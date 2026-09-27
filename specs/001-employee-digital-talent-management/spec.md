@@ -7,6 +7,7 @@
 **Revisi**: 2026-09-27 (clarify 3) — Assignment project merujuk Master Data Project; divisi/posisi karyawan merujuk Master Data Unit/Role (bukan isian bebas); Master Data Role = peran jabatan/fungsional standar perusahaan; Admin mengelola akun user & penetapan peran akses dalam aplikasi; RBAC chapter-as-data disetujui.
 **Revisi**: 2026-09-27 (clarify 4) — Talent dapat melihat riwayat assignment miliknya, dan riwayat tersebut menjadi sumber data pengalaman kerja pada CV (bukan input manual); Chapter dapat membaca CV talent dalam chapter-nya (opsi A); jejak audit hanya dapat dilihat Admin.
 **Revisi**: 2026-09-27 (clarify 5, walkthrough) — Perbaikan koherensi hasil walkthrough: cakupan chapter ditegakkan pada akses IDP oleh Talent (US5); siklus status IDP (berjalan → perlu review → selesai) dan status assignment (berjalan/selesai) didefinisikan; satu sumber kebenaran atribut chapter (pada Employee, diwarisi cakupan user); cakupan jejak audit diperluas ke akun user & profil CV.
+**Revisi**: 2026-09-27 (clarify 6) — Model tanggung jawab chapter: setiap Master Data Role dimiliki tepat satu chapter atau tidak sama sekali (dikelola Admin); chapter talent, keter-assign-an, dan cakupan otorisasi Chapter diturunkan otomatis dari posisi → Role → chapter pemilik (tanpa atribut Unit Origin/Unit Assignment eksplisit). Karyawan dengan Role tanpa chapter tetap tercatat di Database Karyawan sebagai pencatatan, tetapi tidak dapat di-assign dan bukan kandidat IDP.
 **Status**: Draft
 **Input**: /speckit-specify Buat aplikasi employee (digital talent) management dengan target user Chapter sebagai pengelola data assignment dan data talent competency, Operation sebagai pengelola yang memasukkan data karyawan, dan Talent yang dapat membangun profil dengan input data CV dan melihat competency matrix.
 
@@ -27,6 +28,7 @@ Sebagai **Operation**, saya dapat menambahkan dan mengelola data induk karyawan 
 3. **Given** field wajib kosong atau email/employee ID duplikat, **When** submit, **Then** sistem menolak dengan pesan validasi yang jelas.
 4. **Given** daftar karyawan berisi banyak entri, **When** Operation mencari nama atau memfilter divisi/status, **Then** daftar hanya menampilkan hasil yang sesuai.
 5. **Given** karyawan sudah tidak aktif, **When** Operation menonaktifkan karyawan, **Then** karyawan tidak muncul sebagai pilihan talent baru untuk assignment/IDP.
+6. **Given** Operation merekam karyawan yang posisinya merujuk Role tanpa kepemilikan chapter, **When** data disimpan, **Then** karyawan tetap tercatat di Database Karyawan sebagai pencatatan dan ditandai tidak dapat di-assign.
 
 ### User Story 2 — Chapter mengelola data assignment (Priority: P1)
 
@@ -34,7 +36,7 @@ Sebagai **Chapter**, saya dapat membuat dan mengelola assignment talent sehingga
 
 **Acceptance Scenarios:**
 
-1. **Given** Chapter sudah login dan karyawan aktif tersedia, **When** membuat assignment (talent, project dari Master Data Project, peran, periode), **Then** assignment tersimpan dan muncul pada riwayat talent.
+1. **Given** Chapter sudah login dan talent aktif dalam chapter-nya tersedia, **When** membuat assignment (talent, project dari Master Data Project, peran, periode), **Then** assignment tersimpan dan muncul pada riwayat talent.
 2. **Given** assignment aktif berjalan, **When** Chapter mengubah atau mengakhirinya (isi tanggal selesai), **Then** riwayat assignment memperlihatkan versi terbaru tanpa menghapus history.
 3. **Given** Chapter membuka detail seorang talent, **When** melihat daftar assignment, **Then** terlihat semua assignment talent tersebut beserta periodenya.
 4. **Given** Chapter membuka daftar assignment per project, **When** memilih project, **Then** terlihat semua talent yang ter-assign beserta perannya.
@@ -97,6 +99,8 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 - IDP melewati tanggal akhir timeline tanpa penutupan atau perpanjangan → IDP ditandai perlu review pada daftar IDP Chapter.
 - User dengan peran A mencoba mengakses fungsi peran B → akses ditolak di sisi server.
 - Karyawan dinonaktifkan → akun user terkait ikut dinonaktifkan sehingga tidak dapat login lagi.
+- User ditetapkan peran akses Chapter tetapi posisi Employee-nya merujuk Role tanpa kepemilikan chapter → sistem menolak penetapan dengan penjelasan (cakupan chapter tidak terdefinisi).
+- Kepemilikan chapter pada sebuah Role diubah oleh Admin → seluruh talent yang memakai Role tersebut otomatis berpindah tanggung jawab chapter, termasuk assignment/IDP yang sedang berjalan (menyusul FR-23, tanpa migrasi data manual).
 
 ## Requirements
 
@@ -107,13 +111,13 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 - **FR-01**: Sistem harus menyediakan tambah/ubah data karyawan oleh Operation dengan field: nama lengkap, employee ID, email, divisi (merujuk Master Data Unit), posisi (merujuk Master Data Role), tanggal bergabung, status (aktif/non-aktif). Divisi dan posisi dipilih dari master data — bukan isian bebas.
 - **FR-02**: Sistem harus menyediakan daftar karyawan dengan pencarian (nama/email) dan filter (divisi, status).
 - **FR-03**: Email dan employee ID harus unik; field wajib divalidasi.
-- **FR-04**: Operation harus dapat menonaktifkan karyawan; karyawan non-aktif tidak muncul sebagai pilihan talent untuk assignment/IDP baru.
+- **FR-04**: Operation harus dapat menonaktifkan karyawan; karyawan non-aktif tidak muncul sebagai pilihan talent untuk assignment/IDP baru. Kandidat assignment/IDP adalah karyawan aktif yang assignable (lihat FR-23).
 
 **Assignment (Chapter)**
 
-- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran, periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project. Status assignment: berjalan / selesai.
+- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran, periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project. Status assignment: berjalan / selesai. Chapter hanya dapat meng-assign talent yang berada dalam tanggung jawab chapter-nya (FR-23); kandidat talent pada form assignment hanya talent aktif dan assignable dalam chapter-nya.
 - **FR-06**: Chapter harus dapat mengubah dan mengakhiri assignment; mengakhiri berarti mengisi tanggal selesai dan mengubah status menjadi selesai. Riwayat assignment talent tetap tersimpan.
-- **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project. Talent dapat melihat riwayat assignment miliknya sendiri (hanya baca); riwayat ini menjadi sumber data pengalaman kerja pada CV-nya.
+- **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project — keduanya terbatas pada talent dalam tanggung jawab chapter-nya. Talent dapat melihat riwayat assignment miliknya sendiri (hanya baca); riwayat ini menjadi sumber data pengalaman kerja pada CV-nya.
 
 **Individual Development Plan (Chapter & Talent)**
 
@@ -131,7 +135,7 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 **Akses & keamanan**
 
 - **FR-15**: Sistem harus menyediakan login dan role-based access control untuk empat peran akses yang fixed: Admin, Operation, Chapter, Talent. Admin mengelola akun user dan penetapan peran akses di dalam aplikasi (tambah/nonaktifkan akun, ubah peran); tidak ada pembuatan akun di luar aplikasi.
-- **FR-16**: Operation tidak dapat mengubah assignment/IDP; Chapter tidak dapat mengubah data induk karyawan; Talent hanya dapat mengakses profil CV dan IDP miliknya; hanya Admin yang dapat mengelola master data. Chapter hanya dapat mengakses/mengelola IDP talent dalam chapter yang sama dengannya — cakupan mengikuti atribut chapter yang tersimpan pada data Employee yang terhubung ke user (satu sumber kebenaran), bukan definisi peran. Validasi ditegakkan di sisi server.
+- **FR-16**: Operation tidak dapat mengubah assignment/IDP; Chapter tidak dapat mengubah data induk karyawan; Talent hanya dapat mengakses profil CV dan IDP miliknya; hanya Admin yang dapat mengelola master data. Chapter hanya dapat mengakses/mengelola IDP talent dalam tanggung jawab chapter-nya — cakupan diturunkan otomatis dari posisi Employee yang terhubung ke user melalui kepemilikan chapter pada Role (FR-22–FR-23), bukan definisi peran. Validasi ditegakkan di sisi server.
 - **FR-17**: Setiap perubahan data inti (master data, karyawan, akun user, assignment, IDP, profil CV) harus tercatat jejak auditnya; hanya Admin yang dapat melihat jejak audit tersebut.
 
 **Master data (Admin)**
@@ -140,6 +144,8 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 - **FR-19**: Admin harus dapat mengelola Master Data Project (tambah/ubah/nonaktifkan); setiap Project wajib merujuk tepat satu Unit.
 - **FR-20**: Admin harus dapat mengelola Master Data Role (tambah/ubah/nonaktifkan). Master Data Role adalah peran jabatan/fungsional talent dalam organisasi yang mengikuti standar role perusahaan — bukan peran akses aplikasi, dan isian yang merujuknya tidak bebas. Peran akses aplikasi tetap fixed empat: Admin, Operation, Chapter, Talent.
 - **FR-21**: Master data yang masih direferensikan data lain (mis. Unit yang dipakai Project) tidak dapat dihapus; penonaktifan hanya menghentikan pemakaian untuk data baru.
+- **FR-22**: Setiap Master Data Role harus memiliki tepat satu chapter pemilik (Product, Engineer, atau Design) atau tidak memiliki chapter sama sekali. Kepemilikan ini dikelola Admin pada Master Data Role dan menjadi satu-satunya sumber kebenaran tanggung jawab chapter.
+- **FR-23**: Keter-assign-an dan tanggung jawab chapter diturunkan otomatis dari posisi → Role → chapter pemilik: (a) talent assignable jika posisinya merujuk Role yang dimiliki sebuah chapter; (b) chapter yang bertanggung jawab atas talent tersebut adalah chapter pemilik Role-nya; (c) karyawan dengan Role tanpa chapter tetap tercatat di Database Karyawan sebagai pencatatan, tetapi tidak dapat di-assign dan bukan kandidat IDP; (d) cakupan data user ber-peran Chapter adalah chapter pemilik Role posisi employeenya sendiri. Perubahan kepemilikan chapter pada sebuah Role otomatis memindahkan seluruh talent yang memakainya ke tanggung jawab chapter baru.
 
 ### Non-Functional Requirements
 
@@ -149,11 +155,11 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 ### Key Entities
 
-- **Employee**: data induk karyawan (identitas, divisi → Unit, posisi → Role, status, chapter — Product/Engineer/Design). Satu employee memiliki satu akun user.
-- **User & Role (akses)**: akun login dengan tepat satu peran akses yang fixed: Admin, Operation, Chapter, atau Talent; dikelola Admin (tambah/nonaktifkan akun, tetapkan peran). Cakupan data peran Chapter mengikuti chapter pada Employee yang terhubung ke akun tersebut.
+- **Employee**: data induk karyawan (identitas, divisi → Unit, posisi → Role, status). Chapter tidak disimpan pada Employee — diturunkan dari posisi → Role → chapter pemilik (FR-23); karyawan dengan Role tanpa chapter bersifat pencatatan saja (tidak assignable). Satu employee memiliki satu akun user.
+- **User & Role (akses)**: akun login dengan tepat satu peran akses yang fixed: Admin, Operation, Chapter, atau Talent; dikelola Admin (tambah/nonaktifkan akun, tetapkan peran). Cakupan data peran Chapter diturunkan dari kepemilikan chapter pada Role posisi Employee yang terhubung ke akun.
 - **Unit**: master data unit organisasi, dikelola Admin.
 - **Project (master data)**: master data project yang wajib merujuk satu Unit, dikelola Admin; menjadi satu-satunya sumber pilihan project pada assignment.
-- **Role (master data)**: master data peran jabatan/fungsional talent mengikuti standar role perusahaan, dikelola Admin; dirujuk oleh posisi karyawan.
+- **Role (master data)**: master data peran jabatan/fungsional talent mengikuti standar role perusahaan, dikelola Admin; dirujuk oleh posisi karyawan. Setiap Role dimiliki tepat satu chapter (Product/Engineer/Design) atau tanpa chapter — dasar penentuan tanggung jawab chapter dan keter-assign-an (FR-22–FR-23).
 - **Assignment**: penempatan seorang talent pada sebuah project (dari Master Data Project) untuk periode tertentu dengan peran tertentu. Riwayat assignment menjadi sumber data pengalaman kerja pada CV talent.
 - **IndividualDevelopmentPlan (IDP)**: rencana pengembangan individual milik satu talent, dibuat dan dikelola Chapter; memuat development objective, penilaian kondisi saat ini, identifikasi gap, timeline & milestones, dan success indicators.
 - **DevelopmentAction**: aksi pengembangan dalam sebuah IDP (deskripsi, metode — penugasan project, mentoring, training, exposure lintas fungsi, atau belajar mandiri — status to do/in progress/completed, tenggat).
@@ -171,7 +177,8 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 ## Assumptions
 
 - Satu user = satu employee; pengelolaan akun user & penetapan peran akses dilakukan Admin di dalam aplikasi (klarifikasi 2026-09-27).
-- Chapter (Product, Engineer, Design) diperlakukan sebagai atribut data pada Employee (satu sumber kebenaran; cakupan akses user mengikutinya), bukan sebagai peran RBAC — pendekatan ini disetujui stakeholder; konsolidasi chapter cukup mengubah data tanpa mengubah definisi peran.
+- Chapter (Product, Engineer, Design) diperlakukan sebagai data konfigurasi, bukan peran RBAC — pendekatan ini disetujui stakeholder. Sejak klarifikasi 2026-09-27, kepemilikan chapter tersimpan pada Master Data Role dan menurunkan segala hal lain (chapter talent, keter-assign-an, cakupan akses Chapter); konsolidasi chapter cukup memindahkan kepemilikan Role tanpa mengubah definisi peran.
+- Atribut Unit Origin & Unit Assignment pada assignment tidak digunakan: keduanya dapat diturunkan (asal talent = chapter pemilik Role posisinya; unit project = Unit pada Master Data Project), sehingga atribut eksplisit berisiko tidak sinkron. Bila tetap diinginkan sebagai kolom tersimpan, dapat ditambahkan kembali.
 - Peran pada assignment diasumsikan juga merujuk Master Data Role (referensi jabatan standar); dapat disesuaikan bila peran assignment dimaksudkan berbeda.
 - CV diinput sebagai form terstruktur — bukan upload file PDF — sesuai frasa "input data CV".
 - Bagian pengalaman kerja pada CV bukan input manual: diturunkan otomatis dari riwayat assignment talent (klarifikasi 2026-09-27).
