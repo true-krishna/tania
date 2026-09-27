@@ -5,6 +5,7 @@
 **Revisi**: 2026-09-27 — Seluruh spesifikasi Competency ditarik dan diganti dengan spesifikasi Individual Development Plan (IDP) untuk peran Chapter dan Talent, mengacu pada artikel [Individual Development Plan: A Framework for Employee Growth (Mekari Talenta)](https://www.talenta.co/en/blog/individual-development-plan/).
 **Revisi**: 2026-09-27 (clarify 2) — Jawaban klarifikasi diterapkan: periode default IDP = kuartalan; daftar IDP Chapter terbatas pada talent dalam chapter-nya; bentuk detail assignment ditunda (akan dijelaskan berikutnya). Ditambahkan peran Admin dengan Master Data (Unit, Project, Role; Project bergantung pada Unit) dan pendekatan RBAC chapter-as-data.
 **Revisi**: 2026-09-27 (clarify 3) — Assignment project merujuk Master Data Project; divisi/posisi karyawan merujuk Master Data Unit/Role (bukan isian bebas); Master Data Role = peran jabatan/fungsional standar perusahaan; Admin mengelola akun user & penetapan peran akses dalam aplikasi; RBAC chapter-as-data disetujui.
+**Revisi**: 2026-09-27 (clarify 4) — Talent dapat melihat riwayat assignment miliknya, dan riwayat tersebut menjadi sumber data pengalaman kerja pada CV (bukan input manual); Chapter dapat membaca CV talent dalam chapter-nya (opsi A); jejak audit hanya dapat dilihat Admin.
 **Status**: Draft
 **Input**: /speckit-specify Buat aplikasi employee (digital talent) management dengan target user Chapter sebagai pengelola data assignment dan data talent competency, Operation sebagai pengelola yang memasukkan data karyawan, dan Talent yang dapat membangun profil dengan input data CV dan melihat competency matrix.
 
@@ -54,10 +55,11 @@ Sebagai **Talent**, saya dapat mengisi data CV milik saya sehingga profil saya l
 
 **Acceptance Scenarios:**
 
-1. **Given** Talent sudah login pertama kali, **When** membuka halaman profil CV, **Then** tersedia form terstruktur: ringkasan profil, pendidikan, pengalaman kerja, sertifikasi, keahlian.
+1. **Given** Talent sudah login pertama kali, **When** membuka halaman profil CV, **Then** tersedia form terstruktur: ringkasan profil, pendidikan, sertifikasi, keahlian — sedangkan bagian pengalaman kerja terisi otomatis dari riwayat assignment.
 2. **Given** Talent mengisi satu atau lebih bagian CV, **When** menyimpan, **Then** data bagian tersebut tersimpan dan tampil pada profil Talent tersebut.
 3. **Given** Talent memiliki data CV tersimpan, **When** mengedit dan menyimpan kembali, **Then** hanya profil miliknya yang berubah.
-4. **Given** Talent lain mencoba mengakses profil Talent A, **When** permintaan dikirim, **Then** sistem menolak (hanya pemilik dan peran pengelola yang boleh).
+4. **Given** Talent lain mencoba mengakses profil Talent A, **When** permintaan dikirim, **Then** sistem menolak (hanya pemiliknya dan Chapter talent dalam chapter yang sama — hanya baca — yang boleh).
+5. **Given** Talent memiliki riwayat assignment, **When** membuka profilnya, **Then** bagian pengalaman kerja menampilkan riwayat assignment (project, peran, periode) secara otomatis, termasuk assignment yang sudah diakhiri.
 
 ### User Story 5 — Talent mengikuti IDP miliknya (Priority: P2)
 
@@ -110,7 +112,7 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 - **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran, periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project.
 - **FR-06**: Chapter harus dapat mengubah dan mengakhiri assignment; riwayat assignment talent tetap tersimpan.
-- **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project.
+- **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project. Talent dapat melihat riwayat assignment miliknya sendiri (hanya baca); riwayat ini menjadi sumber data pengalaman kerja pada CV-nya.
 
 **Individual Development Plan (Chapter & Talent)**
 
@@ -122,14 +124,14 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 **Profil & CV (Talent)**
 
-- **FR-12**: Talent harus dapat mengisi profil CV berbentuk form terstruktur: ringkasan profil, pendidikan (banyak entri), pengalaman kerja (banyak entri), sertifikasi (banyak entri), keahlian (banyak entri).
-- **FR-13**: Talent hanya dapat melihat dan mengedit CV miliknya sendiri.
+- **FR-12**: Talent harus dapat mengisi profil CV berbentuk form terstruktur: ringkasan profil, pendidikan (banyak entri), sertifikasi (banyak entri), keahlian (banyak entri). Bagian pengalaman kerja tidak diinput manual — terisi otomatis dari riwayat assignment talent (project, peran, periode).
+- **FR-13**: Talent hanya dapat melihat dan mengedit CV miliknya sendiri. Chapter dapat melihat CV (hanya baca) talent dalam chapter yang sama dengannya; peran lain tidak dapat mengakses CV.
 
 **Akses & keamanan**
 
 - **FR-15**: Sistem harus menyediakan login dan role-based access control untuk empat peran akses yang fixed: Admin, Operation, Chapter, Talent. Admin mengelola akun user dan penetapan peran akses di dalam aplikasi (tambah/nonaktifkan akun, ubah peran); tidak ada pembuatan akun di luar aplikasi.
 - **FR-16**: Operation tidak dapat mengubah assignment/IDP; Chapter tidak dapat mengubah data induk karyawan; Talent hanya dapat mengakses profil CV dan IDP miliknya; hanya Admin yang dapat mengelola master data. Chapter hanya dapat mengakses/mengelola IDP talent dalam chapter yang sama dengannya — cakupan mengikuti atribut chapter pada user, bukan definisi peran. Validasi ditegakkan di sisi server.
-- **FR-17**: Setiap perubahan data inti (master data, karyawan, assignment, IDP) harus tercatat jejak auditnya.
+- **FR-17**: Setiap perubahan data inti (master data, karyawan, assignment, IDP) harus tercatat jejak auditnya; hanya Admin yang dapat melihat jejak audit tersebut.
 
 **Master data (Admin)**
 
@@ -151,11 +153,11 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 - **Unit**: master data unit organisasi, dikelola Admin.
 - **Project (master data)**: master data project yang wajib merujuk satu Unit, dikelola Admin; menjadi satu-satunya sumber pilihan project pada assignment.
 - **Role (master data)**: master data peran jabatan/fungsional talent mengikuti standar role perusahaan, dikelola Admin; dirujuk oleh posisi karyawan.
-- **Assignment**: penempatan seorang talent pada sebuah project (dari Master Data Project) untuk periode tertentu dengan peran tertentu.
+- **Assignment**: penempatan seorang talent pada sebuah project (dari Master Data Project) untuk periode tertentu dengan peran tertentu. Riwayat assignment menjadi sumber data pengalaman kerja pada CV talent.
 - **IndividualDevelopmentPlan (IDP)**: rencana pengembangan individual milik satu talent, dibuat dan dikelola Chapter; memuat development objective, penilaian kondisi saat ini, identifikasi gap, timeline & milestones, dan success indicators.
 - **DevelopmentAction**: aksi pengembangan dalam sebuah IDP (deskripsi, metode — penugasan project, mentoring, training, exposure lintas fungsi, atau belajar mandiri — status to do/in progress/completed, tenggat).
 - **ReviewLog**: catatan check-in review & monitoring antara Chapter dan talent (tanggal, ringkasan hasil, tindak lanjut).
-- **CVProfile**: profil CV milik talent, terdiri atas ringkasan dan sub-data multi-entri (pendidikan, pengalaman kerja, sertifikasi, keahlian).
+- **CVProfile**: profil CV milik talent, terdiri atas ringkasan dan sub-data multi-entri (pendidikan, sertifikasi, keahlian) serta pengalaman kerja yang diturunkan otomatis dari riwayat assignment.
 
 ## Success Criteria
 
@@ -171,6 +173,7 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 - Chapter (Product, Engineer, Design) diperlakukan sebagai atribut data pada user/employee, bukan sebagai peran RBAC — pendekatan ini disetujui stakeholder; konsolidasi chapter cukup mengubah data tanpa mengubah definisi peran.
 - Peran pada assignment diasumsikan juga merujuk Master Data Role (referensi jabatan standar); dapat disesuaikan bila peran assignment dimaksudkan berbeda.
 - CV diinput sebagai form terstruktur — bukan upload file PDF — sesuai frasa "input data CV".
+- Bagian pengalaman kerja pada CV bukan input manual: diturunkan otomatis dari riwayat assignment talent (klarifikasi 2026-09-27).
 - Chapter bertindak sebagai manajer pengembangan talent: IDP dibuat, direview, dan diperbarui oleh Chapter; Talent berpartisipasi dengan memperbarui progres aksi pengembangan miliknya.
 - Struktur IDP mengikuti tujuh komponen sesuai artikel Mekari Talenta "Individual Development Plan: A Framework for Employee Growth".
 - Bahasa antarmuka: Indonesia.
