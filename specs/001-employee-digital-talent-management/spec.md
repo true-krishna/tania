@@ -3,13 +3,14 @@
 **Feature Branch**: `001-employee-digital-talent-management`
 **Created**: 2026-09-25
 **Revisi**: 2026-09-27 — Seluruh spesifikasi Competency ditarik dan diganti dengan spesifikasi Individual Development Plan (IDP) untuk peran Chapter dan Talent, mengacu pada artikel [Individual Development Plan: A Framework for Employee Growth (Mekari Talenta)](https://www.talenta.co/en/blog/individual-development-plan/).
-**Revisi**: 2026-09-27 (clarify) — Jawaban klarifikasi diterapkan: periode default IDP = kuartalan; daftar IDP Chapter terbatas pada talent dalam chapter-nya; bentuk detail assignment ditunda (akan dijelaskan berikutnya). Ditambahkan peran Admin dengan Master Data (Unit, Project, Role; Project bergantung pada Unit) dan pendekatan RBAC chapter-as-data.
+**Revisi**: 2026-09-27 (clarify 2) — Jawaban klarifikasi diterapkan: periode default IDP = kuartalan; daftar IDP Chapter terbatas pada talent dalam chapter-nya; bentuk detail assignment ditunda (akan dijelaskan berikutnya). Ditambahkan peran Admin dengan Master Data (Unit, Project, Role; Project bergantung pada Unit) dan pendekatan RBAC chapter-as-data.
+**Revisi**: 2026-09-27 (clarify 3) — Assignment project merujuk Master Data Project; divisi/posisi karyawan merujuk Master Data Unit/Role (bukan isian bebas); Master Data Role = peran jabatan/fungsional standar perusahaan; Admin mengelola akun user & penetapan peran akses dalam aplikasi; RBAC chapter-as-data disetujui.
 **Status**: Draft
 **Input**: /speckit-specify Buat aplikasi employee (digital talent) management dengan target user Chapter sebagai pengelola data assignment dan data talent competency, Operation sebagai pengelola yang memasukkan data karyawan, dan Talent yang dapat membangun profil dengan input data CV dan melihat competency matrix.
 
 ## Ringkasan
 
-Aplikasi web untuk mengelola data karyawan digital talent dalam satu tempat: Admin mengelola master data (Unit, Project, Role), data induk karyawan dikelola Operation, data assignment dan Individual Development Plan (IDP) dikelola Chapter, dan setiap Talent dapat membangun profilnya sendiri dengan mengisi data CV serta mengikuti IDP miliknya. Empat peran dengan hak akses yang dipisahkan tegas; IDP hanya melibatkan peran Chapter dan Talent, dan Chapter hanya menangani talent dalam chapter-nya.
+Aplikasi web untuk mengelola data karyawan digital talent dalam satu tempat: Admin mengelola master data (Unit, Project, Role) beserta akun user dan penetapan peran akses, data induk karyawan dikelola Operation, data assignment dan Individual Development Plan (IDP) dikelola Chapter, dan setiap Talent dapat membangun profilnya sendiri dengan mengisi data CV serta mengikuti IDP miliknya. Empat peran dengan hak akses yang dipisahkan tegas; IDP hanya melibatkan peran Chapter dan Talent, dan Chapter hanya menangani talent dalam chapter-nya.
 
 ## User Scenarios & Testing
 
@@ -31,7 +32,7 @@ Sebagai **Chapter**, saya dapat membuat dan mengelola assignment talent sehingga
 
 **Acceptance Scenarios:**
 
-1. **Given** Chapter sudah login dan karyawan aktif tersedia, **When** membuat assignment (talent, project/engagement, peran, periode), **Then** assignment tersimpan dan muncul pada riwayat talent.
+1. **Given** Chapter sudah login dan karyawan aktif tersedia, **When** membuat assignment (talent, project dari Master Data Project, peran, periode), **Then** assignment tersimpan dan muncul pada riwayat talent.
 2. **Given** assignment aktif berjalan, **When** Chapter mengubah atau mengakhirinya (isi tanggal selesai), **Then** riwayat assignment memperlihatkan versi terbaru tanpa menghapus history.
 3. **Given** Chapter membuka detail seorang talent, **When** melihat daftar assignment, **Then** terlihat semua assignment talent tersebut beserta periodenya.
 4. **Given** Chapter membuka daftar assignment per project, **When** memilih project, **Then** terlihat semua talent yang ter-assign beserta perannya.
@@ -69,9 +70,9 @@ Sebagai **Talent**, saya dapat melihat IDP milik saya dan memperbarui progres ak
 3. **Given** Talent belum memiliki IDP, **When** membuka halaman IDP, **Then** tampil keadaan kosong dengan penjelasan singkat (bukan error).
 4. **Given** Talent lain mencoba mengakses IDP Talent A, **When** permintaan dikirim, **Then** sistem menolak (IDP hanya dapat dilihat oleh pemiliknya dan peran Chapter).
 
-### User Story 6 — Admin mengelola master data (Priority: P1)
+### User Story 6 — Admin mengelola master data & akun user (Priority: P1)
 
-Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Project, Role) sehingga data operasional aplikasi konsisten mengacu pada referensi yang sama.
+Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Project, Role) serta mengelola akun user dan penetapan peran akses sehingga data operasional aplikasi konsisten mengacu pada referensi yang sama dan akses pengguna terkendali.
 
 **Acceptance Scenarios:**
 
@@ -81,6 +82,8 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 4. **Given** Unit masih direferensikan oleh minimal satu Project, **When** Admin mencoba menghapus Unit tersebut, **Then** sistem menolak dengan penjelasan dependensi.
 5. **Given** Admin menambahkan Role baru pada daftar Role, **When** submit, **Then** Role tersimpan dan muncul pada daftar Role.
 6. **Given** Admin mengubah data master (mis. nama Unit), **When** disimpan, **Then** referensi pada data yang memakainya tetap valid tanpa penyesuaian manual.
+7. **Given** Admin menambahkan akun user untuk seorang employee dan menetapkan peran aksesnya, **When** disimpan, **Then** akun tersimpan dan user dapat login dengan peran tersebut.
+8. **Given** Admin mengubah peran akses seorang user, **When** perubahan disimpan, **Then** hak akses user mengikuti peran barunya.
 
 ### Edge Cases
 
@@ -90,6 +93,7 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 - Semua aksi pengembangan sudah completed tetapi success indicators belum dievaluasi → status IDP tidak otomatis selesai; penutupan IDP dilakukan oleh Chapter saat review.
 - IDP melewati tanggal akhir timeline tanpa penutupan atau perpanjangan → IDP ditandai perlu review pada daftar IDP Chapter.
 - User dengan peran A mencoba mengakses fungsi peran B → akses ditolak di sisi server.
+- Karyawan dinonaktifkan → akun user terkait ikut dinonaktifkan sehingga tidak dapat login lagi.
 
 ## Requirements
 
@@ -97,16 +101,16 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 **Data karyawan (Operation)**
 
-- **FR-01**: Sistem harus menyediakan tambah/ubah data karyawan oleh Operation dengan field: nama lengkap, employee ID, email, divisi, posisi, tanggal bergabung, status (aktif/non-aktif). *[NEEDS CLARIFICATION: apakah divisi dan posisi akan menunjuk Master Data Unit dan Master Data Role, atau tetap isian bebas?]*
+- **FR-01**: Sistem harus menyediakan tambah/ubah data karyawan oleh Operation dengan field: nama lengkap, employee ID, email, divisi (merujuk Master Data Unit), posisi (merujuk Master Data Role), tanggal bergabung, status (aktif/non-aktif). Divisi dan posisi dipilih dari master data — bukan isian bebas.
 - **FR-02**: Sistem harus menyediakan daftar karyawan dengan pencarian (nama/email) dan filter (divisi, status).
 - **FR-03**: Email dan employee ID harus unik; field wajib divalidasi.
 - **FR-04**: Operation harus dapat menonaktifkan karyawan; karyawan non-aktif tidak muncul sebagai pilihan talent untuk assignment/IDP baru.
 
 **Assignment (Chapter)**
 
-- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, nama project/engagement, peran, periode (mulai–selesai), status. *[DITUNDA: bentuk detail assignment akan dijelaskan pada iterasi berikutnya — saat itu project/engagement dapat diarahkan merujuk Master Data Project.]*
+- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran, periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project.
 - **FR-06**: Chapter harus dapat mengubah dan mengakhiri assignment; riwayat assignment talent tetap tersimpan.
-- **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project/engagement.
+- **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project.
 
 **Individual Development Plan (Chapter & Talent)**
 
@@ -123,7 +127,7 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 **Akses & keamanan**
 
-- **FR-15**: Sistem harus menyediakan login dan role-based access control untuk empat peran: Admin, Operation, Chapter, Talent. *[NEEDS CLARIFICATION: apakah Admin juga mengelola akun user & penetapan peran, atau pembuatan akun tetap di luar aplikasi (seeding)?]*
+- **FR-15**: Sistem harus menyediakan login dan role-based access control untuk empat peran akses yang fixed: Admin, Operation, Chapter, Talent. Admin mengelola akun user dan penetapan peran akses di dalam aplikasi (tambah/nonaktifkan akun, ubah peran); tidak ada pembuatan akun di luar aplikasi.
 - **FR-16**: Operation tidak dapat mengubah assignment/IDP; Chapter tidak dapat mengubah data induk karyawan; Talent hanya dapat mengakses profil CV dan IDP miliknya; hanya Admin yang dapat mengelola master data. Chapter hanya dapat mengakses/mengelola IDP talent dalam chapter yang sama dengannya — cakupan mengikuti atribut chapter pada user, bukan definisi peran. Validasi ditegakkan di sisi server.
 - **FR-17**: Setiap perubahan data inti (master data, karyawan, assignment, IDP) harus tercatat jejak auditnya.
 
@@ -131,7 +135,7 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 - **FR-18**: Admin harus dapat mengelola Master Data Unit (tambah/ubah/nonaktifkan) berisi minimal nama unit.
 - **FR-19**: Admin harus dapat mengelola Master Data Project (tambah/ubah/nonaktifkan); setiap Project wajib merujuk tepat satu Unit.
-- **FR-20**: Admin harus dapat mengelola Master Data Role (tambah/ubah/nonaktifkan). *[NEEDS CLARIFICATION: apakah Master Data Role adalah peran jabatan/fungsional talent (mis. Backend Engineer), bukan peran akses aplikasi? Peran akses (RBAC) disarankan tetap fixed: Admin, Operation, Chapter, Talent.]*
+- **FR-20**: Admin harus dapat mengelola Master Data Role (tambah/ubah/nonaktifkan). Master Data Role adalah peran jabatan/fungsional talent dalam organisasi yang mengikuti standar role perusahaan — bukan peran akses aplikasi, dan isian yang merujuknya tidak bebas. Peran akses aplikasi tetap fixed empat: Admin, Operation, Chapter, Talent.
 - **FR-21**: Master data yang masih direferensikan data lain (mis. Unit yang dipakai Project) tidak dapat dihapus; penonaktifan hanya menghentikan pemakaian untuk data baru.
 
 ### Non-Functional Requirements
@@ -142,12 +146,12 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 ### Key Entities
 
-- **Employee**: data induk karyawan (identitas, divisi, posisi, status, chapter — Product/Engineer/Design). Satu employee memiliki satu akun user.
-- **User & Role**: akun login dengan tepat satu peran akses: Admin, Operation, Chapter, atau Talent; atribut chapter pada user menentukan cakupan data peran Chapter.
+- **Employee**: data induk karyawan (identitas, divisi → Unit, posisi → Role, status, chapter — Product/Engineer/Design). Satu employee memiliki satu akun user.
+- **User & Role (akses)**: akun login dengan tepat satu peran akses yang fixed: Admin, Operation, Chapter, atau Talent; dikelola Admin (tambah/nonaktifkan akun, tetapkan peran). Atribut chapter pada user menentukan cakupan data peran Chapter.
 - **Unit**: master data unit organisasi, dikelola Admin.
-- **Project (master data)**: master data project/engagement yang wajib merujuk satu Unit, dikelola Admin.
-- **Role (master data)**: master data peran jabatan talent, dikelola Admin.
-- **Assignment**: penempatan seorang talent pada project/engagement untuk periode tertentu (detail bentuk assignment ditunda — akan dijelaskan berikutnya).
+- **Project (master data)**: master data project yang wajib merujuk satu Unit, dikelola Admin; menjadi satu-satunya sumber pilihan project pada assignment.
+- **Role (master data)**: master data peran jabatan/fungsional talent mengikuti standar role perusahaan, dikelola Admin; dirujuk oleh posisi karyawan.
+- **Assignment**: penempatan seorang talent pada sebuah project (dari Master Data Project) untuk periode tertentu dengan peran tertentu.
 - **IndividualDevelopmentPlan (IDP)**: rencana pengembangan individual milik satu talent, dibuat dan dikelola Chapter; memuat development objective, penilaian kondisi saat ini, identifikasi gap, timeline & milestones, dan success indicators.
 - **DevelopmentAction**: aksi pengembangan dalam sebuah IDP (deskripsi, metode — penugasan project, mentoring, training, exposure lintas fungsi, atau belajar mandiri — status to do/in progress/completed, tenggat).
 - **ReviewLog**: catatan check-in review & monitoring antara Chapter dan talent (tanggal, ringkasan hasil, tindak lanjut).
@@ -163,8 +167,9 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 ## Assumptions
 
-- Satu user = satu employee; pembuatan akun awal tetap di luar aplikasi (seeding) sampai dikonfirmasi apakah Admin mengambil alih pengelolaan akun & penetapan peran.
-- Chapter (Product, Engineer, Design) diperlakukan sebagai atribut data pada user/employee, bukan sebagai peran RBAC — konsolidasi chapter cukup mengubah data tanpa mengubah definisi peran.
+- Satu user = satu employee; pengelolaan akun user & penetapan peran akses dilakukan Admin di dalam aplikasi (klarifikasi 2026-09-27).
+- Chapter (Product, Engineer, Design) diperlakukan sebagai atribut data pada user/employee, bukan sebagai peran RBAC — pendekatan ini disetujui stakeholder; konsolidasi chapter cukup mengubah data tanpa mengubah definisi peran.
+- Peran pada assignment diasumsikan juga merujuk Master Data Role (referensi jabatan standar); dapat disesuaikan bila peran assignment dimaksudkan berbeda.
 - CV diinput sebagai form terstruktur — bukan upload file PDF — sesuai frasa "input data CV".
 - Chapter bertindak sebagai manajer pengembangan talent: IDP dibuat, direview, dan diperbarui oleh Chapter; Talent berpartisipasi dengan memperbarui progres aksi pengembangan miliknya.
 - Struktur IDP mengikuti tujuh komponen sesuai artikel Mekari Talenta "Individual Development Plan: A Framework for Employee Growth".
