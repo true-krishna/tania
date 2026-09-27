@@ -6,6 +6,7 @@
 **Revisi**: 2026-09-27 (clarify 2) — Jawaban klarifikasi diterapkan: periode default IDP = kuartalan; daftar IDP Chapter terbatas pada talent dalam chapter-nya; bentuk detail assignment ditunda (akan dijelaskan berikutnya). Ditambahkan peran Admin dengan Master Data (Unit, Project, Role; Project bergantung pada Unit) dan pendekatan RBAC chapter-as-data.
 **Revisi**: 2026-09-27 (clarify 3) — Assignment project merujuk Master Data Project; divisi/posisi karyawan merujuk Master Data Unit/Role (bukan isian bebas); Master Data Role = peran jabatan/fungsional standar perusahaan; Admin mengelola akun user & penetapan peran akses dalam aplikasi; RBAC chapter-as-data disetujui.
 **Revisi**: 2026-09-27 (clarify 4) — Talent dapat melihat riwayat assignment miliknya, dan riwayat tersebut menjadi sumber data pengalaman kerja pada CV (bukan input manual); Chapter dapat membaca CV talent dalam chapter-nya (opsi A); jejak audit hanya dapat dilihat Admin.
+**Revisi**: 2026-09-27 (clarify 5, walkthrough) — Perbaikan koherensi hasil walkthrough: cakupan chapter ditegakkan pada akses IDP oleh Talent (US5); siklus status IDP (berjalan → perlu review → selesai) dan status assignment (berjalan/selesai) didefinisikan; satu sumber kebenaran atribut chapter (pada Employee, diwarisi cakupan user); cakupan jejak audit diperluas ke akun user & profil CV.
 **Status**: Draft
 **Input**: /speckit-specify Buat aplikasi employee (digital talent) management dengan target user Chapter sebagai pengelola data assignment dan data talent competency, Operation sebagai pengelola yang memasukkan data karyawan, dan Talent yang dapat membangun profil dengan input data CV dan melihat competency matrix.
 
@@ -70,7 +71,7 @@ Sebagai **Talent**, saya dapat melihat IDP milik saya dan memperbarui progres ak
 1. **Given** Chapter sudah membuat IDP untuk seorang Talent, **When** Talent membuka halaman IDP, **Then** Talent melihat seluruh komponen IDP miliknya: development objective, kondisi saat ini, gap, aksi pengembangan beserta statusnya, timeline & milestones, success indicators, dan riwayat review.
 2. **Given** Talent memiliki aksi pengembangan, **When** Talent memperbarui status aksi (to do → in progress → completed), **Then** pembaruan tersimpan dan terlihat oleh Chapter pada tampilan progres IDP.
 3. **Given** Talent belum memiliki IDP, **When** membuka halaman IDP, **Then** tampil keadaan kosong dengan penjelasan singkat (bukan error).
-4. **Given** Talent lain mencoba mengakses IDP Talent A, **When** permintaan dikirim, **Then** sistem menolak (IDP hanya dapat dilihat oleh pemiliknya dan peran Chapter).
+4. **Given** Talent lain mencoba mengakses IDP Talent A, **When** permintaan dikirim, **Then** sistem menolak (IDP hanya dapat dilihat oleh pemiliknya dan Chapter dari chapter yang sama).
 
 ### User Story 6 — Admin mengelola master data & akun user (Priority: P1)
 
@@ -110,15 +111,15 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 
 **Assignment (Chapter)**
 
-- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran, periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project.
-- **FR-06**: Chapter harus dapat mengubah dan mengakhiri assignment; riwayat assignment talent tetap tersimpan.
+- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran, periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project. Status assignment: berjalan / selesai.
+- **FR-06**: Chapter harus dapat mengubah dan mengakhiri assignment; mengakhiri berarti mengisi tanggal selesai dan mengubah status menjadi selesai. Riwayat assignment talent tetap tersimpan.
 - **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project. Talent dapat melihat riwayat assignment miliknya sendiri (hanya baca); riwayat ini menjadi sumber data pengalaman kerja pada CV-nya.
 
 **Individual Development Plan (Chapter & Talent)**
 
-- **FR-08**: Chapter harus dapat membuat IDP untuk seorang talent dalam chapter-nya yang memuat: development objective (target peran/kapabilitas yang spesifik dan terikat pada ekspektasi peran), penilaian kondisi saat ini (kekuatan & keterbatasan), identifikasi gap (selisih kondisi saat ini vs yang dibutuhkan), aksi pengembangan (banyak entri), timeline & milestones (periode mulai–selesai dengan checkpoint), dan success indicators. Periode default IDP adalah satu kuartal (3 bulan).
+- **FR-08**: Chapter harus dapat membuat IDP untuk seorang talent dalam chapter-nya yang memuat: development objective (target peran/kapabilitas yang spesifik dan terikat pada ekspektasi peran), penilaian kondisi saat ini (kekuatan & keterbatasan), identifikasi gap (selisih kondisi saat ini vs yang dibutuhkan), aksi pengembangan (banyak entri), timeline & milestones (periode mulai–selesai dengan checkpoint), dan success indicators. Periode default IDP adalah satu kuartal (3 bulan). IDP dibuat dengan status **berjalan**; siklus status IDP: berjalan → perlu review → selesai.
 - **FR-09**: Setiap aksi pengembangan harus dapat dilacak statusnya (to do / in progress / completed); Talent dapat memperbarui status aksi miliknya dan Chapter dapat memperbaruinya saat review.
-- **FR-10**: Chapter harus dapat mencatat hasil review & monitoring berkala (tanggal, ringkasan hasil, tindak lanjut) dan merevisi IDP sebagai dokumen kerja yang diperbarui; riwayat perubahan IDP tetap tersimpan.
+- **FR-10**: Chapter harus dapat mencatat hasil review & monitoring berkala (tanggal, ringkasan hasil, tindak lanjut) dan merevisi IDP sebagai dokumen kerja yang diperbarui; riwayat perubahan IDP tetap tersimpan. Chapter menutup IDP (status → selesai) saat review setelah success indicators dievaluasi; IDP yang melewati akhir timeline tanpa penutupan otomatis berstatus perlu review.
 - **FR-11**: Sistem harus menyediakan daftar IDP untuk Chapter yang dapat difilter per status, menampilkan progres tiap IDP. Daftar hanya memuat IDP talent yang berada dalam chapter yang sama dengan Chapter yang login.
 - **FR-14**: Talent hanya dapat melihat IDP miliknya sendiri beserta progres dan riwayat review.
 
@@ -130,8 +131,8 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 **Akses & keamanan**
 
 - **FR-15**: Sistem harus menyediakan login dan role-based access control untuk empat peran akses yang fixed: Admin, Operation, Chapter, Talent. Admin mengelola akun user dan penetapan peran akses di dalam aplikasi (tambah/nonaktifkan akun, ubah peran); tidak ada pembuatan akun di luar aplikasi.
-- **FR-16**: Operation tidak dapat mengubah assignment/IDP; Chapter tidak dapat mengubah data induk karyawan; Talent hanya dapat mengakses profil CV dan IDP miliknya; hanya Admin yang dapat mengelola master data. Chapter hanya dapat mengakses/mengelola IDP talent dalam chapter yang sama dengannya — cakupan mengikuti atribut chapter pada user, bukan definisi peran. Validasi ditegakkan di sisi server.
-- **FR-17**: Setiap perubahan data inti (master data, karyawan, assignment, IDP) harus tercatat jejak auditnya; hanya Admin yang dapat melihat jejak audit tersebut.
+- **FR-16**: Operation tidak dapat mengubah assignment/IDP; Chapter tidak dapat mengubah data induk karyawan; Talent hanya dapat mengakses profil CV dan IDP miliknya; hanya Admin yang dapat mengelola master data. Chapter hanya dapat mengakses/mengelola IDP talent dalam chapter yang sama dengannya — cakupan mengikuti atribut chapter yang tersimpan pada data Employee yang terhubung ke user (satu sumber kebenaran), bukan definisi peran. Validasi ditegakkan di sisi server.
+- **FR-17**: Setiap perubahan data inti (master data, karyawan, akun user, assignment, IDP, profil CV) harus tercatat jejak auditnya; hanya Admin yang dapat melihat jejak audit tersebut.
 
 **Master data (Admin)**
 
@@ -149,7 +150,7 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 ### Key Entities
 
 - **Employee**: data induk karyawan (identitas, divisi → Unit, posisi → Role, status, chapter — Product/Engineer/Design). Satu employee memiliki satu akun user.
-- **User & Role (akses)**: akun login dengan tepat satu peran akses yang fixed: Admin, Operation, Chapter, atau Talent; dikelola Admin (tambah/nonaktifkan akun, tetapkan peran). Atribut chapter pada user menentukan cakupan data peran Chapter.
+- **User & Role (akses)**: akun login dengan tepat satu peran akses yang fixed: Admin, Operation, Chapter, atau Talent; dikelola Admin (tambah/nonaktifkan akun, tetapkan peran). Cakupan data peran Chapter mengikuti chapter pada Employee yang terhubung ke akun tersebut.
 - **Unit**: master data unit organisasi, dikelola Admin.
 - **Project (master data)**: master data project yang wajib merujuk satu Unit, dikelola Admin; menjadi satu-satunya sumber pilihan project pada assignment.
 - **Role (master data)**: master data peran jabatan/fungsional talent mengikuti standar role perusahaan, dikelola Admin; dirujuk oleh posisi karyawan.
@@ -170,7 +171,7 @@ Sebagai **Admin**, saya dapat mendefinisikan dan mengelola master data (Unit, Pr
 ## Assumptions
 
 - Satu user = satu employee; pengelolaan akun user & penetapan peran akses dilakukan Admin di dalam aplikasi (klarifikasi 2026-09-27).
-- Chapter (Product, Engineer, Design) diperlakukan sebagai atribut data pada user/employee, bukan sebagai peran RBAC — pendekatan ini disetujui stakeholder; konsolidasi chapter cukup mengubah data tanpa mengubah definisi peran.
+- Chapter (Product, Engineer, Design) diperlakukan sebagai atribut data pada Employee (satu sumber kebenaran; cakupan akses user mengikutinya), bukan sebagai peran RBAC — pendekatan ini disetujui stakeholder; konsolidasi chapter cukup mengubah data tanpa mengubah definisi peran.
 - Peran pada assignment diasumsikan juga merujuk Master Data Role (referensi jabatan standar); dapat disesuaikan bila peran assignment dimaksudkan berbeda.
 - CV diinput sebagai form terstruktur — bukan upload file PDF — sesuai frasa "input data CV".
 - Bagian pengalaman kerja pada CV bukan input manual: diturunkan otomatis dari riwayat assignment talent (klarifikasi 2026-09-27).
