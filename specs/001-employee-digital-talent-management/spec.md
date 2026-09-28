@@ -10,6 +10,7 @@
 **Revisi**: 2026-09-27 (clarify 6) — Model tanggung jawab chapter: setiap Master Data Role dimiliki tepat satu chapter atau tidak sama sekali (dikelola Admin); chapter talent, keter-assign-an, dan cakupan otorisasi Chapter diturunkan otomatis dari posisi → Role → chapter pemilik (tanpa atribut Unit Origin/Unit Assignment eksplisit). Karyawan dengan Role tanpa chapter tetap tercatat di Database Karyawan sebagai pencatatan, tetapi tidak dapat di-assign dan bukan kandidat IDP.
 **Revisi**: 2026-09-27 (clarify 7) — Fleksibilitas konsolidasi: daftar chapter menjadi Master Data Chapter yang dikelola Admin (FR-24, nilai awal Product/Engineer/Design), sehingga chapter berjumlah bebas (1, 3, atau N) dan konsolidasi menjadi "Chapter Digital Talents" adalah operasi data murni — tanpa perubahan peran RBAC dan tanpa migrasi data karyawan.
 **Revisi**: 2026-09-27 (clarify 8) — Keputusan scope MVP: modul Performance Evaluation dan Dashboard masuk ke dalam fitur ini untuk memperkuat alur end-to-end (assignment → penilaian performa → pengembangan IDP → pemantauan periodik). Ditambahkan User Story 7–8, FR-25–FR-30, entitas EvaluationPeriod & PerformanceEvaluation; skala penilaian, self-assessment, dan cakupan widget dashboard ditandai NEEDS CLARIFICATION.
+**Revisi**: 2026-09-27 (clarify 9) — Evaluasi performa dibuat dapat dikonfigurasi: Admin mengelola template evaluasi (kriteria + tipe jawaban dari set fixed) yang terpinned ke periode evaluasi (FR-31), sehingga perubahan framework penilaian tidak mengubah kode; self-assessment di luar MVP (Chapter-only); widget dashboard MVP dikonfirmasi sesuai User Story 8.
 **Status**: Draft
 **Input**: /speckit-specify Buat aplikasi employee (digital talent) management dengan target user Chapter sebagai pengelola data assignment dan data talent competency, Operation sebagai pengelola yang memasukkan data karyawan, dan Talent yang dapat membangun profil dengan input data CV dan melihat competency matrix.
 
@@ -100,7 +101,7 @@ Sebagai **Chapter**, saya dapat menilai performa talent dalam tanggung jawab cha
 **Acceptance Scenarios:**
 
 1. **Given** periode evaluasi berjalan dan talent dalam tanggung jawab chapter-nya tersedia, **When** Chapter membuka daftar evaluasi periode tersebut, **Then** terlihat talent yang belum dinilai dan yang sudah dinilai.
-2. **Given** Chapter mengisi evaluasi seorang talent (skala penilaian, ringkasan pencapaian, catatan pengembangan) dengan konteks assignment aktif dan IDP berjalan talent tersebut, **When** submit, **Then** evaluasi tersimpan dan muncul pada daftar evaluasi periode itu.
+2. **Given** Chapter mengisi evaluasi seorang talent (jawaban per kriteria sesuai template evaluasi periode terkait, ringkasan pencapaian, catatan pengembangan) dengan konteks assignment aktif dan IDP berjalan talent tersebut, **When** submit, **Then** evaluasi tersimpan dan muncul pada daftar evaluasi periode itu.
 3. **Given** Chapter merevisi evaluasi sebelum periode ditutup, **When** disimpan, **Then** evaluasi menampilkan versi terbaru dan riwayat perubahan tetap tersimpan.
 4. **Given** Talent membuka halaman evaluasinya, **Then** Talent melihat evaluasi miliknya (hanya baca); Talent lain tidak dapat melihat evaluasi orang lain.
 5. **Given** periode evaluasi berakhir dengan talent yang belum dinilai, **Then** talent tersebut ditandai belum dinilai pada daftar evaluasi Chapter.
@@ -164,7 +165,7 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 
 - **FR-15**: Sistem harus menyediakan login dan role-based access control untuk empat peran akses yang fixed: Admin, Operation, Chapter, Talent. Admin mengelola akun user dan penetapan peran akses di dalam aplikasi (tambah/nonaktifkan akun, ubah peran); tidak ada pembuatan akun di luar aplikasi.
 - **FR-16**: Operation tidak dapat mengubah assignment/IDP; Chapter tidak dapat mengubah data induk karyawan; Talent hanya dapat mengakses profil CV dan IDP miliknya; hanya Admin yang dapat mengelola master data. Chapter hanya dapat mengakses/mengelola IDP talent dalam tanggung jawab chapter-nya — cakupan diturunkan otomatis dari posisi Employee yang terhubung ke user melalui kepemilikan chapter pada Role (FR-22–FR-23), bukan definisi peran. Validasi ditegakkan di sisi server.
-- **FR-17**: Setiap perubahan data inti (master data, karyawan, akun user, assignment, IDP, evaluasi performa, profil CV) harus tercatat jejak auditnya; hanya Admin yang dapat melihat jejak audit tersebut.
+- **FR-17**: Setiap perubahan data inti (master data, karyawan, akun user, assignment, IDP, evaluasi performa & template evaluasi, profil CV) harus tercatat jejak auditnya; hanya Admin yang dapat melihat jejak audit tersebut.
 
 **Master data (Admin)**
 
@@ -178,14 +179,15 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 
 **Evaluasi performa (Chapter & Talent)**
 
-- **FR-25**: Sistem harus menyediakan periode evaluasi performa yang dikelola Admin (tambah/ubah/nonaktifkan), berisi nama dan tanggal mulai–selesai. Periode evaluasi yang masih memiliki evaluasi terkait tidak dapat dihapus.
-- **FR-26**: Chapter harus dapat membuat dan mengelola evaluasi performa untuk tiap talent dalam tanggung jawab chapter-nya (FR-23) per periode evaluasi — satu evaluasi per talent per periode — berisi: skala penilaian *[NEEDS CLARIFICATION: skala penilaian performa — usulan: 5 tingkat (Sangat Kurang → Sangat Baik), atau skor 1–5?]*, ringkasan pencapaian, dan catatan pengembangan. Form evaluasi menampilkan konteks talent: assignment aktif, IDP berjalan beserta progresnya *[NEEDS CLARIFICATION: apakah Talent perlu mengisi self-assessment sebelum Chapter menilai, atau MVP cukup penilaian Chapter-only?]*.
+- **FR-25**: Sistem harus menyediakan periode evaluasi performa yang dikelola Admin (tambah/ubah/nonaktifkan), berisi nama dan tanggal mulai–selesai. Setiap periode terpinned ke satu template evaluasi saat dibuat. Periode evaluasi yang masih memiliki evaluasi terkait tidak dapat dihapus.
+- **FR-26**: Chapter harus dapat membuat dan mengelola evaluasi performa untuk tiap talent dalam tanggung jawab chapter-nya (FR-23) per periode evaluasi — satu evaluasi per talent per periode. Form evaluasi mengikuti template periode terkait: jawaban per kriteria sesuai tipe jawabannya, ditambah ringkasan pencapaian dan catatan pengembangan. Form juga menampilkan konteks talent: assignment aktif dan IDP berjalan beserta progresnya. Evaluasi MVP hanya oleh Chapter (tanpa self-assessment).
 - **FR-27**: Talent hanya dapat melihat evaluasi miliknya sendiri (hanya baca); Chapter dapat melihat evaluasi seluruh talent dalam tanggung jawabnya; peran lain tidak dapat mengakses evaluasi.
 - **FR-28**: Evaluasi harus dapat direvisi oleh Chapter sebelum periode ditutup; riwayat perubahan tetap tersimpan. Periode yang berakhir dengan talent belum dinilai ditandai pada daftar evaluasi Chapter.
+- **FR-31**: Admin harus dapat mengelola template evaluasi performa (framework penilaian): daftar kriteria dengan tipe jawaban yang dipilih dari set fixed — skala numerik 1–5, skala numerik 1–10, pilihan ya/tidak, teks bebas — beserta urutannya. Perubahan template setelah periode dibuat tidak memengaruhi periode yang sudah berjalan maupun evaluasi yang sudah tersimpan; perubahan hanya berlaku untuk periode berikutnya.
 
 **Dashboard (semua peran)**
 
-- **FR-29**: Sistem harus menyediakan dashboard per peran dengan cakupan data yang sama dengan hak akses peran masing-masing (FR-23, FR-27): Chapter melihat ringkasan talent dalam tanggung jawabnya, Talent melihat ringkasan miliknya, Operation melihat ringkasan data karyawan, Admin melihat ringkasan administrasi & master data. Rincian widget mengikuti User Story 8. *[NEEDS CLARIFICATION: konfirmasi atau kurangi daftar widget MVP per peran sebagaimana tertulis di User Story 8]*
+- **FR-29**: Sistem harus menyediakan dashboard per peran dengan cakupan data yang sama dengan hak akses peran masing-masing (FR-23, FR-27): Chapter melihat ringkasan talent dalam tanggung jawabnya, Talent melihat ringkasan miliknya, Operation melihat ringkasan data karyawan, Admin melihat ringkasan administrasi & master data. Rincian widget mengikuti User Story 8 (dikonfirmasi untuk MVP).
 - **FR-30**: Angka pada dashboard harus konsisten dengan data terbaru tanpa langkah sinkronisasi manual; dashboard adalah tampilan agregat turunan dan tidak menyimpan data baru.
 
 ### Non-Functional Requirements
@@ -207,8 +209,9 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 - **DevelopmentAction**: aksi pengembangan dalam sebuah IDP (deskripsi, metode — penugasan project, mentoring, training, exposure lintas fungsi, atau belajar mandiri — status to do/in progress/completed, tenggat).
 - **ReviewLog**: catatan check-in review & monitoring antara Chapter dan talent (tanggal, ringkasan hasil, tindak lanjut).
 - **CVProfile**: profil CV milik talent, terdiri atas ringkasan dan sub-data multi-entri (pendidikan, sertifikasi, keahlian) serta pengalaman kerja yang diturunkan otomatis dari riwayat assignment.
-- **EvaluationPeriod**: periode evaluasi performa (nama, tanggal mulai–selesai), dikelola Admin; mengikuti ritme kuartalan secara default.
-- **PerformanceEvaluation**: penilaian performa satu talent untuk satu periode evaluasi (satu per talent per periode), dibuat dan direvisi Chapter; berisi skala penilaian, ringkasan pencapaian, catatan pengembangan; Talent hanya-baca.
+- **EvaluationPeriod**: periode evaluasi performa (nama, tanggal mulai–selesai, template evaluasi terpinned), dikelola Admin; mengikuti ritme kuartalan secara default.
+- **EvaluationTemplate**: framework penilaian yang dikelola Admin — daftar kriteria, masing-masing dengan tipe jawaban dari set fixed (skala 1–5, skala 1–10, ya/tidak, teks bebas) dan urutan; terpinned ke periode evaluasi saat periode dibuat.
+- **PerformanceEvaluation**: penilaian performa satu talent untuk satu periode evaluasi (satu per talent per periode), dibuat dan direvisi Chapter; jawaban per kriteria mengikuti template periode, ditambah ringkasan pencapaian dan catatan pengembangan; Talent hanya-baca.
 - **Dashboard**: tampilan agregat yang sepenuhnya diturunkan dari entitas lain — tidak menyimpan data baru; cakupan datanya mengikuti hak akses peran.
 
 ## Success Criteria
@@ -233,6 +236,7 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 - Struktur IDP mengikuti tujuh komponen sesuai artikel Mekari Talenta "Individual Development Plan: A Framework for Employee Growth".
 - Bahasa antarmuka: Indonesia.
 - Periode evaluasi performa mengikuti ritme kuartalan secara default (selaras periode IDP), dapat disesuaikan lewat periode yang dikelola Admin.
+- Framework penilaian performa belum ditetapkan jangka panjang — karena itu template evaluasi dikonfigurasikan Admin (kriteria + tipe jawaban fixed) dan terpinned per periode: perubahan framework menjadi operasi data, bukan perubahan kode.
 
 ## Out of Scope
 
@@ -244,6 +248,8 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 - Perencanaan suksesi dan rekomendasi promosi otomatis — IDP hanya mencatat rencana dan progres pengembangan.
 - Penetapan kenaikan jabatan/kompensasi berdasarkan hasil evaluasi — evaluasi performa hanya mencatat penilaian, tidak memicu keputusan SDM otomatis.
 - Ekspor laporan (PDF/Excel) dari dashboard dan evaluasi.
+- Self-assessment oleh Talent pada evaluasi performa — MVP penilaian Chapter-only; dapat ditambahkan belakangan.
+- Import template evaluasi dari file (Excel/CSV) — template didefinisikan melalui form Admin; import file dapat ditambahkan belakangan.
 
 ## Dependencies
 
