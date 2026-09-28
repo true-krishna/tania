@@ -6,12 +6,13 @@
 **Revisi**: 2026-09-27 (clarify 2) — Jawaban klarifikasi diterapkan: periode default IDP = kuartalan; daftar IDP Chapter terbatas pada talent dalam chapter-nya; bentuk detail assignment ditunda (akan dijelaskan berikutnya). Ditambahkan peran Admin dengan Master Data (Unit, Project, Role; Project bergantung pada Unit) dan pendekatan RBAC chapter-as-data.
 **Revisi**: 2026-09-27 (clarify 3) — Assignment project merujuk Master Data Project; divisi/posisi karyawan merujuk Master Data Unit/Role (bukan isian bebas); Master Data Role = peran jabatan/fungsional standar perusahaan; Admin mengelola akun user & penetapan peran akses dalam aplikasi; RBAC chapter-as-data disetujui.
 **Revisi**: 2026-09-27 (clarify 4) — Talent dapat melihat riwayat assignment miliknya, dan riwayat tersebut menjadi sumber data pengalaman kerja pada CV (bukan input manual); Chapter dapat membaca CV talent dalam chapter-nya (opsi A); jejak audit hanya dapat dilihat Admin.
-**Revisi**: 2026-09-27 (clarify 5, walkthrough) — Perbaikan koherensi hasil walkthrough: cakupan chapter ditegakkan pada akses IDP oleh Talent (US5); siklus status IDP (berjalan → perlu review → selesai) dan status assignment (berjalan/selesai) didefinisikan; satu sumber kebenaran atribut chapter (pada Employee, diwarisi cakupan user); cakupan jejak audit diperluas ke akun user & profil CV.
+**Revisi**: 2026-09-27 (clarify 5, walkthrough) — Perbaikan koherensi hasil walkthrough: cakupan chapter ditegakkan pada akses IDP oleh Talent (US5); siklus status IDP (berjalan → perlu review → selesai) dan status assignment (berjalan/selesai) didefinisikan; satu sumber kebenaran atribut chapter (pada Employee, diwarisi cakupan user); cakupan jejak audit diperluas ke akun user & profil CV. *(Catatan koreksi: sejak clarify 6 model ini disempurnakan — chapter tidak disimpan pada Employee, melainkan diturunkan dari posisi → Role → chapter pemilik.)*
 **Revisi**: 2026-09-27 (clarify 6) — Model tanggung jawab chapter: setiap Master Data Role dimiliki tepat satu chapter atau tidak sama sekali (dikelola Admin); chapter talent, keter-assign-an, dan cakupan otorisasi Chapter diturunkan otomatis dari posisi → Role → chapter pemilik (tanpa atribut Unit Origin/Unit Assignment eksplisit). Karyawan dengan Role tanpa chapter tetap tercatat di Database Karyawan sebagai pencatatan, tetapi tidak dapat di-assign dan bukan kandidat IDP.
 **Revisi**: 2026-09-27 (clarify 7) — Fleksibilitas konsolidasi: daftar chapter menjadi Master Data Chapter yang dikelola Admin (FR-24, nilai awal Product/Engineer/Design), sehingga chapter berjumlah bebas (1, 3, atau N) dan konsolidasi menjadi "Chapter Digital Talents" adalah operasi data murni — tanpa perubahan peran RBAC dan tanpa migrasi data karyawan.
 **Revisi**: 2026-09-27 (clarify 8) — Keputusan scope MVP: modul Performance Evaluation dan Dashboard masuk ke dalam fitur ini untuk memperkuat alur end-to-end (assignment → penilaian performa → pengembangan IDP → pemantauan periodik). Ditambahkan User Story 7–8, FR-25–FR-30, entitas EvaluationPeriod & PerformanceEvaluation; skala penilaian, self-assessment, dan cakupan widget dashboard ditandai NEEDS CLARIFICATION.
 **Revisi**: 2026-09-27 (clarify 9) — Evaluasi performa dibuat dapat dikonfigurasi: Admin mengelola template evaluasi (kriteria + tipe jawaban dari set fixed) yang terpinned ke periode evaluasi (FR-31), sehingga perubahan framework penilaian tidak mengubah kode; self-assessment di luar MVP (Chapter-only); widget dashboard MVP dikonfirmasi sesuai User Story 8.
 **Revisi**: 2026-09-27 (clarify 10, walkthrough 2) — Perbaikan koherensi hasil walkthrough atas modul baru: siklus hidup periode evaluasi didefinisikan (berjalan → berakhir otomatis & terkunci saat melewati tanggal selesai); User Story 6 diperluas mencakup pengelolaan Master Data Chapter, periode evaluasi, dan template evaluasi oleh Admin; FR-16 melengkapi aturan akses evaluasi performa.
+**Revisi**: 2026-09-28 (clarify 11, remediasi evaluasi PM) — Remediasi atas evaluasi agent Product Manager: rantai evaluasi → IDP ditetapkan eksplisit (FR-32 + US7 skenario 6); peran pada assignment wajib merujuk Master Data Role (FR-05, asumsi dicabut); integritas periode evaluasi ditegaskan (anti-overlap satu periode berjalan, periode dengan evaluasi tak dapat dinonaktifkan/dihapus); US2 skenario 4 selaras cakupan chapter; catatan historis clarify 5 dikoreksi; widget Admin "status master data" diuji sebagai jumlah aktif/nonaktif per jenis.
 **Status**: Draft
 **Input**: /speckit-specify Buat aplikasi employee (digital talent) management dengan target user Chapter sebagai pengelola data assignment dan data talent competency, Operation sebagai pengelola yang memasukkan data karyawan, dan Talent yang dapat membangun profil dengan input data CV dan melihat competency matrix.
 
@@ -43,7 +44,7 @@ Sebagai **Chapter**, saya dapat membuat dan mengelola assignment talent sehingga
 1. **Given** Chapter sudah login dan talent aktif dalam chapter-nya tersedia, **When** membuat assignment (talent, project dari Master Data Project, peran, periode), **Then** assignment tersimpan dan muncul pada riwayat talent.
 2. **Given** assignment aktif berjalan, **When** Chapter mengubah atau mengakhirinya (isi tanggal selesai), **Then** riwayat assignment memperlihatkan versi terbaru tanpa menghapus history.
 3. **Given** Chapter membuka detail seorang talent, **When** melihat daftar assignment, **Then** terlihat semua assignment talent tersebut beserta periodenya.
-4. **Given** Chapter membuka daftar assignment per project, **When** memilih project, **Then** terlihat semua talent yang ter-assign beserta perannya.
+4. **Given** Chapter membuka daftar assignment per project, **When** memilih project, **Then** terlihat semua talent dalam cakupan chapter-nya yang ter-assign pada project tersebut beserta perannya.
 
 ### User Story 3 — Chapter mengelola IDP talent (Priority: P1)
 
@@ -108,6 +109,7 @@ Sebagai **Chapter**, saya dapat menilai performa talent dalam tanggung jawab cha
 3. **Given** Chapter merevisi evaluasi selama periode terkait masih berjalan, **When** disimpan, **Then** evaluasi menampilkan versi terbaru dan riwayat perubahan tetap tersimpan.
 4. **Given** Talent membuka halaman evaluasinya, **Then** Talent melihat evaluasi miliknya (hanya baca); Talent lain tidak dapat melihat evaluasi orang lain.
 5. **Given** periode evaluasi berakhir dengan talent yang belum dinilai, **Then** talent tersebut ditandai belum dinilai pada daftar evaluasi Chapter.
+6. **Given** periode evaluasi telah berakhir dan evaluasi seorang talent menunjukkan kebutuhan pengembangan, **When** Chapter menindaklanjuti hasilnya, **Then** Chapter membuat IDP baru atau merevisi IDP berjalan talent tersebut, dan tindak lanjut tercatat pada IDP.
 
 ### User Story 8 — Semua peran memantau melalui dashboard (Priority: P2)
 
@@ -118,7 +120,7 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 1. **Given** Chapter login, **When** membuka dashboard, **Then** tampil ringkasan talent dalam tanggung jawabnya: distribusi status IDP, progres aksi pengembangan, talent belum ter-assign, IDP perlu review, dan status evaluasi periode berjalan.
 2. **Given** Talent login, **When** membuka dashboard, **Then** tampil ringkasan miliknya: assignment aktif, progres IDP (aksi per status), evaluasi terakhir, dan tenggat aksi pengembangan.
 3. **Given** Operation login, **When** membuka dashboard, **Then** tampil ringkasan data karyawan: total karyawan aktif, distribusi divisi (Unit), karyawan non-assignable, dan perubahan data terbaru.
-4. **Given** Admin login, **When** membuka dashboard, **Then** tampil ringkasan administrasi: distribusi talent per chapter, jumlah akun per peran akses, akun nonaktif, dan status master data.
+4. **Given** Admin login, **When** membuka dashboard, **Then** tampil ringkasan administrasi: distribusi talent per chapter, jumlah akun per peran akses, akun nonaktif, dan jumlah master data aktif/nonaktif per jenis (Unit, Project, Role, Chapter, template & periode evaluasi).
 5. **Given** data inti berubah (mis. Talent memperbarui status aksi), **When** dashboard dibuka, **Then** angka yang tampil konsisten dengan data terbaru tanpa sinkronisasi manual.
 
 ### Edge Cases
@@ -147,7 +149,7 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 
 **Assignment (Chapter)**
 
-- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran, periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project. Status assignment: berjalan / selesai. Chapter hanya dapat meng-assign talent yang berada dalam tanggung jawab chapter-nya (FR-23); kandidat talent pada form assignment hanya talent aktif dan assignable dalam chapter-nya.
+- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran (wajib merujuk Master Data Role), periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project. Status assignment: berjalan / selesai. Chapter hanya dapat meng-assign talent yang berada dalam tanggung jawab chapter-nya (FR-23); kandidat talent pada form assignment hanya talent aktif dan assignable dalam chapter-nya.
 - **FR-06**: Chapter harus dapat mengubah dan mengakhiri assignment; mengakhiri berarti mengisi tanggal selesai dan mengubah status menjadi selesai. Riwayat assignment talent tetap tersimpan.
 - **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project — keduanya terbatas pada talent dalam tanggung jawab chapter-nya. Talent dapat melihat riwayat assignment miliknya sendiri (hanya baca); riwayat ini menjadi sumber data pengalaman kerja pada CV-nya.
 
@@ -182,11 +184,12 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 
 **Evaluasi performa (Chapter & Talent)**
 
-- **FR-25**: Sistem harus menyediakan periode evaluasi performa yang dikelola Admin (tambah/ubah/nonaktifkan), berisi nama dan tanggal mulai–selesai. Setiap periode terpinned ke satu template evaluasi saat dibuat. Periode berjalan ketika tanggal saat ini berada dalam rentangnya, dan otomatis berakhir (terkunci, menjadi hanya-baca) setelah melewati tanggal selesai. Periode evaluasi yang masih memiliki evaluasi terkait tidak dapat dihapus.
+- **FR-25**: Sistem harus menyediakan periode evaluasi performa yang dikelola Admin (tambah/ubah/nonaktifkan), berisi nama dan tanggal mulai–selesai. Setiap periode terpinned ke satu template evaluasi saat dibuat. Periode berjalan ketika tanggal saat ini berada dalam rentangnya, dan otomatis berakhir (terkunci, menjadi hanya-baca) setelah melewati tanggal selesai. Rentang tanggal periode tidak boleh tumpang tindih dengan periode lain — hanya ada satu periode berjalan pada satu waktu. Periode yang sudah memiliki evaluasi tidak dapat dinonaktifkan/dihapus; penonaktifan hanya menghentikan pemakaian periode untuk evaluasi baru.
 - **FR-26**: Chapter harus dapat membuat dan mengelola evaluasi performa untuk tiap talent dalam tanggung jawab chapter-nya (FR-23) per periode evaluasi — satu evaluasi per talent per periode. Form evaluasi mengikuti template periode terkait: jawaban per kriteria sesuai tipe jawabannya, ditambah ringkasan pencapaian dan catatan pengembangan. Form juga menampilkan konteks talent: assignment aktif dan IDP berjalan beserta progresnya. Evaluasi MVP hanya oleh Chapter (tanpa self-assessment).
 - **FR-27**: Talent hanya dapat melihat evaluasi miliknya sendiri (hanya baca); Chapter dapat melihat evaluasi seluruh talent dalam tanggung jawabnya; peran lain tidak dapat mengakses evaluasi.
 - **FR-28**: Evaluasi harus dapat direvisi oleh Chapter selama periode terkait masih berjalan; setelah periode berakhir, evaluasi menjadi hanya-baca. Riwayat perubahan tetap tersimpan. Periode yang berakhir dengan talent belum dinilai ditandai pada daftar evaluasi Chapter.
 - **FR-31**: Admin harus dapat mengelola template evaluasi performa (framework penilaian): daftar kriteria dengan tipe jawaban yang dipilih dari set fixed — skala numerik 1–5, skala numerik 1–10, pilihan ya/tidak, teks bebas — beserta urutannya. Perubahan template setelah periode dibuat tidak memengaruhi periode yang sudah berjalan maupun evaluasi yang sudah tersimpan; perubahan hanya berlaku untuk periode berikutnya.
+- **FR-32**: Hasil evaluasi harus ditindaklanjuti oleh Chapter: setelah periode evaluasi berakhir, Chapter meninjau hasil evaluasi setiap talent dalam tanggung jawabnya; bila hasil menunjukkan kebutuhan pengembangan, Chapter membuat IDP baru atau merevisi IDP berjalan talent tersebut (FR-08, FR-10). Rantai ini menuntaskan alur assignment → penilaian performa → pengembangan.
 
 **Dashboard (semua peran)**
 
@@ -232,7 +235,7 @@ Sebagai pengguna aplikasi, saya dapat melihat dashboard sesuai peran saya sehing
 - Satu user = satu employee; pengelolaan akun user & penetapan peran akses dilakukan Admin di dalam aplikasi (klarifikasi 2026-09-27).
 - Chapter diperlakukan sebagai data konfigurasi (Master Data Chapter, FR-24), bukan peran RBAC — pendekatan ini disetujui stakeholder. Kepemilikan chapter tersimpan pada Master Data Role dan menurunkan segala hal lain (chapter talent, keter-assign-an, cakupan akses Chapter); konsolidasi chapter — termasuk melebur menjadi satu "Chapter Digital Talents" — cukup memindahkan kepemilikan Role tanpa mengubah definisi peran maupun data karyawan.
 - Atribut Unit Origin & Unit Assignment pada assignment tidak digunakan: keduanya dapat diturunkan (asal talent = chapter pemilik Role posisinya; unit project = Unit pada Master Data Project), sehingga atribut eksplisit berisiko tidak sinkron. Bila tetap diinginkan sebagai kolom tersimpan, dapat ditambahkan kembali.
-- Peran pada assignment diasumsikan juga merujuk Master Data Role (referensi jabatan standar); dapat disesuaikan bila peran assignment dimaksudkan berbeda.
+- Peran pada assignment merujuk Master Data Role (referensi jabatan standar) — ditetapkan eksplisit pada FR-05 menyusul evaluasi PM (2026-09-28), bukan lagi asumsi.
 - CV diinput sebagai form terstruktur — bukan upload file PDF — sesuai frasa "input data CV".
 - Bagian pengalaman kerja pada CV bukan input manual: diturunkan otomatis dari riwayat assignment talent (klarifikasi 2026-09-27).
 - Chapter bertindak sebagai manajer pengembangan talent: IDP dibuat, direview, dan diperbarui oleh Chapter; Talent berpartisipasi dengan memperbarui progres aksi pengembangan miliknya.
