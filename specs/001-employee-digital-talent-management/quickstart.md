@@ -98,9 +98,11 @@ GraphQL (`plan.md` §Open Items O4).
 
 ```text
 specs/001-employee-digital-talent-management/
-├── spec.md · plan.md · research.md · data-model.md · quickstart.md
+├── spec.md · plan.md · research.md · data-model.md · quickstart.md · tasks.md
 └── contracts/{schema.graphql, api-conventions.md, operations.md}
 ```
 
-`tasks.md` **tidak** ada di repo ini — urutan task ada di `tania-backend/.../tasks.md` (opsi C,
-lihat `plan.md` §Summary).
+`tasks.md` **ada di repo ini** (22 task UI) dan dijalankan lewat `/speckit.implement` dari root
+repo ini. Daftar backend terpisah (108 task) ada di `tania-backend/specs/.../tasks.md`; **ID task
+dipertahankan sama di dua daftar**, jadi nomor di tiap daftar tidak berurutan penuh — pemetaan
+per fase ada di `tasks.md` §Pemetaan ID.
