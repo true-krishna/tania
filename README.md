@@ -97,20 +97,29 @@ cp .env.example .env.local   # then point the URLs at your API
 npm run dev
 ```
 
-Open http://localhost:3000 — `/` redirects to `/talents`.
+Open http://localhost:3000 — `/` redirects to `/dashboard` (authenticated shell);
+unauthenticated visitors are sent to `/login`. In dev with
+`NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` the guard treats the user as logged in with
+`NEXT_PUBLIC_DEFAULT_ACCESS_ROLE` (plan.md R3).
 
 ### Environment variables
 
 | Variable                    | Used by                                  | Description                                       |
 | --------------------------- | ---------------------------------------- | ------------------------------------------------- |
-| `TANIA_API_URL`             | Server-rendered pages                    | Base URL of the external Talent Profile API       |
-| `NEXT_PUBLIC_TANIA_API_URL` | Client-side "Add User" form              | Same API, accessible from the browser (CORS)      |
+| `TANIA_API_URL`             | Server-rendered Talent Profile pages (REST, legacy) | Base URL of the external Talent Profile API |
+| `NEXT_PUBLIC_TANIA_API_URL` | Client-side "Add User" form (REST, legacy) | Same API, accessible from the browser (CORS) |
+| `NEXT_PUBLIC_GRAPHQL_URL`   | Apollo Client (browser)                  | GraphQL endpoint of the Tania backend              |
+| `NEXT_PUBLIC_AUTH_LOCAL_ONLY` | Auth guard (dev mode)                 | `1` = skip login; unset/`0` = normal mode          |
+| `NEXT_PUBLIC_DEFAULT_ACCESS_ROLE` | Auth guard (dev mode)            | Default role when `AUTH_LOCAL_ONLY=1`              |
 
 Example:
 
 ```bash
 TANIA_API_URL=http://localhost:8080
 NEXT_PUBLIC_TANIA_API_URL=http://localhost:8080
+NEXT_PUBLIC_GRAPHQL_URL=http://localhost:8080/query
+NEXT_PUBLIC_AUTH_LOCAL_ONLY=0
+NEXT_PUBLIC_DEFAULT_ACCESS_ROLE=TALENT
 ```
 
 ## API contract
@@ -141,6 +150,56 @@ The frontend expects the backend to expose:
   createdAt: string;
 }
 ```
+
+## Data layer (Apollo Client)
+
+The primary data path is **GraphQL via Apollo Client** (plan.md §3.2). The
+Talent Profile REST client above is legacy and deprecated gradually (plan.md
+R2); new modules use Apollo.
+
+### GraphQL codegen
+
+The schema source of truth is
+`specs/001-employee-digital-talent-management/contracts/schema.graphql`.
+Generated output lives in `src/generated/graphql/` and is **committed** — never
+edit it by hand, regenerate after contract changes:
+
+```bash
+npm run codegen        # regenerate src/generated/graphql/
+npm run generate:check # fail CI if the generated code is stale
+```
+
+Operations are written next to their feature as `.graphql` files under
+`src/features/**`; codegen turns them into typed documents (`gql()`) and hooks.
+
+### Auth guard
+
+`src/lib/auth/` holds token storage (in-memory access token), role helpers and
+the route guard. Routes under `src/app/(app)/*` are wrapped in `AuthGuard`
+(redirects unauthenticated users to `/login`; hides actions by role). Final
+authorization is enforced server-side (FR-16) — this layer only de-clutters the
+UI. SSO (Entra/SAML) lands in W8; local login is wired in W0 (plan.md R3).
+
+### Folder structure (plan.md §6.2)
+
+```
+src/
+├── app/(auth)/login/      # login lokal (W0); SSO menyusul (W8)
+├── app/(app)/dashboard/   # shell terautentikasi; modul fitur W1+ menambah rute
+├── components/            # UI reusable (selaras Tailwind)
+├── features/              # modul fitur (§5.2): hooks + komponen + query/mutation
+├── generated/graphql/     # hasil GraphQL codegen (committed)
+├── lib/apollo/            # Apollo Client, link auth, cache policy
+├── lib/auth/              # token storage, guard peran, AUTH_LOCAL_ONLY
+├── lib/api.ts             # klien REST lama (dipensiunkan bertahap)
+└── test/                  # setup Vitest (setup.ts)
+```
+
+### Testing
+
+Unit/component tests use **Vitest + React Testing Library**. Component tests
+run in jsdom via the `// @vitest-environment jsdom` pragma; Apollo queries are
+tested with `MockedProvider` (plan.md §10.2).
 
 ## Spec-Driven Development
 
@@ -189,10 +248,12 @@ installed for this project.
 ## Scripts
 
 ```bash
-npm run dev        # development server
-npm run build      # production build
-npm start          # serve production build
-npm run lint       # eslint
-npm run typecheck  # tsc --noEmit
-npm test           # vitest run
+npm run dev          # development server
+npm run build        # production build
+npm start            # serve production build
+npm run lint         # eslint
+npm run typecheck    # tsc --noEmit
+npm test             # vitest run
+npm run codegen      # regenerate GraphQL types from the schema contract
+npm run generate:check # verify generated code is up to date (CI gate)
 ```

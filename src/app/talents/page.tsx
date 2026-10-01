@@ -32,7 +32,7 @@ export default async function TalentsPage({
     managers = all;
     profiles = filtered;
   } catch (err) {
-    error = err instanceof Error ? err.message : "Gagal mengambil data";
+    error = err instanceof Error ? err.message : "Failed to load data";
   }
 
   return (
@@ -41,8 +41,8 @@ export default async function TalentsPage({
         <p className="text-sm font-medium text-indigo-600">Tania</p>
         <h1 className="text-2xl font-bold text-zinc-900">Talent Profiles</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Profil otomatis terbentuk saat user dibuat — identitas, role, grade,
-          squad, lokasi, status, dan manager.
+          Profiles are created automatically when a user is created — identity,
+          role, grade, squad, location, status, and manager.
         </p>
       </header>
 
@@ -59,7 +59,7 @@ export default async function TalentsPage({
           type="search"
           name="q"
           defaultValue={query}
-          placeholder="Cari nama, email, role, grade, squad, lokasi, status, manager…"
+          placeholder="Search name, email, role, grade, squad, location, status, manager…"
           className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
         <button
@@ -80,15 +80,15 @@ export default async function TalentsPage({
 
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
-          <p className="font-medium">Tidak dapat memuat data talent.</p>
+          <p className="font-medium">Could not load talent data.</p>
           <p className="mt-1">{error}</p>
         </div>
       ) : (
         <>
           <p className="mb-3 text-sm text-zinc-500">
             {query
-              ? `${profiles.length} hasil untuk “${query}”`
-              : `Menampilkan semua ${profiles.length} profil`}{" "}
+              ? `${profiles.length} result(s) for “${query}”`
+              : `Showing all ${profiles.length} profiles`}{" "}
             · total {managers.length}
           </p>
 
@@ -153,7 +153,7 @@ export default async function TalentsPage({
                       colSpan={9}
                       className="px-4 py-12 text-center text-zinc-500"
                     >
-                      Tidak ada profil yang cocok dengan pencarian “{query}”.
+                      No profiles match the search “{query}”.
                     </td>
                   </tr>
                 ) : null}
