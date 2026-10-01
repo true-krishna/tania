@@ -1,6 +1,6 @@
 # Tania Constitution
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-01
+**Version**: 1.1.1 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-01
 
 ## Preamble
 
@@ -54,9 +54,10 @@ Errors are handled explicitly — no swallowed errors. Logs are structured, corr
 
 ## Additional Constraints
 
-- **Frontend stack (pinned 2026-10-01, amendment 1.1.0)**: React (via Next.js App Router, `tania-dashboard` repository), TypeScript, TailwindCSS, Apollo Client for GraphQL (layered beside the legacy REST client during migration), Vitest + React Testing Library for tests, eslint + `tsc --noEmit` for static checks. GraphQL codegen output lives in `src/generated/graphql/`; generated code is never hand-edited. The API schema (`specs/001-employee-digital-talent-management/contracts/schema.graphql`) is the single source of truth for the frontend's queries.
-- **Backend stack (declared)**: Go clean architecture + PostgreSQL 16 + GraphQL (gqlgen) + Redis + Kafka, tracked in the `tania-backend` repository, not this one.
-- **API contract**: the GraphQL schema is the single source of truth for the API; generated clients (`src/generated/graphql/`) are never hand-edited.
+- **Frontend stack (pinned 2026-10-01, amendment 1.1.0)**: React (via Next.js App Router, `tania-dashboard` repository), TypeScript, TailwindCSS, Apollo Client for GraphQL (layered beside the legacy REST client during migration), Vitest + React Testing Library for tests, eslint + `tsc --noEmit` for static checks. GraphQL codegen output lives in `src/generated/graphql/`; generated code is never hand-edited.
+  - **Status (2026-10-01)**: the repo currently ships Next.js (App Router), React, TypeScript, TailwindCSS, and Vitest only — Apollo Client, React Testing Library, and the `src/generated/graphql/` codegen directory are **not installed yet**; adding them is part of the migration slice, not a re-decision of the pinned stack.
+- **Backend stack (declared)**: Go clean architecture + PostgreSQL 16 + GraphQL (gqlgen) + Redis + JWT + Docker Compose, tracked in the `tania-backend` repository, not this one. (Corrected in amendment 1.1.1: the backend stack pinned at amendment 1.1.0 of that repository does **not** include Kafka; keep this line in sync with `.specify/memory/constitution.md` there.)
+- **API contract**: the GraphQL schema is the single source of truth for the API; generated clients (`src/generated/graphql/`) are never hand-edited. **Source-of-truth split (clarified in 1.1.1)**: the served schema is `graph/schema.graphqls` in `tania-backend` — frontend codegen targets that schema, because it is what the running API actually exposes; `specs/001-employee-digital-talent-management/contracts/schema.graphql` is the design contract, mirrored byte-for-byte into both repositories, which the served schema converges to. When the contract changes, re-copy the mirror into both repos and regenerate; never let the two drift.
 - **Reproducibility**: a fresh clone builds and tests with documented commands only (`npm install && npm run typecheck && npm test`); local-only steps are defects.
 
 ## Governance
@@ -71,5 +72,6 @@ Errors are handled explicitly — no swallowed errors. Logs are structured, corr
 |---|---|---|
 | 1.0.0 | 2026-09-25 | Initial ratification: design, security, and technical pillars. |
 | 1.1.0 | 2026-10-01 | Pinned the frontend stack during project initiation (Technical, Additional Constraints): Next.js App Router + React + TypeScript + TailwindCSS + Apollo Client, Vitest/RTL, eslint + `tsc --noEmit`; GraphQL schema as the single source of truth. |
+| 1.1.1 | 2026-10-01 | Clarification (Technical, Additional Constraints): corrected the declared backend stack (Kafka is not part of the pinned backend stack — that repository's amendment 1.1.0 has no message broker), recorded which parts of the pinned frontend stack are actually installed, and split the API schema source of truth (served schema `graph/schema.graphqls` in `tania-backend` is what codegen targets; the mirrored design contract converges to it). |
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-01
+**Version**: 1.1.1 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-01
