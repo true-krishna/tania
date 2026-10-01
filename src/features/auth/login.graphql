@@ -1,0 +1,13 @@
+mutation Login($input: LocalLoginInput!) {
+  login(input: $input) {
+    accessToken
+    accessTokenExpiresAt
+    user {
+      id
+      email
+      fullName
+      accessRole
+      status
+    }
+  }
+}
