@@ -57,7 +57,8 @@ Paket integrasi Apollo untuk App Router/RSC dipilih pada task pertama; kandidat:
 token sesi di memori dan cache normalisasi Apollo (in-memory).
 
 **Testing**: Vitest + React Testing Library + Apollo `MockedProvider`; test guard peran;
-E2E Playwright (opsional, menyusul). Perluasan `vitest.config.ts` wajib: `environment: "jsdom"`
+E2E Playwright **wajib** untuk jalur kritis (konstitusi §VII), dikerjakan pada F8 (T129).
+Perluasan `vitest.config.ts` wajib: `environment: "jsdom"`
 dan `include` mencakup `src/**/*.test.tsx` (kini hanya `.test.ts` dengan environment `node`).
 
 **Target Platform**: browser modern desktop-first, responsif; UI berbahasa Indonesia
@@ -88,7 +89,7 @@ Indonesian copy. Aksesibilitas dasar (label form, fokus, kontras Tailwind).
 | **II. Data minimization** — field diklasifikasi; tanpa PII di log/trace/URL | Frontend hanya mengirim field yang dibutuhkan operasi GraphQL masing-masing layar; tidak ada PII pada query string selain kata kunci pencarian yang sudah jadi bagian kontrak API | **Lulus** |
 | **V. Smallest change** — tanpa fitur spekulatif | Hanya layar/operasi yang ada di `spec.md`; tidak menambah state manager, i18n runtime, atau design system baru | **Lulus** |
 | **VI. Quality by machines** — lint/typecheck/test di CI, nol warning | `npm run lint` + `npm run typecheck` + `npm test` (sudah ada) dipertahankan; ditambah target codegen bersih | **Lulus** |
-| **VII. Testing non-negotiable** — unit, contract, e2e | Unit (Vitest), kontrak (test query/mutation terhadap SDL + `MockedProvider`), guard test per peran, E2E opsional | **Lulus** (rincian §Testing) |
+| **VII. Testing non-negotiable** — unit, contract, e2e | Unit (Vitest), kontrak (test query/mutation terhadap SDL + `MockedProvider`), guard test per peran, **E2E jalur kritis wajib** (Playwright, T129) | **Lulus** (rincian §Testing) |
 | **VIII. Boundaries & dependency hygiene** — UI → API/service → data; deps minimal | Akses GraphQL hanya lewat `src/lib/apollo/` + hook per fitur di `src/features/*`; komponen tidak memanggil klien langsung; setiap dependensi baru dijustifikasi di MR | **Lulus** |
 | **IX. Fail visibly** — error eksplisit, tanpa swallowed error | Setiap operasi menangani state loading/error/empty secara eksplisit; `UNAUTHENTICATED` → logout terkendali; tidak ada catch kosong | **Lulus** |
 | **Additional Constraints — frontend stack pinned 1.1.0** | Apollo Client, RTL, codegen `src/generated/graphql/` **wajib**; saat ini belum terpasang | **Gap terencana** (bukan pelanggaran): ketiganya menjadi prasyarat task frontend pertama |
@@ -231,7 +232,7 @@ Legacy `/talents/page.tsx` dipertahankan sampai port GraphQL selesai, lalu dihap
 | Komponen | Render tabel/form/empty/error state dengan `MockedProvider` | Vitest + RTL |
 | Kontrak | Operasi GraphQL yang dikirim cocok dengan SDL ter-generate; tipe hasil codegen dipakai apa adanya | Vitest + snapshot operasi |
 | Guard peran | Render rute untuk tiap peran: menu/aksi tersembunyi, `FORBIDDEN` ditampilkan benar | Vitest + RTL |
-| E2E (opsional) | Alur kritis US1→US3→US7→IDP pada stack `docker-compose` | Playwright (menyusul) |
+| E2E | Alur kritis lintas stack pada `docker-compose`: login 4 peran → tambah karyawan → assignment → evaluasi → IDP → status aksi → dashboard | **Playwright** — **wajib** (konstitusi §VII), bukan opsional; suite di `e2e/`, dijalankan oleh task T129/T130 di `tania-backend/.../tasks.md` |
 
 Perubahan `vitest.config.ts` (jsdom + `.test.tsx`) dan pemasangan RTL adalah prasyarat: saat ini
 hanya test logika `src/lib/api.test.ts` (6 test) yang terjaring.
@@ -250,8 +251,8 @@ hanya test logika `src/lib/api.test.ts` (6 test) yang terjaring.
 | **F5 — CV** | Form terstruktur (Talent) + tampilan read-only (Chapter) | T103, T104 |
 | **F6 — Evaluasi** | Template & periode (Admin) + form/roster (Chapter) + read-only (Talent) | T094, T095 |
 | **F7 — Dashboard & Audit** | Widget per peran (US8) + penampil audit (Admin) | T115, T116 |
-| **F8 — SSO & Hardening** | Callback SSO (backend W8), error state, audit aksesibilitas & performa | — |
-| **F9 — UAT & Migrasi** | Port `/talents` ke GraphQL lalu hapus klien REST legacy | T127 |
+| **F8 — SSO & Hardening** | Callback SSO (backend W8), error state, audit aksesibilitas & performa, **harness E2E Playwright (`e2e/`)** | T129 |
+| **F9 — UAT & Migrasi** | Port `/talents` ke GraphQL lalu hapus klien REST legacy; **E2E + regression sebagai gerbang rilis** | T127, T130 |
 
 Setiap gelombang UI bergantung pada gelombang backend dengan nomor yang sama.
 
