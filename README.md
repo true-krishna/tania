@@ -1,13 +1,30 @@
 # Tania Dashboard — Frontend
 
-Frontend for the **Tania Talent Profile** feature: complete profiles (identity,
-role, grade, squad, location, status, manager) shown and searchable, with
-profiles auto-created when a user is made.
+Frontend for **Tania**, the employee / digital-talent management platform. It
+implements the per-role dashboards and data-entry UI (Admin, Operation,
+Chapter, Talent) and reads and writes talent data through the **Tania backend**
+(`codex/backend/tania-backend`) via a GraphQL API.
 
 This repo contains **frontend only**. It does not ship a database or API
-implementation — it reads and writes talent data through an **external API**
-whose base URL is configured via environment variables (backend, e.g. SQLite,
-is developed separately).
+implementation — it consumes the backend's GraphQL API, whose base URL is
+configured via environment variables (see [Environment variables](#environment-variables)).
+The current codebase ships the **Talent Profile** slice (TAN-1) over a REST
+client; the migration to Apollo Client + GraphQL is tracked in the spec and
+plan below.
+
+## Scope
+
+The product requirements are defined by the feature specification authored in
+this repository — it is the **source of truth** for the feature:
+
+- `specs/001-employee-digital-talent-management/spec.md` — the four access roles
+  (Admin, Operation, Chapter, Talent), employee records, assignments, Individual
+  Development Plans, CV profiles, performance evaluation, master data, and the
+  per-role dashboards.
+
+The spec is mirrored verbatim into `codex/backend/tania-backend` so the backend
+can run `/speckit.plan` and `/speckit.tasks` against it; when the spec changes
+here, re-copy it there instead of editing the mirror.
 
 ## Stack
 
@@ -70,6 +87,44 @@ The frontend expects the backend to expose:
   createdAt: string;
 }
 ```
+
+## Spec-Driven Development
+
+Work in this repository is spec-driven with
+[GitHub Spec Kit](https://github.com/github/spec-kit). The scaffolding is
+committed, so a fresh checkout is ready to use:
+
+```
+.specify/            Spec Kit infrastructure (scripts, templates, workflows, memory)
+  memory/            the ratified constitution — read before specifying or planning
+  scripts/bash/      helper scripts invoked by the speckit commands
+  templates/         spec / plan / tasks / checklist templates
+.omp/commands/       "/speckit.*" commands for the Oh My Pi agent
+.opencode/commands/  "/speckit.*" commands for the opencode agent
+specs/               one directory per feature (spec.md + the artifacts it generates)
+```
+
+The constitution in `.specify/memory/` is the governing document: it has three
+pillars — security (UU PDP No. 27/2022), design (Legion), and technical (code
+quality, testing, maintainability) — ranked in that order, with the master
+`constitution.md` as the index and governance rules. It is mirrored to
+`docs/constitution/` for convenient reading.
+
+Workflow, in order:
+
+```
+/speckit.constitution   only to amend the constitution itself
+/speckit.specify        describe a feature in plain language → specs/<NNN>-<feature>/spec.md
+/speckit.clarify        optional: resolve open points in the spec before planning
+/speckit.plan           derive the technical plan from the spec + constitution
+/speckit.tasks          break the plan into ordered, testable tasks
+/speckit.analyze        optional: cross-check spec, plan and tasks for drift
+/speckit.implement      execute the tasks
+```
+
+Commands run from the repository root. `specify check` reports the CLI and
+integration status; `specify integration list` shows the integrations
+installed for this project.
 
 ## Scripts
 
