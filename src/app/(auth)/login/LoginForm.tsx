@@ -7,11 +7,6 @@ import { LoginDocument } from "@/generated/graphql";
 import { authConfig } from "@/lib/auth/config";
 import { setSession } from "@/lib/auth/token-store";
 
-/**
- * Form login lokal (W0) — dirender hanya di browser (lihat page.tsx: ssr:false)
- * karena memakai useMutation Apollo. SSO Entra/SAML menyusul di W8; mode dev
- * `AUTH_LOCAL_ONLY=1` melompati form dan langsung masuk ke dashboard.
- */
 export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
@@ -33,14 +28,14 @@ export default function LoginForm() {
         },
       });
       if (!data?.login) {
-        setError("Autentikasi gagal.");
+        setError("Authentication failed.");
         return;
       }
       const { accessToken, accessTokenExpiresAt, user } = data.login;
       setSession({ accessToken, accessTokenExpiresAt, accessRole: user.accessRole });
       router.replace("/dashboard");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
+      const message = err instanceof Error ? err.message : "An error occurred.";
       setError(message);
     }
   }
@@ -50,8 +45,8 @@ export default function LoginForm() {
   return (
     <main className="mx-auto flex min-h-full w-full max-w-sm flex-col justify-center gap-6 px-4 py-12">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Masuk ke Tania</h1>
-        <p className="mt-1 text-sm text-zinc-600">Gunakan akun Tania Anda.</p>
+        <h1 className="text-2xl font-semibold text-zinc-900">Sign in to Tania</h1>
+        <p className="mt-1 text-sm text-zinc-600">Use your Tania account.</p>
       </div>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -67,7 +62,7 @@ export default function LoginForm() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-          Kata sandi
+          Password
           <input
             type="password"
             required
@@ -89,7 +84,7 @@ export default function LoginForm() {
           disabled={loading}
           className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
-          {loading ? "Memproses…" : "Masuk"}
+          {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </main>

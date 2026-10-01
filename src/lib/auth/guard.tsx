@@ -7,14 +7,9 @@ import { getSession } from "@/lib/auth/token-store";
 import { authConfig } from "@/lib/auth/config";
 import { atLeast, type RoleOrMore } from "@/lib/auth/roles";
 
-/**
- * Peran session saat ini. Mode local-only mengembalikan `defaultAccessRole`
- * (dev, plan.md R3); mode normal mengambil sesi in-memory. Sesion dari cookie
- * server dilengkapi modul auth penuh (W1+).
- */
 export function useSessionRole(): AccessRole | null {
-  // Toko sesi bersifat sinkron (in-memory, plan.md §5.2) — baca sekali saat
-  // mount tanpa effect untuk menghindari cascading render (react-hooks lint).
+  // Session store is synchronous (in-memory, plan.md §5.2) — read once at
+  // mount, no effect, to avoid cascading renders (react-hooks lint).
   const [role] = React.useState<AccessRole | null>(() => {
     if (authConfig.localOnly) {
       return (authConfig.defaultAccessRole as AccessRole | undefined) ?? "TALENT";
@@ -26,15 +21,13 @@ export function useSessionRole(): AccessRole | null {
   return role;
 }
 
-/**
- * Guard akses untuk route `(app)/*`. Tanpa sesi (mode normal) redirect ke
- * `/login`; peran kurang dari `requiredRole` dianggap tak berhak (303/403 UI).
- * Otorisasi final tetap di server (FR-16); ini lapisan UI.
- */
 export function AuthGuard({ requiredRole, children }: { requiredRole?: RoleOrMore; children: React.ReactNode }) {
   const router = useRouter();
   const role = useSessionRole();
 
+  // Guard access for `(app)/*` routes: without a session (normal mode)
+  // redirect to /login; insufficient role hides the view (UI layer). Final
+  // authorization is enforced server-side (FR-16).
   React.useEffect(() => {
     if (!authConfig.localOnly && role === null) {
       router.replace("/login");

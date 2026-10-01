@@ -28,7 +28,7 @@ const loginResult = {
   },
 } as const;
 
-// AUTH_LOCAL_ONLY off: configuration dibaca dari process.env; pastikan mati.
+// AUTH_LOCAL_ONLY off: config reads process.env; ensure it is off.
 beforeEach(() => {
   process.env.NEXT_PUBLIC_AUTH_LOCAL_ONLY = "0";
   delete process.env.NEXT_PUBLIC_DEFAULT_ACCESS_ROLE;
@@ -37,7 +37,7 @@ beforeEach(() => {
 });
 
 describe("LoginForm", () => {
-  it("menyimpan sesi dan mengarahkan ke dashboard setelah login sukses", async () => {
+  it("saves the session and redirects to the dashboard after a successful login", async () => {
     render(
       <MockedProvider
         mocks={[
@@ -59,10 +59,10 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: "ada@tania.id" },
     });
-    fireEvent.change(screen.getByLabelText(/kata sandi/i), {
+    fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "secret" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /masuk/i }));
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
       const session = tokenStore.getSession();
@@ -72,7 +72,7 @@ describe("LoginForm", () => {
     });
   });
 
-  it("menampilkan pesan kesalahan saat mutation gagal", async () => {
+  it("shows an error message when the mutation fails", async () => {
     render(
       <MockedProvider
         mocks={[
@@ -94,10 +94,10 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: "ada@tania.id" },
     });
-    fireEvent.change(screen.getByLabelText(/kata sandi/i), {
+    fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "wrong" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /masuk/i }));
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("FORBIDDEN");

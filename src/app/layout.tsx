@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Tania — Talent Profiles",
   description:
-    "Profil talent lengkap: identitas, role, grade, squad, lokasi, status, dan manager — auto-terbentuk saat user dibuat.",
+    "Complete talent profiles: identity, role, grade, squad, location, status, and manager — auto-generated when a user is created.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

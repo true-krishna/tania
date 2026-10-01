@@ -50,12 +50,12 @@ export default function AddUserForm({ managers, grades, statuses }: Props) {
     try {
       const profile = await createUser(apiBase, payload);
       setSuccess(
-        `User dibuat — profil ${profile.employeeId} otomatis terbentuk.`
+        `User created — profile ${profile.employeeId} auto-generated.`
       );
       event.currentTarget.reset();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "gagal menghubungi server");
+      setError(err instanceof Error ? err.message : "Failed to reach the server");
     } finally {
       setPending(false);
     }
@@ -86,8 +86,8 @@ export default function AddUserForm({ managers, grades, statuses }: Props) {
         <div>
           <h2 className="text-sm font-semibold text-zinc-900">Add User</h2>
           <p className="text-xs text-zinc-500">
-            Isi nama dan email saja — profil lengkap dengan atribut default
-            otomatis terbentuk.
+            Enter name and email only — the full profile is generated with
+            default attributes.
           </p>
         </div>
         <button
@@ -95,20 +95,20 @@ export default function AddUserForm({ managers, grades, statuses }: Props) {
           onClick={() => setOpen(false)}
           className="text-sm text-zinc-500 hover:text-zinc-800"
         >
-          Tutup
+          Close
         </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label htmlFor="name" className={labelClass}>
-            Nama *
+            Name *
           </label>
           <input
             id="name"
             name="name"
             required
-            placeholder="Nama lengkap"
+            placeholder="Full name"
             className={inputClass}
           />
         </div>
@@ -121,7 +121,7 @@ export default function AddUserForm({ managers, grades, statuses }: Props) {
             name="email"
             type="email"
             required
-            placeholder="nama@tania.id"
+            placeholder="name@tania.id"
             className={inputClass}
           />
         </div>
@@ -166,7 +166,7 @@ export default function AddUserForm({ managers, grades, statuses }: Props) {
         </div>
         <div>
           <label htmlFor="location" className={labelClass}>
-            Lokasi
+            Location
           </label>
           <select
             id="location"
@@ -205,7 +205,7 @@ export default function AddUserForm({ managers, grades, statuses }: Props) {
             className={inputClass}
             defaultValue=""
           >
-            <option value="">(tanpa manager)</option>
+            <option value="">(no manager)</option>
             {managers.map((m) => (
               <option key={m.userId} value={m.userId}>
                 {m.name}
@@ -225,7 +225,7 @@ export default function AddUserForm({ managers, grades, statuses }: Props) {
         disabled={pending}
         className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
       >
-        {pending ? "Menyimpan…" : "Create User"}
+        {pending ? "Saving…" : "Create User"}
       </button>
     </form>
   );

@@ -19,7 +19,7 @@ export default async function ProfileDetailPage({
     try {
       profile = await getProfileById(getServerApiBaseUrl(), userId);
     } catch (err) {
-      error = err instanceof Error ? err.message : "Gagal mengambil data";
+      error = err instanceof Error ? err.message : "Failed to load data";
     }
   }
   if (!profile && !error) notFound();
@@ -34,19 +34,19 @@ export default async function ProfileDetailPage({
         { label: "Location", value: profile.location },
         { label: "Status", value: profile.status },
         { label: "Manager", value: profile.managerName ?? "—" },
-        { label: "Dibuat", value: profile.createdAt },
+        { label: "Created", value: profile.createdAt },
       ]
     : [];
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <Link href="/talents" className="text-sm text-indigo-600 hover:underline">
-        ← Kembali ke daftar talent
+        ← Back to talent list
       </Link>
 
       {error ? (
         <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
-          <p className="font-medium">Tidak dapat memuat profil.</p>
+          <p className="font-medium">Could not load profile.</p>
           <p className="mt-1">{error}</p>
         </div>
       ) : (

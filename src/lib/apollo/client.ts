@@ -9,10 +9,10 @@ import { onError } from "@apollo/client/link/error";
 import { clearSession, getSession } from "@/lib/auth/token-store";
 
 /**
- * Endpoint GraphQL backend. Dibaca dari `NEXT_PUBLIC_GRAPHQL_URL` (env browser,
- * lihat .env.example). Mengembalikan string kosong saat belum diset — dipakai
- * untuk menandai "belum ada GraphQL" saat build/prerender (env tidak disuntik);
- * saat runtime browser endpoint wajib terisi.
+ * Backend GraphQL endpoint. Read from `NEXT_PUBLIC_GRAPHQL_URL` (browser env,
+ * see .env.example). Returns an empty string when unset — used to flag "no
+ * GraphQL" during build/prerender (env is not injected); at browser runtime
+ * the endpoint must be set.
  */
 export function getGraphqlEndpoint(): string {
   const url = process.env.NEXT_PUBLIC_GRAPHQL_URL;
@@ -20,18 +20,18 @@ export function getGraphqlEndpoint(): string {
 }
 
 /**
- * Normalized cache dengan type policies yang selaras pada kontrak
- * `contracts/schema.graphql`. ID default memakai `id`; `Type`/enum tanpa `id`
- * memakai `__typename` keying. Pendekatan W0 — policy per-relasi ditambah saat
- * modul fitur (plan.md §7: normalized cache mengurangi request berulang).
+ * Normalized cache with type policies aligned to the `contracts/schema.graphql`
+ * contract. Default ID uses `id`; `Type`/enums without `id` use `__typename`
+ * keying. W0 approach — per-relation policies are added with feature modules
+ * (plan.md §7: normalized cache reduces duplicate requests).
  */
 function createCache(): InMemoryCache {
   return new InMemoryCache({
     typePolicies: {
       Query: {
         fields: {
-          // Cursor pagination: keyArgs memisahkan cache per argumen query
-          // (filter/period) sehingga paging tiap filter tidak saling menimpa.
+          // Cursor pagination: keyArgs separates cache per query argument
+          // (filter/period) so paging per filter does not overwrite.
           employees: { keyArgs: ["filter"] },
           assignments: { keyArgs: ["filter"] },
           idps: { keyArgs: ["filter"] },
@@ -47,15 +47,15 @@ function createCache(): InMemoryCache {
 }
 
 /**
- * Membuat ApolloClient untuk browser. Menyuntikkan access token dari
- * token-store (in-memory) ke header Authorization; saat sesi/refresh habis
- * (error auth dari server), sesi lokal dibersihkan. Wiring mutation
- * `refreshToken` menyusul pada modul auth (W8 hardening).
+ * Creates the browser ApolloClient. Injects the access token from the
+ * token-store (in-memory) into the Authorization header; when the session
+ * expires (auth error from the server) the local session is cleared. The
+ * `refreshToken` mutation wiring lands with the auth module (W8 hardening).
  */
 export function createApolloClient(): ApolloClient<unknown> | null {
   const uri = getGraphqlEndpoint();
-  // Tanpa endpoint (build/prerender) jangan bikin client — mencegah crash
-  // saat env belum disuntik; runtime browser endpoint terisi via .env.local.
+  // No endpoint (build/prerender): do not create the client — prevents a
+  // crash when env is not injected; browser runtime reads .env.local.
   if (!uri) return null;
 
   const httpLink = createHttpLink({ uri });
