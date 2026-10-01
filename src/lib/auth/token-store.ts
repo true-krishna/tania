@@ -1,13 +1,13 @@
 import type { AccessRole } from "@/generated/graphql";
 
 /**
- * Penyimpanan sesi di sisi klien.
+ * Client-side session store.
  *
- * Sesuai plan.md §5.2, access token disimpan **in-memory** (tidak di
- * localStorage) untuk memperkecil permukaan serangan XSS; refresh token
- * dipegang server (HttpOnly cookie) dan ditukar lewat mutation
- * `refreshToken`. Karena in-memory, reload halaman = sesi baru yang
- * membutuhkan refresh dari cookie server.
+ * Per plan.md §5.2, the access token is kept **in-memory** (not in
+ * localStorage) to reduce the XSS attack surface; the refresh token lives
+ * server-side (HttpOnly cookie) and is exchanged via the `refreshToken`
+ * mutation. Because it is in-memory, a page reload means a fresh session
+ * that must be rehydrated from the server cookie.
  */
 export interface Session {
   accessToken: string;

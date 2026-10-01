@@ -2,9 +2,9 @@
 
 import dynamic from "next/dynamic";
 
-// Form login memakai useMutation (Apollo) yang butuh client — render hanya di
-// browser (ssr:false) agar halaman login aman di-prerender saat build tanpa
-// endpoint GraphQL. Plan.md R3: SSO menyusul di W8, ini login lokal W0.
+// Login form uses useMutation (Apollo) which needs a client — render it only
+// in the browser (ssr:false) so the login page can be safely prerendered at
+// build time without a GraphQL endpoint. Plan.md R3: SSO follows in W8.
 const LoginForm = dynamic(() => import("./LoginForm"), { ssr: false });
 
 export default function LoginPage() {

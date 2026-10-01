@@ -6,18 +6,13 @@ import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const },
-  { href: "/employees", label: "Karyawan", roles: ["OPERATION", "ADMIN"] as const },
-  { href: "/assignments", label: "Penugasan", roles: ["CHAPTER", "ADMIN"] as const },
+  { href: "/employees", label: "Employees", roles: ["OPERATION", "ADMIN"] as const },
+  { href: "/assignments", label: "Assignments", roles: ["CHAPTER", "ADMIN"] as const },
   { href: "/idp", label: "IDP", roles: ["CHAPTER", "TALENT", "ADMIN"] as const },
   { href: "/master-data", label: "Master Data", roles: ["ADMIN"] as const },
   { href: "/audit", label: "Audit", roles: ["ADMIN"] as const },
 ] as const;
 
-/**
- * Shell aplikasi terautentikasi. Route group `(app)` tidak mengubah URL;
- * semua halaman di dalamnya butuh sesi (guard). Otorisasi per-peran
- * ditentukan server (FR-16); menu hanya disembunyikan sesuai peran UI.
- */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const role = useSessionRole();
 
