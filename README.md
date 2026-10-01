@@ -1,20 +1,39 @@
 # Tania Dashboard — Frontend
 
-Frontend for the **Tania Talent Profile** feature: complete profiles (identity,
-role, grade, squad, location, status, manager) shown and searchable, with
-profiles auto-created when a user is made.
+Frontend for **Tania**, the employee / digital-talent management platform. It
+implements the per-role dashboards and data-entry UI (Admin, Operation,
+Chapter, Talent) and reads and writes talent data through the **Tania backend**
+(`codex/backend/tania-backend`) via a GraphQL API.
 
 This repo contains **frontend only**. It does not ship a database or API
-implementation — it reads and writes talent data through an **external API**
-whose base URL is configured via environment variables (backend, e.g. SQLite,
-is developed separately).
+implementation — it consumes the backend's GraphQL API, whose base URL is
+configured via environment variables (see [Environment variables](#environment-variables)).
+The current codebase ships the **Talent Profile** slice (TAN-1) over a REST
+client; the migration to Apollo Client + GraphQL is tracked in the spec and
+plan below.
+
+## Scope
+
+The product requirements are defined by the feature specification authored in
+this repository — it is the **source of truth** for the feature:
+
+- `specs/001-employee-digital-talent-management/spec.md` — the four access roles
+  (Admin, Operation, Chapter, Talent), employee records, assignments, Individual
+  Development Plans, CV profiles, performance evaluation, master data, and the
+  per-role dashboards.
+
+The spec is mirrored verbatim into `codex/backend/tania-backend` so the backend
+can run `/speckit.plan` and `/speckit.tasks` against it; when the spec changes
+here, re-copy it there instead of editing the mirror.
 
 ## Stack
 
-- [Next.js](https://nextjs.org) (App Router, server components)
+- [Next.js](https://nextjs.org) (App Router, route groups)
 - TypeScript
 - Tailwind CSS
-- Vitest (unit tests)
+- [Apollo Client](https://www.apollographql.com/docs/react) (GraphQL data layer)
+- GraphQL Code Generator (types + hooks from the schema contract)
+- Vitest + React Testing Library (unit/component tests)
 
 ## Getting started
 
@@ -26,20 +45,29 @@ cp .env.example .env.local   # then point the URLs at your API
 npm run dev
 ```
 
-Open http://localhost:3000 — `/` redirects to `/talents`.
+Open http://localhost:3000 — `/` redirects to `/dashboard` (authenticated shell);
+unauthenticated visitors are sent to `/login`. In dev with
+`NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` the guard treats the user as logged in with
+`NEXT_PUBLIC_DEFAULT_ACCESS_ROLE` (plan.md R3).
 
 ### Environment variables
 
 | Variable                    | Used by                                  | Description                                       |
 | --------------------------- | ---------------------------------------- | ------------------------------------------------- |
-| `TANIA_API_URL`             | Server-rendered pages                    | Base URL of the external Talent Profile API       |
-| `NEXT_PUBLIC_TANIA_API_URL` | Client-side "Add User" form              | Same API, accessible from the browser (CORS)      |
+| `TANIA_API_URL`             | Server-rendered Talent Profile pages (REST, legacy) | Base URL of the external Talent Profile API |
+| `NEXT_PUBLIC_TANIA_API_URL` | Client-side "Add User" form (REST, legacy) | Same API, accessible from the browser (CORS) |
+| `NEXT_PUBLIC_GRAPHQL_URL`   | Apollo Client (browser)                  | GraphQL endpoint of the Tania backend              |
+| `NEXT_PUBLIC_AUTH_LOCAL_ONLY` | Auth guard (dev mode)                 | `1` = skip login; unset/`0` = normal mode          |
+| `NEXT_PUBLIC_DEFAULT_ACCESS_ROLE` | Auth guard (dev mode)            | Default role when `AUTH_LOCAL_ONLY=1`              |
 
 Example:
 
 ```bash
 TANIA_API_URL=http://localhost:8080
 NEXT_PUBLIC_TANIA_API_URL=http://localhost:8080
+NEXT_PUBLIC_GRAPHQL_URL=http://localhost:8080/query
+NEXT_PUBLIC_AUTH_LOCAL_ONLY=0
+NEXT_PUBLIC_DEFAULT_ACCESS_ROLE=TALENT
 ```
 
 ## API contract
@@ -71,13 +99,103 @@ The frontend expects the backend to expose:
 }
 ```
 
+## Data layer (Apollo Client)
+
+The primary data path is **GraphQL via Apollo Client** (plan.md §3.2). The
+Talent Profile REST client above is legacy and deprecated gradually (plan.md
+R2); new modules use Apollo.
+
+### GraphQL codegen
+
+The schema source of truth is
+`specs/001-employee-digital-talent-management/contracts/schema.graphql`.
+Generated output lives in `src/generated/graphql/` and is **committed** — never
+edit it by hand, regenerate after contract changes:
+
+```bash
+npm run codegen        # regenerate src/generated/graphql/
+npm run generate:check # fail CI if the generated code is stale
+```
+
+Operations are written next to their feature as `.graphql` files under
+`src/features/**`; codegen turns them into typed documents (`gql()`) and hooks.
+
+### Auth guard
+
+`src/lib/auth/` holds token storage (in-memory access token), role helpers and
+the route guard. Routes under `src/app/(app)/*` are wrapped in `AuthGuard`
+(redirects unauthenticated users to `/login`; hides actions by role). Final
+authorization is enforced server-side (FR-16) — this layer only de-clutters the
+UI. SSO (Entra/SAML) lands in W8; local login is wired in W0 (plan.md R3).
+
+### Folder structure (plan.md §6.2)
+
+```
+src/
+├── app/(auth)/login/      # login lokal (W0); SSO menyusul (W8)
+├── app/(app)/dashboard/   # shell terautentikasi; modul fitur W1+ menambah rute
+├── components/            # UI reusable (selaras Tailwind)
+├── features/              # modul fitur (§5.2): hooks + komponen + query/mutation
+├── generated/graphql/     # hasil GraphQL codegen (committed)
+├── lib/apollo/            # Apollo Client, link auth, cache policy
+├── lib/auth/              # token storage, guard peran, AUTH_LOCAL_ONLY
+├── lib/api.ts             # klien REST lama (dipensiunkan bertahap)
+└── test/                  # setup Vitest (setup.ts)
+```
+
+### Testing
+
+Unit/component tests use **Vitest + React Testing Library**. Component tests
+run in jsdom via the `// @vitest-environment jsdom` pragma; Apollo queries are
+tested with `MockedProvider` (plan.md §10.2).
+
+## Spec-Driven Development
+
+Work in this repository is spec-driven with
+[GitHub Spec Kit](https://github.com/github/spec-kit). The scaffolding is
+committed, so a fresh checkout is ready to use:
+
+```
+.specify/            Spec Kit infrastructure (scripts, templates, workflows, memory)
+  memory/            the ratified constitution — read before specifying or planning
+  scripts/bash/      helper scripts invoked by the speckit commands
+  templates/         spec / plan / tasks / checklist templates
+.omp/commands/       "/speckit.*" commands for the Oh My Pi agent
+.opencode/commands/  "/speckit.*" commands for the opencode agent
+specs/               one directory per feature (spec.md + the artifacts it generates)
+```
+
+The constitution in `.specify/memory/` is the governing document: it has three
+pillars — security (UU PDP No. 27/2022), design (Legion), and technical (code
+quality, testing, maintainability) — ranked in that order, with the master
+`constitution.md` as the index and governance rules. It is mirrored to
+`docs/constitution/` for convenient reading.
+
+Workflow, in order:
+
+```
+/speckit.constitution   only to amend the constitution itself
+/speckit.specify        describe a feature in plain language → specs/<NNN>-<feature>/spec.md
+/speckit.clarify        optional: resolve open points in the spec before planning
+/speckit.plan           derive the technical plan from the spec + constitution
+/speckit.tasks          break the plan into ordered, testable tasks
+/speckit.analyze        optional: cross-check spec, plan and tasks for drift
+/speckit.implement      execute the tasks
+```
+
+Commands run from the repository root. `specify check` reports the CLI and
+integration status; `specify integration list` shows the integrations
+installed for this project.
+
 ## Scripts
 
 ```bash
-npm run dev        # development server
-npm run build      # production build
-npm start          # serve production build
-npm run lint       # eslint
-npm run typecheck  # tsc --noEmit
-npm test           # vitest run
+npm run dev          # development server
+npm run build        # production build
+npm start            # serve production build
+npm run lint         # eslint
+npm run typecheck    # tsc --noEmit
+npm test             # vitest run
+npm run codegen      # regenerate GraphQL types from the schema contract
+npm run generate:check # verify generated code is up to date (CI gate)
 ```
