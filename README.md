@@ -158,11 +158,11 @@ committed, so a fresh checkout is ready to use:
 specs/               one directory per feature (spec.md + the artifacts it generates)
 ```
 
-> **Current gap (2026-10-01)**: `specs/001-employee-digital-talent-management/` here holds
-> `spec.md` and the mirrored `contracts/` only — **no `plan.md`, `roadmap.md`, or `tasks.md`**.
-> Those artifacts were produced in `codex/backend/tania-backend` and currently carry the
-> frontend work items too. Running `/speckit.plan` + `/speckit.tasks` in this repo (or moving
-> the frontend items into a plan here) is an open decision.
+> **Pembagian artefak (diputuskan 2026-10-01, "opsi C")**: `specs/001-employee-digital-talent-management/`
+> di repo ini kini memuat `spec.md`, `plan.md`, `research.md`, `data-model.md`, `quickstart.md`,
+> dan `contracts/`. **`tasks.md` tetap tidak ada di sini** — urutan eksekusi (termasuk 21 task UI)
+> dikelola di `codex/backend/tania-backend/specs/001-employee-digital-talent-management/tasks.md`.
+> Memindahkan urutan task ke repo ini adalah keputusan terpisah yang belum diambil.
 
 The constitution in `.specify/memory/` is the governing document: it has three
 pillars — security (UU PDP No. 27/2022), design (Legion), and technical (code
