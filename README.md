@@ -217,11 +217,12 @@ committed, so a fresh checkout is ready to use:
 specs/               one directory per feature (spec.md + the artifacts it generates)
 ```
 
-> **Pembagian artefak (diputuskan 2026-10-01, "opsi C")**: `specs/001-employee-digital-talent-management/`
-> di repo ini kini memuat `spec.md`, `plan.md`, `research.md`, `data-model.md`, `quickstart.md`,
-> dan `contracts/`. **`tasks.md` tetap tidak ada di sini** — urutan eksekusi (termasuk 21 task UI)
-> dikelola di `codex/backend/tania-backend/specs/001-employee-digital-talent-management/tasks.md`.
-> Memindahkan urutan task ke repo ini adalah keputusan terpisah yang belum diambil.
+> **Pembagian artefak (diputuskan 2026-10-01, "jalur dua-run")**: `specs/001-employee-digital-talent-management/`
+> di repo ini memuat `spec.md`, `plan.md`, `research.md`, `data-model.md`, `quickstart.md`,
+> `contracts/`, dan **`tasks.md` (22 task UI)** — dijalankan dengan `/speckit.implement` dari root
+> repo ini. Repo backend mengelola daftar terpisah (108 task). **ID task dipertahankan sama di dua
+> daftar** (T008, T052, …), jadi nomor di tiap daftar tidak berurutan penuh; pemetaan per fase ada
+> di `tasks.md` §Pemetaan ID.
 
 The constitution in `.specify/memory/` is the governing document: it has three
 pillars — security (UU PDP No. 27/2022), design (Legion), and technical (code

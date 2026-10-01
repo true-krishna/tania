@@ -8,14 +8,14 @@
 (arsitektur, data model, API) ada di `codex/backend/tania-backend`
 (`specs/001-employee-digital-talent-management/plan.md`).
 
-> **Pembagian artefak (diputuskan 2026-10-01, "opsi C")**: repo ini memiliki `plan.md` (dokumen
-> ini) + `research.md` + `data-model.md` + `quickstart.md` + `contracts/`. **Urutan pengerjaan
-> task tetap di `tania-backend/specs/001-employee-digital-talent-management/tasks.md`**, di mana
-> 21 task UI (T008–T010, T052–T054, T061–T062, T069–T070, T079–T080, T094–T095, T103–T104,
-> T109–T110, T115–T116, T127) sudah hidup berdampingan dengan task backend per fase user story.
-> Dokumen ini merinci **bagaimana** UI dibangun; `tasks.md` backend tetap menjadi satu-satunya
-> daftar urutan eksekusi. Pindah ke model "frontend punya `tasks.md` sendiri" adalah keputusan
-> terpisah yang belum diambil.
+> **Pembagian artefak (diputuskan 2026-10-01, "jalur dua-run")**: repo ini memiliki `plan.md`
+> (dokumen ini) + `research.md` + `data-model.md` + `quickstart.md` + `contracts/` + **`tasks.md`
+> sendiri** (22 task UI). Repo backend punya `plan.md`/`roadmap.md`/`tasks.md` sendiri (108 task).
+> Masing-masing repo diimplementasikan lewat `/speckit.implement` dari root-nya sendiri.
+> **ID task dipertahankan sama di dua daftar** (T008, T052, …) supaya rujukan lintas dokumen tetap
+> valid — karena itu nomor di tiap daftar tidak berurutan penuh. T130 (wiring gerbang rilis) dan
+> T123 (regression lintas modul) tetap di daftar backend karena keduanya soal pipeline/Makefile;
+> T129 (harness E2E di `e2e/`) ada di daftar repo ini.
 
 ---
 
@@ -112,8 +112,8 @@ Konsekuensi yang mengikat plan ini:
    akan memanggil operasi yang belum ada dan gagal saat runtime. Kontrak desain dipakai sebagai
    acuan bentuk tipe, bukan sumber generate.
 2. Urutan gelombang UI **mengikuti gelombang backend** (W1 master data → W2 karyawan → W3
-   assignment → W4 IDP → W5 CV → W6 evaluasi → W7 dashboard/audit → W8 SSO/hardening). Task UI
-   di `tasks.md` backend sudah disusun dengan urutan itu.
+   assignment → W4 IDP → W5 CV → W6 evaluasi → W7 dashboard/audit → W8 SSO/hardening); task UI
+   di `tasks.md` repo ini sudah disusun dengan urutan itu (pemetaan per fase ada di §Pemetaan ID).
 3. Setiap penambahan operasi backend harus disertai `make generate` di backend dan `npm run
    generate` di sini; CI kedua repo gagal bila hasil generate tidak sinkron.
 
@@ -136,7 +136,7 @@ specs/001-employee-digital-talent-management/
     └── operations.md        # operasi GraphQL per layar (khusus frontend)
 ```
 
-> `tasks.md` **tidak** dibuat di sini — urutan task di `tania-backend/.../tasks.md` (opsi C).
+> `tasks.md` **ada di repo ini** (22 task UI); daftar backend terpisah di `tania-backend/.../tasks.md`.
 
 ### Source Code (repo ini)
 
@@ -232,7 +232,7 @@ Legacy `/talents/page.tsx` dipertahankan sampai port GraphQL selesai, lalu dihap
 | Komponen | Render tabel/form/empty/error state dengan `MockedProvider` | Vitest + RTL |
 | Kontrak | Operasi GraphQL yang dikirim cocok dengan SDL ter-generate; tipe hasil codegen dipakai apa adanya | Vitest + snapshot operasi |
 | Guard peran | Render rute untuk tiap peran: menu/aksi tersembunyi, `FORBIDDEN` ditampilkan benar | Vitest + RTL |
-| E2E | Alur kritis lintas stack pada `docker-compose`: login 4 peran → tambah karyawan → assignment → evaluasi → IDP → status aksi → dashboard | **Playwright** — **wajib** (konstitusi §VII), bukan opsional; suite di `e2e/`, dijalankan oleh task T129/T130 di `tania-backend/.../tasks.md` |
+| E2E | Alur kritis lintas stack pada `docker-compose`: login 4 peran → tambah karyawan → assignment → evaluasi → IDP → status aksi → dashboard | **Playwright** — **wajib** (konstitusi §VII), bukan opsional; suite di `e2e/` via task **T129 (repo ini)**; gerbang rilisnya T130 di daftar backend |
 
 Perubahan `vitest.config.ts` (jsdom + `.test.tsx`) dan pemasangan RTL adalah prasyarat: saat ini
 hanya test logika `src/lib/api.test.ts` (6 test) yang terjaring.
@@ -241,7 +241,7 @@ hanya test logika `src/lib/api.test.ts` (6 test) yang terjaring.
 
 ## Roadmap Frontend (mengikuti gelombang backend)
 
-| Gelombang | Pekerjaan UI | Task (di `tasks.md` backend) |
+| Gelombang | Pekerjaan UI | Task (di `tasks.md` repo ini, kecuali disebut lain) |
 | --- | --- | --- |
 | **F0 — Foundation** | Pasang Apollo + `graphql` + codegen + RTL; perluas `vitest.config.ts`; `src/lib/apollo/*`; sesi + guard; shell `(app)` + login lokal | T008, T009, T010 |
 | **F1 — Master Data & Akun** | Halaman Unit/Chapter/Job Role/Project + Akun User (Admin) | T052, T053, T054 |
@@ -252,7 +252,7 @@ hanya test logika `src/lib/api.test.ts` (6 test) yang terjaring.
 | **F6 — Evaluasi** | Template & periode (Admin) + form/roster (Chapter) + read-only (Talent) | T094, T095 |
 | **F7 — Dashboard & Audit** | Widget per peran (US8) + penampil audit (Admin) | T115, T116 |
 | **F8 — SSO & Hardening** | Callback SSO (backend W8), error state, audit aksesibilitas & performa, **harness E2E Playwright (`e2e/`)** | T129 |
-| **F9 — UAT & Migrasi** | Port `/talents` ke GraphQL lalu hapus klien REST legacy; **E2E + regression sebagai gerbang rilis** | T127, T130 |
+| **F9 — UAT & Migrasi** | Port `/talents` ke GraphQL lalu hapus klien REST legacy; **E2E + regression sebagai gerbang rilis** | T127 (di sini), T130 (daftar backend) |
 
 Setiap gelombang UI bergantung pada gelombang backend dengan nomor yang sama.
 
@@ -264,7 +264,7 @@ Setiap gelombang UI bergantung pada gelombang backend dengan nomor yang sama.
 | --- | --- | --- | --- |
 | O1 | Penyimpanan token & rendering ber-auth di server | Sesi hilang saat reload; SSR ber-auth tidak mungkin tanpa cookie | MVP: token di memori + render client-side. Usulkan ke backend: refresh token via cookie `HttpOnly` (amandemen backend) agar SSR ber-auth & sesi tahan reload |
 | O2 | Paket integrasi Apollo untuk App Router (`@apollo/client` murni vs `@apollo/client-integration-nextjs`) | Mempengaruhi struktur provider & RSC | Diputuskan pada T008 dengan uji coba kecil; hasilnya dicatat di `research.md` |
-| O3 | Kepemilikan daftar task (opsi C dipilih: tetap di backend) | Kontributor frontend membaca repo backend | Ditinjau ulang bila ada aliran kerja/tim frontend terpisah |
+| O3 | **Selesai 2026-10-01 (jalur dua-run)**: repo ini punya `tasks.md` sendiri | Dua daftar harus dijaga sinkron (ID bersama, pemetaan fase) | ID task dipertahankan sama di dua daftar; `§Pemetaan ID` di `tasks.md` menjadi rujukan; tinjau ulang bila salah satu daftar ditomori ulang |
 | O4 | Nasib fitur *Talent Profile* legacy | Rute `/talents` mati terhadap backend saat ini | Port ke GraphQL pada F9, lalu hapus `src/lib/{api,talents}.ts` |
 
 ---
