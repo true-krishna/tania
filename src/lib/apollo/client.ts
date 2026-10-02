@@ -48,7 +48,7 @@ function createCache(): InMemoryCache {
 
 /**
  * Creates the browser ApolloClient. Injects the access token from the
- * token-store (in-memory) into the Authorization header; when the session
+ * token-store (cookie-backed) into the Authorization header; when the session
  * expires (auth error from the server) the local session is cleared. The
  * `refreshToken` mutation wiring lands with the auth module (W8 hardening).
  */
