@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import * as React from "react";
+import { Button, Input, PageHeader, Select } from "@/components/monday";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { useJobRoles, useUnits } from "@/features/master-data/useMasterData";
 
@@ -84,49 +85,42 @@ export default function NewEmployeePage() {
 
   return (
     <section className="flex max-w-xl flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Tambah Karyawan</h1>
-        <p className="mt-1 text-sm text-zinc-600">Lengkapi data karyawan baru.</p>
-      </div>
+      <PageHeader title="Tambah Karyawan" subtitle="Lengkapi data karyawan baru." />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Label error={errors.fullName}>
           Nama lengkap
-          <input
+          <Input
             type="text"
             value={values.fullName}
             onChange={(e) => set("fullName", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
             placeholder="cth. Ahmad Fauzi"
           />
         </Label>
         <Label error={errors.employeeCode}>
           Kode karyawan
-          <input
+          <Input
             type="text"
             value={values.employeeCode}
             onChange={(e) => set("employeeCode", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
             placeholder="cth. EMP-0100"
           />
         </Label>
         <Label error={errors.email}>
           Email
-          <input
+          <Input
             type="email"
             value={values.email}
             onChange={(e) => set("email", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
             placeholder="cth. ahmad.fauzi@tania.co.id"
             autoComplete="email"
           />
         </Label>
         <Label error={errors.unitId}>
           Unit
-          <select
+          <Select
             value={values.unitId}
             onChange={(e) => set("unitId", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           >
             <option value="">— pilih unit —</option>
             {units.data?.map((unit) => (
@@ -134,14 +128,13 @@ export default function NewEmployeePage() {
                 {unit.name}
               </option>
             ))}
-          </select>
+          </Select>
         </Label>
         <Label error={errors.jobRoleId}>
           Job Role
-          <select
+          <Select
             value={values.jobRoleId}
             onChange={(e) => set("jobRoleId", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           >
             <option value="">— pilih job role —</option>
             {jobRoles.data?.map((role) => (
@@ -149,30 +142,23 @@ export default function NewEmployeePage() {
                 {role.name}
               </option>
             ))}
-          </select>
+          </Select>
         </Label>
         <Label error={errors.joinedAt}>
           Tanggal Bergabung
-          <input
+          <Input
             type="date"
             value={values.joinedAt}
             onChange={(e) => set("joinedAt", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
         </Label>
 
         <div className="flex gap-2">
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
-          >
-            Simpan
-          </button>
-          <Link
-            href="/employees"
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
-          >
-            Batal
+          <Button type="submit">Simpan</Button>
+          <Link href="/employees" className="no-underline">
+            <Button type="button" variant="secondary">
+              Batal
+            </Button>
           </Link>
         </div>
       </form>

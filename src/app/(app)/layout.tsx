@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import * as React from "react";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
 
@@ -15,27 +16,49 @@ const NAV_ITEMS = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const role = useSessionRole();
+  const pathname = usePathname();
 
   return (
     <AuthGuard>
-      <div className="min-h-full">
-        <nav className="border-b border-zinc-200 bg-white">
-          <ul className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 py-2 text-sm">
-            {NAV_ITEMS.map(({ href, label, roles }) =>
-              role && (roles as readonly string[]).includes(role) ? (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className="rounded-md px-3 py-1.5 text-zinc-700 hover:bg-zinc-100"
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ) : null
-            )}
-          </ul>
-        </nav>
-        <main className="mx-auto w-full max-w-5xl px-4 py-6">{children}</main>
+      <div className="flex min-h-screen">
+        <aside className="fixed inset-y-0 left-0 z-20 flex w-60 flex-col border-r border-board-border bg-sidebar">
+          <div className="flex items-center gap-2 px-5 py-4">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-sm font-bold text-white">
+              T
+            </span>
+            <span className="text-base font-semibold tracking-tight text-zinc-900">Tania</span>
+          </div>
+          <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-3 py-2">
+            <ul className="flex flex-col gap-0.5 text-sm">
+              {NAV_ITEMS.map(({ href, label, roles }) => {
+                const active =
+                  href === "/dashboard"
+                    ? pathname === href
+                    : pathname.startsWith(href);
+                if (role && !(roles as readonly string[]).includes(role)) return null;
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      aria-current={active ? "page" : undefined}
+                      className={`block rounded-md px-3 py-2 font-medium transition-colors ${
+                        active
+                          ? "bg-brand-50 text-brand-700"
+                          : "text-sidebar-muted hover:bg-zinc-100 hover:text-sidebar-fg"
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+          <div className="border-t border-board-border px-5 py-3 text-xs text-zinc-500">
+            Logged in as {role?.toLowerCase() ?? "—"}
+          </div>
+        </aside>
+        <main className="ml-60 flex-1 px-6 py-6">{children}</main>
       </div>
     </AuthGuard>
   );

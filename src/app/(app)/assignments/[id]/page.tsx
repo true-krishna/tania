@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as React from "react";
 import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { Button, Card, PageHeader } from "@/components/monday";
 import { useAssignment } from "@/features/assignments/useAssignment";
 
 export default function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -23,62 +24,56 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
       <Link href="/assignments" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
         ← Kembali ke daftar
       </Link>
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">
-          {assignment.talent.fullName} — {assignment.project.name}
-        </h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          {assignment.id} · {assignment.jobRole.name}
-        </p>
-      </div>
+      <PageHeader
+        title={`${assignment.talent.fullName} — ${assignment.project.name}`}
+        subtitle={`${assignment.id} · ${assignment.jobRole.name}`}
+      />
 
-      <dl className="grid max-w-2xl grid-cols-1 gap-3 rounded-md border border-zinc-200 bg-white p-4 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-xs uppercase tracking-wide text-zinc-500">Talent</dt>
-          <dd className="text-zinc-900">
-            {assignment.talent.fullName} ({assignment.talent.employeeCode})
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wide text-zinc-500">Project</dt>
-          <dd className="text-zinc-900">{assignment.project.name}</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wide text-zinc-500">Job Role</dt>
-          <dd className="text-zinc-900">{assignment.jobRole.name}</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wide text-zinc-500">Periode</dt>
-          <dd className="text-zinc-900">
-            {assignment.periodStart} — {ended ? "sekarang" : assignment.periodEnd ?? "sekarang"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wide text-zinc-500">Status</dt>
-          <dd>
-            <StatusBadge active={isActive} />
-          </dd>
-        </div>
-      </dl>
+      <Card className="max-w-2xl">
+        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">Talent</dt>
+            <dd className="text-zinc-900">
+              {assignment.talent.fullName} ({assignment.talent.employeeCode})
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">Project</dt>
+            <dd className="text-zinc-900">{assignment.project.name}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">Job Role</dt>
+            <dd className="text-zinc-900">{assignment.jobRole.name}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">Periode</dt>
+            <dd className="text-zinc-900">
+              {assignment.periodStart} — {ended ? "sekarang" : assignment.periodEnd ?? "sekarang"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">Status</dt>
+            <dd>
+              <StatusBadge active={isActive} />
+            </dd>
+          </div>
+        </dl>
+      </Card>
 
       {isActive ? (
-        <div className="flex max-w-2xl flex-col gap-3 rounded-md border border-amber-200 bg-amber-50 p-4">
+        <Card className="flex max-w-2xl flex-col gap-3 border-amber-200 bg-amber-50">
           <p className="text-sm text-amber-800">
             Mengakhiri assignment ini akan menandainya <strong>selesai</strong> dan mengosongkan
             talent untuk tugas berikutnya. Lanjutkan?
           </p>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setEnded(true)}
-              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
-            >
+            <Button type="button" onClick={() => setEnded(true)}>
               Ya, akhiri assignment
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       ) : (
-        <p className="w-fit rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-500">
+        <p className="w-fit rounded-full bg-brand-50 px-4 py-1.5 text-sm text-brand-700">
           Assignment selesai.
         </p>
       )}

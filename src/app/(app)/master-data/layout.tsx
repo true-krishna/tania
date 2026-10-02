@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { PageHeader } from "@/components/monday";
 
 const TABS = [
   { href: "/master-data/units", label: "Unit" },
@@ -8,26 +12,32 @@ const TABS = [
 ] as const;
 
 export default function MasterDataLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Master Data</h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          Reference data for the talent ecosystem, managed by Admin.
-        </p>
-      </div>
+      <PageHeader
+        title="Master Data"
+        subtitle="Reference data for the talent ecosystem, managed by Admin."
+      />
       <nav aria-label="Master data section">
-        <ul className="flex gap-1 border-b border-zinc-200 text-sm">
-          {TABS.map(({ href, label }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className="block rounded-t-md px-3 py-2 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
+        <ul className="flex flex-wrap gap-1 rounded-lg border border-board-border bg-board p-1 shadow-sm">
+          {TABS.map(({ href, label }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    active ? "bg-brand-100 text-brand-700" : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+                >
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
       {children}

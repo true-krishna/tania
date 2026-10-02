@@ -3,6 +3,7 @@
 import Link from "next/link";
 import * as React from "react";
 import { ErrorState, LoadingState } from "@/components/DataState";
+import { Button, Input, PageHeader, Select } from "@/components/monday";
 import { employees } from "@/features/employees/mock";
 import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
 
@@ -69,35 +70,31 @@ export default function NewAssignmentPage() {
           untuk dibuat (mock). Saat backend US2 tersedia, submit ini akan memanggil mutasi{" "}
           <code>createAssignment</code>.
         </div>
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => {
             setValues(EMPTY);
             setErrors({});
             setSubmitted(false);
           }}
-          className="w-fit rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
         >
           Buat assignment lain
-        </button>
+        </Button>
       </section>
     );
   }
 
   return (
     <section className="flex max-w-xl flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Buat Assignment</h1>
-        <p className="mt-1 text-sm text-zinc-600">Tugaskan talent ke project (Chapter).</p>
-      </div>
+      <PageHeader title="Buat Assignment" subtitle="Tugaskan talent ke project (Chapter)." />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Label error={errors.employeeId}>
           Talent
-          <select
+          <Select
             value={values.employeeId}
             onChange={(e) => set("employeeId", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           >
             <option value="">— pilih talent (assignable) —</option>
             {assignableTalents.map((emp) => (
@@ -105,14 +102,13 @@ export default function NewAssignmentPage() {
                 {emp.fullName} ({emp.employeeCode})
               </option>
             ))}
-          </select>
+          </Select>
         </Label>
         <Label error={errors.projectId}>
           Project
-          <select
+          <Select
             value={values.projectId}
             onChange={(e) => set("projectId", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           >
             <option value="">— pilih project —</option>
             {projects.data?.map((p) => (
@@ -120,14 +116,13 @@ export default function NewAssignmentPage() {
                 {p.name}
               </option>
             ))}
-          </select>
+          </Select>
         </Label>
         <Label error={errors.jobRoleId}>
           Job Role
-          <select
+          <Select
             value={values.jobRoleId}
             onChange={(e) => set("jobRoleId", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           >
             <option value="">— pilih job role —</option>
             {jobRoles.data?.map((role) => (
@@ -135,38 +130,31 @@ export default function NewAssignmentPage() {
                 {role.name}
               </option>
             ))}
-          </select>
+          </Select>
         </Label>
         <Label error={errors.periodStart}>
           Tanggal Mulai
-          <input
+          <Input
             type="date"
             value={values.periodStart}
             onChange={(e) => set("periodStart", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
         </Label>
         <Label>
           Tanggal Selesai{" "}
           <span className="text-xs font-normal text-zinc-500">(opsional, kosong = aktif)</span>
-          <input
+          <Input
             type="date"
             value={values.periodEnd}
             onChange={(e) => set("periodEnd", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
         </Label>
 
         <div className="flex gap-2">
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
-          >
-            Simpan
-          </button>
+          <Button type="submit">Simpan</Button>
           <Link
             href="/assignments"
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal
           </Link>
