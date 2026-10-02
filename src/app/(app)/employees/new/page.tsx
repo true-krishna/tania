@@ -23,13 +23,6 @@ const EMPTY: FormValues = {
   joinedAt: "",
 };
 
-/**
- * "Tambah Karyawan" form (Operation) — US1.
- * Required-field validation runs client-side (FR: form menolak field wajib
- * kosong). Submit is a mock for now: it surfaces what would be sent as a
- * `CreateEmployeeInput`. Swap for the real `createEmployee` mutation when the
- * backend US1 wave lands.
- */
 export default function NewEmployeePage() {
   const units = useUnits();
   const jobRoles = useJobRoles();

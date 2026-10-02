@@ -1,7 +1,3 @@
-/**
- * Shared presentational states for data-driven client pages (mock or live).
- * Keeps loading / error / empty rendering consistent across feature pages.
- */
 export function LoadingState({ label = "Memuat…" }: { label?: string }) {
   return (
     <p className="rounded-md border border-zinc-200 bg-white p-4 text-sm text-zinc-500">

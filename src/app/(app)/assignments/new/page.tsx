@@ -22,12 +22,6 @@ const EMPTY: FormValues = {
   periodEnd: "",
 };
 
-/**
- * "Buat Assignment" form (Chapter) — US2.
- * Only assignable talents and registered projects are offered (FR-05/FR-07).
- * Submit is a mock for now; swap for the real `createAssignment` mutation when
- * the backend US2 wave lands.
- */
 export default function NewAssignmentPage() {
   const projects = useProjects();
   const jobRoles = useJobRoles();

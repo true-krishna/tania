@@ -6,11 +6,6 @@ import * as React from "react";
 import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { useAssignment } from "@/features/assignments/useAssignment";
 
-/**
- * Detail page for one assignment, with the akhiri (end) action.
- * The status change is a local mock toggle for now — replace with the real
- * `endAssignment(id, periodEnd)` mutation when the backend US2 wave lands.
- */
 export default function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data, error } = useAssignment(id);

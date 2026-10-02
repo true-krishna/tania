@@ -6,11 +6,6 @@ import * as React from "react";
 import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { useEmployee } from "@/features/employees/useEmployee";
 
-/**
- * Detail page for one employee, with the nonaktifkan (deactivate) action.
- * The status change is a local mock toggle for now — replace with the real
- * `deactivateEmployee` mutation when the backend US1 wave lands.
- */
 export default function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data, error } = useEmployee(id);

@@ -7,10 +7,6 @@ const TABS = [
   { href: "/master-data/projects", label: "Project" },
 ] as const;
 
-/**
- * Sub-navigation for the Admin master-data area (US6), so the four entity
- * pages share one tab bar under /master-data alongside the top-level nav.
- */
 export default function MasterDataLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-4">
