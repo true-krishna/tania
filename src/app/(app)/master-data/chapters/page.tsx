@@ -1,6 +1,6 @@
 "use client";
 
-import { BoardTable } from "@/components/monday";
+import { BoardTable } from "@/components/BoardTable";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { useChapters } from "@/features/master-data/useMasterData";
 

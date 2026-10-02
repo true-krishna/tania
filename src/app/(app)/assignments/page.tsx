@@ -3,7 +3,9 @@
 import Link from "next/link";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
-import { BoardTable, PageHeader, Select } from "@/components/monday";
+import { BoardTable } from "@/components/BoardTable";
+import { PageHeader } from "@/components/PageHeader";
+import { Select } from "@/components/Select";
 import { assignments } from "@/features/assignments/mock";
 import { useAssignments } from "@/features/assignments/useAssignments";
 import { employees } from "@/features/employees/mock";

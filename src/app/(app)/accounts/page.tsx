@@ -1,6 +1,7 @@
 "use client";
 
-import { BoardTable, PageHeader } from "@/components/monday";
+import { BoardTable } from "@/components/BoardTable";
+import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { roleLabel } from "@/features/accounts/mock";
 import { useUsers } from "@/features/accounts/useAccounts";

@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useSessionRole } from "@/lib/auth/guard";
-import { Card, PageHeader } from "@/components/monday";
+import { Card } from "@/components/Card";
+import { PageHeader } from "@/components/PageHeader";
 import { getSession } from "@/lib/auth/token-store";
 
 export default function DashboardPage() {

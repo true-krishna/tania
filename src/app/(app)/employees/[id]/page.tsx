@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as React from "react";
-import { Card, PageHeader } from "@/components/monday";
+import { Card } from "@/components/Card";
+import { PageHeader } from "@/components/PageHeader";
 import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { useEmployee } from "@/features/employees/useEmployee";
 

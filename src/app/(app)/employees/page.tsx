@@ -3,8 +3,11 @@
 import Link from "next/link";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
-import { BoardTable, Button, Input, PageHeader, Select } from "@/components/monday";
-import type { Column } from "@/components/monday";
+import { BoardTable, type Column } from "@/components/BoardTable";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { PageHeader } from "@/components/PageHeader";
+import { Select } from "@/components/Select";
 import { employees } from "@/features/employees/mock";
 import { useEmployees } from "@/features/employees/useEmployees";
 import type { Employee, EmployeeStatus } from "@/generated/graphql/types";

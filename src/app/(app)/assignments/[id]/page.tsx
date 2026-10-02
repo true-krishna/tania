@@ -4,7 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as React from "react";
 import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
-import { Button, Card, PageHeader } from "@/components/monday";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { PageHeader } from "@/components/PageHeader";
 import { useAssignment } from "@/features/assignments/useAssignment";
 
 export default function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
