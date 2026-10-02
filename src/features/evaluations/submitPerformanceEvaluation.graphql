@@ -1,0 +1,6 @@
+mutation SubmitPerformanceEvaluation($id: ID!) {
+  submitPerformanceEvaluation(id: $id) {
+    id
+    status
+  }
+}

@@ -1,0 +1,54 @@
+query PerformanceEvaluationForTalent($periodId: ID!, $employeeId: ID!, $first: Int = 1) {
+  performanceEvaluations(periodId: $periodId, employeeId: $employeeId, first: $first) {
+    edges {
+      node {
+        id
+        status
+        summaryAchievement
+        developmentNotes
+        talent {
+          id
+          fullName
+          employeeCode
+        }
+        status
+        summaryAchievement
+        developmentNotes
+        period {
+          id
+          name
+          startDate
+          endDate
+          state
+          template {
+            id
+            name
+            criteria {
+              id
+              label
+              answerType
+              position
+            }
+          }
+        }
+        answers {
+          criterion {
+            id
+            label
+            answerType
+            position
+          }
+          valueNumeric
+          valueBool
+          valueText
+        }
+        createdBy {
+          id
+          fullName
+        }
+        createdAt
+        updatedAt
+      }
+    }
+  }
+}

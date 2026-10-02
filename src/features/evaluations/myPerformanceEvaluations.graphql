@@ -1,0 +1,27 @@
+query MyPerformanceEvaluations {
+  myPerformanceEvaluations {
+    id
+    status
+    summaryAchievement
+    developmentNotes
+    period {
+      id
+      name
+      startDate
+      endDate
+      state
+    }
+    answers {
+      criterion {
+        id
+        label
+        answerType
+        position
+      }
+      valueNumeric
+      valueBool
+      valueText
+    }
+    updatedAt
+  }
+}

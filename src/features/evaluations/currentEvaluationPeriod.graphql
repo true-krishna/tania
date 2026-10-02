@@ -1,0 +1,20 @@
+query CurrentEvaluationPeriod {
+  currentEvaluationPeriod {
+    id
+    name
+    startDate
+    endDate
+    state
+    isActive
+    template {
+      id
+      name
+      criteria {
+        id
+        label
+        answerType
+        position
+      }
+    }
+  }
+}

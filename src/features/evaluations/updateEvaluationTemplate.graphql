@@ -1,0 +1,13 @@
+mutation UpdateEvaluationTemplate($id: ID!, $name: String, $criteria: [EvaluationCriterionInput!]) {
+  updateEvaluationTemplate(id: $id, name: $name, criteria: $criteria) {
+    id
+    name
+    isActive
+    criteria {
+      id
+      label
+      answerType
+      position
+    }
+  }
+}
