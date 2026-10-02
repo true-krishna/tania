@@ -278,6 +278,57 @@ describe("NewIdpPage (Apollo form, US3)", () => {
 
     expect(await screen.findByText(/berhasil dibuat/i)).toBeInTheDocument();
   });
+
+  it("shows an error toast when the create mutation fails", async () => {
+    const failingMocks = [
+      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: assignableTalentsResult },
+      {
+        request: {
+          query: CreateIdpDocument,
+          variables: {
+            input: {
+              employeeId: "emp-1",
+              developmentObjective: "Menjadi Go backend engineer yang andal",
+              currentAssessment: "Kuat di API",
+              gapAnalysis: "Butuh concurrency",
+              timelineStart: "2025-07-01",
+              timelineEnd: "2025-09-30",
+              successIndicators: "Selesaikan 3 fitur",
+              actions: [],
+            },
+          },
+        },
+        error: new Error("Gagal membuat IDP."),
+      },
+    ];
+
+    render(
+      <MockedProvider mocks={failingMocks}>
+        <NewIdpPage />
+      </MockedProvider>
+    );
+    await screen.findByRole("heading", { name: /buat idp/i });
+
+    fireEvent.change(screen.getByRole("combobox", { name: /talent/i }), { target: { value: "emp-1" } });
+    fireEvent.change(screen.getByLabelText(/development objective/i), {
+      target: { value: "Menjadi Go backend engineer yang andal" },
+    });
+    fireEvent.change(screen.getByLabelText(/penilaian kondisi saat ini/i), {
+      target: { value: "Kuat di API" },
+    });
+    fireEvent.change(screen.getByLabelText(/identifikasi gap/i), {
+      target: { value: "Butuh concurrency" },
+    });
+    fireEvent.change(screen.getByLabelText(/timeline mulai/i), { target: { value: "2025-07-01" } });
+    fireEvent.change(screen.getByLabelText(/timeline selesai/i), { target: { value: "2025-09-30" } });
+    fireEvent.change(screen.getByLabelText(/success indicators/i), {
+      target: { value: "Selesaikan 3 fitur" },
+    });
+
+    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/gagal membuat idp/i);
+  });
 });
 
 describe("IdpDetailPage (Apollo, US3)", () => {

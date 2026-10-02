@@ -9,9 +9,12 @@ import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
+import { ToastStack } from "@/components/Toast";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
-import { CreateIdpDocument } from "@/generated/graphql";
 import type { DevelopmentMethod } from "@/generated/graphql/types";
+import { CreateIdpDocument } from "@/generated/graphql";
+
+type ToastItem = { id: string; variant: "error" | "success"; message: string };
 
 type ActionRow = {
   description: string;
@@ -67,6 +70,21 @@ export default function NewIdpPage() {
   const [actions, setActions] = React.useState<ActionRow[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
 
+  const [toasts, setToasts] = React.useState<ToastItem[]>([]);
+  const toastId = React.useRef(0);
+
+  function addToast(variant: ToastItem["variant"], message: string) {
+    toastId.current += 1;
+    const id = String(toastId.current);
+    setToasts((prev) => [...prev, { id, variant, message }]);
+    setTimeout(() => dismissToast(id), 4000);
+    return id;
+  }
+
+  function dismissToast(id: string) {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }
+
   if (talents.status === "loading") return <LoadingState />;
   if (talents.status === "error")
     return <ErrorState message={talents.error ?? "Gagal memuat talent."} />;
@@ -119,8 +137,9 @@ export default function NewIdpPage() {
         },
       });
       setSubmitted(true);
+      addToast("success", "IDP berhasil dibuat.");
     } catch (err) {
-      setErrors({ employeeId: err instanceof Error ? err.message : "Gagal membuat IDP." });
+      addToast("error", err instanceof Error ? err.message : "Gagal membuat IDP.");
     }
   }
 
@@ -156,6 +175,7 @@ export default function NewIdpPage() {
 
   return (
     <section className="flex max-w-3xl flex-col gap-4">
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
       <PageHeader title="Buat IDP" subtitle="Rancang Individual Development Plan untuk talent (Chapter)." />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">

@@ -10,6 +10,7 @@ import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
+import { ToastStack } from "@/components/Toast";
 import { useIdp } from "@/features/idp/useIdp";
 import {
   AddDevelopmentActionDocument,
@@ -74,6 +75,8 @@ function Definition({ label, value }: { label: string; value: string }) {
   );
 }
 
+type ToastItem = { id: string; variant: "error" | "success"; message: string };
+
 export default function IdpDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data, error } = useIdp(id);
@@ -102,7 +105,20 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
   const [reviewFollowUp, setReviewFollowUp] = React.useState("");
   const [reviewError, setReviewError] = React.useState<string | null>(null);
 
-  const [notifyDone, setNotifyDone] = React.useState<string | null>(null);
+  const [toasts, setToasts] = React.useState<ToastItem[]>([]);
+  const toastId = React.useRef(0);
+
+  function addToast(variant: ToastItem["variant"], message: string) {
+    toastId.current += 1;
+    const id = String(toastId.current);
+    setToasts((prev) => [...prev, { id, variant, message }]);
+    setTimeout(() => dismissToast(id), 4000);
+    return id;
+  }
+
+  function dismissToast(id: string) {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -127,10 +143,9 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
       });
       setActionDesc("");
       setActionDue("");
-      setNotifyDone("Aksi pengembangan ditambahkan.");
-      setTimeout(() => setNotifyDone(null), 3000);
+      addToast("success", "Aksi pengembangan ditambahkan.");
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Gagal menambah aksi.");
+      addToast("error", err instanceof Error ? err.message : "Gagal menambah aksi.");
     }
   }
 
@@ -151,21 +166,18 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
       setReviewDate("");
       setReviewSummary("");
       setReviewFollowUp("");
-      setNotifyDone("Hasil review dicatat.");
-      setTimeout(() => setNotifyDone(null), 3000);
+      addToast("success", "Hasil review dicatat.");
     } catch (err) {
-      setReviewError(err instanceof Error ? err.message : "Gagal mencatat review.");
+      addToast("error", err instanceof Error ? err.message : "Gagal mencatat review.");
     }
   }
 
   async function handleClose() {
     try {
       await closeIdp({ variables: { id } });
-      setNotifyDone("IDP ditutup.");
-      setTimeout(() => setNotifyDone(null), 3000);
+      addToast("success", "IDP ditutup.");
     } catch (err) {
-      setNotifyDone(err instanceof Error ? err.message : "Gagal menutup IDP.");
-      setTimeout(() => setNotifyDone(null), 3000);
+      addToast("error", err instanceof Error ? err.message : "Gagal menutup IDP.");
     }
   }
 
@@ -191,11 +203,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         }
       />
 
-      {notifyDone ? (
-        <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-          {notifyDone}
-        </div>
-      ) : null}
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
       <Card className="max-w-3xl">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">Komponen IDP</h2>
@@ -232,11 +240,12 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                   aria-label={`Status aksi ${action.description}`}
                   className="w-auto py-1 text-xs"
                   value={action.status}
-                  onChange={(e) =>
-                    updateActionStatus({
-                      variables: { id: action.id, status: e.target.value as DevelopmentActionStatus },
-                    })
-                  }
+                  onChange={(e) => {
+                    const status = e.target.value as DevelopmentActionStatus;
+                    updateActionStatus({ variables: { id: action.id, status } }).catch((err: unknown) => {
+                      addToast("error", err instanceof Error ? err.message : "Gagal memperbarui status aksi.");
+                    });
+                  }}
                 >
                   {(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map((s) => (
                     <option key={s} value={s}>
