@@ -1,43 +1,46 @@
-/**
- * Shared presentational states for data-driven client pages (mock or live).
- * Keeps loading / error / empty rendering consistent across feature pages.
- */
+import { cn } from "@/lib/cn";
+
 export function LoadingState({ label = "Memuat…" }: { label?: string }) {
   return (
-    <p className="rounded-md border border-zinc-200 bg-white p-4 text-sm text-zinc-500">
-      {label}
-    </p>
+    <div className="flex items-center justify-center rounded-lg border border-board-border bg-board p-6 shadow-sm">
+      <span className="flex items-center gap-2 text-sm text-zinc-500">
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+        {label}
+      </span>
+    </div>
   );
 }
 
 export function ErrorState({ message }: { message: string }) {
   return (
-    <p
-      className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+    <div
+      className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm"
       role="alert"
     >
       {message}
-    </p>
+    </div>
   );
 }
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <p className="rounded-md border border-zinc-200 bg-white p-4 text-sm text-zinc-500">
+    <div className="rounded-lg border border-dashed border-zinc-300 bg-board p-8 text-center text-sm text-zinc-500 shadow-sm">
       {message}
-    </p>
+    </div>
   );
 }
 
 export function StatusBadge({ active }: { active: boolean }) {
   return (
     <span
-      className={
-        active
-          ? "rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
-          : "rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600"
-      }
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
+        active ? "bg-brand-100 text-brand-700" : "bg-zinc-100 text-zinc-600",
+      )}
     >
+      <span
+        className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-brand-600" : "bg-zinc-400")}
+      />
       {active ? "Aktif" : "Nonaktif"}
     </span>
   );

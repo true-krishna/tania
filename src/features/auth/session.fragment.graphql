@@ -1,0 +1,13 @@
+fragment AuthSession on AuthPayload {
+  accessToken
+  accessTokenExpiresAt
+  refreshToken
+  refreshTokenExpiresAt
+  user {
+    id
+    email
+    fullName
+    accessRole
+    status
+  }
+}

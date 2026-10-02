@@ -1,0 +1,7 @@
+mutation EndAssignment($id: ID!, $periodEnd: Date!) {
+  endAssignment(id: $id, periodEnd: $periodEnd) {
+    id
+    status
+    periodEnd
+  }
+}

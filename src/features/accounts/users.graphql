@@ -1,0 +1,9 @@
+query Users($search: String, $accessRole: AccessRole, $status: AccountStatus) {
+  users(search: $search, accessRole: $accessRole, status: $status) {
+    id
+    fullName
+    email
+    accessRole
+    status
+  }
+}

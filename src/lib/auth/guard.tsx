@@ -8,8 +8,8 @@ import { authConfig } from "@/lib/auth/config";
 import { atLeast, type RoleOrMore } from "@/lib/auth/roles";
 
 export function useSessionRole(): AccessRole | null {
-  // Session store is synchronous (in-memory, plan.md §5.2) — read once at
-  // mount, no effect, to avoid cascading renders (react-hooks lint).
+  // Session store is synchronous (cookie-backed, src/lib/auth/token-store) —
+  // read once at mount, no effect, to avoid cascading renders (react-hooks lint).
   const [role] = React.useState<AccessRole | null>(() => {
     if (authConfig.localOnly) {
       return (authConfig.defaultAccessRole as AccessRole | undefined) ?? "TALENT";

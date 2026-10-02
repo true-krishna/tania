@@ -1,0 +1,11 @@
+query Projects($unitId: ID, $includeInactive: Boolean = false) {
+  projects(unitId: $unitId, includeInactive: $includeInactive) {
+    id
+    name
+    isActive
+    unit {
+      id
+      name
+    }
+  }
+}

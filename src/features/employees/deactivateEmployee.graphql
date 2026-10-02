@@ -1,0 +1,6 @@
+mutation DeactivateEmployee($id: ID!, $acknowledgeActiveWork: Boolean = false) {
+  deactivateEmployee(id: $id, acknowledgeActiveWork: $acknowledgeActiveWork) {
+    id
+    status
+  }
+}

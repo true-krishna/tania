@@ -2,8 +2,14 @@
 
 import Link from "next/link";
 import * as React from "react";
+import { useMutation } from "@apollo/client";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { PageHeader } from "@/components/PageHeader";
+import { Select } from "@/components/Select";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { useJobRoles, useUnits } from "@/features/master-data/useMasterData";
+import { CreateEmployeeDocument } from "@/generated/graphql";
 
 type FormValues = {
   fullName: string;
@@ -23,16 +29,10 @@ const EMPTY: FormValues = {
   joinedAt: "",
 };
 
-/**
- * "Tambah Karyawan" form (Operation) — US1.
- * Required-field validation runs client-side (FR: form menolak field wajib
- * kosong). Submit is a mock for now: it surfaces what would be sent as a
- * `CreateEmployeeInput`. Swap for the real `createEmployee` mutation when the
- * backend US1 wave lands.
- */
 export default function NewEmployeePage() {
   const units = useUnits();
   const jobRoles = useJobRoles();
+  const [createEmployee, { data, error, loading }] = useMutation(CreateEmployeeDocument);
   const [values, setValues] = React.useState<FormValues>(EMPTY);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});
   const [submitted, setSubmitted] = React.useState(false);
@@ -59,20 +59,43 @@ export default function NewEmployeePage() {
     if (!valuesToCheck.joinedAt) next.joinedAt = "Tanggal bergabung wajib diisi.";
     return next;
   }
-
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const nextErrors = validate(values);
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length === 0) setSubmitted(true);
+    if (Object.keys(nextErrors).length > 0) return;
+    try {
+      await createEmployee({
+        variables: {
+          input: {
+            fullName: values.fullName.trim(),
+            employeeCode: values.employeeCode.trim(),
+            email: values.email.trim(),
+            unitId: values.unitId,
+            jobRoleId: values.jobRoleId,
+            joinedAt: values.joinedAt,
+          },
+        },
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setErrors({ email: err instanceof Error ? err.message : "Gagal membuat karyawan." });
+    }
   }
 
+
   if (submitted) {
+    const ok = Boolean(data?.createEmployee);
     return (
       <section className="flex max-w-xl flex-col gap-4">
-        <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-          Karyawan <strong>{values.fullName}</strong> disiapkan untuk dibuat (mock). Saat backend
-          US1 tersedia, submit ini akan memanggil mutasi <code>createEmployee</code>.
+        <div
+          className={`rounded-md border p-4 text-sm ${
+            ok ? "border-green-200 bg-green-50 text-green-800" : "border-red-200 bg-red-50 text-red-800"
+          }`}
+        >
+          {ok
+            ? `Karyawan ${values.fullName} berhasil dibuat.`
+            : error?.message ?? "Terjadi kesalahan saat membuat karyawan."}
         </div>
         <button
           type="button"
@@ -91,49 +114,42 @@ export default function NewEmployeePage() {
 
   return (
     <section className="flex max-w-xl flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Tambah Karyawan</h1>
-        <p className="mt-1 text-sm text-zinc-600">Lengkapi data karyawan baru.</p>
-      </div>
+      <PageHeader title="Tambah Karyawan" subtitle="Lengkapi data karyawan baru." />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Label error={errors.fullName}>
           Nama lengkap
-          <input
+          <Input
             type="text"
             value={values.fullName}
             onChange={(e) => set("fullName", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
             placeholder="cth. Ahmad Fauzi"
           />
         </Label>
         <Label error={errors.employeeCode}>
           Kode karyawan
-          <input
+          <Input
             type="text"
             value={values.employeeCode}
             onChange={(e) => set("employeeCode", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
             placeholder="cth. EMP-0100"
           />
         </Label>
         <Label error={errors.email}>
           Email
-          <input
+          <Input
             type="email"
             value={values.email}
             onChange={(e) => set("email", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
             placeholder="cth. ahmad.fauzi@tania.co.id"
             autoComplete="email"
           />
         </Label>
         <Label error={errors.unitId}>
           Unit
-          <select
+          <Select
             value={values.unitId}
             onChange={(e) => set("unitId", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           >
             <option value="">— pilih unit —</option>
             {units.data?.map((unit) => (
@@ -141,14 +157,13 @@ export default function NewEmployeePage() {
                 {unit.name}
               </option>
             ))}
-          </select>
+          </Select>
         </Label>
         <Label error={errors.jobRoleId}>
           Job Role
-          <select
+          <Select
             value={values.jobRoleId}
             onChange={(e) => set("jobRoleId", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           >
             <option value="">— pilih job role —</option>
             {jobRoles.data?.map((role) => (
@@ -156,30 +171,23 @@ export default function NewEmployeePage() {
                 {role.name}
               </option>
             ))}
-          </select>
+          </Select>
         </Label>
         <Label error={errors.joinedAt}>
           Tanggal Bergabung
-          <input
+          <Input
             type="date"
             value={values.joinedAt}
             onChange={(e) => set("joinedAt", e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
         </Label>
 
         <div className="flex gap-2">
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
-          >
-            Simpan
-          </button>
-          <Link
-            href="/employees"
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
-          >
-            Batal
+          <Button type="submit" disabled={loading}>Simpan</Button>
+          <Link href="/employees" className="no-underline">
+            <Button type="button" variant="secondary">
+              Batal
+            </Button>
           </Link>
         </div>
       </form>

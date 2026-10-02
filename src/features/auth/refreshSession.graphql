@@ -1,0 +1,5 @@
+mutation RefreshSession($refreshToken: String!) {
+  refreshSession(refreshToken: $refreshToken) {
+    ...AuthSession
+  }
+}

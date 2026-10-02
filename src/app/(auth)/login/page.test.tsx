@@ -17,6 +17,8 @@ const loginResult = {
     login: {
       accessToken: "token-abc",
       accessTokenExpiresAt: "2026-10-02T00:00:00Z",
+      refreshToken: "refresh-xyz",
+      refreshTokenExpiresAt: "2026-10-09T00:00:00Z",
       user: {
         id: "u-1",
         email: "ada@tania.id",

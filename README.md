@@ -174,7 +174,8 @@ Operations are written next to their feature as `.graphql` files under
 
 ### Auth guard
 
-`src/lib/auth/` holds token storage (in-memory access token), role helpers and
+`src/lib/auth/` holds token storage (access token in a client-readable
+`tania_session` cookie so reloads keep you signed in), role helpers and
 the route guard. Routes under `src/app/(app)/*` are wrapped in `AuthGuard`
 (redirects unauthenticated users to `/login`; hides actions by role). Final
 authorization is enforced server-side (FR-16) — this layer only de-clutters the

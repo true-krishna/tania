@@ -1,5 +1,6 @@
 "use client";
 
+import { BoardTable } from "@/components/BoardTable";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { useJobRoles } from "@/features/master-data/useMasterData";
 
@@ -12,32 +13,23 @@ export default function JobRolesPage() {
     return <EmptyState message="Belum ada job role. Tambahkan job role pertama." />;
 
   return (
-    <table className="w-full border-collapse text-left text-sm">
-      <caption className="sr-only">Daftar job role</caption>
-      <thead>
-        <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">
-          <th scope="col" className="py-2 pr-4 font-medium">
-            Nama Job Role
-          </th>
-          <th scope="col" className="py-2 pr-4 font-medium">
-            Chapter
-          </th>
-          <th scope="col" className="py-2 font-medium">
-            Status
-          </th>
+    <BoardTable
+      caption="Daftar job role"
+      columns={[
+        { key: "name", label: "Nama Job Role" },
+        { key: "chapter", label: "Chapter" },
+        { key: "status", label: "Status" },
+      ]}
+    >
+      {data.map((role) => (
+        <tr key={role.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
+          <td className="px-4 py-2.5 text-zinc-900">{role.name}</td>
+          <td className="px-4 py-2.5 text-zinc-600">{role.chapter?.name ?? "Tanpa chapter"}</td>
+          <td className="px-4 py-2.5">
+            <StatusBadge active={role.isActive} />
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        {data.map((role) => (
-          <tr key={role.id} className="border-b border-zinc-100">
-            <td className="py-2 pr-4 text-zinc-900">{role.name}</td>
-            <td className="py-2 pr-4 text-zinc-600">{role.chapter?.name ?? "Tanpa chapter"}</td>
-            <td className="py-2">
-              <StatusBadge active={role.isActive} />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+      ))}
+    </BoardTable>
   );
 }

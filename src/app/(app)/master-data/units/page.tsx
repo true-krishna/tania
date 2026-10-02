@@ -1,5 +1,6 @@
 "use client";
 
+import { BoardTable } from "@/components/BoardTable";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { useUnits } from "@/features/master-data/useMasterData";
 
@@ -12,32 +13,23 @@ export default function UnitsPage() {
     return <EmptyState message="Belum ada unit. Tambahkan unit pertama." />;
 
   return (
-    <table className="w-full border-collapse text-left text-sm">
-      <caption className="sr-only">Daftar unit</caption>
-      <thead>
-        <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">
-          <th scope="col" className="py-2 pr-4 font-medium">
-            Nama Unit
-          </th>
-          <th scope="col" className="py-2 pr-4 font-medium">
-            Proyek
-          </th>
-          <th scope="col" className="py-2 font-medium">
-            Status
-          </th>
+    <BoardTable
+      caption="Daftar unit"
+      columns={[
+        { key: "name", label: "Nama Unit" },
+        { key: "projects", label: "Proyek" },
+        { key: "status", label: "Status" },
+      ]}
+    >
+      {data.map((unit) => (
+        <tr key={unit.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
+          <td className="px-4 py-2.5 text-zinc-900">{unit.name}</td>
+          <td className="px-4 py-2.5 text-zinc-600">{unit.projects.length}</td>
+          <td className="px-4 py-2.5">
+            <StatusBadge active={unit.isActive} />
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        {data.map((unit) => (
-          <tr key={unit.id} className="border-b border-zinc-100">
-            <td className="py-2 pr-4 text-zinc-900">{unit.name}</td>
-            <td className="py-2 pr-4 text-zinc-600">{unit.projects.length}</td>
-            <td className="py-2">
-              <StatusBadge active={unit.isActive} />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+      ))}
+    </BoardTable>
   );
 }

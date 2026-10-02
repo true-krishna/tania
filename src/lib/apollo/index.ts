@@ -1,2 +1,3 @@
 export { ApolloProvider } from "./provider";
-export { getGraphqlEndpoint, createApolloClient } from "./client";
+export { getGraphqlEndpoint } from "./endpoint";
+export { createApolloClient } from "./client";

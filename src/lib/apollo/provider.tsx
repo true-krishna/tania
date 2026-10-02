@@ -6,11 +6,7 @@ import type { ApolloClient } from "@apollo/client";
 import { createApolloClient } from "./client";
 
 export function ApolloProvider({ children }: { children: React.ReactNode }) {
-  const [client] = React.useState<ApolloClient<unknown> | null>(() =>
-    createApolloClient()
-  );
-
-  if (!client) return <>{children}</>;
+  const [client] = React.useState<ApolloClient<unknown>>(() => createApolloClient());
 
   return <ApolloProviderBase client={client}>{children}</ApolloProviderBase>;
 }
