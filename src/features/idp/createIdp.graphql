@@ -1,0 +1,10 @@
+mutation CreateIdp($input: CreateIdpInput!) {
+  createIdp(input: $input) {
+    id
+    status
+    talent {
+      id
+      fullName
+    }
+  }
+}
