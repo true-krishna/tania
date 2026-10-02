@@ -1,3 +1,5 @@
+import { cn } from "@/lib/cn";
+
 export function LoadingState({ label = "Memuat…" }: { label?: string }) {
   return (
     <div className="flex items-center justify-center rounded-lg border border-board-border bg-board p-6 shadow-sm">
@@ -31,12 +33,13 @@ export function EmptyState({ message }: { message: string }) {
 export function StatusBadge({ active }: { active: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold ${
-        active ? "bg-brand-100 text-brand-700" : "bg-zinc-100 text-zinc-600"
-      }`}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
+        active ? "bg-brand-100 text-brand-700" : "bg-zinc-100 text-zinc-600",
+      )}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${active ? "bg-brand-600" : "bg-zinc-400"}`}
+        className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-brand-600" : "bg-zinc-400")}
       />
       {active ? "Aktif" : "Nonaktif"}
     </span>

@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import * as React from "react";
 
 interface AvatarProps {
@@ -17,7 +18,10 @@ export function Avatar({ initials }: AvatarProps) {
   return (
     <span
       aria-hidden
-      className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs font-semibold ${color}`}
+      className={cn(
+        "inline-flex h-8 w-8 items-center justify-center rounded-md text-xs font-semibold",
+        color,
+      )}
     >
       {initials}
     </span>

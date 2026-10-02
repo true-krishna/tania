@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import * as React from "react";
 
 export interface Column {
@@ -23,7 +24,10 @@ export function BoardTable({ caption, columns, children }: BoardTableProps) {
               <th
                 key={col.key}
                 scope="col"
-                className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-zinc-700 ${col.className ?? ""}`}
+                className={cn(
+                  "px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-zinc-700",
+                  col.className,
+                )}
               >
                 {col.label}
               </th>

@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import * as React from "react";
 
 const CONTROL =
@@ -6,5 +7,5 @@ const CONTROL =
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 export function Input({ className = "", ...rest }: InputProps) {
-  return <input className={`${CONTROL} ${className}`} {...rest} />;
+  return <input className={cn(CONTROL, className)} {...rest} />;
 }

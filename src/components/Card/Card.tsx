@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import * as React from "react";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -7,7 +8,11 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Card({ padded = true, className = "", ...rest }: CardProps) {
   return (
     <div
-      className={`rounded-lg border border-board-border bg-board shadow-sm ${padded ? "p-5" : ""} ${className}`}
+      className={cn(
+        "rounded-lg border border-board-border bg-board shadow-sm",
+        padded && "p-5",
+        className,
+      )}
       {...rest}
     />
   );
