@@ -1,0 +1,6 @@
+mutation CloseIdp($id: ID!) {
+  closeIdp(id: $id) {
+    id
+    status
+  }
+}

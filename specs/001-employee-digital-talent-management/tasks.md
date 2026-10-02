@@ -121,8 +121,12 @@ Aturan yang mengikat:
 
 **Independent Test**: Login Chapter → daftar menampilkan progres per status; detail IDP menampilkan seluruh komponen; filter status menyempitkan hasil.
 
-- [ ] T079 [P] [US3] Frontend feature `idp` (Chapter): daftar + filter status + progres, detail IDP, aksi pengembangan, log review pada `src/app/(app)/idp/` dan `src/features/idp/`
-- [ ] T080 [P] [US3] Test Vitest + RTL IDP (filter status, progres aksi) pada `src/features/idp/idp.test.tsx`
+- [x] T079 [P] [US3] Frontend feature `idp` (Chapter): daftar + filter status + progres, detail IDP, aksi pengembangan, log review pada `src/app/(app)/idp/` dan `src/features/idp/` — **terpenuhi (TAN-82)**: `src/app/(app)/idp/page.tsx` (daftar + filter status + progress aksi), `src/app/(app)/idp/[id]/page.tsx` (seluruh komponen IDP, aksi pengembangan + ubah status, log review + catat review, riwayat revisi, tutup IDP), `src/app/(app)/idp/new/page.tsx` (buat IDP + aksi opsional). Hooks/query: `src/features/idp/` (`useIdps`, `useIdp`, dan 8 dokumen GraphQL). **Terverifikasi** 2026-10-02: `npm run typecheck`, `npm test` (42 test/9 file hijau), `npm run lint` (0 error), `npm run build`, `npm run generate:check` hijau.
+- [x] T080 [P] [US3] Test Vitest + RTL IDP (filter status, progres aksi) pada `src/features/idp/idp.test.tsx` — **terpenuhi (TAN-82)**: 9 test (daftar + filter + progres, empty state, form buat termasuk validasi + hanya talent assignable, detail seluruh komponen, ubah status aksi, catat review, tutup IDP) — **terverifikasi** 2026-10-02.</think>Now let me check whether `tasks.md` at the top has a legend about Phase 5 status (row 42 said "Phase 6 backend" which is stale from prior phases). Let me not touch that row since it reflects prior phases' state. Let me check if there's a completion summary table I should update. Let me look at the header of tasks.md to see if there's a status table.
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="read">
+<｜DSML｜parameter name="path" string="true">tania-dashboard/specs/001-employee-digital-talent-management/tasks.md:30-50
 
 **Checkpoint**: US3 UI berfungsi.
 
