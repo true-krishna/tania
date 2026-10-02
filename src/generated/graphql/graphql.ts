@@ -15,6 +15,12 @@ export type AccountStatus =
   | 'ACTIVE'
   | 'INACTIVE';
 
+export type AddIdpReviewInput = {
+  followUp?: string | null | undefined;
+  reviewDate: string;
+  summary: string;
+};
+
 export type AssignmentFilter = {
   employeeId?: string | number | null | undefined;
   projectId?: string | number | null | undefined;
@@ -31,6 +37,12 @@ export type CreateAssignmentInput = {
   periodEnd?: string | null | undefined;
   periodStart: string;
   projectId: string | number;
+};
+
+export type CreateDevelopmentActionInput = {
+  description: string;
+  dueDate?: string | null | undefined;
+  method: DevelopmentMethod;
 };
 
 export type CreateEmployeeInput = {

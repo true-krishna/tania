@@ -1,0 +1,30 @@
+query Idps($filter: IdpFilter, $first: Int = 25, $after: String) {
+  idps(filter: $filter, first: $first, after: $after) {
+    totalCount
+    edges {
+      node {
+        id
+        status
+        developmentObjective
+        timelineStart
+        timelineEnd
+        talent {
+          id
+          fullName
+          employeeCode
+        }
+        actions {
+          id
+          status
+        }
+        reviews {
+          id
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

@@ -1,0 +1,9 @@
+mutation AddIdpReview($idpId: ID!, $input: AddIdpReviewInput!) {
+  addIdpReview(idpId: $idpId, input: $input) {
+    id
+    reviewDate
+    summary
+    followUp
+    createdAt
+  }
+}

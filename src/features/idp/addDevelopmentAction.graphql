@@ -1,0 +1,9 @@
+mutation AddDevelopmentAction($idpId: ID!, $input: CreateDevelopmentActionInput!) {
+  addDevelopmentAction(idpId: $idpId, input: $input) {
+    id
+    description
+    method
+    status
+    dueDate
+  }
+}

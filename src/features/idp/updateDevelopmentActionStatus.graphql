@@ -1,0 +1,9 @@
+mutation UpdateDevelopmentActionStatus($id: ID!, $status: DevelopmentActionStatus!) {
+  updateDevelopmentActionStatus(id: $id, status: $status) {
+    id
+    description
+    method
+    status
+    dueDate
+  }
+}
