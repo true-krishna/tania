@@ -2,70 +2,181 @@
 
 import * as React from "react";
 import { describe, expect, it } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { MockedProvider } from "@apollo/client/testing";
 import AssignmentsPage from "@/app/(app)/assignments/page";
 import NewAssignmentPage from "@/app/(app)/assignments/new/page";
 import AssignmentDetailPage from "@/app/(app)/assignments/[id]/page";
-import { assignments, filterAssignments } from "./mock";
+import {
+  AssignableTalentsDocument,
+  AssignmentsDocument,
+  CreateAssignmentDocument,
+  EmployeesDocument,
+  EndAssignmentDocument,
+  JobRolesDocument,
+  ProjectsDocument,
+} from "@/generated/graphql";
 
-describe("filterAssignments (mock, US2)", () => {
-  it("filters by talent (employeeId)", () => {
-    const result = filterAssignments(assignments, { employeeId: "emp-001" });
-    expect(result).toHaveLength(1);
-    expect(result[0].talent.id).toBe("emp-001");
+const unit = { __typename: "Unit", id: "u-1", name: "Digital" };
+
+const employeeNodes = [
+  { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", employeeCode: "EMP-001", assignable: true },
+  { __typename: "Employee", id: "emp-5", fullName: "Eko Prasetyo", employeeCode: "EMP-005", assignable: false },
+];
+const employeesResult = {
+  data: {
+    employees: {
+      __typename: "EmployeeConnection",
+      totalCount: 2,
+      edges: employeeNodes.map((n) => ({ __typename: "EmployeeEdge", cursor: n.id, node: n })),
+      pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+    },
+  },
+};
+
+const projectsResult = {
+  data: {
+    projects: [
+      { __typename: "Project", id: "prj-1", name: "Network Modernization", isActive: true, unit },
+    ],
+  },
+};
+
+const jobRolesResult = {
+  data: {
+    jobRoles: [
+      { __typename: "JobRole", id: "jr-1", name: "Engineer", isActive: true, chapter: null },
+    ],
+  },
+};
+
+const assignableTalentNode = {
+  __typename: "Employee",
+  id: "emp-1",
+  fullName: "Andi Pratama",
+  employeeCode: "EMP-001",
+};
+
+const assignmentNode = {
+  __typename: "Assignment",
+  id: "asg-1",
+  status: "ACTIVE",
+  periodStart: "2025-07-01",
+  periodEnd: "2025-12-31",
+  talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", employeeCode: "EMP-001" },
+  project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
+  jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
+};
+
+const assignmentsResult = {
+  data: {
+    assignments: {
+      __typename: "AssignmentConnection",
+      totalCount: 1,
+      edges: [{ __typename: "AssignmentEdge", cursor: "asg-1", node: assignmentNode }],
+      pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+    },
+  },
+};
+
+describe("AssignmentsPage (Apollo, US2)", () => {
+  it("renders the assignment list after the queries resolve", async () => {
+    render(
+      <MockedProvider
+        mocks={[
+          { request: { query: EmployeesDocument, variables: { filter: {}, first: 100 } }, result: employeesResult },
+          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+          { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+        ]}
+      >
+        <AssignmentsPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+    expect(screen.getAllByText("Network Modernization").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("filters by project (projectId)", () => {
-    const result = filterAssignments(assignments, { projectId: "prj-001" });
-    expect(result.every((a) => a.project.id === "prj-001")).toBe(true);
-    expect(result.length).toBeGreaterThanOrEqual(2);
-  });
+  it("shows an empty state when the list has no assignments", async () => {
+    render(
+      <MockedProvider
+        mocks={[
+          { request: { query: EmployeesDocument, variables: { filter: {}, first: 100 } }, result: employeesResult },
+          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+          {
+            request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+            result: {
+              data: {
+                assignments: {
+                  __typename: "AssignmentConnection",
+                  totalCount: 0,
+                  edges: [],
+                  pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+                },
+              },
+            },
+          },
+        ]}
+      >
+        <AssignmentsPage />
+      </MockedProvider>
+    );
 
-  it("filters by status", () => {
-    const result = filterAssignments(assignments, { status: "COMPLETED" });
-    expect(result.every((a) => a.status === "COMPLETED")).toBe(true);
-  });
-
-  it("returns all when the filter is empty", () => {
-    expect(filterAssignments(assignments, {})).toHaveLength(assignments.length);
+    expect(await screen.findByText(/tidak ada assignment yang cocok/i)).toBeInTheDocument();
   });
 });
 
-describe("AssignmentsPage (mock, US2)", () => {
-  it("renders the assignment list after the mock query resolves", async () => {
-    render(<AssignmentsPage />);
-    expect(await screen.findByText("Budi Santoso")).toBeInTheDocument();
-    expect(screen.getByText("Andi Pratama")).toBeInTheDocument();
-    expect(screen.getByText("Network Modernization")).toBeInTheDocument();
-  });
+describe("NewAssignmentPage (Apollo form, US2)", () => {
+  const newMocks = [
+    { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+    { request: { query: JobRolesDocument, variables: { includeInactive: true } }, result: jobRolesResult },
+    {
+      request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+      result: {
+        data: {
+          assignableTalents: {
+            __typename: "EmployeeConnection",
+            edges: [{ __typename: "EmployeeEdge", cursor: "emp-1", node: assignableTalentNode }],
+          },
+        },
+      },
+    },
+    {
+      request: {
+        query: CreateAssignmentDocument,
+        variables: {
+          input: {
+            employeeId: "emp-1",
+            projectId: "prj-1",
+            jobRoleId: "jr-1",
+            periodStart: "2025-07-01",
+            periodEnd: undefined,
+          },
+        },
+      },
+      result: { data: { createAssignment: { id: "asg-2", status: "ACTIVE", __typename: "Assignment" } } },
+    },
+  ];
+  const renderPage = () =>
+    render(
+      <MockedProvider mocks={newMocks}>
+        <NewAssignmentPage />
+      </MockedProvider>
+    );
 
-  it("shows an empty state when a filter matches nothing", async () => {
-    render(<AssignmentsPage />);
-    await screen.findByText("Budi Santoso");
-
-    // Andi (asg-001) is COMPLETED, so ACTIVE + emp-001 matches nothing
-    fireEvent.change(screen.getByLabelText("Talent"), { target: { value: "emp-001" } });
-    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "ACTIVE" } });
-    await waitFor(() => {
-      expect(screen.getByText(/tidak ada assignment yang cocok/i)).toBeInTheDocument();
-    });
-  });
-});
-
-describe("NewAssignmentPage (mock form, US2)", () => {
   it("only offers assignable talents on the form", async () => {
-    render(<NewAssignmentPage />);
+    renderPage();
     await screen.findByRole("heading", { name: /buat assignment/i });
 
     const talentSelect = screen.getByRole("combobox", { name: /talent/i });
     const options = Array.from(talentSelect.querySelectorAll("option")).map((o) => o.textContent);
-    // emp-005 (Eko Prasetyo) is not assignable -> must not appear
+    // emp-5 (Eko Prasetyo) is not assignable -> must not appear
     expect(options.some((t) => t?.includes("Eko Prasetyo"))).toBe(false);
     expect(options.some((t) => t?.includes("Andi Pratama"))).toBe(true);
   });
 
   it("shows required-field errors on an empty submit", async () => {
-    render(<NewAssignmentPage />);
+    renderPage();
     await screen.findByRole("heading", { name: /buat assignment/i });
 
     fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
@@ -76,42 +187,48 @@ describe("NewAssignmentPage (mock form, US2)", () => {
     expect(screen.getByText(/tanggal mulai wajib diisi/i)).toBeInTheDocument();
   });
 
-  it("accepts a valid assignment and shows the mock success state", async () => {
-    render(<NewAssignmentPage />);
+  it("creates the assignment and shows a success state", async () => {
+    renderPage();
     await screen.findByRole("heading", { name: /buat assignment/i });
 
     fireEvent.change(screen.getByRole("combobox", { name: /talent/i }), {
-      target: { value: "emp-001" },
+      target: { value: "emp-1" },
     });
     fireEvent.change(screen.getByRole("combobox", { name: /project/i }), {
-      target: { value: "prj-001" },
+      target: { value: "prj-1" },
     });
     fireEvent.change(screen.getByRole("combobox", { name: /job role/i }), {
-      target: { value: "jr-001" },
+      target: { value: "jr-1" },
     });
     fireEvent.change(screen.getByLabelText(/tanggal mulai/i), { target: { value: "2025-07-01" } });
 
     fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
 
-    expect(await screen.findByText(/disiapkan untuk dibuat \(mock\)/i)).toBeInTheDocument();
+    expect(await screen.findByText(/berhasil dibuat/i)).toBeInTheDocument();
   });
 });
 
-describe("AssignmentDetailPage (mock, US2)", () => {
+describe("AssignmentDetailPage (Apollo, US2)", () => {
   it("renders the assignment and ends an active one", async () => {
+    const detailMocks = [
+      { request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult },
+      {
+        request: { query: EndAssignmentDocument, variables: { id: "asg-1", periodEnd: "2025-12-31" } },
+        result: { data: { endAssignment: { __typename: "Assignment", id: "asg-1", status: "COMPLETED", periodEnd: "2025-12-31" } } },
+      },
+    ];
 
-    // The page uses React.use(params); wrap render in an awaited act so the
-    // params suspension (and the mock query) resolve before interacting.
     await act(async () => {
       render(
         <React.Suspense fallback={null}>
-          <AssignmentDetailPage params={Promise.resolve({ id: "asg-002" })} />
+          <MockedProvider mocks={detailMocks}>
+            <AssignmentDetailPage params={Promise.resolve({ id: "asg-1" })} />
+          </MockedProvider>
         </React.Suspense>
       );
     });
-    fireEvent.click(
-      await screen.findByRole("button", { name: /ya, akhiri assignment/i })
-    );
+
+    fireEvent.click(await screen.findByRole("button", { name: /ya, akhiri assignment/i }));
 
     expect(await screen.findByText(/assignment selesai/i)).toBeInTheDocument();
     expect(

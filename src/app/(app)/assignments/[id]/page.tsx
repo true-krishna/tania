@@ -3,23 +3,25 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as React from "react";
+import { useMutation } from "@apollo/client";
 import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { PageHeader } from "@/components/PageHeader";
 import { useAssignment } from "@/features/assignments/useAssignment";
+import { EndAssignmentDocument } from "@/generated/graphql";
 
 export default function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data, error } = useAssignment(id);
-  const [ended, setEnded] = React.useState(false);
+  const [endAssignment, { loading }] = useMutation(EndAssignmentDocument);
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
   if (!data) return notFound();
 
   const assignment = data;
-  const isActive = !ended && assignment.status === "ACTIVE";
+  const isActive = assignment.status === "ACTIVE";
 
   return (
     <section className="flex flex-col gap-4">
@@ -50,7 +52,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Periode</dt>
             <dd className="text-zinc-900">
-              {assignment.periodStart} — {ended ? "sekarang" : assignment.periodEnd ?? "sekarang"}
+              {assignment.periodStart} — {assignment.periodEnd ?? "sekarang"}
             </dd>
           </div>
           <div>
@@ -69,7 +71,18 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
             talent untuk tugas berikutnya. Lanjutkan?
           </p>
           <div className="flex gap-2">
-            <Button type="button" onClick={() => setEnded(true)}>
+            <Button
+              type="button"
+              disabled={loading}
+              onClick={() =>
+                endAssignment({
+                  variables: {
+                    id,
+                    periodEnd: assignment.periodEnd ?? new Date().toISOString().slice(0, 10),
+                  },
+                })
+              }
+            >
               Ya, akhiri assignment
             </Button>
           </div>

@@ -1,14 +1,17 @@
 "use client";
 
-import type { Employee } from "@/generated/graphql/types";
-import { useMockQuery } from "@/lib/mock/useMockQuery";
-import { employeeById } from "./mock";
+import { useQuery } from "@apollo/client";
+import { EmployeeDocument, type EmployeeQuery } from "@/generated/graphql";
+import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
 
 /**
  * Single-employee lookup hook (Operation) — US1.
- * Mock-backed while the backend US1 wave is unserved; swap for the real
- * `employee(id)` query when live.
+ * Backed by the served `employee(id)` query.
  */
-export function useEmployee(id: string) {
-  return useMockQuery<Employee | undefined>(() => employeeById(id), [id]);
+export function useEmployee(id: string): QueryState<NonNullable<EmployeeQuery["employee"]> | undefined> {
+  const result = useQuery(EmployeeDocument, {
+    variables: { id },
+    skip: !id,
+  });
+  return toQueryState({ ...result, data: result.data?.employee ?? undefined });
 }

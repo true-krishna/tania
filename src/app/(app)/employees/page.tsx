@@ -8,10 +8,18 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
-import { employees } from "@/features/employees/mock";
 import { useEmployees } from "@/features/employees/useEmployees";
-import type { Employee, EmployeeStatus } from "@/generated/graphql/types";
+import type { EmployeeStatus } from "@/generated/graphql/types";
 
+type EmployeeRowData = {
+  id: string;
+  fullName: string;
+  employeeCode: string;
+  email: string;
+  status: EmployeeStatus;
+  unit: { name: string };
+  jobRole: { name: string };
+};
 const COLUMNS: Column[] = [
   { key: "name", label: "Nama" },
   { key: "email", label: "Email" },
@@ -20,7 +28,7 @@ const COLUMNS: Column[] = [
   { key: "status", label: "Status" },
 ];
 
-function EmployeeRow({ employee }: { employee: Employee }) {
+function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
@@ -101,7 +109,7 @@ export default function EmployeesPage() {
         </BoardTable>
       )}
       <p className="text-xs text-zinc-500">
-        {data ? `${data.length} dari ${employees.length} karyawan ditampilkan.` : ""}
+        {data ? `${data.length} karyawan ditampilkan.` : ""}
       </p>
     </section>
   );

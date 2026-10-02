@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
+import { useMutation } from "@apollo/client";
+import { LogoutDocument } from "@/generated/graphql";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
+import { clearSession, getSession } from "@/lib/auth/token-store";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const },
@@ -15,8 +18,22 @@ const NAV_ITEMS = [
 ] as const;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const role = useSessionRole();
   const pathname = usePathname();
+  const [logout] = useMutation(LogoutDocument);
+
+  async function handleLogout() {
+    const refreshToken = getSession()?.refreshToken;
+    try {
+      // Best-effort: the backend revokes the refresh token. The local session
+      // is cleared regardless so the user can sign back in.
+      if (refreshToken) await logout({ variables: { refreshToken } });
+    } finally {
+      clearSession();
+      router.replace("/login");
+    }
+  }
 
   return (
     <AuthGuard>
@@ -55,7 +72,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </ul>
           </nav>
           <div className="border-t border-board-border px-5 py-3 text-xs text-zinc-500">
-            Logged in as {role?.toLowerCase() ?? "—"}
+            <div className="mb-2">Logged in as {role?.toLowerCase() ?? "—"}</div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full rounded-md px-3 py-1.5 text-left text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            >
+              Sign out
+            </button>
           </div>
         </aside>
         <main className="ml-60 flex-1 px-6 py-6">{children}</main>

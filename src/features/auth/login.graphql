@@ -2,6 +2,8 @@ mutation Login($input: LocalLoginInput!) {
   login(input: $input) {
     accessToken
     accessTokenExpiresAt
+    refreshToken
+    refreshTokenExpiresAt
     user {
       id
       email

@@ -13,6 +13,8 @@ import {
 const SESSION: Session = {
   accessToken: "token-abc123",
   accessTokenExpiresAt: "2026-10-02T00:00:00Z",
+  refreshToken: "refresh-xyz789",
+  refreshTokenExpiresAt: "2026-10-09T00:00:00Z",
   accessRole: "ADMIN",
 };
 
@@ -34,6 +36,8 @@ describe("token-store codec", () => {
     const encoded = encodeSession({
       accessToken: "a,b;c=d e",
       accessTokenExpiresAt: "2026-10-02T00:00:00Z",
+      refreshToken: "x;y,z=w q",
+      refreshTokenExpiresAt: "2026-10-09T00:00:00Z",
       accessRole: "TALENT",
     });
     expect(encoded).not.toContain(";");

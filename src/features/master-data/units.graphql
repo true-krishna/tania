@@ -1,0 +1,11 @@
+query Units($includeInactive: Boolean = false) {
+  units(includeInactive: $includeInactive) {
+    id
+    name
+    isActive
+    projects {
+      id
+      name
+    }
+  }
+}

@@ -1,0 +1,11 @@
+query AssignableTalents($search: String, $first: Int = 25, $after: String) {
+  assignableTalents(search: $search, first: $first, after: $after) {
+    edges {
+      node {
+        id
+        fullName
+        employeeCode
+      }
+    }
+  }
+}

@@ -14,10 +14,42 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "mutation Login($input: LocalLoginInput!) {\n  login(input: $input) {\n    accessToken\n    accessTokenExpiresAt\n    user {\n      id\n      email\n      fullName\n      accessRole\n      status\n    }\n  }\n}": typeof types.LoginDocument,
+    "query Users($search: String, $accessRole: AccessRole, $status: AccountStatus) {\n  users(search: $search, accessRole: $accessRole, status: $status) {\n    id\n    fullName\n    email\n    accessRole\n    status\n  }\n}": typeof types.UsersDocument,
+    "query AssignableTalents($search: String, $first: Int = 25, $after: String) {\n  assignableTalents(search: $search, first: $first, after: $after) {\n    edges {\n      node {\n        id\n        fullName\n        employeeCode\n      }\n    }\n  }\n}": typeof types.AssignableTalentsDocument,
+    "query Assignments($filter: AssignmentFilter, $first: Int = 25, $after: String) {\n  assignments(filter: $filter, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        status\n        periodStart\n        periodEnd\n        talent {\n          id\n          fullName\n          employeeCode\n        }\n        project {\n          id\n          name\n        }\n        jobRole {\n          id\n          name\n        }\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n  }\n}": typeof types.AssignmentsDocument,
+    "mutation CreateAssignment($input: CreateAssignmentInput!) {\n  createAssignment(input: $input) {\n    id\n    status\n  }\n}": typeof types.CreateAssignmentDocument,
+    "mutation EndAssignment($id: ID!, $periodEnd: Date!) {\n  endAssignment(id: $id, periodEnd: $periodEnd) {\n    id\n    status\n    periodEnd\n  }\n}": typeof types.EndAssignmentDocument,
+    "mutation Login($input: LocalLoginInput!) {\n  login(input: $input) {\n    accessToken\n    accessTokenExpiresAt\n    refreshToken\n    refreshTokenExpiresAt\n    user {\n      id\n      email\n      fullName\n      accessRole\n      status\n    }\n  }\n}": typeof types.LoginDocument,
+    "mutation Logout($refreshToken: String) {\n  logout(refreshToken: $refreshToken)\n}": typeof types.LogoutDocument,
+    "mutation RefreshSession($refreshToken: String!) {\n  refreshSession(refreshToken: $refreshToken) {\n    ...AuthSession\n  }\n}": typeof types.RefreshSessionDocument,
+    "fragment AuthSession on AuthPayload {\n  accessToken\n  accessTokenExpiresAt\n  refreshToken\n  refreshTokenExpiresAt\n  user {\n    id\n    email\n    fullName\n    accessRole\n    status\n  }\n}": typeof types.AuthSessionFragmentDoc,
+    "mutation CreateEmployee($input: CreateEmployeeInput!) {\n  createEmployee(input: $input) {\n    id\n    fullName\n    employeeCode\n  }\n}": typeof types.CreateEmployeeDocument,
+    "mutation DeactivateEmployee($id: ID!, $acknowledgeActiveWork: Boolean = false) {\n  deactivateEmployee(id: $id, acknowledgeActiveWork: $acknowledgeActiveWork) {\n    id\n    status\n  }\n}": typeof types.DeactivateEmployeeDocument,
+    "query Employee($id: ID!) {\n  employee(id: $id) {\n    id\n    fullName\n    employeeCode\n    email\n    status\n    assignable\n    joinedAt\n    unit {\n      id\n      name\n    }\n    jobRole {\n      id\n      name\n    }\n    chapter {\n      id\n      name\n    }\n  }\n}": typeof types.EmployeeDocument,
+    "query Employees($filter: EmployeeFilter, $first: Int = 25, $after: String) {\n  employees(filter: $filter, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        fullName\n        employeeCode\n        email\n        status\n        assignable\n        unit {\n          id\n          name\n        }\n        jobRole {\n          id\n          name\n        }\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n  }\n}": typeof types.EmployeesDocument,
+    "query Chapters($includeInactive: Boolean = false) {\n  chapters(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    jobRoles {\n      id\n      name\n    }\n  }\n}": typeof types.ChaptersDocument,
+    "query JobRoles($includeInactive: Boolean = false) {\n  jobRoles(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    chapter {\n      id\n      name\n    }\n  }\n}": typeof types.JobRolesDocument,
+    "query Projects($unitId: ID, $includeInactive: Boolean = false) {\n  projects(unitId: $unitId, includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    unit {\n      id\n      name\n    }\n  }\n}": typeof types.ProjectsDocument,
+    "query Units($includeInactive: Boolean = false) {\n  units(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    projects {\n      id\n      name\n    }\n  }\n}": typeof types.UnitsDocument,
 };
 const documents: Documents = {
-    "mutation Login($input: LocalLoginInput!) {\n  login(input: $input) {\n    accessToken\n    accessTokenExpiresAt\n    user {\n      id\n      email\n      fullName\n      accessRole\n      status\n    }\n  }\n}": types.LoginDocument,
+    "query Users($search: String, $accessRole: AccessRole, $status: AccountStatus) {\n  users(search: $search, accessRole: $accessRole, status: $status) {\n    id\n    fullName\n    email\n    accessRole\n    status\n  }\n}": types.UsersDocument,
+    "query AssignableTalents($search: String, $first: Int = 25, $after: String) {\n  assignableTalents(search: $search, first: $first, after: $after) {\n    edges {\n      node {\n        id\n        fullName\n        employeeCode\n      }\n    }\n  }\n}": types.AssignableTalentsDocument,
+    "query Assignments($filter: AssignmentFilter, $first: Int = 25, $after: String) {\n  assignments(filter: $filter, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        status\n        periodStart\n        periodEnd\n        talent {\n          id\n          fullName\n          employeeCode\n        }\n        project {\n          id\n          name\n        }\n        jobRole {\n          id\n          name\n        }\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n  }\n}": types.AssignmentsDocument,
+    "mutation CreateAssignment($input: CreateAssignmentInput!) {\n  createAssignment(input: $input) {\n    id\n    status\n  }\n}": types.CreateAssignmentDocument,
+    "mutation EndAssignment($id: ID!, $periodEnd: Date!) {\n  endAssignment(id: $id, periodEnd: $periodEnd) {\n    id\n    status\n    periodEnd\n  }\n}": types.EndAssignmentDocument,
+    "mutation Login($input: LocalLoginInput!) {\n  login(input: $input) {\n    accessToken\n    accessTokenExpiresAt\n    refreshToken\n    refreshTokenExpiresAt\n    user {\n      id\n      email\n      fullName\n      accessRole\n      status\n    }\n  }\n}": types.LoginDocument,
+    "mutation Logout($refreshToken: String) {\n  logout(refreshToken: $refreshToken)\n}": types.LogoutDocument,
+    "mutation RefreshSession($refreshToken: String!) {\n  refreshSession(refreshToken: $refreshToken) {\n    ...AuthSession\n  }\n}": types.RefreshSessionDocument,
+    "fragment AuthSession on AuthPayload {\n  accessToken\n  accessTokenExpiresAt\n  refreshToken\n  refreshTokenExpiresAt\n  user {\n    id\n    email\n    fullName\n    accessRole\n    status\n  }\n}": types.AuthSessionFragmentDoc,
+    "mutation CreateEmployee($input: CreateEmployeeInput!) {\n  createEmployee(input: $input) {\n    id\n    fullName\n    employeeCode\n  }\n}": types.CreateEmployeeDocument,
+    "mutation DeactivateEmployee($id: ID!, $acknowledgeActiveWork: Boolean = false) {\n  deactivateEmployee(id: $id, acknowledgeActiveWork: $acknowledgeActiveWork) {\n    id\n    status\n  }\n}": types.DeactivateEmployeeDocument,
+    "query Employee($id: ID!) {\n  employee(id: $id) {\n    id\n    fullName\n    employeeCode\n    email\n    status\n    assignable\n    joinedAt\n    unit {\n      id\n      name\n    }\n    jobRole {\n      id\n      name\n    }\n    chapter {\n      id\n      name\n    }\n  }\n}": types.EmployeeDocument,
+    "query Employees($filter: EmployeeFilter, $first: Int = 25, $after: String) {\n  employees(filter: $filter, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        fullName\n        employeeCode\n        email\n        status\n        assignable\n        unit {\n          id\n          name\n        }\n        jobRole {\n          id\n          name\n        }\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n  }\n}": types.EmployeesDocument,
+    "query Chapters($includeInactive: Boolean = false) {\n  chapters(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    jobRoles {\n      id\n      name\n    }\n  }\n}": types.ChaptersDocument,
+    "query JobRoles($includeInactive: Boolean = false) {\n  jobRoles(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    chapter {\n      id\n      name\n    }\n  }\n}": types.JobRolesDocument,
+    "query Projects($unitId: ID, $includeInactive: Boolean = false) {\n  projects(unitId: $unitId, includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    unit {\n      id\n      name\n    }\n  }\n}": types.ProjectsDocument,
+    "query Units($includeInactive: Boolean = false) {\n  units(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    projects {\n      id\n      name\n    }\n  }\n}": types.UnitsDocument,
 };
 
 /**
@@ -37,7 +69,71 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "mutation Login($input: LocalLoginInput!) {\n  login(input: $input) {\n    accessToken\n    accessTokenExpiresAt\n    user {\n      id\n      email\n      fullName\n      accessRole\n      status\n    }\n  }\n}"): (typeof documents)["mutation Login($input: LocalLoginInput!) {\n  login(input: $input) {\n    accessToken\n    accessTokenExpiresAt\n    user {\n      id\n      email\n      fullName\n      accessRole\n      status\n    }\n  }\n}"];
+export function graphql(source: "query Users($search: String, $accessRole: AccessRole, $status: AccountStatus) {\n  users(search: $search, accessRole: $accessRole, status: $status) {\n    id\n    fullName\n    email\n    accessRole\n    status\n  }\n}"): (typeof documents)["query Users($search: String, $accessRole: AccessRole, $status: AccountStatus) {\n  users(search: $search, accessRole: $accessRole, status: $status) {\n    id\n    fullName\n    email\n    accessRole\n    status\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query AssignableTalents($search: String, $first: Int = 25, $after: String) {\n  assignableTalents(search: $search, first: $first, after: $after) {\n    edges {\n      node {\n        id\n        fullName\n        employeeCode\n      }\n    }\n  }\n}"): (typeof documents)["query AssignableTalents($search: String, $first: Int = 25, $after: String) {\n  assignableTalents(search: $search, first: $first, after: $after) {\n    edges {\n      node {\n        id\n        fullName\n        employeeCode\n      }\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query Assignments($filter: AssignmentFilter, $first: Int = 25, $after: String) {\n  assignments(filter: $filter, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        status\n        periodStart\n        periodEnd\n        talent {\n          id\n          fullName\n          employeeCode\n        }\n        project {\n          id\n          name\n        }\n        jobRole {\n          id\n          name\n        }\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n  }\n}"): (typeof documents)["query Assignments($filter: AssignmentFilter, $first: Int = 25, $after: String) {\n  assignments(filter: $filter, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        status\n        periodStart\n        periodEnd\n        talent {\n          id\n          fullName\n          employeeCode\n        }\n        project {\n          id\n          name\n        }\n        jobRole {\n          id\n          name\n        }\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation CreateAssignment($input: CreateAssignmentInput!) {\n  createAssignment(input: $input) {\n    id\n    status\n  }\n}"): (typeof documents)["mutation CreateAssignment($input: CreateAssignmentInput!) {\n  createAssignment(input: $input) {\n    id\n    status\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation EndAssignment($id: ID!, $periodEnd: Date!) {\n  endAssignment(id: $id, periodEnd: $periodEnd) {\n    id\n    status\n    periodEnd\n  }\n}"): (typeof documents)["mutation EndAssignment($id: ID!, $periodEnd: Date!) {\n  endAssignment(id: $id, periodEnd: $periodEnd) {\n    id\n    status\n    periodEnd\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation Login($input: LocalLoginInput!) {\n  login(input: $input) {\n    accessToken\n    accessTokenExpiresAt\n    refreshToken\n    refreshTokenExpiresAt\n    user {\n      id\n      email\n      fullName\n      accessRole\n      status\n    }\n  }\n}"): (typeof documents)["mutation Login($input: LocalLoginInput!) {\n  login(input: $input) {\n    accessToken\n    accessTokenExpiresAt\n    refreshToken\n    refreshTokenExpiresAt\n    user {\n      id\n      email\n      fullName\n      accessRole\n      status\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation Logout($refreshToken: String) {\n  logout(refreshToken: $refreshToken)\n}"): (typeof documents)["mutation Logout($refreshToken: String) {\n  logout(refreshToken: $refreshToken)\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation RefreshSession($refreshToken: String!) {\n  refreshSession(refreshToken: $refreshToken) {\n    ...AuthSession\n  }\n}"): (typeof documents)["mutation RefreshSession($refreshToken: String!) {\n  refreshSession(refreshToken: $refreshToken) {\n    ...AuthSession\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "fragment AuthSession on AuthPayload {\n  accessToken\n  accessTokenExpiresAt\n  refreshToken\n  refreshTokenExpiresAt\n  user {\n    id\n    email\n    fullName\n    accessRole\n    status\n  }\n}"): (typeof documents)["fragment AuthSession on AuthPayload {\n  accessToken\n  accessTokenExpiresAt\n  refreshToken\n  refreshTokenExpiresAt\n  user {\n    id\n    email\n    fullName\n    accessRole\n    status\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation CreateEmployee($input: CreateEmployeeInput!) {\n  createEmployee(input: $input) {\n    id\n    fullName\n    employeeCode\n  }\n}"): (typeof documents)["mutation CreateEmployee($input: CreateEmployeeInput!) {\n  createEmployee(input: $input) {\n    id\n    fullName\n    employeeCode\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation DeactivateEmployee($id: ID!, $acknowledgeActiveWork: Boolean = false) {\n  deactivateEmployee(id: $id, acknowledgeActiveWork: $acknowledgeActiveWork) {\n    id\n    status\n  }\n}"): (typeof documents)["mutation DeactivateEmployee($id: ID!, $acknowledgeActiveWork: Boolean = false) {\n  deactivateEmployee(id: $id, acknowledgeActiveWork: $acknowledgeActiveWork) {\n    id\n    status\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query Employee($id: ID!) {\n  employee(id: $id) {\n    id\n    fullName\n    employeeCode\n    email\n    status\n    assignable\n    joinedAt\n    unit {\n      id\n      name\n    }\n    jobRole {\n      id\n      name\n    }\n    chapter {\n      id\n      name\n    }\n  }\n}"): (typeof documents)["query Employee($id: ID!) {\n  employee(id: $id) {\n    id\n    fullName\n    employeeCode\n    email\n    status\n    assignable\n    joinedAt\n    unit {\n      id\n      name\n    }\n    jobRole {\n      id\n      name\n    }\n    chapter {\n      id\n      name\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query Employees($filter: EmployeeFilter, $first: Int = 25, $after: String) {\n  employees(filter: $filter, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        fullName\n        employeeCode\n        email\n        status\n        assignable\n        unit {\n          id\n          name\n        }\n        jobRole {\n          id\n          name\n        }\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n  }\n}"): (typeof documents)["query Employees($filter: EmployeeFilter, $first: Int = 25, $after: String) {\n  employees(filter: $filter, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        fullName\n        employeeCode\n        email\n        status\n        assignable\n        unit {\n          id\n          name\n        }\n        jobRole {\n          id\n          name\n        }\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query Chapters($includeInactive: Boolean = false) {\n  chapters(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    jobRoles {\n      id\n      name\n    }\n  }\n}"): (typeof documents)["query Chapters($includeInactive: Boolean = false) {\n  chapters(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    jobRoles {\n      id\n      name\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query JobRoles($includeInactive: Boolean = false) {\n  jobRoles(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    chapter {\n      id\n      name\n    }\n  }\n}"): (typeof documents)["query JobRoles($includeInactive: Boolean = false) {\n  jobRoles(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    chapter {\n      id\n      name\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query Projects($unitId: ID, $includeInactive: Boolean = false) {\n  projects(unitId: $unitId, includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    unit {\n      id\n      name\n    }\n  }\n}"): (typeof documents)["query Projects($unitId: ID, $includeInactive: Boolean = false) {\n  projects(unitId: $unitId, includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    unit {\n      id\n      name\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query Units($includeInactive: Boolean = false) {\n  units(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    projects {\n      id\n      name\n    }\n  }\n}"): (typeof documents)["query Units($includeInactive: Boolean = false) {\n  units(includeInactive: $includeInactive) {\n    id\n    name\n    isActive\n    projects {\n      id\n      name\n    }\n  }\n}"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

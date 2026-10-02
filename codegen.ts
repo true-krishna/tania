@@ -1,8 +1,9 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
 /**
- * GraphQL Code Generator config — sumber tunggal SDL adalah kontrak:
- * `contracts/schema.graphql` (schema-first, lihat contracts/api-conventions.md).
+ * GraphQL Code Generator — sumber SDL adalah skema yang **dilayani** backend:
+ * `tania-backend/graph/schema.graphqls` (constitution 1.1.1: codegen menargetkan
+ * SDL yang dilayani, bukan kontrak desain).
  *
  * Keluaran di `src/generated/graphql/` TIDAK diedit manual — regenerate lewat
  * `npm run codegen` (gate CI: `generate check`, plan.md §10.3).
@@ -11,9 +12,13 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
  *   untuk meng-typify data sebelum operasi dibuat.
  * - preset `client` — `gql()` + fragment masking + (saat operasi ada) hooks;
  *   dokumen operasi diambil dari folder `src/features` (berkas `.graphql`).
+ *
+ * Scalars mengikuti SDL yang dilayani (`Time`/`Date`/`JSON`, identitas `ID`).
+ * `contracts/schema.graphql` adalah kontrak desain (target) yang konvergen ke
+ * SDL ini dan bukan sumber generate.
  */
 const config: CodegenConfig = {
-  schema: "specs/001-employee-digital-talent-management/contracts/schema.graphql",
+  schema: "../tania-backend/graph/schema.graphqls",
   documents: [
     "src/features/**/*.graphql",
   ],
@@ -23,9 +28,9 @@ const config: CodegenConfig = {
       plugins: ["typescript"],
       config: {
         scalars: {
-          UUID: "string",
-          DateTime: "string",
+          Time: "string",
           Date: "string",
+          JSON: "unknown",
         },
         enumsAsTypes: true,
         maybeValue: "T | null | undefined",
@@ -40,9 +45,9 @@ const config: CodegenConfig = {
       },
       config: {
         scalars: {
-          UUID: "string",
-          DateTime: "string",
+          Time: "string",
           Date: "string",
+          JSON: "unknown",
         },
       },
     },

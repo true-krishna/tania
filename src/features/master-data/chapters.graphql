@@ -1,0 +1,11 @@
+query Chapters($includeInactive: Boolean = false) {
+  chapters(includeInactive: $includeInactive) {
+    id
+    name
+    isActive
+    jobRoles {
+      id
+      name
+    }
+  }
+}

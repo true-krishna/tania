@@ -3,22 +3,26 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as React from "react";
+import { useMutation } from "@apollo/client";
 import { Card } from "@/components/Card";
 import { PageHeader } from "@/components/PageHeader";
 import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { useEmployee } from "@/features/employees/useEmployee";
+import { DeactivateEmployeeDocument, EmployeesDocument } from "@/generated/graphql";
 
 export default function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data, error } = useEmployee(id);
-  const [deactivated, setDeactivated] = React.useState(false);
+  const [deactivate, { loading: deactivating }] = useMutation(DeactivateEmployeeDocument, {
+    refetchQueries: [{ query: EmployeesDocument }],
+  });
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
   if (!data) return notFound();
 
   const employee = data;
-  const isInactive = deactivated || employee.status === "INACTIVE";
+  const isInactive = employee.status === "INACTIVE";
 
   return (
     <section className="flex flex-col gap-4">
@@ -74,7 +78,8 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setDeactivated(true)}
+                onClick={() => deactivate({ variables: { id } })}
+                disabled={deactivating}
                 className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
               >
                 Ya, nonaktifkan

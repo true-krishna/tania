@@ -6,13 +6,22 @@ import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/
 import { BoardTable } from "@/components/BoardTable";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
-import { assignments } from "@/features/assignments/mock";
 import { useAssignments } from "@/features/assignments/useAssignments";
-import { employees } from "@/features/employees/mock";
-import { projects } from "@/features/master-data/mock";
-import type { Assignment, AssignmentStatus } from "@/generated/graphql/types";
+import { useEmployees } from "@/features/employees/useEmployees";
+import { useProjects } from "@/features/master-data/useMasterData";
+import type { AssignmentStatus } from "@/generated/graphql/types";
 
-function AssignmentRow({ assignment }: { assignment: Assignment }) {
+type AssignmentRowData = {
+  id: string;
+  status: AssignmentStatus;
+  periodStart: string;
+  periodEnd: string | null;
+  talent: { fullName: string; employeeCode: string };
+  project: { name: string };
+  jobRole: { name: string };
+};
+
+function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
@@ -45,6 +54,8 @@ export default function AssignmentsPage() {
     projectId: projectId || undefined,
     status: status === "ALL" ? undefined : status,
   });
+  const employees = useEmployees();
+  const projects = useProjects();
 
   return (
     <section className="flex flex-col gap-4">
@@ -66,7 +77,7 @@ export default function AssignmentsPage() {
           <span>Talent</span>
           <Select value={talentId} onChange={(e) => setTalentId(e.target.value)}>
             <option value="">Semua</option>
-            {employees.map((emp) => (
+            {employees.data?.map((emp) => (
               <option key={emp.id} value={emp.id}>
                 {emp.fullName}
               </option>
@@ -77,7 +88,7 @@ export default function AssignmentsPage() {
           <span>Project</span>
           <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
             <option value="">Semua</option>
-            {projects.map((p) => (
+            {projects.data?.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
@@ -120,7 +131,7 @@ export default function AssignmentsPage() {
         </BoardTable>
       )}
       <p className="text-xs text-zinc-500">
-        {data ? `${data.length} dari ${assignments.length} assignment ditampilkan.` : ""}
+        {data ? `${data.length} assignment ditampilkan.` : ""}
       </p>
     </section>
   );

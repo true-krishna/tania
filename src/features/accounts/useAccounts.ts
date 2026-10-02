@@ -1,14 +1,14 @@
 "use client";
 
-import type { User } from "@/generated/graphql/types";
-import { useMockQuery } from "@/lib/mock/useMockQuery";
-import { users } from "./mock";
+import { useQuery } from "@apollo/client";
+import { UsersDocument, type UsersQuery } from "@/generated/graphql";
+import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
 
 /**
  * Accounts feature hook (Admin) — US6.
- * Mock-backed while the backend wave is unserved; swap body for the real
- * `users` query when live.
+ * Backed by the served `users` query (no pagination; returns all accounts).
  */
-export function useUsers() {
-  return useMockQuery<User[]>(() => users);
+export function useUsers(): QueryState<UsersQuery["users"] | undefined> {
+  const result = useQuery(UsersDocument);
+  return toQueryState({ ...result, data: result.data?.users });
 }

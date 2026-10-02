@@ -3,18 +3,22 @@ import type { AccessRole } from "@/generated/graphql";
 /**
  * Browser session store, backed by a cookie.
  *
- * The access-token session is persisted in a single client-readable cookie
- * (`tania_session`) instead of an in-memory module variable, so a page reload
- * keeps the user signed in. The cookie is `HttpOnly=false` because the Apollo
- * auth link must read the token client-side to build the Authorization header.
+ * The access- and refresh-token session is persisted in a single client-readable
+ * cookie (`tania_session`) instead of an in-memory module variable, so a page
+ * reload keeps the user signed in. The cookie is `HttpOnly=false` because the
+ * Apollo auth link must read the token client-side to build the Authorization
+ * header, and the refresh link must read the refresh token to rehydrate an
+ * expired session.
  *
- * Hardening (refresh token in an HttpOnly cookie, server-side `refreshSession`
- * rehydration) lands with the real backend auth module (plan.md W8) once the
- * backend GraphQL API is merged and reachable.
+ * The refresh token lets the client silently recover a valid access token when
+ * one expires (refresh link in `src/lib/apollo/client.ts`); it is only cleared
+ * (forcing sign-in again) when the refresh itself fails.
  */
 export interface Session {
   accessToken: string;
   accessTokenExpiresAt: string;
+  refreshToken: string;
+  refreshTokenExpiresAt: string;
   accessRole: AccessRole;
 }
 
@@ -38,6 +42,8 @@ export function decodeSession(raw: string): Session | null {
     if (
       typeof session.accessToken === "string" &&
       typeof session.accessTokenExpiresAt === "string" &&
+      typeof session.refreshToken === "string" &&
+      typeof session.refreshTokenExpiresAt === "string" &&
       typeof session.accessRole === "string"
     ) {
       return session as Session;

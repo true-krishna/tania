@@ -1,0 +1,27 @@
+query Employees($filter: EmployeeFilter, $first: Int = 25, $after: String) {
+  employees(filter: $filter, first: $first, after: $after) {
+    totalCount
+    edges {
+      node {
+        id
+        fullName
+        employeeCode
+        email
+        status
+        assignable
+        unit {
+          id
+          name
+        }
+        jobRole {
+          id
+          name
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

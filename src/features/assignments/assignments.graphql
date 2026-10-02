@@ -1,0 +1,30 @@
+query Assignments($filter: AssignmentFilter, $first: Int = 25, $after: String) {
+  assignments(filter: $filter, first: $first, after: $after) {
+    totalCount
+    edges {
+      node {
+        id
+        status
+        periodStart
+        periodEnd
+        talent {
+          id
+          fullName
+          employeeCode
+        }
+        project {
+          id
+          name
+        }
+        jobRole {
+          id
+          name
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

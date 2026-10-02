@@ -34,8 +34,15 @@ export default function LoginForm() {
         setError("Authentication failed.");
         return;
       }
-      const { accessToken, accessTokenExpiresAt, user } = data.login;
-      setSession({ accessToken, accessTokenExpiresAt, accessRole: user.accessRole });
+      const { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user } =
+        data.login;
+      setSession({
+        accessToken,
+        accessTokenExpiresAt,
+        refreshToken,
+        refreshTokenExpiresAt,
+        accessRole: user.accessRole,
+      });
       router.replace("/dashboard");
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred.";

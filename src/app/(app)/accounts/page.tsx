@@ -3,7 +3,7 @@
 import { BoardTable } from "@/components/BoardTable";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { roleLabel } from "@/features/accounts/mock";
+import { roleLabel } from "@/features/accounts/roles";
 import { useUsers } from "@/features/accounts/useAccounts";
 
 function RoleBadge({ role }: { role: string }) {

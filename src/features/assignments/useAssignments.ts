@@ -1,21 +1,29 @@
 "use client";
 
-import type { Assignment, AssignmentFilter } from "@/generated/graphql/types";
-import { useMockQuery } from "@/lib/mock/useMockQuery";
-import { assignments, filterAssignments } from "./mock";
+import { useQuery } from "@apollo/client";
+import {
+  AssignmentsDocument,
+  type AssignmentsQuery,
+} from "@/generated/graphql";
+import type { AssignmentFilter } from "@/generated/graphql/types";
+import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
+
+type AssignmentNode = AssignmentsQuery["assignments"]["edges"][number]["node"];
 
 /**
  * Assignments feature hook (Chapter) — US2.
- *
- * Mock-backed while the backend US2 wave is unserved; swap body for the real
- * `assignments(filter)` GraphQL query when live — return type already matches
- * the `AssignmentConnection.edges[].node` shape consumed by the pages. Deps
- * mirror the query variables so changing a filter re-fetches.
+ * Backed by the served `assignments(filter, first, after)` query (connection).
+ * Edges are mapped to a plain `Assignment[]` so pages keep their existing shape.
  */
-export function useAssignments(filter: AssignmentFilter = {}) {
-  return useMockQuery<Assignment[]>(() => filterAssignments(assignments, filter), [
-    filter.employeeId,
-    filter.projectId,
-    filter.status,
-  ]);
+export function useAssignments(filter: AssignmentFilter = {}): QueryState<
+  Array<AssignmentNode> | undefined
+> {
+  const clean = Object.fromEntries(
+    Object.entries(filter ?? {}).filter(([, v]) => v !== undefined)
+  ) as typeof filter;
+  const result = useQuery(AssignmentsDocument, { variables: { filter: clean, first: 100 } });
+  return toQueryState({
+    ...result,
+    data: result.data?.assignments?.edges.map((edge) => edge.node),
+  });
 }

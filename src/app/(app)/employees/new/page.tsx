@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import * as React from "react";
+import { useMutation } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { useJobRoles, useUnits } from "@/features/master-data/useMasterData";
+import { CreateEmployeeDocument } from "@/generated/graphql";
 
 type FormValues = {
   fullName: string;
@@ -30,6 +32,7 @@ const EMPTY: FormValues = {
 export default function NewEmployeePage() {
   const units = useUnits();
   const jobRoles = useJobRoles();
+  const [createEmployee, { data, error, loading }] = useMutation(CreateEmployeeDocument);
   const [values, setValues] = React.useState<FormValues>(EMPTY);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});
   const [submitted, setSubmitted] = React.useState(false);
@@ -56,20 +59,43 @@ export default function NewEmployeePage() {
     if (!valuesToCheck.joinedAt) next.joinedAt = "Tanggal bergabung wajib diisi.";
     return next;
   }
-
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const nextErrors = validate(values);
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length === 0) setSubmitted(true);
+    if (Object.keys(nextErrors).length > 0) return;
+    try {
+      await createEmployee({
+        variables: {
+          input: {
+            fullName: values.fullName.trim(),
+            employeeCode: values.employeeCode.trim(),
+            email: values.email.trim(),
+            unitId: values.unitId,
+            jobRoleId: values.jobRoleId,
+            joinedAt: values.joinedAt,
+          },
+        },
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setErrors({ email: err instanceof Error ? err.message : "Gagal membuat karyawan." });
+    }
   }
 
+
   if (submitted) {
+    const ok = Boolean(data?.createEmployee);
     return (
       <section className="flex max-w-xl flex-col gap-4">
-        <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-          Karyawan <strong>{values.fullName}</strong> disiapkan untuk dibuat (mock). Saat backend
-          US1 tersedia, submit ini akan memanggil mutasi <code>createEmployee</code>.
+        <div
+          className={`rounded-md border p-4 text-sm ${
+            ok ? "border-green-200 bg-green-50 text-green-800" : "border-red-200 bg-red-50 text-red-800"
+          }`}
+        >
+          {ok
+            ? `Karyawan ${values.fullName} berhasil dibuat.`
+            : error?.message ?? "Terjadi kesalahan saat membuat karyawan."}
         </div>
         <button
           type="button"
@@ -157,7 +183,7 @@ export default function NewEmployeePage() {
         </Label>
 
         <div className="flex gap-2">
-          <Button type="submit">Simpan</Button>
+          <Button type="submit" disabled={loading}>Simpan</Button>
           <Link href="/employees" className="no-underline">
             <Button type="button" variant="secondary">
               Batal
