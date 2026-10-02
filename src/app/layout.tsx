@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import { ApolloProvider } from "@/lib/apollo";
+import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +28,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ApolloProvider>{children}</ApolloProvider>
+        <ApolloProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </ApolloProvider>
       </body>
     </html>
   );

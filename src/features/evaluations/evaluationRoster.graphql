@@ -1,0 +1,19 @@
+query EvaluationRoster($periodId: ID!) {
+  evaluationRoster(periodId: $periodId) {
+    talent {
+      id
+      fullName
+      employeeCode
+      jobRole {
+        id
+        name
+      }
+    }
+    fillState
+    evaluation {
+      id
+      status
+      updatedAt
+    }
+  }
+}

@@ -1,0 +1,14 @@
+query EvaluationTemplates($includeInactive: Boolean = false) {
+  evaluationTemplates(includeInactive: $includeInactive) {
+    id
+    name
+    isActive
+    criteria {
+      id
+      label
+      answerType
+      position
+    }
+    createdAt
+  }
+}

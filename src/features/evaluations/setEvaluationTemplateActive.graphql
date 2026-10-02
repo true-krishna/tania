@@ -1,0 +1,7 @@
+mutation SetEvaluationTemplateActive($id: ID!, $isActive: Boolean!) {
+  setEvaluationTemplateActive(id: $id, isActive: $isActive) {
+    id
+    name
+    isActive
+  }
+}

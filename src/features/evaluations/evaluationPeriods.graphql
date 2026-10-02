@@ -1,0 +1,14 @@
+query EvaluationPeriods($includeInactive: Boolean = false) {
+  evaluationPeriods(includeInactive: $includeInactive) {
+    id
+    name
+    startDate
+    endDate
+    state
+    isActive
+    template {
+      id
+      name
+    }
+  }
+}

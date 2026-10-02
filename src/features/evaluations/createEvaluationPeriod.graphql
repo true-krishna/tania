@@ -1,0 +1,14 @@
+mutation CreateEvaluationPeriod($input: CreateEvaluationPeriodInput!) {
+  createEvaluationPeriod(input: $input) {
+    id
+    name
+    startDate
+    endDate
+    state
+    isActive
+    template {
+      id
+      name
+    }
+  }
+}

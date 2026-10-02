@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/employees", label: "Employees", roles: ["OPERATION", "ADMIN"] as const },
   { href: "/assignments", label: "Assignments", roles: ["CHAPTER", "ADMIN"] as const },
   { href: "/idp", label: "IDP", roles: ["CHAPTER", "TALENT", "ADMIN"] as const },
+  { href: "/evaluations", label: "Evaluations", roles: ["CHAPTER", "TALENT", "ADMIN"] as const },
   { href: "/accounts", label: "Accounts", roles: ["ADMIN"] as const },
   { href: "/master-data/units", label: "Master Data", roles: ["ADMIN"] as const },
 ] as const;

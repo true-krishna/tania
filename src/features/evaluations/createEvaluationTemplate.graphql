@@ -1,0 +1,13 @@
+mutation CreateEvaluationTemplate($input: CreateEvaluationTemplateInput!) {
+  createEvaluationTemplate(input: $input) {
+    id
+    name
+    isActive
+    criteria {
+      id
+      label
+      answerType
+      position
+    }
+  }
+}

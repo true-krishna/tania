@@ -1,0 +1,19 @@
+mutation UpsertPerformanceEvaluation($input: UpsertPerformanceEvaluationInput!) {
+  upsertPerformanceEvaluation(input: $input) {
+    id
+    status
+    summaryAchievement
+    developmentNotes
+    answers {
+      criterion {
+        id
+        label
+        answerType
+        position
+      }
+      valueNumeric
+      valueBool
+      valueText
+    }
+  }
+}

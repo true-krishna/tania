@@ -1,68 +1,93 @@
 "use client";
 
+import * as React from "react";
 import { cn } from "@/lib/cn";
 
 type ToastVariant = "error" | "success";
 
-const VARIANT_STYLES: Record<ToastVariant, string> = {
-  error: "border-red-300 bg-red-50 text-red-900",
-  success: "border-green-300 bg-green-50 text-green-900",
+type ToastItem = {
+  id: number;
+  variant: ToastVariant;
+  message: string;
 };
 
-export function Toast({
-  variant = "error",
-  message,
-  onDismiss,
-}: {
-  variant?: ToastVariant;
-  message: string;
-  onDismiss: () => void;
-}) {
-  return (
-    <div
-      role="alert"
-      className={cn(
-        "pointer-events-auto flex w-full max-w-sm items-start justify-between gap-3 rounded-md border px-3 py-2.5 shadow-lg",
-        VARIANT_STYLES[variant],
-      )}
-    >
-      <p className="text-sm">{message}</p>
-      <button
-        type="button"
-        aria-label="Tutup notifikasi"
-        onClick={onDismiss}
-        className="text-xs font-semibold uppercase tracking-wide opacity-70 transition-opacity hover:opacity-100"
-      >
-        Tutup
-      </button>
-    </div>
+type ToastContextValue = {
+  pushToast: (variant: ToastVariant, message: string) => void;
+};
+
+const ToastContext = React.createContext<ToastContextValue | null>(null);
+
+/**
+ * Lightweight toast provider — bottom-center snackbar for mutation feedback.
+ * Error variant is red, success green; auto-dismiss after 4s with a close
+ * button, and `role="alert"` / `aria-live` for screen readers.
+ */
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = React.useState<ToastItem[]>([]);
+  const nextId = React.useRef(1);
+
+  const dismiss = React.useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const pushToast = React.useCallback(
+    (variant: ToastVariant, message: string) => {
+      const id = nextId.current++;
+      setToasts((prev) => [...prev, { id, variant, message }]);
+      window.setTimeout(() => dismiss(id), 4000);
+    },
+    [dismiss],
   );
+
+  const value = React.useMemo(() => ({ pushToast }), [pushToast]);
+
+  return (
+    <ToastContext.Provider value={value}>
+      {children}
+      <ToastStack toasts={toasts} onDismiss={dismiss} />
+    </ToastContext.Provider>
+  );
+}
+
+export function useToast(): ToastContextValue {
+  const ctx = React.useContext(ToastContext);
+  if (!ctx) throw new Error("useToast must be used within <ToastProvider>");
+  return ctx;
 }
 
 export function ToastStack({
   toasts,
   onDismiss,
-  className = "",
 }: {
-  toasts: { id: string; variant?: ToastVariant; message: string }[];
-  onDismiss: (id: string) => void;
-  className?: string;
+  toasts: ToastItem[];
+  onDismiss: (id: number) => void;
 }) {
   return (
     <div
       aria-live="polite"
-      className={cn(
-        "pointer-events-none fixed bottom-4 left-1/2 z-50 flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-4",
-        className,
-      )}
+      className="pointer-events-none fixed bottom-4 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 flex-col gap-2 px-4"
     >
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          variant={toast.variant}
-          message={toast.message}
-          onDismiss={() => onDismiss(toast.id)}
-        />
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          role="alert"
+          className={cn(
+            "pointer-events-auto flex items-start gap-2 rounded-md border px-3 py-2 text-sm shadow-lg",
+            t.variant === "error"
+              ? "border-red-200 bg-red-50 text-red-800"
+              : "border-green-200 bg-green-50 text-green-800",
+          )}
+        >
+          <span className="flex-1">{t.message}</span>
+          <button
+            type="button"
+            aria-label="Tutup notifikasi"
+            onClick={() => onDismiss(t.id)}
+            className="text-xs text-zinc-500 hover:text-zinc-800"
+          >
+            ✕
+          </button>
+        </div>
       ))}
     </div>
   );

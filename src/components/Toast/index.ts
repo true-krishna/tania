@@ -1,1 +1,1 @@
-export { Toast, ToastStack } from "./Toast";
+export { ToastProvider, ToastStack, useToast } from "./Toast";
