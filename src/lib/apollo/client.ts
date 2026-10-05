@@ -94,6 +94,8 @@ export function createApolloClient(): ApolloClient<unknown> {
             refreshToken: next.refreshToken,
             refreshTokenExpiresAt: next.refreshTokenExpiresAt,
             accessRole: next.user.accessRole,
+            fullName: next.user.fullName,
+            email: next.user.email,
           });
           inner = forward(operation).subscribe(subscriber);
         })

@@ -1,36 +1,63 @@
 @import "tailwindcss";
 
+/*
+ * Legion design tokens (constitution-design.md §I–§II).
+ * `primary-500` #875bf7 is the only interactive color; the ladder is
+ * 500 (default) -> 600 (hover) -> 700 (press), with 200 for focus tint.
+ */
 :root {
   --background: #f4f4f8;
-  --foreground: #1d1d1f;
-  --brand: #6a5ce8;
-  --brand-50: #f1efff;
-  --brand-100: #e5e2ff;
-  --brand-600: #6a5ce8;
-  --brand-700: #5749d6;
-  --brand-800: #4639b8;
+  --foreground: #212121;
+
+  --brand-25: #faf8ff;
+  --brand-50: #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-200: #ddd6fe;
+  --brand-300: #c4b5fd;
+  --brand-400: #a78bfa;
+  --brand-500: #875bf7;
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9;
+  --brand-800: #5b21b6;
+  --brand-900: #4c1d95;
+  --brand: var(--brand-500);
+
   --sidebar: #ffffff;
-  --sidebar-fg: #1d1d1f;
-  --sidebar-muted: #6f6f74;
+  --sidebar-fg: #212121;
+  --sidebar-muted: #667085;
+  --sidebar-hover: #f5f3ff;
+  --sidebar-active: #f5f3ff;
+  --sidebar-active-fg: #6d28d9;
+  --sidebar-border: #eaecf0;
   --board: #ffffff;
-  --board-border: #e7e7ec;
-  --header-row: #f7f7fa;
+  --board-border: #eaecf0;
+  --header-row: #f9fafb;
   --surface: #ffffff;
-  --surface-border: #e4e4ea;
+  --surface-border: #d0d5dd;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand: var(--brand);
+  --color-brand-25: var(--brand-25);
   --color-brand-50: var(--brand-50);
   --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
   --color-brand-600: var(--brand-600);
   --color-brand-700: var(--brand-700);
   --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
   --color-sidebar: var(--sidebar);
   --color-sidebar-fg: var(--sidebar-fg);
   --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-fg: var(--sidebar-active-fg);
+  --color-sidebar-border: var(--sidebar-border);
   --color-board: var(--board);
   --color-board-border: var(--board-border);
   --color-header-row: var(--header-row);
@@ -44,4 +71,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Focus indication is a 2px tint at primary-200 (constitution §IV) — applied
+ * globally so every interactive component shares one focus color. */
+:focus-visible {
+  outline: 2px solid var(--brand-200);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--brand-200);
+  color: var(--brand-900);
 }

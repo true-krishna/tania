@@ -2,12 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ErrorState, LoadingState } from "@/components/DataState";
+import { Avatar } from "@/components/Avatar";
+import { BarList } from "@/components/BarList";
 import { Card } from "@/components/Card";
+import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
+import { StatCard } from "@/components/StatCard";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
-import { cn } from "@/lib/cn";
 import type {
   AssignmentStatus,
   DevelopmentActionStatus,
@@ -53,32 +55,38 @@ const PERIOD_STATE_LABEL: Record<EvaluationPeriodState, string> = {
   CLOSED: "Ditutup",
 };
 
-const ROW =
-  "flex items-center justify-between gap-3 rounded-md border border-surface-border px-3 py-2 text-sm";
-
-function CountRow({ label, count, highlight = false }: { label: string; count: number; highlight?: boolean }) {
+function Panel({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <li className={cn(ROW, highlight && "border-brand-200 bg-brand-50")}>
-      <span className="text-zinc-700">{label}</span>
-      <span className="font-semibold text-zinc-900">{count}</span>
+    <Card className={`flex flex-col gap-4 ${className ?? ""}`}>
+      <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+      {children}
+    </Card>
+  );
+}
+
+function EmptyNote({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm text-zinc-500">{children}</p>;
+}
+
+function PersonRow({ name, code }: { name: string; code: string }) {
+  return (
+    <li className="flex items-center gap-3 rounded-lg border border-surface-border px-3 py-2">
+      <Avatar name={name} />
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
+        <p className="truncate text-xs text-zinc-500">{code}</p>
+      </div>
     </li>
   );
 }
-
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="rounded-md border border-surface-border px-3 py-2">
-      <p className="text-xs font-medium text-zinc-500">{label}</p>
-      <p className="mt-0.5 text-lg font-semibold text-zinc-900">{value}</p>
-    </div>
-  );
-}
-
-const STATUS_DOT: Record<DevelopmentActionStatus, string> = {
-  TODO: "bg-zinc-300",
-  IN_PROGRESS: "bg-brand-400",
-  COMPLETED: "bg-green-500",
-};
 
 /**
  * Role-scoped dashboard (US4 / FR-30). The served SDL returns a `Dashboard`
@@ -95,197 +103,215 @@ export default function DashboardPage() {
   const dash = data;
 
   return (
-    <section className="flex flex-col gap-4">
-      <PageHeader
-        title="Dashboard"
-        subtitle="Ringkasan sesuai peran akses Anda."
-      />
+    <section className="flex flex-col gap-5">
+      <PageHeader title="Dashboard" subtitle="Ringkasan sesuai peran akses Anda." />
 
       {dash.__typename === "AdminDashboard" ? (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Stat label="Akun tidak aktif" value={dash.inactiveAccounts} />
-            <Stat label="Talent per chapter" value={dash.talentsPerChapter.reduce((s, c) => s + c.count, 0)} />
-            <Stat label="Total akun" value={dash.accountsPerRole.reduce((s, c) => s + c.count, 0)} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Akun tidak aktif" value={dash.inactiveAccounts} icon="accounts" />
+            <StatCard
+              label="Talent per chapter"
+              value={dash.talentsPerChapter.reduce((sum, c) => sum + c.count, 0)}
+              icon="idp"
+            />
+            <StatCard
+              label="Total akun"
+              value={dash.accountsPerRole.reduce((sum, c) => sum + c.count, 0)}
+              icon="employees"
+            />
           </div>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Talent per Chapter</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.talentsPerChapter.map((c) => (
-                <CountRow key={c.chapter.id} label={c.chapter.name} count={c.count} />
-              ))}
-            </ul>
-          </Card>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel title="Talent per Chapter">
+              {dash.talentsPerChapter.length ? (
+                <BarList items={dash.talentsPerChapter.map((c) => ({ label: c.chapter.name, value: c.count }))} />
+              ) : (
+                <EmptyNote>Belum ada talent pada chapter mana pun.</EmptyNote>
+              )}
+            </Panel>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Akun per Peran</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.accountsPerRole.map((c) => (
-                <CountRow key={c.role} label={roleLabel[c.role]} count={c.count} />
-              ))}
-            </ul>
-          </Card>
+            <Panel title="Akun per Peran">
+              {dash.accountsPerRole.length ? (
+                <BarList items={dash.accountsPerRole.map((c) => ({ label: roleLabel[c.role], value: c.count }))} />
+              ) : (
+                <EmptyNote>Belum ada akun.</EmptyNote>
+              )}
+            </Panel>
+          </div>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Data Master Aktif</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.masterDataActiveCounts.map((c) => (
-                <li key={c.kind} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="capitalize text-zinc-700">{c.kind}</span>
-                  <span className="text-zinc-600">
-                    {c.active} aktif · {c.inactive} nonaktif
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+          <Panel title="Data Master Aktif">
+            {dash.masterDataActiveCounts.length ? (
+              <ul className="flex flex-col gap-3">
+                {dash.masterDataActiveCounts.map((c) => (
+                  <li key={c.kind} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="capitalize text-zinc-600">{c.kind}</span>
+                    <span className="text-zinc-500">
+                      <span className="font-semibold text-zinc-900">{c.active}</span> aktif ·{" "}
+                      <span className="font-semibold text-zinc-900">{c.inactive}</span> nonaktif
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyNote>Belum ada data master.</EmptyNote>
+            )}
+          </Panel>
         </>
       ) : null}
 
       {dash.__typename === "OperationDashboard" ? (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Stat label="Karyawan aktif" value={dash.totalActiveEmployees} />
-            <Stat label="Tidak assignable" value={dash.nonAssignableEmployees} />
-            <Stat label="Unit" value={dash.employeesPerUnit.length} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Karyawan aktif" value={dash.totalActiveEmployees} icon="employees" />
+            <StatCard label="Tidak assignable" value={dash.nonAssignableEmployees} icon="assignments" />
+            <StatCard label="Unit" value={dash.employeesPerUnit.length} icon="masterData" />
           </div>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Karyawan per Unit</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.employeesPerUnit.map((u) => (
-                <CountRow key={u.unit.id} label={u.unit.name} count={u.count} />
-              ))}
-            </ul>
-          </Card>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel title="Karyawan per Unit">
+              {dash.employeesPerUnit.length ? (
+                <BarList items={dash.employeesPerUnit.map((u) => ({ label: u.unit.name, value: u.count }))} />
+              ) : (
+                <EmptyNote>Belum ada karyawan per unit.</EmptyNote>
+              )}
+            </Panel>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Perubahan Karyawan Terbaru</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.recentEmployeeChanges.map((e) => (
-                <li key={e.id} className={ROW}>
-                  <span className="text-zinc-700">{e.fullName}</span>
-                  <span className="text-xs text-zinc-500">{e.employeeCode}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+            <Panel title="Perubahan Karyawan Terbaru">
+              {dash.recentEmployeeChanges.length ? (
+                <ul className="flex flex-col gap-2">
+                  {dash.recentEmployeeChanges.map((e) => (
+                    <PersonRow key={e.id} name={e.fullName} code={e.employeeCode} />
+                  ))}
+                </ul>
+              ) : (
+                <EmptyNote>Belum ada perubahan terbaru.</EmptyNote>
+              )}
+            </Panel>
+          </div>
         </>
       ) : null}
 
       {dash.__typename === "ChapterDashboard" ? (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Stat
-              label="IDP perlu review"
-              value={dash.idpsNeedingReview}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="IDP perlu review" value={dash.idpsNeedingReview} icon="idp" />
+            <StatCard
+              label="Talent tanpa penugasan"
+              value={dash.unassignedTalents.length}
+              icon="assignments"
             />
-            <Stat label="Talent tanpa penugasan" value={dash.unassignedTalents.length} />
-            <Stat
+            <StatCard
               label="Periode evaluasi"
               value={dash.currentEvaluationPeriod ? PERIOD_STATE_LABEL[dash.currentEvaluationPeriod.state] : "—"}
+              icon="evaluations"
             />
           </div>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Distribusi Status IDP</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.idpStatusDistribution.map((c) => (
-                <CountRow key={c.status} label={IDP_STATUS_LABEL[c.status]} count={c.count} />
-              ))}
-            </ul>
-          </Card>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel title="Distribusi Status IDP">
+              {dash.idpStatusDistribution.length ? (
+                <BarList items={dash.idpStatusDistribution.map((c) => ({ label: IDP_STATUS_LABEL[c.status], value: c.count }))} />
+              ) : (
+                <EmptyNote>Belum ada IDP.</EmptyNote>
+              )}
+            </Panel>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Progres Aksi</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.actionProgress.map((c) => (
-                <CountRow key={c.status} label={ACTION_STATUS_LABEL[c.status]} count={c.count} />
-              ))}
-            </ul>
-          </Card>
+            <Panel title="Progres Aksi">
+              {dash.actionProgress.length ? (
+                <BarList items={dash.actionProgress.map((c) => ({ label: ACTION_STATUS_LABEL[c.status], value: c.count }))} />
+              ) : (
+                <EmptyNote>Belum ada aksi pengembangan.</EmptyNote>
+              )}
+            </Panel>
+          </div>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Talent Tanpa Penugasan</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.unassignedTalents.map((e) => (
-                <li key={e.id} className={ROW}>
-                  <span className="text-zinc-700">{e.fullName}</span>
-                  <span className="text-xs text-zinc-500">{e.employeeCode}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+          <Panel title="Talent Tanpa Penugasan">
+            {dash.unassignedTalents.length ? (
+              <ul className="flex flex-col gap-2">
+                {dash.unassignedTalents.map((e) => (
+                  <PersonRow key={e.id} name={e.fullName} code={e.employeeCode} />
+                ))}
+              </ul>
+            ) : (
+              <EmptyNote>Semua talent sudah memiliki penugasan.</EmptyNote>
+            )}
+          </Panel>
         </>
       ) : null}
 
       {dash.__typename === "TalentDashboard" ? (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Stat label="Penugasan aktif" value={dash.activeAssignments.length} />
-            <Stat
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Penugasan aktif" value={dash.activeAssignments.length} icon="assignments" />
+            <StatCard
               label="Evaluasi terakhir"
               value={dash.latestEvaluation ? EVAL_STATUS_LABEL[dash.latestEvaluation.status] : "—"}
+              icon="evaluations"
             />
-            <Stat label="Aksi segera" value={dash.upcomingActionDeadlines.length} />
+            <StatCard label="Aksi segera" value={dash.upcomingActionDeadlines.length} icon="idp" />
           </div>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Penugasan Aktif</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.activeAssignments.map((a) => (
-                <li key={a.id} className={ROW}>
-                  <div>
-                    <p className="text-sm font-medium text-zinc-900">{a.project.name}</p>
-                    <p className="text-xs text-zinc-500">
-                      {a.jobRole.name} · {a.periodStart} — {a.periodEnd ?? "…"}
-                    </p>
-                  </div>
-                  <span className="text-xs font-medium text-zinc-600">
-                    {ASSIGNMENT_STATUS_LABEL[a.status]}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Progres Aksi IDP</h2>
-            <ul className="flex flex-col gap-2">
-              {dash.idpProgress.map((c) => (
-                <li key={c.status} className={cn(ROW)}>
-                  <span className="inline-flex items-center gap-2 text-zinc-700">
-                    <span className={cn("h-2 w-2 rounded-full", STATUS_DOT[c.status])} />
-                    {ACTION_STATUS_LABEL[c.status]}
-                  </span>
-                  <span className="font-semibold text-zinc-900">{c.count}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-zinc-900">Tenggat Aksi Terdekat</h2>
-            {dash.upcomingActionDeadlines.length ? (
+          <Panel title="Penugasan Aktif">
+            {dash.activeAssignments.length ? (
               <ul className="flex flex-col gap-2">
-                {dash.upcomingActionDeadlines.map((a) => (
-                  <li key={a.id} className={ROW}>
-                    <div>
-                      <p className="text-sm font-medium text-zinc-900">{a.description}</p>
-                      <p className="text-xs text-zinc-500">{METHOD_LABEL[a.method]}</p>
+                {dash.activeAssignments.map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-surface-border px-3 py-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-zinc-900">{a.project.name}</p>
+                      <p className="text-xs text-zinc-500">
+                        {a.jobRole.name} · {a.periodStart} — {a.periodEnd ?? "…"}
+                      </p>
                     </div>
-                    <span className="text-xs text-zinc-500">{[a.dueDate, a.status === "COMPLETED" ? "Selesai" : ""].filter(Boolean).join(" · ")}</span>
+                    <span className="rounded-md bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">
+                      {ASSIGNMENT_STATUS_LABEL[a.status]}
+                    </span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-zinc-500">Tidak ada tenggat aksi segera.</p>
+              <EmptyNote>Belum ada penugasan aktif.</EmptyNote>
             )}
-          </Card>
+          </Panel>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel title="Progres Aksi IDP">
+              {dash.idpProgress.length ? (
+                <BarList items={dash.idpProgress.map((c) => ({ label: ACTION_STATUS_LABEL[c.status], value: c.count }))} />
+              ) : (
+                <EmptyNote>Belum ada aksi IDP.</EmptyNote>
+              )}
+            </Panel>
+
+            <Panel title="Tenggat Aksi Terdekat">
+              {dash.upcomingActionDeadlines.length ? (
+                <ul className="flex flex-col gap-2">
+                  {dash.upcomingActionDeadlines.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-surface-border px-3 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-zinc-900">{a.description}</p>
+                        <p className="text-xs text-zinc-500">{METHOD_LABEL[a.method]}</p>
+                      </div>
+                      <span className="text-xs text-zinc-500">
+                        {[a.dueDate, a.status === "COMPLETED" ? "Selesai" : ""].filter(Boolean).join(" · ")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyNote>Tidak ada tenggat aksi segera.</EmptyNote>
+              )}
+            </Panel>
+          </div>
 
           <p className="text-sm">
-            <Link href="/idp/my" className="font-medium text-brand-600 hover:text-brand-700">
+            <Link href="/idp/my" className="font-medium text-brand hover:text-brand-600">
               Lihat IDP saya →
             </Link>
           </p>

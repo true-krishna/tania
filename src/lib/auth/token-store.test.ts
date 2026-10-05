@@ -16,6 +16,8 @@ const SESSION: Session = {
   refreshToken: "refresh-xyz789",
   refreshTokenExpiresAt: "2026-10-09T00:00:00Z",
   accessRole: "ADMIN",
+  fullName: "Yudi Krisnandi",
+  email: "yudi.krisnandi@digitaltelkom.id",
 };
 
 beforeEach(() => {
@@ -30,6 +32,22 @@ describe("token-store codec", () => {
   it("returns null for malformed cookie values", () => {
     expect(decodeSession("not-json")).toBeNull();
     expect(decodeSession(encodeURIComponent('{"accessRole":"ADMIN"}'))).toBeNull();
+  });
+
+  it("decodes a session stored before the profile fields existed", () => {
+    const legacy = encodeURIComponent(
+      JSON.stringify({
+        accessToken: "t",
+        accessTokenExpiresAt: "2026-10-02T00:00:00Z",
+        refreshToken: "r",
+        refreshTokenExpiresAt: "2026-10-09T00:00:00Z",
+        accessRole: "TALENT",
+      }),
+    );
+    const decoded = decodeSession(legacy);
+    expect(decoded?.accessRole).toBe("TALENT");
+    expect(decoded?.fullName).toBeUndefined();
+    expect(decoded?.email).toBeUndefined();
   });
 
   it("encodes cookie-unsafe characters", () => {

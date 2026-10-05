@@ -45,6 +45,8 @@ export default function LoginForm() {
         refreshToken,
         refreshTokenExpiresAt,
         accessRole: user.accessRole,
+        fullName: user.fullName,
+        email: user.email,
       });
       router.replace("/dashboard");
     } catch (err) {
@@ -130,7 +132,7 @@ export default function LoginForm() {
                 onClick={() =>
                   setNotice("Password reset is not available yet — contact your administrator.")
                 }
-                className="text-sm font-medium text-brand hover:text-brand-700"
+                className="text-sm font-medium text-brand hover:text-brand-600"
               >
                 Forget Password?
               </button>
@@ -145,7 +147,7 @@ export default function LoginForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full justify-center rounded-full bg-linear-to-r from-brand-700 to-brand text-sm font-semibold hover:from-brand-800 hover:to-brand-700"
+              className="h-11 w-full justify-center rounded-full bg-linear-to-r from-brand to-brand-600 text-sm font-semibold hover:from-brand-600 hover:to-brand-700"
             >
               {loading ? "Signing in…" : "Login"}
             </Button>
