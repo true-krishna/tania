@@ -64,7 +64,7 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "secret" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Login" }));
 
     await waitFor(() => {
       const session = tokenStore.getSession();
@@ -99,11 +99,24 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "wrong" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Login" }));
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("FORBIDDEN");
       expect(tokenStore.getSession()).toBeNull();
     });
+  });
+
+  it("renders the redesigned layout and reports unavailable SSO honestly", () => {
+    render(
+      <MockedProvider mocks={[]}>
+        <LoginForm />
+      </MockedProvider>
+    );
+
+    expect(screen.getByRole("heading", { name: /login/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with Google" }));
+    expect(screen.getByRole("status")).toHaveTextContent(/not available yet/i);
   });
 });
