@@ -124,10 +124,15 @@ modules use Apollo.
 
 ### GraphQL codegen
 
-The schema source of truth is
-`specs/001-employee-digital-talent-management/contracts/schema.graphql`.
+Codegen targets the **served** schema, kept in this repo at
+`graph/schema.graphqls` (a `cp` of `tania-backend/graph/schema.graphqls`,
+constitution 1.1.1) — committed so `npm run codegen` works on any clone without
+a sibling checkout of `tania-backend`. When the backend schema changes, re-copy
+it over `graph/schema.graphqls`, then regenerate. `specs/.../contracts/schema.graphql`
+is the design contract and is not the codegen source.
+
 Generated output lives in `src/generated/graphql/` and is **committed** — never
-edit it by hand, regenerate after contract changes:
+edit it by hand, regenerate after schema/operation changes:
 
 ```bash
 npm run codegen        # regenerate src/generated/graphql/
