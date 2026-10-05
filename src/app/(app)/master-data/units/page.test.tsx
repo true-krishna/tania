@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
+import { ToastProvider } from "@/components/Toast";
 import UnitsPage from "@/app/(app)/master-data/units/page";
 import { UnitsDocument } from "@/generated/graphql";
 
@@ -38,7 +39,9 @@ describe("UnitsPage (Apollo)", () => {
   it("renders the master-data units table after the query resolves", async () => {
     render(
       <MockedProvider mocks={mocks}>
-        <UnitsPage />
+        <ToastProvider>
+          <UnitsPage />
+        </ToastProvider>
       </MockedProvider>
     );
 
@@ -49,7 +52,9 @@ describe("UnitsPage (Apollo)", () => {
   it("shows the project count for each unit", async () => {
     render(
       <MockedProvider mocks={mocks}>
-        <UnitsPage />
+        <ToastProvider>
+          <UnitsPage />
+        </ToastProvider>
       </MockedProvider>
     );
 

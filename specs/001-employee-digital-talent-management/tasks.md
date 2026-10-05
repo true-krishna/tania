@@ -81,9 +81,9 @@ Aturan yang mengikat:
 
 **Independent Test**: Login Admin → CRUD master data dengan pesan validasi server tampil benar (Project wajib Unit; penonaktifan yang melanggar referensi ditolak) → buat akun & ubah peran.
 
-- [ ] T052 [P] [US6] Frontend feature `master-data`: halaman `src/app/(app)/master-data/` + hooks/query pada `src/features/master-data/`
+- [x] T052 [P] [US6] Frontend feature `master-data`: halaman `src/app/(app)/master-data/` + hooks/query pada `src/features/master-data/`
 - [ ] T053 [P] [US6] Frontend feature `accounts`: halaman `src/app/(app)/accounts/` + hooks/mutation pada `src/features/accounts/`
-- [ ] T054 [P] [US6] Test Vitest + RTL form master data termasuk tampilan pesan validasi server (`plan.md` §10.2) pada `src/features/master-data/master-data.test.tsx`
+- [x] T054 [P] [US6] Test Vitest + RTL form master data termasuk tampilan pesan validasi server (`plan.md` §10.2) pada `src/features/master-data/master-data.test.tsx`
 
 **Checkpoint**: US6 UI berfungsi terhadap endpoint backend US6.
 
@@ -262,4 +262,4 @@ US2 → US3 → US7 (P1 selesai) → US4 → US5 → US8 → Polish (T127, T129)
 - [ ] T140 Bangun penampil jejak audit khusus Admin `src/app/(app)/audit/` per FR-17 + `plan.md` Target Structure (missing — belum ada task pemilik)
 - [ ] T141 Buat pemetaan error terpusat `src/lib/errors.ts` (`extensions.code` → perilaku UI: `UNAUTHENTICATED`/`FORBIDDEN`/`NOT_FOUND`/`BAD_USER_INPUT`/`CONFLICT`/`RATE_LIMITED`) per `plan.md` §Data Layer + konstitusi §IX (missing)
 - [ ] T142 Pensiunkan klien REST legacy `src/lib/api.ts`, `src/lib/talents.ts`, dan rute `/talents` setelah port GraphQL selesai per T127 (partial)
-- [ ] T143 Lengkapi test master data termasuk tampilan pesan validasi server (baru unit yang tercakup) pada `src/features/master-data/master-data.test.tsx` per T054 (partial)
+- [x] T143 Lengkapi test master data termasuk tampilan pesan validasi server (baru unit yang tercakup) pada `src/features/master-data/master-data.test.tsx` per T054 (partial)

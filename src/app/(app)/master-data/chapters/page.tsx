@@ -1,37 +1,47 @@
 "use client";
 
-import { BoardTable } from "@/components/BoardTable";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { useToast } from "@/components/Toast";
 import { useChapters } from "@/features/master-data/useMasterData";
+import {
+  MasterDataSection,
+  type MasterDataItem,
+} from "@/features/master-data/MasterDataSection";
+import { useChapterMutations } from "@/features/master-data/useMasterDataMutations";
+
+type Chapter = MasterDataItem & { jobRoles: { length: number } };
 
 export default function ChaptersPage() {
   const { status, data, error } = useChapters();
+  const chapterMutations = useChapterMutations();
+  const { pushToast } = useToast();
 
-  if (status === "loading") return <LoadingState />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
-  if (!data || data.length === 0)
-    return <EmptyState message="Belum ada chapter. Tambahkan chapter pertama." />;
+  async function detectError(fn: () => Promise<unknown>, ok: string) {
+    try {
+      await fn();
+      pushToast("success", ok);
+    } catch (err) {
+      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan chapter.");
+    }
+  }
 
   return (
-    <BoardTable
+    <MasterDataSection<Chapter>
       caption="Daftar chapter"
-      columns={[
-        { key: "name", label: "Nama Chapter" },
-        { key: "roles", label: "Job Role" },
-        { key: "status", label: "Status" },
-      ]}
-    >
-      {data.map((chapter) => (
-        <tr key={chapter.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-          <td className="px-4 py-2.5 text-zinc-900">{chapter.name}</td>
-          <td className="px-4 py-2.5 text-zinc-600">
-            {chapter.jobRoles.map((r) => r.name).join(", ") || "—"}
-          </td>
-          <td className="px-4 py-2.5">
-            <StatusBadge active={chapter.isActive} />
-          </td>
-        </tr>
-      ))}
-    </BoardTable>
+      emptyMessage="Belum ada chapter. Tambahkan chapter pertama."
+      addLabel="Tambah Chapter"
+      nameLabel="Nama Chapter"
+      items={data}
+      status={status}
+      error={error}
+      extraColumn={{ label: "Job Role", render: (chapter) => chapter.jobRoles.length }}
+      onCreate={({ name }) => detectError(() => chapterMutations.create({ name }), `Chapter "${name}" berhasil dibuat.`)}
+      onUpdate={(id, { name }) => detectError(() => chapterMutations.update(id, { name }), "Chapter berhasil diubah.")}
+      onToggleActive={(id, isActive) =>
+        detectError(
+          () => chapterMutations.toggleActive(id, isActive),
+          isActive ? "Chapter berhasil diaktifkan." : "Chapter berhasil dinonaktifkan.",
+        )
+      }
+    />
   );
 }

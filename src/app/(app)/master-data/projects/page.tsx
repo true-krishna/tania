@@ -1,35 +1,58 @@
 "use client";
 
-import { BoardTable } from "@/components/BoardTable";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
-import { useProjects } from "@/features/master-data/useMasterData";
+import { useToast } from "@/components/Toast";
+import { useProjects, useUnits } from "@/features/master-data/useMasterData";
+import {
+  MasterDataSection,
+  type MasterDataItem,
+} from "@/features/master-data/MasterDataSection";
+import { useProjectMutations } from "@/features/master-data/useMasterDataMutations";
+
+type Project = MasterDataItem & { unit: { id: string; name: string } };
 
 export default function ProjectsPage() {
   const { status, data, error } = useProjects();
+  const units = useUnits();
+  const projectMutations = useProjectMutations();
+  const { pushToast } = useToast();
 
-  if (status === "loading") return <LoadingState />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
-  if (!data || data.length === 0)
-    return <EmptyState message="Belum ada proyek. Tambahkan proyek pertama." />;
+  async function detectError(fn: () => Promise<unknown>, ok: string) {
+    try {
+      await fn();
+      pushToast("success", ok);
+    } catch (err) {
+      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan proyek.");
+    }
+  }
 
   return (
-    <BoardTable
+    <MasterDataSection<Project>
       caption="Daftar proyek"
-      columns={[
-        { key: "name", label: "Nama Proyek" },
-        { key: "unit", label: "Unit" },
-        { key: "status", label: "Status" },
-      ]}
-    >
-      {data.map((project) => (
-        <tr key={project.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-          <td className="px-4 py-2.5 text-zinc-900">{project.name}</td>
-          <td className="px-4 py-2.5 text-zinc-600">{project.unit.name}</td>
-          <td className="px-4 py-2.5">
-            <StatusBadge active={project.isActive} />
-          </td>
-        </tr>
-      ))}
-    </BoardTable>
+      emptyMessage="Belum ada proyek. Tambahkan proyek pertama."
+      addLabel="Tambah Proyek"
+      nameLabel="Nama Proyek"
+      items={data}
+      status={status}
+      error={error}
+      select={{
+        label: "Unit",
+        placeholder: "pilih unit pemilik —",
+        options: (units.data ?? []).map((u) => ({ id: u.id, name: u.name })),
+      }}
+      selectIdOf={(project) => project.unit.id}
+      extraColumn={{ label: "Unit", render: (project) => project.unit.name }}
+      onCreate={({ name, selectValue }) =>
+        detectError(() => projectMutations.create({ name, selectValue }), `Proyek "${name}" berhasil dibuat.`)
+      }
+      onUpdate={(id, { name, selectValue }) =>
+        detectError(() => projectMutations.update(id, { name, selectValue }), "Proyek berhasil diubah.")
+      }
+      onToggleActive={(id, isActive) =>
+        detectError(
+          () => projectMutations.toggleActive(id, isActive),
+          isActive ? "Proyek berhasil diaktifkan." : "Proyek berhasil dinonaktifkan.",
+        )
+      }
+    />
   );
 }

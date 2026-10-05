@@ -1,35 +1,47 @@
 "use client";
 
-import { BoardTable } from "@/components/BoardTable";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { useToast } from "@/components/Toast";
 import { useUnits } from "@/features/master-data/useMasterData";
+import {
+  MasterDataSection,
+  type MasterDataItem,
+} from "@/features/master-data/MasterDataSection";
+import { useUnitMutations } from "@/features/master-data/useMasterDataMutations";
+
+type Unit = MasterDataItem & { projects: { length: number } };
 
 export default function UnitsPage() {
   const { status, data, error } = useUnits();
+  const unitMutations = useUnitMutations();
+  const { pushToast } = useToast();
 
-  if (status === "loading") return <LoadingState />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
-  if (!data || data.length === 0)
-    return <EmptyState message="Belum ada unit. Tambahkan unit pertama." />;
+  async function detectError(fn: () => Promise<unknown>, ok: string) {
+    try {
+      await fn();
+      pushToast("success", ok);
+    } catch (err) {
+      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan unit.");
+    }
+  }
 
   return (
-    <BoardTable
+    <MasterDataSection<Unit>
       caption="Daftar unit"
-      columns={[
-        { key: "name", label: "Nama Unit" },
-        { key: "projects", label: "Proyek" },
-        { key: "status", label: "Status" },
-      ]}
-    >
-      {data.map((unit) => (
-        <tr key={unit.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-          <td className="px-4 py-2.5 text-zinc-900">{unit.name}</td>
-          <td className="px-4 py-2.5 text-zinc-600">{unit.projects.length}</td>
-          <td className="px-4 py-2.5">
-            <StatusBadge active={unit.isActive} />
-          </td>
-        </tr>
-      ))}
-    </BoardTable>
+      emptyMessage="Belum ada unit. Tambahkan unit pertama."
+      addLabel="Tambah Unit"
+      nameLabel="Nama Unit"
+      items={data}
+      status={status}
+      error={error}
+      extraColumn={{ label: "Proyek", render: (unit) => unit.projects.length }}
+      onCreate={({ name }) => detectError(() => unitMutations.create({ name }), `Unit "${name}" berhasil dibuat.`)}
+      onUpdate={(id, { name }) => detectError(() => unitMutations.update(id, { name }), "Unit berhasil diubah.")}
+      onToggleActive={(id, isActive) =>
+        detectError(
+          () => unitMutations.toggleActive(id, isActive),
+          isActive ? "Unit berhasil diaktifkan." : "Unit berhasil dinonaktifkan.",
+        )
+      }
+    />
   );
 }
