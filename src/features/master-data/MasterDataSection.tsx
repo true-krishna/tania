@@ -17,23 +17,22 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   items: T[] | undefined;
   status: "loading" | "ready" | "error";
   error: string | null;
-  /** Optional select on the create/edit form, e.g. Project → Unit or JobRole → Chapter. */
+  // Optional select on the create/edit form, e.g. Project -> Unit or JobRole -> Chapter.
   select?: { label: string; placeholder: string; options: { id: string; name: string }[] };
-  /** Current select value of an item (for pre-filling the edit form), e.g. project.unit.id. */
+  // Current select value of an item (for pre-filling the edit form), e.g. project.unit.id.
   selectIdOf?: (item: T) => string | undefined;
+
   extraColumn?: { label: string; render: (item: T) => React.ReactNode };
   onCreate: (values: { name: string; selectValue?: string }) => Promise<void>;
   onUpdate: (id: string, values: { name: string; selectValue?: string }) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
 };
 
-/**
- * Shared Admin edit surface for master-data entities (FR-15, FR-20, FR-24).
- * One list + create form + inline edit + activate/deactivate per entity.
- * There is deliberately NO delete operation (FR-21): master data is only
- * deactivated, and the server rejects deactivation while the row is still
- * referenced. Invalid submissions surface the server message (T054).
- */
+// Shared Admin edit surface for master-data entities (FR-15, FR-20, FR-24).
+// One list + create form + inline edit + activate/deactivate per entity.
+// There is deliberately NO delete operation (FR-21): master data is only
+// deactivated, and the server rejects deactivation while the row is still
+// referenced. Invalid submissions surface the server message (T054).
 export function MasterDataSection<T extends MasterDataItem>({
   caption,
   emptyMessage,
