@@ -75,7 +75,7 @@ function Definition({ label, value }: { label: string; value: string }) {
   );
 }
 
-type ToastItem = { id: string; variant: "error" | "success"; message: string };
+type ToastItem = { id: number; variant: "error" | "success"; message: string };
 
 export default function IdpDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -110,13 +110,13 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
 
   function addToast(variant: ToastItem["variant"], message: string) {
     toastId.current += 1;
-    const id = String(toastId.current);
+    const id = toastId.current;
     setToasts((prev) => [...prev, { id, variant, message }]);
     setTimeout(() => dismissToast(id), 4000);
     return id;
   }
 
-  function dismissToast(id: string) {
+  function dismissToast(id: number) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }
 

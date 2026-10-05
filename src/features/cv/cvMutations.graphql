@@ -1,0 +1,78 @@
+mutation UpsertCvProfile($input: UpsertCvProfileInput!) {
+  upsertCvProfile(input: $input) {
+    id
+    summary
+  }
+}
+
+mutation AddCvEducation($input: CvEducationInput!) {
+  addCvEducation(input: $input) {
+    id
+    institution
+    degree
+    fieldOfStudy
+    startYear
+    endYear
+  }
+}
+
+mutation UpdateCvEducation($id: ID!, $input: CvEducationInput!) {
+  updateCvEducation(id: $id, input: $input) {
+    id
+    institution
+    degree
+    fieldOfStudy
+    startYear
+    endYear
+  }
+}
+
+mutation DeleteCvEducation($id: ID!) {
+  deleteCvEducation(id: $id)
+}
+
+mutation AddCvCertification($input: CvCertificationInput!) {
+  addCvCertification(input: $input) {
+    id
+    name
+    issuer
+    issuedDate
+    expiryDate
+    credentialUrl
+  }
+}
+
+mutation UpdateCvCertification($id: ID!, $input: CvCertificationInput!) {
+  updateCvCertification(id: $id, input: $input) {
+    id
+    name
+    issuer
+    issuedDate
+    expiryDate
+    credentialUrl
+  }
+}
+
+mutation DeleteCvCertification($id: ID!) {
+  deleteCvCertification(id: $id)
+}
+
+mutation AddCvSkill($input: CvSkillInput!) {
+  addCvSkill(input: $input) {
+    id
+    name
+    level
+  }
+}
+
+mutation UpdateCvSkill($id: ID!, $input: CvSkillInput!) {
+  updateCvSkill(id: $id, input: $input) {
+    id
+    name
+    level
+  }
+}
+
+mutation DeleteCvSkill($id: ID!) {
+  deleteCvSkill(id: $id)
+}

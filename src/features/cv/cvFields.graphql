@@ -1,0 +1,39 @@
+fragment CvFields on CvProfile {
+  id
+  summary
+  educations {
+    id
+    institution
+    degree
+    fieldOfStudy
+    startYear
+    endYear
+  }
+  certifications {
+    id
+    name
+    issuer
+    issuedDate
+    expiryDate
+    credentialUrl
+  }
+  skills {
+    id
+    name
+    level
+  }
+  workExperience {
+    id
+    periodStart
+    periodEnd
+    status
+    project {
+      id
+      name
+    }
+    jobRole {
+      id
+      name
+    }
+  }
+}

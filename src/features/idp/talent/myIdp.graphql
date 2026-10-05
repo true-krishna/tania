@@ -1,0 +1,39 @@
+query MyIdp {
+  myIdp {
+    id
+    status
+    developmentObjective
+    currentAssessment
+    gapAnalysis
+    timelineStart
+    timelineEnd
+    successIndicators
+    actions {
+      id
+      description
+      method
+      status
+      dueDate
+    }
+    reviews {
+      id
+      reviewDate
+      summary
+      followUp
+      createdBy {
+        id
+        fullName
+      }
+    }
+    revisions {
+      id
+      revisionNo
+      changeNote
+      createdAt
+      changedBy {
+        id
+        fullName
+      }
+    }
+  }
+}

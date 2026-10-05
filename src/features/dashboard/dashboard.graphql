@@ -1,0 +1,97 @@
+query Dashboard {
+  dashboard {
+    __typename
+    ... on AdminDashboard {
+      talentsPerChapter {
+        chapter {
+          id
+          name
+        }
+        count
+      }
+      accountsPerRole {
+        role
+        count
+      }
+      inactiveAccounts
+      masterDataActiveCounts {
+        kind
+        active
+        inactive
+      }
+    }
+    ... on OperationDashboard {
+      totalActiveEmployees
+      employeesPerUnit {
+        unit {
+          id
+          name
+        }
+        count
+      }
+      nonAssignableEmployees
+      recentEmployeeChanges {
+        id
+        fullName
+        employeeCode
+      }
+    }
+    ... on ChapterDashboard {
+      idpStatusDistribution {
+        status
+        count
+      }
+      actionProgress {
+        status
+        count
+      }
+      unassignedTalents {
+        id
+        fullName
+        employeeCode
+      }
+      idpsNeedingReview
+      currentEvaluationPeriod {
+        id
+        name
+        startDate
+        endDate
+        state
+      }
+    }
+    ... on TalentDashboard {
+      activeAssignments {
+        id
+        periodStart
+        periodEnd
+        status
+        project {
+          id
+          name
+        }
+        jobRole {
+          id
+          name
+        }
+      }
+      idpProgress {
+        status
+        count
+      }
+      latestEvaluation {
+        id
+        status
+        period {
+          name
+        }
+      }
+      upcomingActionDeadlines {
+        id
+        description
+        method
+        status
+        dueDate
+      }
+    }
+  }
+}

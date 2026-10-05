@@ -1,0 +1,5 @@
+query CvProfile($employeeId: ID!) {
+  cvProfile(employeeId: $employeeId) {
+    ...CvFields
+  }
+}
