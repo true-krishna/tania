@@ -245,3 +245,21 @@ US2 → US3 → US7 (P1 selesai) → US4 → US5 → US8 → Polish (T127, T129)
 - Status penyelesaian task dicatat per repo; jangan menandai task backend selesai dari repo ini
 - Verifikasi minimal sebelum menutup satu fase: `npm run lint`, `npm run typecheck`, `npm test`
 - Semua operasi GraphQL diambil dari SDL ter-generate; jangan menulis tipe manual (`src/generated/graphql/` tidak boleh diedit)
+
+---
+
+## Phase 11: Convergence
+
+**Scope**: `/speckit.converge` dijalankan 2026-10-05 untuk **integrasi lintas repo `tania-backend` ↔ `tania-dashboard`**. Semua temuan bernilai HIGH muncul lebih dulu, lalu MEDIUM/LOW. ID dilanjutkan dari daftar bersama (max T130); task backend padanan ada di `tania-backend/specs/.../tasks.md` Phase 12 (T131–T132).
+
+- [ ] T133 Pasang Playwright + harness E2E jalur kritis pada `e2e/` dan skrip `npm run test:e2e` per T129 + konstitusi §VII (missing) — alasan blokir lama ("repo backend tak terjangkau") sudah tidak berlaku
+- [ ] T134 Bangun fitur CV Talent (form terstruktur: ringkasan, pendidikan, sertifikasi, keahlian) + tampilan hanya-baca Chapter pada `src/app/(app)/cv/` dan `src/features/cv/` per FR-12/FR-13 (T103) (missing) — pengalaman kerja tetap turunan assignment
+- [ ] T135 Tambahkan test Vitest + RTL CV (simpan per bagian, tampilan pengalaman kerja turunan) pada `src/features/cv/cv.test.tsx` per T104 (missing)
+- [ ] T136 Bangun halaman IDP milik Talent (`src/app/(app)/idp/my/` + `src/features/idp/talent/`) dengan kontrol status aksi + empty state bukan error per FR-14 (T109) (missing)
+- [ ] T137 Tambahkan test Vitest + RTL empty state IDP Talent per T110 (missing)
+- [ ] T138 Bangun widget `dashboard` per peran pada `src/app/(app)/dashboard/` + `src/features/dashboard/` (saat ini masih placeholder statis) per FR-29/FR-30 (T115) (missing)
+- [ ] T139 Tambahkan test Vitest + RTL render widget per peran + state loading/error per T116 (missing)
+- [ ] T140 Bangun penampil jejak audit khusus Admin `src/app/(app)/audit/` per FR-17 + `plan.md` Target Structure (missing — belum ada task pemilik)
+- [ ] T141 Buat pemetaan error terpusat `src/lib/errors.ts` (`extensions.code` → perilaku UI: `UNAUTHENTICATED`/`FORBIDDEN`/`NOT_FOUND`/`BAD_USER_INPUT`/`CONFLICT`/`RATE_LIMITED`) per `plan.md` §Data Layer + konstitusi §IX (missing)
+- [ ] T142 Pensiunkan klien REST legacy `src/lib/api.ts`, `src/lib/talents.ts`, dan rute `/talents` setelah port GraphQL selesai per T127 (partial)
+- [ ] T143 Lengkapi test master data termasuk tampilan pesan validasi server (baru unit yang tercakup) pada `src/features/master-data/master-data.test.tsx` per T054 (partial)
