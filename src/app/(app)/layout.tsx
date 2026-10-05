@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { LogoutDocument } from "@/generated/graphql";
+import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
 import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { roleLabel } from "@/features/accounts/roles";
@@ -33,6 +34,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
   const sidebarWidth = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 
+  // Profile shown in the top-bar avatar; read once at mount, like `useSessionRole`.
+  const [session] = React.useState(() => getSession());
+  const displayName =
+    session?.fullName?.trim() || session?.email?.split("@")[0] || (role ? roleLabel[role] : "Tania");
+
   async function handleLogout() {
     const refreshToken = getSession()?.refreshToken;
     try {
@@ -61,9 +67,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b border-board-border bg-white/80 px-6 backdrop-blur">
             <p className="truncate text-sm font-semibold text-zinc-700">{sectionForPath(pathname)}</p>
             <div className="flex items-center gap-3">
-              <span className="hidden rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 sm:inline">
-                {role ? roleLabel[role] : "—"}
-              </span>
+              <div className="flex items-center gap-2.5">
+                <Avatar name={displayName} />
+                <span className="hidden flex-col leading-tight sm:flex">
+                  <span className="max-w-[14rem] truncate text-sm font-medium text-zinc-800">
+                    {displayName}
+                  </span>
+                  <span className="text-[11px] text-zinc-500">{role ? roleLabel[role] : "—"}</span>
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={handleLogout}

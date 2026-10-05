@@ -20,6 +20,9 @@ export interface Session {
   refreshToken: string;
   refreshTokenExpiresAt: string;
   accessRole: AccessRole;
+  /** Profile name from `login`/`refreshSession`; absent in sessions stored before these fields existed. */
+  fullName?: string;
+  email?: string;
 }
 
 const SESSION_COOKIE = "tania_session";
@@ -46,7 +49,15 @@ export function decodeSession(raw: string): Session | null {
       typeof session.refreshTokenExpiresAt === "string" &&
       typeof session.accessRole === "string"
     ) {
-      return session as Session;
+      return {
+        accessToken: session.accessToken,
+        accessTokenExpiresAt: session.accessTokenExpiresAt,
+        refreshToken: session.refreshToken,
+        refreshTokenExpiresAt: session.refreshTokenExpiresAt,
+        accessRole: session.accessRole as AccessRole,
+        fullName: typeof session.fullName === "string" ? session.fullName : undefined,
+        email: typeof session.email === "string" ? session.email : undefined,
+      };
     }
     return null;
   } catch {

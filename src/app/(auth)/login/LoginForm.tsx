@@ -45,6 +45,8 @@ export default function LoginForm() {
         refreshToken,
         refreshTokenExpiresAt,
         accessRole: user.accessRole,
+        fullName: user.fullName,
+        email: user.email,
       });
       router.replace("/dashboard");
     } catch (err) {

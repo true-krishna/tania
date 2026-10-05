@@ -2,10 +2,14 @@ import { cn } from "@/lib/cn";
 import * as React from "react";
 
 interface AvatarProps {
-  initials: string;
+  /** Display name; initials are derived from it when no photo is available. */
+  name: string;
+  /** Photo URL. When absent the avatar falls back to the name's initials. */
+  src?: string | null;
+  className?: string;
 }
 
-const COLORS = [
+const TINTS = [
   "bg-brand-50 text-brand-700",
   "bg-brand-100 text-brand-700",
   "bg-brand-100 text-brand-800",
@@ -13,17 +17,53 @@ const COLORS = [
   "bg-brand-200 text-brand-900",
 ];
 
-export function Avatar({ initials }: AvatarProps) {
-  const color = COLORS[initials.charCodeAt(0) % COLORS.length];
+function initialsOf(name: string): string {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+  return initials || "?";
+}
+
+/**
+ * User avatar: the photo when one is available, otherwise the name's initials
+ * on a tinted brand chip. The photo is optional because the API's `User` model
+ * has no photo field yet.
+ */
+export function Avatar({ name, src, className }: AvatarProps) {
+  const label = name.trim() || "?";
+
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- remote user photo, not a build-time asset
+      <img
+        src={src}
+        alt={label}
+        className={cn(
+          "inline-flex h-8 w-8 shrink-0 rounded-full object-cover",
+          className,
+        )}
+      />
+    );
+  }
+
+  const tint = TINTS[
+    [...label].reduce((sum, char) => sum + char.charCodeAt(0), 0) % TINTS.length
+  ];
+
   return (
     <span
-      aria-hidden
+      role="img"
+      aria-label={label}
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-md text-xs font-semibold",
-        color,
+        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+        tint,
+        className,
       )}
     >
-      {initials}
+      {initialsOf(label)}
     </span>
   );
 }

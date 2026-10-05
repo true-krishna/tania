@@ -76,16 +76,10 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-zinc-500">{children}</p>;
 }
 
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).slice(0, 2);
-  const initials = parts.map((part) => part.charAt(0).toUpperCase()).join("");
-  return initials || "?";
-}
-
 function PersonRow({ name, code }: { name: string; code: string }) {
   return (
     <li className="flex items-center gap-3 rounded-lg border border-surface-border px-3 py-2">
-      <Avatar initials={initialsOf(name)} />
+      <Avatar name={name} />
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
         <p className="truncate text-xs text-zinc-500">{code}</p>
