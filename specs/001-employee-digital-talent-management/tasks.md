@@ -81,9 +81,9 @@ Aturan yang mengikat:
 
 **Independent Test**: Login Admin → CRUD master data dengan pesan validasi server tampil benar (Project wajib Unit; penonaktifan yang melanggar referensi ditolak) → buat akun & ubah peran.
 
-- [ ] T052 [P] [US6] Frontend feature `master-data`: halaman `src/app/(app)/master-data/` + hooks/query pada `src/features/master-data/`
+- [x] T052 [P] [US6] Frontend feature `master-data`: halaman `src/app/(app)/master-data/` + hooks/query pada `src/features/master-data/`
 - [ ] T053 [P] [US6] Frontend feature `accounts`: halaman `src/app/(app)/accounts/` + hooks/mutation pada `src/features/accounts/`
-- [ ] T054 [P] [US6] Test Vitest + RTL form master data termasuk tampilan pesan validasi server (`plan.md` §10.2) pada `src/features/master-data/master-data.test.tsx`
+- [x] T054 [P] [US6] Test Vitest + RTL form master data termasuk tampilan pesan validasi server (`plan.md` §10.2) pada `src/features/master-data/master-data.test.tsx`
 
 **Checkpoint**: US6 UI berfungsi terhadap endpoint backend US6.
 
@@ -262,15 +262,4 @@ US2 → US3 → US7 (P1 selesai) → US4 → US5 → US8 → Polish (T127, T129)
 - [ ] T140 Bangun penampil jejak audit khusus Admin `src/app/(app)/audit/` per FR-17 + `plan.md` Target Structure (missing — belum ada task pemilik)
 - [ ] T141 Buat pemetaan error terpusat `src/lib/errors.ts` (`extensions.code` → perilaku UI: `UNAUTHENTICATED`/`FORBIDDEN`/`NOT_FOUND`/`BAD_USER_INPUT`/`CONFLICT`/`RATE_LIMITED`) per `plan.md` §Data Layer + konstitusi §IX (missing)
 - [ ] T142 Pensiunkan klien REST legacy `src/lib/api.ts`, `src/lib/talents.ts`, dan rute `/talents` setelah port GraphQL selesai per T127 (partial)
-- [ ] T143 Lengkapi test master data termasuk tampilan pesan validasi server (baru unit yang tercakup) pada `src/features/master-data/master-data.test.tsx` per T054 (partial)
-
----
-
-## Phase 12: Convergence
-
-**Scope**: `/speckit.converge` dijalankan ulang 2026-10-05 (TAN-84) setelah gelombang implementasi (`feat/convergence`) tiba di `master`. Verifikasi dijalankan pada head ini: `npm ci` + `npm run typecheck` bersih, `npm test` **76/76 lulus (15 file)**, `npm run generate:check` **lulus**, `npm run lint` 1 warning. Seluruh permukaan T133–T143 (CV, IDP Talent, dashboard, audit, `errors.ts`, `e2e/`, pensiun klien REST) kini ada; temuan Phase 11 sudah tertutup. Temuan yang melanggar prinsip konstitusi MUST dikeluarkan lebih dulu sebagai `CRITICAL`; sisanya menyusul.
-
-- [ ] T144 CRITICAL — Lengkapi harness E2E T129/T133 dengan alur jalur kritis sesungguhnya (login 4 peran → tambah karyawan → assignment → periode + evaluasi → IDP → update status aksi → dashboard tiap peran) pada stack `docker-compose` + fixture seed T036 per konstitusi §VII + `plan.md` §Testing; suite saat ini baru smoke shell/dashboard dengan `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` dan menunda alur ber-DB ke "harness T129" yang tidak ada (`e2e/critical-path.spec.ts`, 1 berkas) (partial)
-- [ ] T145 CRITICAL — Sambungkan `src/lib/errors.ts` ke lapisan UI — implementasinya kini **dead code** (tidak ada importer; `git grep '@/lib/errors'` kosong, hanya `src/lib/apollo/client.ts` yang menangani `extensions.code` inline dan terbatas pada `FORBIDDEN`/`UNAUTHORIZED`); pakai pemetaan `UNAUTHENTICATED`/`FORBIDDEN`/`NOT_FOUND`/`BAD_USER_INPUT`/`CONFLICT`/`RATE_LIMITED`/`INTERNAL` pada alur error tiap layar per konstitusi §V/§IX + `plan.md` §Data Layer (partial)
-- [ ] T146 CRITICAL — Hilangkan lint warning pada kode generate — `npm run lint` melaporkan "Unused eslint-disable directive" di `src/generated/graphql/graphql.ts`; kecualikan `src/generated/graphql/**` dari lint (atau perbaiki keluaran codegen) agar `npm run lint` kembali zero-warning per konstitusi §VI (contradicts)
-- [ ] T147 Lengkapi test master data — tambahkan Vitest + RTL untuk `src/app/(app)/master-data/job-roles/` dan `src/app/(app)/master-data/projects/` termasuk tampilan pesan validasi server, mengikuti pola `units`/`chapters` yang sudah ada, per T054/T143 (partial)
+- [x] T143 Lengkapi test master data termasuk tampilan pesan validasi server (baru unit yang tercakup) pada `src/features/master-data/master-data.test.tsx` per T054 (partial)

@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
+import { ToastProvider } from "@/components/Toast";
 import ChaptersPage from "@/app/(app)/master-data/chapters/page";
 import { ChaptersDocument } from "@/generated/graphql";
 
@@ -36,13 +37,15 @@ describe("ChaptersPage (Apollo)", () => {
   it("renders chapters and their job roles after the query resolves", async () => {
     render(
       <MockedProvider mocks={mocks}>
-        <ChaptersPage />
+        <ToastProvider>
+          <ChaptersPage />
+        </ToastProvider>
       </MockedProvider>
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
-    expect(screen.getByText("Software Engineer")).toBeInTheDocument();
     expect(screen.getByText("Operations")).toBeInTheDocument();
+    expect(screen.getByText("1", { selector: "td" })).toBeInTheDocument();
   });
 
   it("surfaces the server validation message when the query fails", async () => {
@@ -56,7 +59,9 @@ describe("ChaptersPage (Apollo)", () => {
           },
         ]}
       >
-        <ChaptersPage />
+        <ToastProvider>
+          <ChaptersPage />
+        </ToastProvider>
       </MockedProvider>
     );
 

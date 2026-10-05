@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSessionRole } from "@/lib/auth/guard";
 import { PageHeader } from "@/components/PageHeader";
 
 const TABS = [
@@ -12,7 +13,11 @@ const TABS = [
 ] as const;
 
 export default function MasterDataLayout({ children }: { children: React.ReactNode }) {
+  const role = useSessionRole();
   const pathname = usePathname();
+  // Admin-only section (FR-15/FR-20); auth enforced server-side (FR-16),
+  // this hides the view at the UI layer for non-Admin roles.
+  if (role !== "ADMIN") return null;
 
   return (
     <div className="flex flex-col gap-4">

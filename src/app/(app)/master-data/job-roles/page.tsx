@@ -1,35 +1,61 @@
 "use client";
 
-import { BoardTable } from "@/components/BoardTable";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
-import { useJobRoles } from "@/features/master-data/useMasterData";
+import { useToast } from "@/components/Toast";
+import { useChapters, useJobRoles } from "@/features/master-data/useMasterData";
+import {
+  MasterDataSection,
+  type MasterDataItem,
+} from "@/features/master-data/MasterDataSection";
+import { useJobRoleMutations } from "@/features/master-data/useMasterDataMutations";
+
+type JobRole = MasterDataItem & { chapter?: { id: string; name: string } | null };
 
 export default function JobRolesPage() {
   const { status, data, error } = useJobRoles();
+  const chapters = useChapters();
+  const jobRoleMutations = useJobRoleMutations();
+  const { pushToast } = useToast();
 
-  if (status === "loading") return <LoadingState />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
-  if (!data || data.length === 0)
-    return <EmptyState message="Belum ada job role. Tambahkan job role pertama." />;
+  async function detectError(fn: () => Promise<unknown>, ok: string) {
+    try {
+      await fn();
+      pushToast("success", ok);
+    } catch (err) {
+      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan job role.");
+    }
+  }
 
   return (
-    <BoardTable
+    <MasterDataSection<JobRole>
       caption="Daftar job role"
-      columns={[
-        { key: "name", label: "Nama Job Role" },
-        { key: "chapter", label: "Chapter" },
-        { key: "status", label: "Status" },
-      ]}
-    >
-      {data.map((role) => (
-        <tr key={role.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-          <td className="px-4 py-2.5 text-zinc-900">{role.name}</td>
-          <td className="px-4 py-2.5 text-zinc-600">{role.chapter?.name ?? "Tanpa chapter"}</td>
-          <td className="px-4 py-2.5">
-            <StatusBadge active={role.isActive} />
-          </td>
-        </tr>
-      ))}
-    </BoardTable>
+      emptyMessage="Belum ada job role. Tambahkan job role pertama."
+      addLabel="Tambah Job Role"
+      nameLabel="Nama Job Role"
+      items={data}
+      status={status}
+      error={error}
+      select={{
+        label: "Chapter",
+        placeholder: "pilih chapter (boleh kosong) —",
+        options: (chapters.data ?? []).map((c) => ({ id: c.id, name: c.name })),
+      }}
+      selectIdOf={(role) => role.chapter?.id}
+      extraColumn={{ label: "Chapter", render: (role) => role.chapter?.name ?? "Tanpa chapter" }}
+      onCreate={({ name, selectValue }) =>
+        detectError(() => jobRoleMutations.create({ name, selectValue }), `Job role "${name}" berhasil dibuat.`)
+      }
+      onUpdate={(id, { name, selectValue }) =>
+        detectError(async () => {
+          await jobRoleMutations.update(id, { name });
+          await jobRoleMutations.changeChapter(id, selectValue || null);
+        }, "Job role berhasil diubah.")
+      }
+      onToggleActive={(id, isActive) =>
+        detectError(
+          () => jobRoleMutations.toggleActive(id, isActive),
+          isActive ? "Job role berhasil diaktifkan." : "Job role berhasil dinonaktifkan.",
+        )
+      }
+    />
   );
 }

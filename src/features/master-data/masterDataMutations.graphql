@@ -1,0 +1,155 @@
+mutation CreateUnit($name: String!) {
+  createUnit(name: $name) {
+    id
+    name
+    isActive
+    projects {
+      id
+      name
+    }
+  }
+}
+
+mutation UpdateUnit($id: ID!, $name: String!) {
+  updateUnit(id: $id, name: $name) {
+    id
+    name
+    isActive
+    projects {
+      id
+      name
+    }
+  }
+}
+
+mutation SetUnitActive($id: ID!, $isActive: Boolean!) {
+  setUnitActive(id: $id, isActive: $isActive) {
+    id
+    name
+    isActive
+    projects {
+      id
+      name
+    }
+  }
+}
+
+mutation CreateChapter($name: String!) {
+  createChapter(name: $name) {
+    id
+    name
+    isActive
+    jobRoles {
+      id
+      name
+    }
+  }
+}
+
+mutation UpdateChapter($id: ID!, $name: String!) {
+  updateChapter(id: $id, name: $name) {
+    id
+    name
+    isActive
+    jobRoles {
+      id
+      name
+    }
+  }
+}
+
+mutation SetChapterActive($id: ID!, $isActive: Boolean!) {
+  setChapterActive(id: $id, isActive: $isActive) {
+    id
+    name
+    isActive
+    jobRoles {
+      id
+      name
+    }
+  }
+}
+
+mutation CreateJobRole($name: String!, $chapterId: ID) {
+  createJobRole(name: $name, chapterId: $chapterId) {
+    id
+    name
+    isActive
+    chapter {
+      id
+      name
+    }
+  }
+}
+
+mutation UpdateJobRole($id: ID!, $name: String!) {
+  updateJobRole(id: $id, name: $name) {
+    id
+    name
+    isActive
+    chapter {
+      id
+      name
+    }
+  }
+}
+
+mutation SetJobRoleChapter($id: ID!, $chapterId: ID) {
+  setJobRoleChapter(id: $id, chapterId: $chapterId) {
+    id
+    name
+    isActive
+    chapter {
+      id
+      name
+    }
+  }
+}
+
+mutation SetJobRoleActive($id: ID!, $isActive: Boolean!) {
+  setJobRoleActive(id: $id, isActive: $isActive) {
+    id
+    name
+    isActive
+    chapter {
+      id
+      name
+    }
+  }
+}
+
+mutation CreateProject($name: String!, $unitId: ID!) {
+  createProject(name: $name, unitId: $unitId) {
+    id
+    name
+    isActive
+    unit {
+      id
+      name
+    }
+  }
+}
+
+mutation UpdateProject($id: ID!, $name: String!, $unitId: ID!) {
+  updateProject(id: $id, name: $name, unitId: $unitId) {
+    id
+    name
+    isActive
+    unit {
+      id
+      name
+    }
+  }
+}
+
+mutation SetProjectActive($id: ID!, $isActive: Boolean!) {
+  setProjectActive(id: $id, isActive: $isActive) {
+    id
+    name
+    isActive
+    unit {
+      id
+      name
+    }
+  }
+}
