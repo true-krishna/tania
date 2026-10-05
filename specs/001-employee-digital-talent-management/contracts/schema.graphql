@@ -1,22 +1,28 @@
-# =============================================================================
-# Tania — Employee (Digital Talent) Management API
-# Kontrak GraphQL (schema-first, di-generate dengan gqlgen)
-# Feature: 001-employee-digital-talent-management
+# Tania backend GraphQL contract. This file is the single source of truth for
+# the API; graph/generated.go is generated from it and never hand-edited.
+# Feature scope: 001-employee-digital-talent-management.
 #
-# Konvensi:
-#  - Otorisasi DITEGAKKAN DI SERVER (FR-16). Field/mutation yang tidak diizinkan
-#    peran pemanggil menghasilkan error dengan extensions.code = FORBIDDEN.
-#  - Cakupan chapter (peran CHAPTER) diturunkan dari user → employee → jobRole →
-#    chapter (FR-23) dan TIDAK dapat diperlebar lewat argumen filter.
-#  - Daftar besar memakai pagination cursor (Connection).
-# =============================================================================
+# The full design contract (69 operations) lives in
+# specs/.../contracts/schema.graphql and is ported phase by phase
+# (api-conventions §7). This file currently covers: authentication, master data
+# (Unit/Chapter/JobRole/Project), employee records, user accounts, and the
+# audit trail — the Foundational phase plus US6 and US1.
+#
+# Naming (api-conventions §5): Time for timestamps, Date for calendar dates,
+# ID for identifiers, JSON for free-form payloads. The design contract's
+# UUID/DateTime aliases are deliberately not ported so a value has exactly one
+# GraphQL name.
+#
+# Authorization is enforced server-side (FR-16); forbidden calls return
+# extensions.code = FORBIDDEN. Chapter scope never widens through arguments.
 
-scalar UUID
-scalar DateTime
+scalar Time
 scalar Date
+scalar JSON
 
 # ------------------------------- Enums --------------------------------------
 
+"""Application access roles (fixed set, FR-15)."""
 enum AccessRole {
   ADMIN
   OPERATION
@@ -32,6 +38,15 @@ enum AccountStatus {
 enum EmployeeStatus {
   ACTIVE
   INACTIVE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DEACTIVATE
+  DELETE
+  LOGIN
+  LOGOUT
 }
 
 enum AssignmentStatus {
@@ -72,23 +87,17 @@ enum PerformanceEvaluationStatus {
 }
 
 enum EvaluationPeriodState {
-  SCHEDULED   # tanggal mulai belum tiba
-  RUNNING     # tanggal saat ini dalam rentang (FR-25)
-  CLOSED      # melewati tanggal selesai — hanya baca
+  """Tanggal mulai belum tiba."""
+  SCHEDULED
+  """Tanggal saat ini berada dalam rentang periode (FR-25)."""
+  RUNNING
+  """Melewati tanggal selesai — hanya baca."""
+  CLOSED
 }
 
 enum EvaluationFillState {
   NOT_EVALUATED
   EVALUATED
-}
-
-enum AuditAction {
-  CREATE
-  UPDATE
-  DEACTIVATE
-  DELETE
-  LOGIN
-  LOGOUT
 }
 
 # ------------------------------ Pagination ----------------------------------
@@ -100,23 +109,32 @@ type PageInfo {
   endCursor: String
 }
 
+type Health {
+  status: String!
+  version: String!
+}
+
 # ------------------------------- Identity -----------------------------------
 
+"""An application account with exactly one access role."""
 type User {
-  id: UUID!
+  id: ID!
   email: String!
   fullName: String!
   accessRole: AccessRole!
   status: AccountStatus!
   employee: Employee
-  lastLoginAt: DateTime
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  lastLoginAt: Time
+  createdAt: Time!
+  updatedAt: Time!
 }
 
+"""A freshly issued access/refresh token pair."""
 type AuthPayload {
   accessToken: String!
-  accessTokenExpiresAt: DateTime!
+  accessTokenExpiresAt: Time!
+  refreshToken: String!
+  refreshTokenExpiresAt: Time!
   user: User!
 }
 
@@ -127,70 +145,81 @@ input LocalLoginInput {
 
 # ------------------------------- Master data --------------------------------
 
+"""Unit master data (FR-18)."""
 type Unit {
-  id: UUID!
+  id: ID!
   name: String!
   isActive: Boolean!
+  """Projects owned by this unit, alphabetical."""
   projects: [Project!]!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
+"""Chapter master data (FR-24)."""
 type Chapter {
-  id: UUID!
+  id: ID!
   name: String!
   isActive: Boolean!
+  """Job roles owned by this chapter, alphabetical."""
   jobRoles: [JobRole!]!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
-"""Master Data Role — peran jabatan/fungsional (bukan peran akses)."""
+"""Master Data Role — peran jabatan/fungsional (bukan peran akses, FR-20)."""
 type JobRole {
-  id: UUID!
+  id: ID!
   name: String!
   isActive: Boolean!
-  chapter: Chapter          # null = role tanpa chapter → tidak assignable (FR-22/FR-23)
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  """null = role tanpa chapter → tidak assignable (FR-22/FR-23)."""
+  chapter: Chapter
+  createdAt: Time!
+  updatedAt: Time!
 }
 
+"""Project master data; wajib merujuk tepat satu Unit (FR-19)."""
 type Project {
-  id: UUID!
+  id: ID!
   name: String!
   unit: Unit!
   isActive: Boolean!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
 # ------------------------------- Employee -----------------------------------
 
 type Employee {
-  id: UUID!
+  id: ID!
   fullName: String!
   employeeCode: String!
   email: String!
   unit: Unit!
   jobRole: JobRole!
-  chapter: Chapter          # turunan jobRole.chapter (FR-23); null bila role tanpa chapter
-  assignable: Boolean!      # status aktif DAN jobRole memiliki chapter
+  """Turunan jobRole.chapter (FR-23); null bila role tanpa chapter."""
+  chapter: Chapter
+  """status aktif DAN jobRole memiliki chapter."""
+  assignable: Boolean!
   joinedAt: Date!
   status: EmployeeStatus!
   account: User
-  assignments(first: Int, after: String): AssignmentConnection!
-  idps(first: Int, after: String): IdpConnection!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  """Riwayat assignment talent, terbaru lebih dulu (FR-07)."""
+  assignments(first: Int = 25, after: String): AssignmentConnection!
+  """IDP talent dalam cakupan pemanggil (FR-11)."""
+  idps(first: Int = 25, after: String): IdpConnection!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
 type EmployeeEdge { node: Employee!, cursor: String! }
 type EmployeeConnection { edges: [EmployeeEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
 
 input EmployeeFilter {
-  search: String            # nama / email / employeeCode
-  unitId: UUID
-  jobRoleId: UUID
+  """nama / email / employeeCode"""
+  search: String
+  unitId: ID
+  jobRoleId: ID
   status: EmployeeStatus
   assignableOnly: Boolean
 }
@@ -199,8 +228,8 @@ input CreateEmployeeInput {
   fullName: String!
   employeeCode: String!
   email: String!
-  unitId: UUID!
-  jobRoleId: UUID!
+  unitId: ID!
+  jobRoleId: ID!
   joinedAt: Date!
   status: EmployeeStatus
 }
@@ -208,16 +237,47 @@ input CreateEmployeeInput {
 input UpdateEmployeeInput {
   fullName: String
   email: String
-  unitId: UUID
-  jobRoleId: UUID
+  unitId: ID
+  jobRoleId: ID
   joinedAt: Date
   status: EmployeeStatus
 }
 
+# --------------------------------- Audit ------------------------------------
+
+"""One entry of the audit trail (FR-17), append-only."""
+type AuditLog {
+  id: ID!
+  occurredAt: Time!
+  actor: User
+  actorRole: AccessRole
+  action: AuditAction!
+  entityType: String!
+  entityId: String
+  before: String
+  after: String
+  ip: String
+  userAgent: String
+  requestId: String
+}
+
+type AuditLogEdge { node: AuditLog!, cursor: String! }
+type AuditLogConnection { edges: [AuditLogEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
+
+input AuditLogFilter {
+  entityType: String
+  entityId: String
+  actorUserId: ID
+  action: AuditAction
+  from: Time
+  to: Time
+}
+
 # ------------------------------- Assignment ---------------------------------
 
+"""Penempatan talent pada sebuah project untuk satu periode (FR-05)."""
 type Assignment {
-  id: UUID!
+  id: ID!
   talent: Employee!
   project: Project!
   jobRole: JobRole!
@@ -225,38 +285,39 @@ type Assignment {
   periodEnd: Date
   status: AssignmentStatus!
   createdBy: User
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
 type AssignmentEdge { node: Assignment!, cursor: String! }
 type AssignmentConnection { edges: [AssignmentEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
 
 input AssignmentFilter {
-  employeeId: UUID
-  projectId: UUID
+  employeeId: ID
+  projectId: ID
   status: AssignmentStatus
 }
 
 input CreateAssignmentInput {
-  employeeId: UUID!
-  projectId: UUID!
-  jobRoleId: UUID!
+  employeeId: ID!
+  projectId: ID!
+  jobRoleId: ID!
   periodStart: Date!
   periodEnd: Date
 }
 
 input UpdateAssignmentInput {
-  projectId: UUID
-  jobRoleId: UUID
+  projectId: ID
+  jobRoleId: ID
   periodStart: Date
   periodEnd: Date
 }
 
 # ---------------------------------- IDP -------------------------------------
 
+"""Individual Development Plan milik satu talent (FR-08)."""
 type Idp {
-  id: UUID!
+  id: ID!
   talent: Employee!
   status: IdpStatus!
   developmentObjective: String!
@@ -269,35 +330,35 @@ type Idp {
   reviews: [ReviewLog!]!
   revisions: [IdpRevision!]!
   createdBy: User
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
 type DevelopmentAction {
-  id: UUID!
+  id: ID!
   description: String!
   method: DevelopmentMethod!
   status: DevelopmentActionStatus!
   dueDate: Date
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
 type ReviewLog {
-  id: UUID!
+  id: ID!
   reviewDate: Date!
   summary: String!
   followUp: String
   createdBy: User
-  createdAt: DateTime!
+  createdAt: Time!
 }
 
 type IdpRevision {
-  id: UUID!
+  id: ID!
   revisionNo: Int!
   changedBy: User
   changeNote: String
-  createdAt: DateTime!
+  createdAt: Time!
 }
 
 type IdpEdge { node: Idp!, cursor: String! }
@@ -305,12 +366,12 @@ type IdpConnection { edges: [IdpEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
 
 input IdpFilter {
   status: IdpStatus
-  employeeId: UUID
+  employeeId: ID
   needsReviewOnly: Boolean
 }
 
 input CreateIdpInput {
-  employeeId: UUID!
+  employeeId: ID!
   developmentObjective: String!
   currentAssessment: String!
   gapAnalysis: String!
@@ -342,92 +403,36 @@ input AddIdpReviewInput {
   followUp: String
 }
 
-# ----------------------------------- CV -------------------------------------
-
-type CvProfile {
-  id: UUID!
-  talent: Employee!
-  summary: String
-  educations: [CvEducation!]!
-  certifications: [CvCertification!]!
-  skills: [CvSkill!]!
-  """Diturunkan dari riwayat assignment (FR-12) — termasuk yang sudah diakhiri."""
-  workExperience: [Assignment!]!
-  updatedAt: DateTime!
-}
-
-type CvEducation {
-  id: UUID!
-  institution: String!
-  degree: String
-  fieldOfStudy: String
-  startYear: Int
-  endYear: Int
-}
-
-type CvCertification {
-  id: UUID!
-  name: String!
-  issuer: String
-  issuedDate: Date
-  expiryDate: Date
-  credentialUrl: String
-}
-
-type CvSkill {
-  id: UUID!
-  name: String!
-  level: String
-}
-
-input UpsertCvProfileInput { summary: String }
-
-input CvEducationInput {
-  institution: String!
-  degree: String
-  fieldOfStudy: String
-  startYear: Int
-  endYear: Int
-}
-
-input CvCertificationInput {
-  name: String!
-  issuer: String
-  issuedDate: Date
-  expiryDate: Date
-  credentialUrl: String
-}
-
-input CvSkillInput { name: String!, level: String }
-
 # ------------------------- Performance evaluation ---------------------------
 
 type EvaluationCriterion {
-  id: UUID!
+  id: ID!
   label: String!
   answerType: EvaluationAnswerType!
   position: Int!
 }
 
 type EvaluationTemplate {
-  id: UUID!
+  id: ID!
   name: String!
   isActive: Boolean!
   criteria: [EvaluationCriterion!]!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
+"""Periode evaluasi; terpinned ke satu template saat dibuat (FR-25)."""
 type EvaluationPeriod {
-  id: UUID!
+  id: ID!
   name: String!
   startDate: Date!
   endDate: Date!
   template: EvaluationTemplate!
   isActive: Boolean!
+  """Turunan dari tanggal saat ini, bukan kolom tersimpan."""
   state: EvaluationPeriodState!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
 type EvaluationAnswer {
@@ -437,8 +442,9 @@ type EvaluationAnswer {
   valueText: String
 }
 
+"""Penilaian performa satu talent untuk satu periode (FR-26)."""
 type PerformanceEvaluation {
-  id: UUID!
+  id: ID!
   period: EvaluationPeriod!
   talent: Employee!
   answers: [EvaluationAnswer!]!
@@ -446,8 +452,8 @@ type PerformanceEvaluation {
   developmentNotes: String
   status: PerformanceEvaluationStatus!
   createdBy: User
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
 type EvaluationPeriodRosterEntry {
@@ -478,52 +484,82 @@ input CreateEvaluationPeriodInput {
   name: String!
   startDate: Date!
   endDate: Date!
-  templateId: UUID!
+  templateId: ID!
 }
 
 input EvaluationAnswerInput {
-  criterionId: UUID!
+  criterionId: ID!
   valueNumeric: Float
   valueBool: Boolean
   valueText: String
 }
 
 input UpsertPerformanceEvaluationInput {
-  periodId: UUID!
-  employeeId: UUID!
+  periodId: ID!
+  employeeId: ID!
   answers: [EvaluationAnswerInput!]
   summaryAchievement: String
   developmentNotes: String
 }
 
-# --------------------------------- Audit ------------------------------------
+# ----------------------------------- CV -------------------------------------
 
-type AuditLog {
+"""Profil CV milik talent (FR-12); pengalaman kerja diturunkan dari assignment."""
+type CvProfile {
   id: ID!
-  occurredAt: DateTime!
-  actor: User
-  actorRole: AccessRole
-  action: AuditAction!
-  entityType: String!
-  entityId: String
-  before: String
-  after: String
-  ip: String
-  userAgent: String
-  requestId: String
+  talent: Employee!
+  summary: String
+  educations: [CvEducation!]!
+  certifications: [CvCertification!]!
+  skills: [CvSkill!]!
+  """Diturunkan dari riwayat assignment (FR-12) — termasuk yang sudah diakhiri."""
+  workExperience: [Assignment!]!
+  updatedAt: Time!
 }
 
-type AuditLogEdge { node: AuditLog!, cursor: String! }
-type AuditLogConnection { edges: [AuditLogEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
-
-input AuditLogFilter {
-  entityType: String
-  entityId: String
-  actorUserId: UUID
-  action: AuditAction
-  from: DateTime
-  to: DateTime
+type CvEducation {
+  id: ID!
+  institution: String!
+  degree: String
+  fieldOfStudy: String
+  startYear: Int
+  endYear: Int
 }
+
+type CvCertification {
+  id: ID!
+  name: String!
+  issuer: String
+  issuedDate: Date
+  expiryDate: Date
+  credentialUrl: String
+}
+
+type CvSkill {
+  id: ID!
+  name: String!
+  level: String
+}
+
+input UpsertCvProfileInput { summary: String }
+
+input CvEducationInput {
+  institution: String!
+  degree: String
+  fieldOfStudy: String
+  startYear: Int
+  endYear: Int
+}
+
+input CvCertificationInput {
+  name: String!
+  issuer: String
+  issuedDate: Date
+  expiryDate: Date
+  credentialUrl: String
+}
+
+input CvSkillInput { name: String!, level: String }
 
 # ------------------------------- Dashboard ----------------------------------
 
@@ -568,23 +604,23 @@ type ActionStatusCount { status: DevelopmentActionStatus!, count: Int! }
 # -------------------------------- Queries -----------------------------------
 
 type Query {
-  """Profil user yang sedang login beserta cakupan chapter-nya."""
+  """Liveness and build information; no authentication required."""
+  health: Health!
+
+  """Profil user yang sedang login."""
   me: User!
 
-  """Dashboard sesuai peran pemanggil (FR-29/FR-30)."""
-  dashboard: Dashboard!
-
-  # --- Master data (Admin; beberapa read-only untuk peran lain) ---
+  # --- Master data (Admin tulis; read-only untuk peran lain) ---
   units(includeInactive: Boolean = false): [Unit!]!
   chapters(includeInactive: Boolean = false): [Chapter!]!
   jobRoles(includeInactive: Boolean = false): [JobRole!]!
-  projects(unitId: UUID, includeInactive: Boolean = false): [Project!]!
+  projects(unitId: ID, includeInactive: Boolean = false): [Project!]!
 
-  # --- Employee ---
+  # --- Employee (Operation tulis; Chapter/Admin baca) ---
   employees(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
-  employee(id: UUID!): Employee
+  employee(id: ID!): Employee
 
-  # --- Kandidat assignment/IDP dalam cakupan pemanggil ---
+  """Kandidat assignment/IDP baru: karyawan aktif dan assignable (FR-04, FR-23)."""
   assignableTalents(search: String, first: Int = 25, after: String): EmployeeConnection!
 
   # --- Assignment ---
@@ -592,19 +628,25 @@ type Query {
 
   # --- IDP ---
   idps(filter: IdpFilter, first: Int = 25, after: String): IdpConnection!
-  idp(id: UUID!): Idp
+  idp(id: ID!): Idp
+  """IDP milik Talent yang sedang login; null = belum ada IDP (FR-14)."""
   myIdp: Idp
 
   # --- CV ---
   myCvProfile: CvProfile
-  cvProfile(employeeId: UUID!): CvProfile   # pemilik + Chapter dalam cakupan (read-only)
+  """Profil CV untuk pemiliknya atau Chapter dalam cakupan (hanya baca, FR-13)."""
+  cvProfile(employeeId: ID!): CvProfile
+
+  # --- Dashboard per peran (FR-29/FR-30) ---
+  dashboard: Dashboard!
 
   # --- Evaluasi ---
   evaluationTemplates(includeInactive: Boolean = false): [EvaluationTemplate!]!
   evaluationPeriods(includeInactive: Boolean = false): [EvaluationPeriod!]!
   currentEvaluationPeriod: EvaluationPeriod
-  evaluationRoster(periodId: UUID!, first: Int = 25, after: String): [EvaluationPeriodRosterEntry!]!
-  performanceEvaluations(periodId: UUID, employeeId: UUID, first: Int = 25, after: String): PerformanceEvaluationConnection!
+  evaluationRoster(periodId: ID!, first: Int = 25, after: String): [EvaluationPeriodRosterEntry!]!
+  performanceEvaluations(periodId: ID, employeeId: ID, first: Int = 25, after: String): PerformanceEvaluationConnection!
+  """Evaluasi milik Talent yang sedang login (FR-27)."""
   myPerformanceEvaluations: [PerformanceEvaluation!]!
 
   # --- Akun (Admin) ---
@@ -619,74 +661,79 @@ type Query {
 type Mutation {
   # --- Auth ---
   login(input: LocalLoginInput!): AuthPayload!
-  refreshToken: AuthPayload!
-  logout: Boolean!
+
+  """Exchange a refresh token for a new token pair (rotating)."""
+  refreshSession(refreshToken: String!): AuthPayload!
+
+  """Revoke the current access token and, when supplied, the refresh token."""
+  logout(refreshToken: String): Boolean!
 
   # --- Master data (Admin) ---
   createUnit(name: String!): Unit!
-  updateUnit(id: UUID!, name: String!): Unit!
-  setUnitActive(id: UUID!, isActive: Boolean!): Unit!
+  updateUnit(id: ID!, name: String!): Unit!
+  setUnitActive(id: ID!, isActive: Boolean!): Unit!
 
   createChapter(name: String!): Chapter!
-  updateChapter(id: UUID!, name: String!): Chapter!
-  setChapterActive(id: UUID!, isActive: Boolean!): Chapter!
+  updateChapter(id: ID!, name: String!): Chapter!
+  setChapterActive(id: ID!, isActive: Boolean!): Chapter!
 
-  createJobRole(name: String!, chapterId: UUID): JobRole!
-  updateJobRole(id: UUID!, name: String!): JobRole!
-  setJobRoleChapter(id: UUID!, chapterId: UUID): JobRole!
-  setJobRoleActive(id: UUID!, isActive: Boolean!): JobRole!
+  createJobRole(name: String!, chapterId: ID): JobRole!
+  updateJobRole(id: ID!, name: String!): JobRole!
+  setJobRoleChapter(id: ID!, chapterId: ID): JobRole!
+  setJobRoleActive(id: ID!, isActive: Boolean!): JobRole!
 
-  createProject(name: String!, unitId: UUID!): Project!
-  updateProject(id: UUID!, name: String!, unitId: UUID!): Project!
-  setProjectActive(id: UUID!, isActive: Boolean!): Project!
+  createProject(name: String!, unitId: ID!): Project!
+  updateProject(id: ID!, name: String!, unitId: ID!): Project!
+  setProjectActive(id: ID!, isActive: Boolean!): Project!
 
   # --- Employee (Operation) ---
   createEmployee(input: CreateEmployeeInput!): Employee!
-  updateEmployee(id: UUID!, input: UpdateEmployeeInput!): Employee!
-  deactivateEmployee(id: UUID!, acknowledgeActiveWork: Boolean = false): Employee!
+  updateEmployee(id: ID!, input: UpdateEmployeeInput!): Employee!
+  deactivateEmployee(id: ID!, acknowledgeActiveWork: Boolean = false): Employee!
 
   # --- Assignment (Chapter) ---
   createAssignment(input: CreateAssignmentInput!): Assignment!
-  updateAssignment(id: UUID!, input: UpdateAssignmentInput!): Assignment!
-  endAssignment(id: UUID!, periodEnd: Date!): Assignment!
+  updateAssignment(id: ID!, input: UpdateAssignmentInput!): Assignment!
+  endAssignment(id: ID!, periodEnd: Date!): Assignment!
 
-  # --- IDP (Chapter; sebagian oleh Talent) ---
+  # --- IDP (Chapter kecuali update status aksi oleh Talent) ---
   createIdp(input: CreateIdpInput!): Idp!
-  updateIdp(id: UUID!, input: UpdateIdpInput!): Idp!
-  closeIdp(id: UUID!): Idp!
-  addDevelopmentAction(idpId: UUID!, input: CreateDevelopmentActionInput!): DevelopmentAction!
-  updateDevelopmentAction(id: UUID!, description: String, method: DevelopmentMethod, dueDate: Date): DevelopmentAction!
-  updateDevelopmentActionStatus(id: UUID!, status: DevelopmentActionStatus!): DevelopmentAction!
-  deleteDevelopmentAction(id: UUID!): Boolean!
-  addIdpReview(idpId: UUID!, input: AddIdpReviewInput!): ReviewLog!
+  updateIdp(id: ID!, input: UpdateIdpInput!): Idp!
+  closeIdp(id: ID!): Idp!
+  addDevelopmentAction(idpId: ID!, input: CreateDevelopmentActionInput!): DevelopmentAction!
+  updateDevelopmentAction(id: ID!, description: String, method: DevelopmentMethod, dueDate: Date): DevelopmentAction!
+  """Talent pemilik atau Chapter chapter terkait (FR-09)."""
+  updateDevelopmentActionStatus(id: ID!, status: DevelopmentActionStatus!): DevelopmentAction!
+  deleteDevelopmentAction(id: ID!): Boolean!
+  addIdpReview(idpId: ID!, input: AddIdpReviewInput!): ReviewLog!
 
-  # --- CV (Talent pemilik) ---
+  # --- CV (Talent pemilik, FR-12/FR-13) ---
   upsertCvProfile(input: UpsertCvProfileInput!): CvProfile!
   addCvEducation(input: CvEducationInput!): CvEducation!
-  updateCvEducation(id: UUID!, input: CvEducationInput!): CvEducation!
-  deleteCvEducation(id: UUID!): Boolean!
+  updateCvEducation(id: ID!, input: CvEducationInput!): CvEducation!
+  deleteCvEducation(id: ID!): Boolean!
   addCvCertification(input: CvCertificationInput!): CvCertification!
-  updateCvCertification(id: UUID!, input: CvCertificationInput!): CvCertification!
-  deleteCvCertification(id: UUID!): Boolean!
+  updateCvCertification(id: ID!, input: CvCertificationInput!): CvCertification!
+  deleteCvCertification(id: ID!): Boolean!
   addCvSkill(input: CvSkillInput!): CvSkill!
-  updateCvSkill(id: UUID!, input: CvSkillInput!): CvSkill!
-  deleteCvSkill(id: UUID!): Boolean!
+  updateCvSkill(id: ID!, input: CvSkillInput!): CvSkill!
+  deleteCvSkill(id: ID!): Boolean!
 
   # --- Evaluasi (Admin: template & periode; Chapter: evaluasi) ---
   createEvaluationTemplate(input: CreateEvaluationTemplateInput!): EvaluationTemplate!
-  updateEvaluationTemplate(id: UUID!, name: String, criteria: [EvaluationCriterionInput!]): EvaluationTemplate!
-  setEvaluationTemplateActive(id: UUID!, isActive: Boolean!): EvaluationTemplate!
+  updateEvaluationTemplate(id: ID!, name: String, criteria: [EvaluationCriterionInput!]): EvaluationTemplate!
+  setEvaluationTemplateActive(id: ID!, isActive: Boolean!): EvaluationTemplate!
 
   createEvaluationPeriod(input: CreateEvaluationPeriodInput!): EvaluationPeriod!
-  updateEvaluationPeriod(id: UUID!, name: String, startDate: Date, endDate: Date): EvaluationPeriod!
-  setEvaluationPeriodActive(id: UUID!, isActive: Boolean!): EvaluationPeriod!
+  updateEvaluationPeriod(id: ID!, name: String, startDate: Date, endDate: Date): EvaluationPeriod!
+  setEvaluationPeriodActive(id: ID!, isActive: Boolean!): EvaluationPeriod!
 
   upsertPerformanceEvaluation(input: UpsertPerformanceEvaluationInput!): PerformanceEvaluation!
-  submitPerformanceEvaluation(id: UUID!): PerformanceEvaluation!
+  submitPerformanceEvaluation(id: ID!): PerformanceEvaluation!
 
   # --- Akun user (Admin) ---
-  createUserAccount(employeeId: UUID!, email: String!, accessRole: AccessRole!, temporaryPassword: String): User!
-  updateUserAccessRole(userId: UUID!, accessRole: AccessRole!): User!
-  setUserAccountStatus(userId: UUID!, status: AccountStatus!): User!
-  revokeUserSessions(userId: UUID!): Boolean!
+  createUserAccount(employeeId: ID!, email: String!, accessRole: AccessRole!, temporaryPassword: String): User!
+  updateUserAccessRole(userId: ID!, accessRole: AccessRole!): User!
+  setUserAccountStatus(userId: ID!, status: AccountStatus!): User!
+  revokeUserSessions(userId: ID!): Boolean!
 }
