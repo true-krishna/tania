@@ -1,0 +1,29 @@
+query AuditLogs($filter: AuditLogFilter, $first: Int, $after: String) {
+  auditLogs(filter: $filter, first: $first, after: $after) {
+    totalCount
+    edges {
+      cursor
+      node {
+        id
+        occurredAt
+        action
+        actor {
+          id
+          fullName
+        }
+        actorRole
+        entityType
+        entityId
+        before
+        after
+        ip
+        userAgent
+        requestId
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

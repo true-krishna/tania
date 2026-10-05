@@ -8,19 +8,11 @@ Chapter, Talent) and reads and writes talent data through the **Tania backend**
 This repo contains **frontend only**. It does not ship a database or API
 implementation — it consumes the backend's GraphQL API, whose base URL is
 configured via environment variables (see [Environment variables](#environment-variables)).
-The current codebase ships the **Talent Profile** slice (TAN-1) over a REST
-client that targets an *external* profile API; the migration to Apollo Client +
-GraphQL is tracked in `specs/001-employee-digital-talent-management/` here
-(spec + contract mirror) and in `codex/backend/tania-backend`
-(`specs/001-employee-digital-talent-management/plan.md`, `roadmap.md`,
-`tasks.md` — that repo hosts the plan and the implementation sequencing).
-
-> **Known gap (2026-10-01)**: the legacy REST endpoints listed under
-> [API contract](#api-contract) below (`GET /profiles`, `GET /profiles/:id`,
-> `POST /users`) are **not served by `codex/backend/tania-backend`** — that
-> service exposes only `POST /graphql`, `GET /healthz`, and `GET /readyz`.
-> The `/talents` slice therefore cannot run end-to-end against the current
-> backend until it is migrated to GraphQL.
+Data is read and written through the backend's GraphQL API via Apollo Client
+(typed documents in `src/generated/graphql/`, feature hooks in `src/features/`).
+The spec and contract (`contracts/schema.graphql`) are authored here and
+mirrored into `codex/backend/tania-backend`, which hosts `plan.md`,
+`roadmap.md`, and `tasks.md` for the shared implementation sequencing.
 
 ## Scope
 
@@ -57,35 +49,34 @@ and `include: ["src/**/*.test.ts"]`, so component tests are not picked up).
 
 ## Project structure
 
-What exists today (verified 2026-10-01):
+What exists today (verified during convergence):
 
 ```text
 src/
-├── app/                        # App Router
+├── app/
 │   ├── layout.tsx              # root layout
-│   ├── page.tsx                # redirects to /talents
-│   └── talents/                # legacy Talent Profile slice (REST)
-│       ├── page.tsx
-│       ├── add-user-form.tsx
-│       └── [id]/page.tsx
-└── lib/
-    ├── api.ts                  # REST client (external profile API)
-    ├── api.test.ts             # Vitest unit tests
-    └── talents.ts              # ProfileView / CreateUserInput types
+│   ├── page.tsx                # redirects to /dashboard
+│   ├── (auth)/login/           # local login (SSO in W8)
+│   └── (app)/                  # authenticated shell (AuthGuard, role-gated nav)
+│       ├── dashboard/          # per-role dashboard
+│       ├── employees/          # employee records + assignments
+│       ├── idp/                # Individual Development Plans (+ /idp/my for Talent)
+│       ├── cv/                 # CV profiles (Talent edit, Chapter read-only)
+│       ├── evaluations/        # performance evaluation
+│       ├── master-data/        # chapters, job roles, units, projects
+│       └── audit/              # admin audit-log viewer
+├── components/                 # UI primitives (DataState, Toast, Card, Select, …)
+├── features/                   # per-module hooks + .graphql documents
+├── generated/graphql/          # GraphQL codegen output (committed)
+├── lib/                        # apollo, auth, errors, cn, …
+└── test/                       # Vitest setup
 specs/001-employee-digital-talent-management/
 ├── spec.md                     # authored here; mirrored to the backend repo
 └── contracts/                  # mirrored: schema.graphql + api-conventions.md
 ```
 
-Not present yet — these are the target layout from
-`tania-backend/specs/001-employee-digital-talent-management/plan.md` §6.2 and are
-created by the migration slice, not decided here:
-
-```text
-src/app/(auth)/login/           src/features/<modul>/      src/lib/apollo/
-src/app/(app)/<rute>/           src/components/            src/lib/auth/
-                                                           src/generated/graphql/
-```
+Target layout per `tania-backend/specs/001-employee-digital-talent-management/plan.md` §6.2
+(one feature module per `src/app/(app)/<rute>/` + `src/features/<modul>/`):
 
 ## Getting started
 
@@ -106,8 +97,6 @@ unauthenticated visitors are sent to `/login`. In dev with
 
 | Variable                    | Used by                                  | Description                                       |
 | --------------------------- | ---------------------------------------- | ------------------------------------------------- |
-| `TANIA_API_URL`             | Server-rendered Talent Profile pages (REST, legacy) | Base URL of the external Talent Profile API |
-| `NEXT_PUBLIC_TANIA_API_URL` | Client-side "Add User" form (REST, legacy) | Same API, accessible from the browser (CORS) |
 | `NEXT_PUBLIC_GRAPHQL_URL`   | Apollo Client (browser)                  | GraphQL endpoint of the Tania backend              |
 | `NEXT_PUBLIC_AUTH_LOCAL_ONLY` | Auth guard (dev mode)                 | `1` = skip login; unset/`0` = normal mode          |
 | `NEXT_PUBLIC_DEFAULT_ACCESS_ROLE` | Auth guard (dev mode)            | Default role when `AUTH_LOCAL_ONLY=1`              |
@@ -115,8 +104,6 @@ unauthenticated visitors are sent to `/login`. In dev with
 Example:
 
 ```bash
-TANIA_API_URL=http://localhost:8080
-NEXT_PUBLIC_TANIA_API_URL=http://localhost:8080
 NEXT_PUBLIC_GRAPHQL_URL=http://localhost:8080/query
 NEXT_PUBLIC_AUTH_LOCAL_ONLY=0
 NEXT_PUBLIC_DEFAULT_ACCESS_ROLE=TALENT
@@ -124,38 +111,16 @@ NEXT_PUBLIC_DEFAULT_ACCESS_ROLE=TALENT
 
 ## API contract
 
-The frontend expects the backend to expose:
-
-| Method | Path             | Description                                      |
-| ------ | ---------------- | ------------------------------------------------ |
-| GET    | `/profiles?q=`   | List/search profiles → `{ query, count, profiles }` |
-| GET    | `/profiles/:id`  | Profile detail → `{ profile }` or `404`            |
-| POST   | `/users`         | Create a user + auto-profile → `{ profile }` (201) |
-
-`ProfileView` shape (camelCase):
-
-```ts
-{
-  userId: number;
-  name: string;
-  email: string;
-  employeeId: string;
-  role: string;
-  grade: string;
-  squad: string;
-  location: string;
-  status: string;
-  managerId: number | null;
-  managerName: string | null;
-  createdAt: string;
-}
-```
+The frontend consumes the backend's **GraphQL** API only; the Contract-First fork
+is `specs/001-employee-digital-talent-management/contracts/schema.graphql`
+(mirrored into `codex/backend/tania-backend`). See [GraphQL codegen](#graphql-codegen)
+for how documents map to code.
 
 ## Data layer (Apollo Client)
 
 The primary data path is **GraphQL via Apollo Client** (plan.md §3.2). The
-Talent Profile REST client above is legacy and deprecated gradually (plan.md
-R2); new modules use Apollo.
+legacy Talent Profile REST client was retired in the convergence slice; all
+modules use Apollo.
 
 ### GraphQL codegen
 
@@ -192,7 +157,6 @@ src/
 ├── generated/graphql/     # hasil GraphQL codegen (committed)
 ├── lib/apollo/            # Apollo Client, link auth, cache policy
 ├── lib/auth/              # token storage, guard peran, AUTH_LOCAL_ONLY
-├── lib/api.ts             # klien REST lama (dipensiunkan bertahap)
 └── test/                  # setup Vitest (setup.ts)
 ```
 
@@ -201,6 +165,12 @@ src/
 Unit/component tests use **Vitest + React Testing Library**. Component tests
 run in jsdom via the `// @vitest-environment jsdom` pragma; Apollo queries are
 tested with `MockedProvider` (plan.md §10.2).
+### End-to-end (Playwright)
+
+Critical-path E2E lives in `e2e/` (`npm run test:e2e`) — see
+`e2e/critical-path.spec.ts`. The web server boots via `playwright.config.ts`
+under `AUTH_LOCAL_ONLY=1` (dev mode); the database-backed multi-role login flow
+requires the backend `docker-compose` stack (T129).
 
 ## Spec-Driven Development
 
@@ -256,6 +226,7 @@ npm start            # serve production build
 npm run lint         # eslint
 npm run typecheck    # tsc --noEmit
 npm test             # vitest run
+npm run test:e2e    # Playwright critical-path E2E
 npm run codegen      # regenerate GraphQL types from the schema contract
 npm run generate:check # verify generated code is up to date (CI gate)
 ```

@@ -14,7 +14,7 @@ import { useAssignableTalents } from "@/features/employees/useEmployees";
 import type { DevelopmentMethod } from "@/generated/graphql/types";
 import { CreateIdpDocument } from "@/generated/graphql";
 
-type ToastItem = { id: string; variant: "error" | "success"; message: string };
+type ToastItem = { id: number; variant: "error" | "success"; message: string };
 
 type ActionRow = {
   description: string;
@@ -75,13 +75,13 @@ export default function NewIdpPage() {
 
   function addToast(variant: ToastItem["variant"], message: string) {
     toastId.current += 1;
-    const id = String(toastId.current);
+    const id = toastId.current;
     setToasts((prev) => [...prev, { id, variant, message }]);
     setTimeout(() => dismissToast(id), 4000);
     return id;
   }
 
-  function dismissToast(id: string) {
+  function dismissToast(id: number) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }
 
