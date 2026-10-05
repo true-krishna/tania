@@ -33,7 +33,7 @@ export default function EvaluationsPage() {
         <p className="text-sm text-zinc-600">Gunakan menu Evaluations untuk membuka daftar evaluasi Anda.</p>
         <Link
           href="/evaluations/my"
-          className="inline-flex w-fit items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
+          className="inline-flex w-fit items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-600 active:bg-brand-700"
         >
           Lihat evaluasi saya
         </Link>
@@ -55,7 +55,7 @@ export default function EvaluationsPage() {
         {role === "ADMIN" ? (
           <p className="text-sm text-zinc-600">
             Buat periode di tab{" "}
-            <Link href="/evaluations/periods" className="font-medium text-brand-700 hover:underline">
+            <Link href="/evaluations/periods" className="font-medium text-brand hover:text-brand-600 hover:underline">
               Periode
             </Link>
             .

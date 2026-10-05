@@ -6,11 +6,11 @@ interface AvatarProps {
 }
 
 const COLORS = [
+  "bg-brand-50 text-brand-700",
+  "bg-brand-100 text-brand-700",
   "bg-brand-100 text-brand-800",
-  "bg-emerald-100 text-emerald-800",
-  "bg-amber-100 text-amber-800",
-  "bg-sky-100 text-sky-800",
-  "bg-rose-100 text-rose-800",
+  "bg-brand-200 text-brand-800",
+  "bg-brand-200 text-brand-900",
 ];
 
 export function Avatar({ initials }: AvatarProps) {

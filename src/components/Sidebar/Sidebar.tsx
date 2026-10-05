@@ -21,8 +21,9 @@ interface SidebarProps {
 }
 
 const LINK_BASE =
-  "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors";
+  "relative flex items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-medium transition-colors";
 const LINK_INACTIVE = "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-fg";
+const LINK_ACTIVE = "border-brand bg-sidebar-active text-sidebar-active-fg";
 
 /** Longest visible href matching the path wins, so `/evaluations` does not also light up on `/evaluations/my`. */
 function useActiveHref(pathname: string, role: AccessRole | null): string {
@@ -122,9 +123,8 @@ export function Sidebar({ role, pathname, width, onWidthChange }: SidebarProps) 
                   <Link
                     href={entry.href}
                     aria-current={active ? "page" : undefined}
-                    className={cn(LINK_BASE, active ? "bg-sidebar-active text-sidebar-active-fg" : LINK_INACTIVE)}
+                    className={cn(LINK_BASE, active ? LINK_ACTIVE : LINK_INACTIVE)}
                   >
-                    {active ? <ActiveIndicator /> : null}
                     <Icon name={entry.icon} className="h-[18px] w-[18px] shrink-0" />
                     <span className="truncate">{entry.label}</span>
                   </Link>
@@ -146,7 +146,7 @@ export function Sidebar({ role, pathname, width, onWidthChange }: SidebarProps) 
                   className={cn(
                     LINK_BASE,
                     "w-full",
-                    groupActive && !open ? "bg-sidebar-active text-sidebar-active-fg" : LINK_INACTIVE,
+                    groupActive ? LINK_ACTIVE : LINK_INACTIVE,
                   )}
                 >
                   <Icon name={entry.icon} className="h-[18px] w-[18px] shrink-0" />
@@ -159,7 +159,7 @@ export function Sidebar({ role, pathname, width, onWidthChange }: SidebarProps) 
                 {open ? (
                   <ul
                     id={`nav-group-${entry.id}`}
-                    className="mt-0.5 ml-[22px] flex flex-col gap-0.5 border-l border-sidebar-border pl-2"
+                    className="mt-0.5 ml-[22px] flex flex-col gap-0.5 pl-2"
                   >
                     {children.map((child) => {
                       const active = activeHref === child.href;
@@ -169,9 +169,9 @@ export function Sidebar({ role, pathname, width, onWidthChange }: SidebarProps) 
                             href={child.href}
                             aria-current={active ? "page" : undefined}
                             className={cn(
-                              "block rounded-md px-3 py-1.5 text-sm transition-colors",
+                              "block rounded-md border-l-4 border-transparent px-3 py-1.5 text-sm transition-colors",
                               active
-                                ? "bg-sidebar-active font-medium text-sidebar-active-fg"
+                                ? "border-brand bg-sidebar-active font-medium text-sidebar-active-fg"
                                 : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-fg",
                             )}
                           >
@@ -225,8 +225,4 @@ export function Sidebar({ role, pathname, width, onWidthChange }: SidebarProps) 
       </div>
     </aside>
   );
-}
-
-function ActiveIndicator() {
-  return <span aria-hidden className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-brand-600" />;
 }

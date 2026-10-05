@@ -94,7 +94,7 @@ export default function EvaluationFormPage() {
     return (
       <section className="flex flex-col gap-4">
         <ErrorState message="Periode evaluasi tidak ditemukan atau akses ditolak." />
-        <Link href="/evaluations" className="text-sm font-medium text-brand-700 hover:underline">
+        <Link href="/evaluations" className="text-sm font-medium text-brand hover:text-brand-600 hover:underline">
           ← Kembali ke roster
         </Link>
       </section>

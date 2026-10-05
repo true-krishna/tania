@@ -317,7 +317,7 @@ export default function DashboardPage() {
           </div>
 
           <p className="text-sm">
-            <Link href="/idp/my" className="font-medium text-brand-600 hover:text-brand-700">
+            <Link href="/idp/my" className="font-medium text-brand hover:text-brand-600">
               Lihat IDP saya →
             </Link>
           </p>

@@ -18,14 +18,14 @@ const WAVE_PATHS = [
 
 export function PromoPanel() {
   return (
-    <aside className="relative hidden overflow-hidden bg-linear-to-br from-brand-800 via-brand-700 to-brand lg:flex lg:w-1/2">
+    <aside className="relative hidden overflow-hidden bg-linear-to-br from-brand-800 via-brand-700 to-brand-500 lg:flex lg:w-1/2">
       <svg
         className="pointer-events-none absolute inset-0 h-full w-full"
         viewBox="0 0 457 569"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
       >
-        <g fill="none" stroke="currentColor" className="text-indigo-950/30" strokeWidth="14">
+        <g fill="none" stroke="currentColor" className="text-brand-900/30" strokeWidth="14">
           {WAVE_PATHS.slice(0, 5).map((d) => (
             <path key={d.slice(0, 12)} d={d} />
           ))}
@@ -38,7 +38,7 @@ export function PromoPanel() {
       </svg>
 
       <div className="relative flex w-full items-center p-12">
-        <div className="relative flex aspect-[4/5] max-h-full w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/12 shadow-2xl shadow-indigo-950/20 backdrop-blur-sm">
+        <div className="relative flex aspect-[4/5] max-h-full w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/12 shadow-2xl shadow-brand-900/20 backdrop-blur-sm">
           <p className="absolute left-10 top-10 z-10 max-w-[19rem] text-3xl font-bold leading-tight text-amber-50">
             Very good works are{" "}
             <span className="whitespace-nowrap">

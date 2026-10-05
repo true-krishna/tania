@@ -38,7 +38,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
-        <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-brand-700 hover:underline">
+        <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-brand hover:text-brand-600 hover:underline">
           {idp.talent.fullName}
         </Link>
         <span className="ml-2 text-xs text-zinc-400">{idp.talent.employeeCode}</span>
@@ -95,7 +95,7 @@ export default function IdpPage() {
         actions={
           <Link
             href="/idp/new"
-            className="inline-flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
+            className="inline-flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-600 active:bg-brand-700"
           >
             + Buat IDP
           </Link>
