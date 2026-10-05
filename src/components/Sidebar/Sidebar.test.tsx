@@ -6,11 +6,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Sidebar } from "@/components/Sidebar";
 
 function renderSidebar(props: Partial<React.ComponentProps<typeof Sidebar>> = {}) {
-  const onWidthChange = vi.fn();
-  render(
-    <Sidebar role="ADMIN" pathname="/dashboard" width={240} onWidthChange={onWidthChange} {...props} />,
+  const onToggle = vi.fn();
+  const view = render(
+    <Sidebar role="ADMIN" pathname="/dashboard" collapsed={false} onToggle={onToggle} {...props} />,
   );
-  return { onWidthChange };
+  return { onToggle, view };
+}
+
+function railWidth() {
+  return (document.getElementById("app-sidebar") as HTMLElement).style.width;
 }
 
 describe("Sidebar", () => {
@@ -50,31 +54,38 @@ describe("Sidebar", () => {
     expect(screen.queryByRole("link", { name: "Roster" })).toBeNull();
   });
 
-  it("resizes with the keyboard and clamps at the limits", () => {
-    const { onWidthChange } = renderSidebar({ width: 240 });
-    const handle = screen.getByRole("separator", { name: "Resize navigation" });
-
-    fireEvent.keyDown(handle, { key: "ArrowRight" });
-    expect(onWidthChange).toHaveBeenLastCalledWith(256);
-    fireEvent.keyDown(handle, { key: "ArrowLeft" });
-    expect(onWidthChange).toHaveBeenLastCalledWith(224);
+  it("renders the full sidebar with labels when expanded", () => {
+    renderSidebar();
+    expect(railWidth()).toBe("240px");
+    expect(screen.getByText("Tania")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collapse navigation" })).toBeInTheDocument();
   });
 
-  it("clamps resizing to the allowed range", () => {
-    const { onWidthChange } = renderSidebar({ width: 395 });
-    const handle = screen.getByRole("separator", { name: "Resize navigation" });
-
-    fireEvent.keyDown(handle, { key: "End" });
-    expect(onWidthChange).toHaveBeenLastCalledWith(400);
-    fireEvent.keyDown(handle, { key: "ArrowRight" });
-    expect(onWidthChange).toHaveBeenLastCalledWith(400);
-    fireEvent.keyDown(handle, { key: "Home" });
-    expect(onWidthChange).toHaveBeenLastCalledWith(200);
+  it("renders an icon-only rail when collapsed", () => {
+    renderSidebar({ collapsed: true });
+    expect(railWidth()).toBe("72px");
+    expect(screen.queryByText("Tania")).toBeNull();
+    expect(screen.queryByText("Dashboard")).toBeNull();
+    // Icon-only items keep an accessible name.
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Unit" })).toBeNull();
   });
 
-  it("resets to the default width on double-click", () => {
-    const { onWidthChange } = renderSidebar({ width: 330 });
-    fireEvent.doubleClick(screen.getByRole("separator", { name: "Resize navigation" }));
-    expect(onWidthChange).toHaveBeenLastCalledWith(240);
+  it("toggles collapse from the footer button", () => {
+    const { onToggle } = renderSidebar();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse navigation" }));
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it("expands, rather than opening a submenu, when a collapsed group is clicked", () => {
+    const { onToggle } = renderSidebar({ collapsed: true });
+    const group = screen.getByRole("button", { name: "Master Data" });
+    expect(group).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(group);
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    // Still controlled as collapsed: the submenu stays hidden until expanded.
+    expect(screen.queryByRole("link", { name: "Unit" })).toBeNull();
   });
 });

@@ -5,23 +5,19 @@ import * as React from "react";
 import { Icon } from "@/components/Icon";
 import { cn } from "@/lib/cn";
 import type { AccessRole } from "@/generated/graphql";
-import {
-  DEFAULT_SIDEBAR_WIDTH,
-  MAX_SIDEBAR_WIDTH,
-  MIN_SIDEBAR_WIDTH,
-  clampSidebarWidth,
-} from "@/lib/sidebar-width";
+import { SIDEBAR_WIDTH_COLLAPSED, SIDEBAR_WIDTH_EXPANDED } from "@/lib/sidebar-state";
 import { NAV, type NavSubmenu } from "./nav";
 
 interface SidebarProps {
   role: AccessRole | null;
   pathname: string;
-  width: number;
-  onWidthChange: (width: number) => void;
+  /** Minimised rail (icons only) vs. full sidebar (icon + label). */
+  collapsed: boolean;
+  onToggle: () => void;
 }
 
 const LINK_BASE =
-  "relative flex items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-medium transition-colors";
+  "relative flex items-center gap-3 rounded-lg border-l-4 border-transparent py-2 text-sm font-medium transition-colors";
 const LINK_INACTIVE = "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-fg";
 const LINK_ACTIVE = "border-brand bg-sidebar-active text-sidebar-active-fg";
 
@@ -41,77 +37,42 @@ function useActiveHref(pathname: string, role: AccessRole | null): string {
   }, [pathname, role]);
 }
 
-export function Sidebar({ role, pathname, width, onWidthChange }: SidebarProps) {
+export function Sidebar({ role, pathname, collapsed, onToggle }: SidebarProps) {
   const activeHref = useActiveHref(pathname, role);
   // User toggles override the default (the submenu owning the current route).
   const [openOverride, setOpenOverride] = React.useState<Record<string, boolean>>({});
-  const [dragging, setDragging] = React.useState(false);
-  const dragRef = React.useRef<{ startX: number; startWidth: number } | null>(null);
 
   const activeGroupId = NAV.find(
     (entry): entry is NavSubmenu =>
       entry.kind === "group" && entry.children.some((child) => child.href === activeHref),
   )?.id;
 
-  React.useEffect(() => {
-    if (!dragging) return;
-    const previous = document.body.style.userSelect;
-    document.body.style.userSelect = "none";
-    return () => {
-      document.body.style.userSelect = previous;
-    };
-  }, [dragging]);
-
-  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    dragRef.current = { startX: event.clientX, startWidth: width };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging(true);
-  }
-
-  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
-    const drag = dragRef.current;
-    if (!drag) return;
-    onWidthChange(clampSidebarWidth(drag.startWidth + event.clientX - drag.startX));
-  }
-
-  function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
-    dragRef.current = null;
-    setDragging(false);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  }
-
-  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-    const step = event.shiftKey ? 40 : 16;
-    const keys: Record<string, number> = {
-      ArrowLeft: width - step,
-      ArrowRight: width + step,
-      Home: MIN_SIDEBAR_WIDTH,
-      End: MAX_SIDEBAR_WIDTH,
-    };
-    if (!(event.key in keys)) return;
-    event.preventDefault();
-    onWidthChange(clampSidebarWidth(keys[event.key]));
-  }
+  const itemClass = (active: boolean) =>
+    cn(
+      LINK_BASE,
+      collapsed ? "justify-center px-2" : "px-3",
+      active ? LINK_ACTIVE : LINK_INACTIVE,
+    );
 
   return (
     <aside
       id="app-sidebar"
-      style={{ width }}
-      className="fixed inset-y-0 left-0 z-20 flex flex-col border-r border-sidebar-border bg-sidebar"
+      style={{ width: collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED }}
+      className="fixed inset-y-0 left-0 z-20 flex flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200"
     >
-      <div className="flex items-center gap-2.5 px-4 py-4">
+      <div className={cn("flex items-center gap-2.5 py-4", collapsed ? "justify-center px-2" : "px-4")}>
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand text-sm font-bold text-white shadow-sm">
           T
         </span>
-        <span className="flex min-w-0 flex-col leading-tight">
-          <span className="truncate text-sm font-semibold tracking-tight text-zinc-900">Tania</span>
-          <span className="truncate text-[11px] text-zinc-400">Talent Management</span>
-        </span>
+        {collapsed ? null : (
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-sm font-semibold tracking-tight text-zinc-900">Tania</span>
+            <span className="truncate text-[11px] text-zinc-400">Talent Management</span>
+          </span>
+        )}
       </div>
 
-      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-2.5 pb-4">
+      <nav aria-label="Main navigation" className={cn("flex-1 overflow-y-auto pb-4", collapsed ? "px-2" : "px-2.5")}>
         <ul className="flex flex-col gap-0.5">
           {NAV.map((entry) => {
             if (role && !entry.roles.includes(role)) return null;
@@ -123,38 +84,50 @@ export function Sidebar({ role, pathname, width, onWidthChange }: SidebarProps) 
                   <Link
                     href={entry.href}
                     aria-current={active ? "page" : undefined}
-                    className={cn(LINK_BASE, active ? LINK_ACTIVE : LINK_INACTIVE)}
+                    aria-label={collapsed ? entry.label : undefined}
+                    title={collapsed ? entry.label : undefined}
+                    className={itemClass(active)}
                   >
                     <Icon name={entry.icon} className="h-[18px] w-[18px] shrink-0" />
-                    <span className="truncate">{entry.label}</span>
+                    {collapsed ? null : <span className="truncate">{entry.label}</span>}
                   </Link>
                 </li>
               );
             }
 
             const children = entry.children.filter((child) => !role || child.roles.includes(role));
-            const open = openOverride[entry.id] ?? activeGroupId === entry.id;
+            const open = !collapsed && (openOverride[entry.id] ?? activeGroupId === entry.id);
             const groupActive = children.some((child) => child.href === activeHref);
 
             return (
               <li key={entry.id}>
                 <button
                   type="button"
-                  aria-expanded={open}
+                  aria-expanded={collapsed ? false : open}
                   aria-controls={`nav-group-${entry.id}`}
-                  onClick={() => setOpenOverride((prev) => ({ ...prev, [entry.id]: !open }))}
-                  className={cn(
-                    LINK_BASE,
-                    "w-full",
-                    groupActive ? LINK_ACTIVE : LINK_INACTIVE,
-                  )}
+                  aria-label={collapsed ? entry.label : undefined}
+                  title={collapsed ? `${entry.label} — expand navigation` : undefined}
+                  onClick={() => {
+                    // No room for a submenu in the rail: expand, then open the group.
+                    if (collapsed) {
+                      onToggle();
+                      setOpenOverride((prev) => ({ ...prev, [entry.id]: true }));
+                      return;
+                    }
+                    setOpenOverride((prev) => ({ ...prev, [entry.id]: !open }));
+                  }}
+                  className={cn(itemClass(groupActive), "w-full")}
                 >
                   <Icon name={entry.icon} className="h-[18px] w-[18px] shrink-0" />
-                  <span className="flex-1 truncate text-left">{entry.label}</span>
-                  <Icon
-                    name="chevronDown"
-                    className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")}
-                  />
+                  {collapsed ? null : (
+                    <>
+                      <span className="flex-1 truncate text-left">{entry.label}</span>
+                      <Icon
+                        name="chevronDown"
+                        className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")}
+                      />
+                    </>
+                  )}
                 </button>
                 {open ? (
                   <ul
@@ -188,40 +161,22 @@ export function Sidebar({ role, pathname, width, onWidthChange }: SidebarProps) 
         </ul>
       </nav>
 
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize navigation"
-        aria-controls="app-sidebar"
-        aria-valuemin={MIN_SIDEBAR_WIDTH}
-        aria-valuemax={MAX_SIDEBAR_WIDTH}
-        aria-valuenow={Math.round(width)}
-        tabIndex={0}
-        title="Drag to resize · double-click to reset"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onDoubleClick={() => onWidthChange(DEFAULT_SIDEBAR_WIDTH)}
-        onKeyDown={handleKeyDown}
-        className={cn(
-          "group absolute inset-y-0 right-0 flex w-2 translate-x-1/2 cursor-col-resize touch-none items-center justify-center focus:outline-none",
-          dragging && "cursor-col-resize",
-        )}
-      >
-        <span
+      <div className={cn("border-t border-sidebar-border p-2", collapsed && "flex justify-center")}>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={!collapsed}
+          aria-controls="app-sidebar"
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          title={collapsed ? "Expand navigation" : "Collapse navigation"}
           className={cn(
-            "flex h-8 w-1 items-center justify-center rounded-full transition-colors",
-            dragging ? "bg-brand" : "bg-transparent group-hover:bg-sidebar-border group-focus-visible:bg-brand",
+            "inline-flex items-center gap-2 rounded-lg text-sm font-medium text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-fg",
+            collapsed ? "h-9 w-9 justify-center" : "w-full px-3 py-2",
           )}
-        />
-        <Icon
-          name="resize"
-          className={cn(
-            "absolute h-4 w-4 text-zinc-300 opacity-0 transition-opacity group-hover:opacity-100",
-            dragging && "text-brand opacity-100",
-          )}
-        />
+        >
+          <Icon name={collapsed ? "chevronRight" : "chevronLeft"} className="h-4 w-4 shrink-0" />
+          {collapsed ? null : <span className="truncate">Collapse</span>}
+        </button>
       </div>
     </aside>
   );

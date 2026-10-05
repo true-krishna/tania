@@ -15,8 +15,9 @@ export type IconName =
   | "masterData"
   | "audit"
   | "chevronDown"
-  | "signOut"
-  | "resize";
+  | "chevronLeft"
+  | "chevronRight"
+  | "signOut";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -82,20 +83,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
   chevronDown: <path d="M6 9.5l6 6 6-6" />,
+  chevronLeft: <path d="M14.5 6l-6 6 6 6" />,
+  chevronRight: <path d="M9.5 6l6 6-6 6" />,
   signOut: (
     <>
       <path d="M9.5 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3h4" />
       <path d="M16 16.5l4.5-4.5L16 7.5M20 12H9" />
-    </>
-  ),
-  resize: (
-    <>
-      <circle cx="10" cy="8" r="1.1" />
-      <circle cx="14" cy="8" r="1.1" />
-      <circle cx="10" cy="12" r="1.1" />
-      <circle cx="14" cy="12" r="1.1" />
-      <circle cx="10" cy="16" r="1.1" />
-      <circle cx="14" cy="16" r="1.1" />
     </>
   ),
 };

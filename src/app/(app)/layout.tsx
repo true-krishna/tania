@@ -10,11 +10,13 @@ import { roleLabel } from "@/features/accounts/roles";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
 import { clearSession, getSession } from "@/lib/auth/token-store";
 import {
-  getSidebarWidthServerSnapshot,
-  getSidebarWidthSnapshot,
-  setSidebarWidth,
-  subscribeSidebarWidth,
-} from "@/lib/sidebar-width";
+  SIDEBAR_WIDTH_COLLAPSED,
+  SIDEBAR_WIDTH_EXPANDED,
+  getSidebarCollapsedServerSnapshot,
+  getSidebarCollapsedSnapshot,
+  setSidebarCollapsed,
+  subscribeSidebarCollapsed,
+} from "@/lib/sidebar-state";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -24,11 +26,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Persisted preference, read through an external store so the server render
   // uses the default and the client upgrades after hydration.
-  const sidebarWidth = React.useSyncExternalStore(
-    subscribeSidebarWidth,
-    getSidebarWidthSnapshot,
-    getSidebarWidthServerSnapshot,
+  const collapsed = React.useSyncExternalStore(
+    subscribeSidebarCollapsed,
+    getSidebarCollapsedSnapshot,
+    getSidebarCollapsedServerSnapshot,
   );
+  const sidebarWidth = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 
   async function handleLogout() {
     const refreshToken = getSession()?.refreshToken;
@@ -48,10 +51,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar
           role={role}
           pathname={pathname}
-          width={sidebarWidth}
-          onWidthChange={setSidebarWidth}
+          collapsed={collapsed}
+          onToggle={() => setSidebarCollapsed(!collapsed)}
         />
-        <div className="flex min-h-screen flex-col" style={{ marginLeft: sidebarWidth }}>
+        <div
+          className="flex min-h-screen flex-col transition-[margin] duration-200"
+          style={{ marginLeft: sidebarWidth }}
+        >
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b border-board-border bg-white/80 px-6 backdrop-blur">
             <p className="truncate text-sm font-semibold text-zinc-700">{sectionForPath(pathname)}</p>
             <div className="flex items-center gap-3">
