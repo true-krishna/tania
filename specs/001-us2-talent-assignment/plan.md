@@ -6,6 +6,10 @@
 
 **Perintah**: `/speckit.plan` — hasil untuk tiket TAN-133
 
+**Revisi**: 2026-10-08 — O2 ditutup mengacu keputusan CV Profile (TAN-91, FR-10 yang disetujui
+stakeholder): riwayat assignment milik Talent tampil sebagai bucket otomatis section Experiences
+pada Profil CV — tidak ada tampilan khusus terpisah.
+
 **Repo**: fitur ini melintasi dua repo — `codex/backend/tania-backend` (modul Assignment)
 dan `codex/frontend/tania-dashboard` (modul UI assignments). Plan induk
 (`specs/001-employee-digital-talent-management/plan.md` di masing-masing repo) tetap menjadi
@@ -101,7 +105,7 @@ Stack dipin dari plan induk (konstitusi); **tidak ada dependensi baru** di fitur
 | US2-4 penolakan tanggal selesai < mulai | **Gap G5** (satu paket) | Pesan server (`ErrPrecondition`/`Invalid`) perlu dipetakan ke tampilan error |
 | US3 riwayat per talent (FR-07) | **Terpenuhi** | `Employee.assignments` + filter Talent pada daftar; histori termasuk yang diakhiri; baca lintas chapter → `ErrNotFound` |
 | US4 daftar per project (FR-07) | **Terpenuhi** | Filter Project pada daftar assignment menampilkan talent dalam cakupan chapter + perannya; kosong → empty state |
-| US5 riwayat milik Talent (FR-08) | **Terpenuhi via CV** (keputusan tampilan → Open Item O2) | `myCvProfile.workExperience` hanya-baca pada halaman CV; skenario empty state perlu diverifikasi |
+| US5 riwayat milik Talent (FR-08) | **Terpenuhi via Profil CV** (O2 ditutup mengacu TAN-91) | Section Experiences Profil CV menampilkan bucket otomatis dari riwayat assignment — hanya-baca, selalu terkini, termasuk yang sudah diakhiri (FR-10 spec CV Profile `002-cv-profile-spec.md`, disetujui stakeholder); tidak ada tampilan khusus terpisah; skenario empty state perlu diverifikasi |
 | FR-10 jejak audit | **Terpenuhi** | `recordChange` before/after dalam transaksi; baca audit Admin-only (modul audit induk) |
 | SC-001…SC-005 | **Diuji pada K1/K6** | SC-002 via test matrix otorisasi; SC-004 dijamin semantik update/end tanpa delete (tidak ada operasi hapus di kontrak) |
 
@@ -178,6 +182,12 @@ field yang bisa diubah sedikit (project, peran, periode).
   pesan error dipetakan jelas di form.
 - Pengalaman kerja CV dan angka dashboard (`activeAssignments`) otomatis mengikuti mutasi
   assignment — SC-003 tanpa sinkronisasi manual.
+- **Relasi ke spec CV Profile (TAN-91, `002-cv-profile-spec.md`)**: spesifikasi itu menggantikan
+  bagian CV pada spec 001 dan menetapkan (FR-10, disetujui stakeholder) bahwa section Experiences
+  memakai model dua bucket — entri otomatis dari riwayat assignment (hanya-baca, selalu terkini,
+  termasuk yang diakhiri) + entri CV/manual. Keputusan ini yang menutup O2 plan ini: tidak ada
+  tampilan riwayat khusus terpisah untuk Talent. Fitur ini tetap pemilik data riwayat assignment;
+  CV Profile hanya mengonsumsinya sebagai turunan (entri assignment tidak disalin ke tabel CV).
 
 ---
 
@@ -216,7 +226,7 @@ Urutan eksekusi; rincian task menyusul di `tasks.md` (Phase 2):
 | **K2 — Form ubah assignment** | Form ubah project/peran/periode pada detail assignment (mutasi `updateAssignment` via codegen) + test | G1 (US2-2, FR-05) |
 | **K3 — Pengakhiran dengan tanggal** | Input tanggal selesai pada aksi akhiri (tanpa default otomatis; hindari `toISOString` UTC → G6) + tampilan pesan penolakan validasi | G2, G6 (US2-3, FR-06, FR-09) |
 | **K4 — Pemetaan error form** | Error server per field/pesan aksi untuk buat & ubah (tanggal, CONFLICT duplikat aktif, FORBIDDEN cakupan) + test | G5 (US1-4, US2-4) |
-| **K5 — Verifikasi US5 & label** | Verifikasi riwayat Talent via CV (termasuk empty state); putuskan tampilan khusus bila produk menghendaki; rapikan label status | O2, O4 (US5, FR-08) |
+| **K5 — Verifikasi US5 & label** | Verifikasi bucket otomatis section Experiences pada Profil CV menampilkan riwayat assignment Talent (termasuk empty state) sesuai FR-10 spec CV Profile (TAN-91); rapikan label status | O2, O4 (US5, FR-08) |
 | **K6 — UAT & regression** | Checklist acceptance scenario spec + regression lintas modul (assignment → CV → dashboard) | SC-001…SC-005 |
 
 K2–K4 dapat berjalan paralel setelah K1. Backend tidak menjadi prasyarat frontend karena
@@ -229,7 +239,7 @@ seluruh operasi sudah dilayani.
 | # | Item | Dampak | Rencana |
 | --- | --- | --- | --- |
 | O1 | Penempatan artefak dua-repo (opsi C) untuk slice ini | Sinkronisasi dokumentasi antar repo | Plan ini satu dokumen di repo dashboard (rumah spec). Bila eksekusi diurutkan dari repo backend, mirror `spec.md` byte-identik + catat K1 di `tasks.md` backend — **menunggu konfirmasi pemilik produk** |
-| O2 | Tampilan riwayat assignment milik Talent (US5) | UI Talent | Saat ini terpenuhi via halaman CV ("pengalaman kerja"). Bila produk menghendaki tampilan khusus (mis. `/assignments/my`, pola `/idp/my`), tambahkan sebagai polish kecil — menunggu keputusan |
+| O2 | **Selesai 2026-10-08** — keputusan pemilik produk mengacu TAN-91 (CV Profile, FR-10 disetujui stakeholder) | UI Talent | Riwayat assignment milik Talent tampil melalui Profil CV: bucket otomatis pada section Experiences (hanya-baca, selalu terkini, termasuk yang diakhiri); **tidak ada** tampilan khusus `/assignments/my`. Sumber data tetap riwayat `Assignment` (diturunkan, tidak disalin). K5 cukup memverifikasi empty state & konsistensi label |
 | O3 | Butir warisan spesifikasi induk: konfirmasi Out of Scope oleh pemilik produk | Penutupan checklist spec (butir terakhir masih terbuka) | Konfirmasi bersama review spec ini |
 | O4 | Label status "Aktif/Selesai" vs "berjalan/selesai" | Konsistensi copy bahasa Indonesia | Diselaraskan saat menyentuh halaman terkait (K5); nilai server tidak berubah |
 
