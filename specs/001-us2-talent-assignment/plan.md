@@ -1,0 +1,245 @@
+# Implementation Plan: Manajemen Assignment Talent
+
+**Branch**: `001-us2-talent-assignment` | **Date**: 2026-10-08 | **Spec**: `specs/001-us2-talent-assignment/spec.md` (TAN-97, Draft)
+
+**Input**: Feature specification dari `/specs/001-us2-talent-assignment/spec.md`
+
+**Perintah**: `/speckit.plan` — hasil untuk tiket TAN-133
+
+**Repo**: fitur ini melintasi dua repo — `codex/backend/tania-backend` (modul Assignment)
+dan `codex/frontend/tania-dashboard` (modul UI assignments). Plan induk
+(`specs/001-employee-digital-talent-management/plan.md` di masing-masing repo) tetap menjadi
+sumber arsitektur; dokumen ini adalah **plan slice** yang memetakan spec dedikasi ke
+implementasi eksisting dan menutup gap-nya.
+
+---
+
+## Summary
+
+Fitur assignment talent — US2 spesifikasi induk yang diangkat menjadi spec mandiri: Chapter
+membuat assignment (talent dari kandidat assignable, project & peran dari master data, periode),
+mengubah dan mengakhiri assignment berjalan, melihat riwayat per talent dan per project; Talent
+melihat riwayat miliknya hanya-baca (P2).
+
+Pendekatan teknis: **konvergensi, bukan greenfield**. Audit 2026-10-08 menunjukkan modul
+assignment sudah terimplementasi di kedua repo pada `master` (hasil W3 fitur induk): backend
+menyajikan seluruh operasi yang dibutuhkan spec (`createAssignment`, `updateAssignment`,
+`endAssignment`, `assignments(filter)`, `Employee.assignments`, `assignableTalents`) dengan
+otorisasi cakupan chapter di sisi server, dan frontend sudah memiliki daftar (filter talent/
+project/status), form buat, serta detail + aksi akhiri. Plan ini karena itu:
+
+1. Memverifikasi kesesuaian implementasi eksisting terhadap FR-01–FR-10 spec dedikasi
+   (test matrix, tanpa perubahan kode bila lolos).
+2. Menutup gap frontend yang teridentifikasi: **form ubah assignment** (backend siap, UI belum
+   ada), **pengisian tanggal selesai saat mengakhiri** (kini terisi otomatis hari ini), dan
+   pemaparan pesan validasi server (tanggal selesai < tanggal mulai).
+3. **Tanpa perubahan kontrak API** — SDL yang dilayani sudah memuat semua operasi fitur ini;
+   tidak ada operasi atau tipe baru.
+
+---
+
+## Technical Context
+
+Stack dipin dari plan induk (konstitusi); **tidak ada dependensi baru** di fitur ini.
+
+| Aspek | Keputusan |
+| --- | --- |
+| Bahasa backend | Go 1.26, clean architecture (transport → usecase → domain → repository), gqlgen schema-first |
+| Database | PostgreSQL 16 (tabel `assignments` — plan induk `data-model.md` §3.4) |
+| Bahasa frontend | TypeScript 5, Next.js 16.3.4 (App Router), React 19, TailwindCSS 4 |
+| Lapisan data frontend | Apollo Client + GraphQL codegen (`src/generated/graphql/`) |
+| Testing backend | `testing` + fake repository (unit usecase), testcontainers (integrasi) |
+| Testing frontend | Vitest + React Testing Library + Apollo `MockedProvider` |
+| Target performa | Daftar tetap responsif hingga ±5.000 karyawan (pagination cursor) |
+| Constraints | SC-002: penolakan akses 100% di server; UI hanya menyembunyikan. Tanpa PII di URL/log. Label UI berbahasa Indonesia |
+| Scale/Scope | 1 modul backend (M5, sudah ada) + 1 modul frontend (`assignments`, sudah ada); gap terbatas 2 layar + test |
+
+---
+
+## Kondisi Repositori (audit 2026-10-08)
+
+### Backend (`tania-backend`, `master`)
+
+- SDL (`graph/schema.graphqls`) memuat: `Assignment`, `AssignmentStatus`
+  (`ACTIVE`/`COMPLETED`), `AssignmentFilter` (employeeId/projectId/status),
+  `CreateAssignmentInput`, `UpdateAssignmentInput` (projectId/jobRoleId/periodStart/periodEnd —
+  **tanpa** employeeId: talent tidak berpindah, selaras spec), mutasi `createAssignment`,
+  `updateAssignment`, `endAssignment(id, periodEnd)`, query `assignments(filter)` dan
+  `Employee.assignments`, plus `assignableTalents` (kandidat FR-03) dan `CvProfile.workExperience`
+  (turunan assignment, FR-12).
+- Usecase (`internal/usecase/assignment.go`) sudah menegakkan di server: `RequireRole(Chapter)`
+  untuk CUD; `ChapterScope` pada semua baca/tulis; baca di luar cakupan → `ErrNotFound`;
+  create hanya untuk karyawan aktif + assignable dalam chapter-nya (FR-03/FR-04); update dan
+  end hanya pada status `ACTIVE` (pengakhiran kedua ditolak — edge case spec); validasi
+  `periodEnd >= periodStart` pada update dan end (FR-09); audit before/after ditulis sinkron
+  dalam transaksi (FR-10); `ensureNoDuplicateActive` — satu assignment aktif per talent+project
+  (lintas project tetap diperbolehkan, selaras Asumsi spec tentang tumpang tindih periode).
+- Test usecase eksisting: `internal/usecase/assignment_test.go` + fakes.
+
+### Frontend (`tania-dashboard`, `master`)
+
+- Halaman: `src/app/(app)/assignments/page.tsx` (daftar + filter Talent/Project/Status —
+  melayani sudut pandang per talent **dan** per project), `/assignments/new` (form buat,
+  kandidat dari `assignableTalents`), `/assignments/[id]` (detail + aksi akhiri).
+- Modul: `src/features/assignments/` (query `assignments`, `assignableTalents`,
+  `createAssignment`, `endAssignment` + hooks + test `assignments.test.tsx`: daftar, empty
+  state, kandidat assignable-only, error field wajib, sukses buat, akhiri aktif).
+- Riwayat talent (Talent sendiri) sudah tampil hanya-baca pada halaman CV
+  (`src/app/(app)/cv/page.tsx`) sebagai "pengalaman kerja" dari `myCvProfile.workExperience`.
+- Riwayat commit terkait: `e1465c4` (mockup US2), `e698c31` (integrasi GraphQL nyata).
+
+---
+
+## Pemetaan Spec → Implementasi (Gap Analysis)
+
+| Spec | Status | Bukti / Gap |
+| --- | --- | --- |
+| US1 membuat assignment (FR-01–FR-04) | **Terpenuhi** | Form `/assignments/new` + `createAssignment`; kandidat `assignableTalents`; project/peran dari master data; penolakan lintas chapter di server |
+| US1-4 / FR-09 validasi tanggal di UI | **Gap G5** | Server menolak `periodEnd < periodStart`; form belum menampilkan pesan server itu dengan jelas (test hanya menutup error field wajib) |
+| US2-2 mengubah detail (FR-05) | **Gap G1** | Backend `updateAssignment` siap; **belum ada form ubah** di UI — detail hanya menampilkan data + aksi akhiri |
+| US2-3 mengakhiri dengan mengisi tanggal (FR-06, FR-09) | **Gap G2** | Aksi akhiri ada, tetapi tanggal selesai **tidak bisa diisi Chapter** — UI memakai `periodEnd ?? hari ini` otomatis; juga memakai `toISOString().slice(0,10)` (UTC) → **Gap G6** risiko geser tanggal pada timezone non-UTC |
+| US2-4 penolakan tanggal selesai < mulai | **Gap G5** (satu paket) | Pesan server (`ErrPrecondition`/`Invalid`) perlu dipetakan ke tampilan error |
+| US3 riwayat per talent (FR-07) | **Terpenuhi** | `Employee.assignments` + filter Talent pada daftar; histori termasuk yang diakhiri; baca lintas chapter → `ErrNotFound` |
+| US4 daftar per project (FR-07) | **Terpenuhi** | Filter Project pada daftar assignment menampilkan talent dalam cakupan chapter + perannya; kosong → empty state |
+| US5 riwayat milik Talent (FR-08) | **Terpenuhi via CV** (keputusan tampilan → Open Item O2) | `myCvProfile.workExperience` hanya-baca pada halaman CV; skenario empty state perlu diverifikasi |
+| FR-10 jejak audit | **Terpenuhi** | `recordChange` before/after dalam transaksi; baca audit Admin-only (modul audit induk) |
+| SC-001…SC-005 | **Diuji pada K1/K6** | SC-002 via test matrix otorisasi; SC-004 dijamin semantik update/end tanpa delete (tidak ada operasi hapus di kontrak) |
+
+**Kesimpulan**: seluruh gap berada di sisi frontend (G1, G2, G5, G6) plus dua keputusan
+produk kecil (G3/O2, O4). Tidak ada perubahan backend yang direncanakan.
+
+---
+
+## Constitution Check
+
+*GATE: harus lulus sebelum fase eksekusi; dievaluasi ulang setelah desain rinci.*
+
+| Prinsip (konstitusi v1.1.1 dashboard / v1.1.0 backend) | Pemeriksaan | Status |
+| --- | --- | --- |
+| III. Security by design — RBAC + cakupan chapter ditegakkan server-side | Sudah ditegakkan usecase (`RequireRole`, `ChapterScope`, `ErrNotFound` lintas cakupan); UI hanya menyembunyikan; SC-002 diuji di backend | **Lulus** |
+| II. Data minimization — tanpa PII di URL/log | Detail assignment diakses via `id` di path (bukan PII); filter dikirim sebagai variabel GraphQL | **Lulus** |
+| V. Smallest change — tanpa fitur spekulatif | Hanya gap yang menutup acceptance scenario spec; tanpa operasi/tipe baru; tanpa dependensi baru; polish opsional ditolak | **Lulus** |
+| VI. Quality by machines — lint/typecheck/test | `npm run lint` + `typecheck` + `vitest` (frontend), `make lint/vet/test` (backend) wajib hijau | **Lulus** |
+| VII. Testing non-negotiable | Perluasan test RTL untuk setiap gap (G1, G2, G5); test matrix otorisasi backend sudah ada dan diverifikasi ulang; E2E jalur assignment tetap di harness induk (T129/T130) | **Lulus** |
+| VIII. Boundaries — UI → hooks/features → generated | Form baru tetap di `src/features/assignments/` + operasi `.graphql` di modul yang sama; komponen tidak memanggil klien langsung | **Lulus** |
+| IX. Fail visibly — tanpa swallowed error | Pesan penolakan server (validasi tanggal, CONFLICT duplikat aktif) ditampilkan eksplisit | **Lulus** |
+
+**Complexity Tracking**: tidak ada pelanggaran yang perlu dijustifikasi.
+
+---
+
+## Project Structure
+
+### Documentation (fitur ini)
+
+```text
+specs/001-us2-talent-assignment/          # di tania-dashboard (rumah spec, TAN-97)
+├── spec.md                               # sudah ada
+├── checklists/requirements.md            # sudah ada
+└── plan.md                               # dokumen ini
+```
+
+> Mengikuti keputusan "opsi C" plan induk: artefak spesifikasi ditulis di repo dashboard.
+> `tasks.md` (Phase 2 `/speckit.tasks`) **belum dibuat** dan bukan keluaran plan ini.
+> Mirror `spec.md` + plan backend menyusul bila eksekusi slice ini dijalankan dari repo backend
+> (lihat Open Item O1).
+
+### Source Code (delta yang diubah plan ini)
+
+```text
+tania-dashboard/
+├── src/app/(app)/assignments/[id]/page.tsx   # + form ubah (project, peran, periode)
+│                                              # + input tanggal selesai pada aksi akhiri
+├── src/features/assignments/
+│   ├── updateAssignment.graphql              # operasi baru (codegen), mutasi sudah ada di SDL
+│   ├── useAssignment.ts                      # + mutation hook ubah/akhiri
+│   └── assignments.test.tsx                  # perluasan test untuk G1, G2, G5
+└── src/generated/graphql/                    # hasil `npm run generate` (jangan diedit manual)
+
+tania-backend/
+└── (tanpa perubahan kode — K1 hanya verifikasi test matrix; perubahan hanya bila verifikasi menemukan cacat)
+```
+
+**Structure Decision**: tidak ada file/struktur baru di luar modul `assignments` yang sudah ada.
+Form ubah hidup di rute detail (konsisten dengan pola modul lain), bukan rute terpisah, karena
+field yang bisa diubah sedikit (project, peran, periode).
+
+---
+
+## Data & API
+
+- **Tidak ada perubahan skema**. `UpdateAssignmentInput` sudah sesuai semantik spec: project,
+  peran, periode bisa diubah; talent **tidak** bisa diganti (buat assignment baru bila salah
+  talent — selaras "riwayat tidak pernah dihapus").
+- Status: nilai server `ACTIVE`/`COMPLETED`; label Indonesia ("berjalan"/"selesai") dipetakan di
+  UI — konsistensi label diperiksa saat menyentuh halaman detail (Open Item O4).
+- Duplikat aktif: server menolak assignment aktif kedua untuk pasangan talent+project
+  (`CONFLICT`) — bukan pelanggaran Asumsi spec (tumpang tindih lintas project tetap sah);
+  pesan error dipetakan jelas di form.
+- Pengalaman kerja CV dan angka dashboard (`activeAssignments`) otomatis mengikuti mutasi
+  assignment — SC-003 tanpa sinkronisasi manual.
+
+---
+
+## Security (rekap slice)
+
+Reuse penuh desain induk — tidak ada permukaan baru: semua mutasi Chapter-only, semua baca
+dibatasi cakupan chapter (`ChapterScope`), baca lintas cakupan mengembalikan `ErrNotFound`
+(bukan `FORBIDDEN`, menghindari kebocoran keberadaan data), Talent terbatas pada riwayat
+miliknya (`CanAccessEmployee` / `myCvProfile`), audit sinkron before/after pada setiap mutasi.
+Frontend tidak pernah menjadi penegak otorisasi.
+
+---
+
+## Testing
+
+| Level | Cakupan | Alat |
+| --- | --- | --- |
+| Backend — verifikasi (K1) | Test matrix FR-01–FR-10 terhadap usecase eksisting: otorisasi 4 peran × (buat/ubah/akhiri/baca), validasi tanggal, pengakhiran kedua ditolak, duplikat aktif ditolak, audit tercatat | `go test ./internal/usecase/...` (fake) — tanpa perubahan kode bila lolos |
+| Frontend — unit/komponen (K2–K4) | Form ubah: simpan perubahan (mutasi terkirim, cache/refetch); aksi akhiri dengan tanggal diisi + validasi tanggal < mulai; tampilan pesan error server (validasi & CONFLICT); kandidat tetap assignable-only | Vitest + RTL + `MockedProvider` |
+| Kontrak | Operasi `updateAssignment` baru cocok dengan SDL ter-generate | codegen + CI `npm run generate` bersih |
+| E2E | Jalur assignment (buat → ubah → akhiri → riwayat) sudah bagian harness induk | Playwright (`e2e/`, T129; gerbang T130) — bukan keluaran plan ini |
+
+Kriteria lulus K6 (UAT): seluruh acceptance scenario spec (US1–US5) dilalui manual sekali
+sebagai checklist, ditambah regression lintas modul: assignment diakhiri → muncul di pengalaman
+kerja CV dan angka dashboard berubah konsisten.
+
+---
+
+## Roadmap (gelombang konvergensi)
+
+Urutan eksekusi; rincian task menyusul di `tasks.md` (Phase 2):
+
+| Gelombang | Pekerjaan | Menutup |
+| --- | --- | --- |
+| **K1 — Verifikasi backend** | Jalankan & lengkapi test matrix FR-01–FR-10 terhadap implementasi eksisting; catat temuan | Verifikasi seluruh FR sisi server; perubahan kode hanya bila ada cacat |
+| **K2 — Form ubah assignment** | Form ubah project/peran/periode pada detail assignment (mutasi `updateAssignment` via codegen) + test | G1 (US2-2, FR-05) |
+| **K3 — Pengakhiran dengan tanggal** | Input tanggal selesai pada aksi akhiri (tanpa default otomatis; hindari `toISOString` UTC → G6) + tampilan pesan penolakan validasi | G2, G6 (US2-3, FR-06, FR-09) |
+| **K4 — Pemetaan error form** | Error server per field/pesan aksi untuk buat & ubah (tanggal, CONFLICT duplikat aktif, FORBIDDEN cakupan) + test | G5 (US1-4, US2-4) |
+| **K5 — Verifikasi US5 & label** | Verifikasi riwayat Talent via CV (termasuk empty state); putuskan tampilan khusus bila produk menghendaki; rapikan label status | O2, O4 (US5, FR-08) |
+| **K6 — UAT & regression** | Checklist acceptance scenario spec + regression lintas modul (assignment → CV → dashboard) | SC-001…SC-005 |
+
+K2–K4 dapat berjalan paralel setelah K1. Backend tidak menjadi prasyarat frontend karena
+seluruh operasi sudah dilayani.
+
+---
+
+## Open Items
+
+| # | Item | Dampak | Rencana |
+| --- | --- | --- | --- |
+| O1 | Penempatan artefak dua-repo (opsi C) untuk slice ini | Sinkronisasi dokumentasi antar repo | Plan ini satu dokumen di repo dashboard (rumah spec). Bila eksekusi diurutkan dari repo backend, mirror `spec.md` byte-identik + catat K1 di `tasks.md` backend — **menunggu konfirmasi pemilik produk** |
+| O2 | Tampilan riwayat assignment milik Talent (US5) | UI Talent | Saat ini terpenuhi via halaman CV ("pengalaman kerja"). Bila produk menghendaki tampilan khusus (mis. `/assignments/my`, pola `/idp/my`), tambahkan sebagai polish kecil — menunggu keputusan |
+| O3 | Butir warisan spesifikasi induk: konfirmasi Out of Scope oleh pemilik produk | Penutupan checklist spec (butir terakhir masih terbuka) | Konfirmasi bersama review spec ini |
+| O4 | Label status "Aktif/Selesai" vs "berjalan/selesai" | Konsistensi copy bahasa Indonesia | Diselaraskan saat menyentuh halaman terkait (K5); nilai server tidak berubah |
+
+---
+
+## Risks
+
+| # | Risiko | Dampak | Tindakan |
+| --- | --- | --- | --- |
+| RF1 | Persepsi "fitur sudah selesai" padahal acceptance scenario US2 belum tertutup UI | Riwayat tidak dapat dikoreksi oleh Chapter | Plan ini menjadikan G1/G2 gelombang eksplisit (K2/K3) dengan test |
+| RF2 | Drift kontrak saat menambah operasi `updateAssignment` di sisi klien | Codegen gagal / tipe meleset | Operasi ditulis dari SDL yang dilayani; `npm run generate` wajib bersih di CI |
+| RF3 | Tanggal otomatis UTC (`toISOString`) menghasilkan tanggal selesai yang bergeser | Data historis salah hari | Dihapus bersama G2 (K3) — tanggal selalu diisi Chapter |
+| RF4 | E2E jalur assignment bergantung harness induk (T129) yang belum tuntas | Gerbang rilis slice menunggu | Bukan keluaran plan ini; dilaporkan pada K6 |
