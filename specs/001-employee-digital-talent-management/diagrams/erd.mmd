@@ -1,0 +1,214 @@
+erDiagram
+    users ||--o| employees : "accounts"
+    employees ||--o{ employment_contracts : "has"
+    units ||--o{ employment_contracts : "division"
+    units ||--o{ projects : "owns"
+    chapters ||--o{ job_roles : "owns"
+    job_roles ||--o{ employment_contracts : "position"
+    employment_contracts ||--o{ employment_contracts : "predecessor"
+    job_roles ||--o{ assignments : "assignment_role"
+    employees ||--o{ assignments : "is_assigned"
+    projects ||--o{ assignments : "placement"
+    employees ||--o{ idps : "has"
+    idps ||--o{ development_actions : "contains"
+    idps ||--o{ review_logs : "reviewed_by"
+    idps ||--o{ idp_revisions : "history"
+    employees ||--o| cv_profiles : "has"
+    cv_profiles ||--o{ cv_educations : "education"
+    cv_profiles ||--o{ cv_certifications : "certification"
+    cv_profiles ||--o{ cv_skills : "skill"
+    evaluation_templates ||--o{ evaluation_criteria : "defines"
+    evaluation_templates ||--o{ evaluation_periods : "pinned_to"
+    evaluation_periods ||--o{ performance_evaluations : "covers"
+    employees ||--o{ performance_evaluations : "evaluated"
+    performance_evaluations ||--o{ performance_evaluation_answers : "answers"
+    performance_evaluations ||--o{ performance_evaluation_revisions : "history"
+    evaluation_criteria ||--o{ performance_evaluation_answers : "scored_by"
+    users ||--o{ refresh_tokens : "sessions"
+
+    users {
+        uuid id PK
+        citext email UK
+        text full_name
+        text password_hash
+        text auth_provider
+        text entra_object_id UK
+        enum access_role
+        enum status
+    }
+    employees {
+        uuid id PK
+        uuid user_id FK,UK
+        text full_name
+        text nik_hash UK
+        bytea nik_enc
+        citext email UK
+        date birth_date
+        text gender
+        text phone
+        text address
+        date joined_at
+        enum status
+    }
+    employment_contracts {
+        uuid id PK
+        uuid employee_id FK
+        text contract_no UK
+        enum contract_type
+        citext office_email
+        text nomor_induk
+        text band_position
+        uuid job_role_id FK
+        text job_title
+        text job_level
+        text work_location
+        uuid unit_id FK
+        date start_date
+        date end_date
+        enum end_reason
+        timestamptz terminated_at
+        uuid predecessor_contract_id FK
+        text notes
+    }
+    units {
+        uuid id PK
+        text name UK
+        boolean is_active
+    }
+    chapters {
+        uuid id PK
+        text name UK
+        boolean is_active
+    }
+    job_roles {
+        uuid id PK
+        text name UK
+        uuid chapter_id FK
+        boolean is_active
+    }
+    projects {
+        uuid id PK
+        text name
+        uuid unit_id FK
+        boolean is_active
+    }
+    assignments {
+        uuid id PK
+        uuid employee_id FK
+        uuid project_id FK
+        uuid job_role_id FK
+        date period_start
+        date period_end
+        enum status
+    }
+    idps {
+        uuid id PK
+        uuid employee_id FK
+        enum status
+        text development_objective
+        date timeline_start
+        date timeline_end
+    }
+    development_actions {
+        uuid id PK
+        uuid idp_id FK
+        text description
+        enum method
+        enum status
+        date due_date
+    }
+    review_logs {
+        uuid id PK
+        uuid idp_id FK
+        date review_date
+        text summary
+        text follow_up
+    }
+    idp_revisions {
+        uuid id PK
+        uuid idp_id FK
+        integer revision_no
+        jsonb snapshot
+    }
+    cv_profiles {
+        uuid id PK
+        uuid employee_id FK,UK
+        text summary
+    }
+    cv_educations {
+        uuid id PK
+        uuid cv_profile_id FK
+        text institution
+        text degree
+    }
+    cv_certifications {
+        uuid id PK
+        uuid cv_profile_id FK
+        text name
+        text issuer
+    }
+    cv_skills {
+        uuid id PK
+        uuid cv_profile_id FK
+        text name
+        text level
+    }
+    evaluation_templates {
+        uuid id PK
+        text name UK
+        boolean is_active
+    }
+    evaluation_criteria {
+        uuid id PK
+        uuid template_id FK
+        text label
+        enum answer_type
+        integer position
+    }
+    evaluation_periods {
+        uuid id PK
+        text name
+        date start_date
+        date end_date
+        uuid template_id FK
+        boolean is_active
+    }
+    performance_evaluations {
+        uuid id PK
+        uuid period_id FK
+        uuid employee_id FK
+        text summary_achievement
+        enum status
+    }
+    performance_evaluation_answers {
+        uuid id PK
+        uuid evaluation_id FK
+        uuid criterion_id FK
+        numeric value_numeric
+        boolean value_bool
+        text value_text
+    }
+    performance_evaluation_revisions {
+        uuid id PK
+        uuid evaluation_id FK
+        integer revision_no
+        jsonb snapshot
+    }
+    refresh_tokens {
+        uuid id PK
+        uuid user_id FK
+        text token_hash UK
+        uuid family_id
+        timestamptz expires_at
+        timestamptz revoked_at
+    }
+    audit_logs {
+        bigserial id PK
+        timestamptz occurred_at PK
+        uuid actor_user_id
+        text action
+        text entity_type
+        text entity_id
+        jsonb before
+        jsonb after
+    }
