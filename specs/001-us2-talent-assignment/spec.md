@@ -6,6 +6,8 @@
 
 **Revisi**: 2026-10-07 (clarify 1) — Klarifikasi hasil review: US 1 kini menyatakan secara eksplisit bahwa Chapter meng-assign satu talent spesifik dengan memilihnya dari daftar kandidat (karyawan aktif dan assignable dalam tanggung jawab chapter-nya, selaras FR-03) — sebelumnya form pembuatan tampak hanya menjabarkan pilihan project dan peran, sementara kewajiban mengisi talent baru tersirat pada daftar field FR-01. Skenario penerimaan 1 US1 diselaraskan.
 
+**Revisi**: 2026-10-08 — Out of Scope dikonfirmasi oleh pemilik produk (keputusan pada TAN-133); butir terakhir Review & Acceptance Checklist tertutup.
+
 **Status**: Draft
 
 **Input**: User description: "speckit.specify create plan spec.md for feature talent assignment based on specs/001-employee-digital-talent-management"
@@ -185,4 +187,4 @@ Sebagai **Talent**, saya dapat melihat riwayat assignment milik saya sendiri (ha
 - [x] Success criteria terukur dan bebas detail teknologi.
 - [x] Edge case diidentifikasi.
 - [x] Scope dibatasi jelas (Out of Scope) dan dependensi dirinci.
-- [ ] Out of scope disepakati bersama stakeholder — menunggu konfirmasi pemilik produk (mewarisi butir terbuka yang sama dari spesifikasi induk).
+- [x] Out of scope disepakati bersama stakeholder — dikonfirmasi pemilik produk 2026-10-08 (keputusan pada TAN-133).

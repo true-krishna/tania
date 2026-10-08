@@ -143,10 +143,10 @@ specs/001-us2-talent-assignment/          # di tania-dashboard (rumah spec, TAN-
 └── plan.md                               # dokumen ini
 ```
 
-> Mengikuti keputusan "opsi C" plan induk: artefak spesifikasi ditulis di repo dashboard.
-> `tasks.md` (Phase 2 `/speckit.tasks`) **belum dibuat** dan bukan keluaran plan ini.
-> Mirror `spec.md` + plan backend menyusul bila eksekusi slice ini dijalankan dari repo backend
-> (lihat Open Item O1).
+> Mengikuti keputusan "opsi C" plan induk: artefak spesifikasi ditulis di repo dashboard;
+> `spec.md` + `checklists/requirements.md` di-mirror byte-identik ke repo backend (keputusan
+> O1, 2026-10-08). `tasks.md` (Phase 2 `/speckit.tasks`) **belum dibuat** dan bukan keluaran
+> plan ini; gelombang verifikasi backend K1 dicatat di `tasks.md` repo backend.
 
 ### Source Code (delta yang diubah plan ini)
 
@@ -238,9 +238,9 @@ seluruh operasi sudah dilayani.
 
 | # | Item | Dampak | Rencana |
 | --- | --- | --- | --- |
-| O1 | Penempatan artefak dua-repo (opsi C) untuk slice ini | Sinkronisasi dokumentasi antar repo | Plan ini satu dokumen di repo dashboard (rumah spec). Bila eksekusi diurutkan dari repo backend, mirror `spec.md` byte-identik + catat K1 di `tasks.md` backend — **menunggu konfirmasi pemilik produk** |
+| O1 | **Selesai 2026-10-08** — keputusan pemilik produk: perlu | Sinkronisasi dokumentasi antar repo | `spec.md` + `checklists/requirements.md` di-mirror byte-identik ke `tania-backend/specs/001-us2-talent-assignment/` (commit backend dicatat pada TAN-133); gelombang verifikasi backend K1 dicatat sebagai task T133 di `tasks.md` repo backend. Plan ini tetap satu dokumen di repo dashboard (rumah spec) |
 | O2 | **Selesai 2026-10-08** — keputusan pemilik produk mengacu TAN-91 (CV Profile, FR-10 disetujui stakeholder) | UI Talent | Riwayat assignment milik Talent tampil melalui Profil CV: bucket otomatis pada section Experiences (hanya-baca, selalu terkini, termasuk yang diakhiri); **tidak ada** tampilan khusus `/assignments/my`. Sumber data tetap riwayat `Assignment` (diturunkan, tidak disalin). K5 cukup memverifikasi empty state & konsistensi label |
-| O3 | Butir warisan spesifikasi induk: konfirmasi Out of Scope oleh pemilik produk | Penutupan checklist spec (butir terakhir masih terbuka) | Konfirmasi bersama review spec ini |
+| O3 | **Selesai 2026-10-08** — Out of Scope dikonfirmasi pemilik produk | Penutupan checklist spec | Butir terakhir Review & Acceptance Checklist `spec.md` dicentang + entri Revisi ditambahkan (konfirmasi via TAN-133); spec tetap berstatus Draft sampai persetujuan spesifikasi penuh |
 | O4 | Label status "Aktif/Selesai" vs "berjalan/selesai" | Konsistensi copy bahasa Indonesia | Diselaraskan saat menyentuh halaman terkait (K5); nilai server tidak berubah |
 
 ---
