@@ -38,6 +38,27 @@ enum AccountStatus {
 enum EmployeeStatus {
   ACTIVE
   INACTIVE
+  RESIGNED
+  RETIRED
+}
+
+enum ContractType {
+  PKWT
+  PKWTT
+}
+
+enum EmploymentContractStatus {
+  """Turunan tanggal, tanpa cron (FR-34)."""
+  ACTIVE
+  ENDED
+  TERMINATED
+}
+
+enum ContractEndReason {
+  EXPIRY
+  RESIGN
+  RETIREMENT
+  MUTATION
 }
 
 enum AuditAction {
@@ -193,17 +214,28 @@ type Project {
 type Employee {
   id: ID!
   fullName: String!
-  employeeCode: String!
+  """NIK tersamar — 4 digit akhir (FR-42); nilai penuh hanya lewat tampilan berizin."""
+  nikMasked: String!
   email: String!
-  unit: Unit!
-  jobRole: JobRole!
-  """Turunan jobRole.chapter (FR-23); null bila role tanpa chapter."""
+  birthDate: Date!
+  gender: String
+  phone: String
+  address: String
+  """Nomor induk karyawan dari kontrak aktif (FR-34); null bila tanpa kontrak aktif."""
+  nomorInduk: String
+  """Turunan kontrak aktif (FR-35)."""
+  unit: Unit
+  """Turunan kontrak aktif (FR-35)."""
+  jobRole: JobRole
+  """Turunan kontrak aktif → jobRole.chapter (FR-23/FR-35); null bila role tanpa chapter."""
   chapter: Chapter
-  """status aktif DAN jobRole memiliki chapter."""
+  """status aktif, punya kontrak aktif, DAN jobRole memiliki chapter."""
   assignable: Boolean!
   joinedAt: Date!
   status: EmployeeStatus!
   account: User
+  """Riwayat kontrak kerja, terbaru lebih dulu (FR-34)."""
+  contracts(first: Int = 25, after: String): EmploymentContractConnection!
   """Riwayat assignment talent, terbaru lebih dulu (FR-07)."""
   assignments(first: Int = 25, after: String): AssignmentConnection!
   """IDP talent dalam cakupan pemanggil (FR-11)."""
@@ -212,11 +244,42 @@ type Employee {
   updatedAt: Time!
 }
 
+type EmploymentContract {
+  id: ID!
+  employee: Employee!
+  contractNo: String!
+  contractType: ContractType!
+  officeEmail: String
+  """Employee ID yang berlaku pada kontrak ini (snapshot historis)."""
+  nomorInduk: String!
+  bandPosition: String
+  jobRole: JobRole!
+  jobTitle: String
+  jobLevel: String
+  workLocation: String
+  unit: Unit!
+  startDate: Date!
+  """null untuk PKWTT."""
+  endDate: Date
+  """Turunan tanggal + terminatedAt, tanpa cron (FR-34)."""
+  status: EmploymentContractStatus!
+  endReason: ContractEndReason
+  terminatedAt: Time
+  predecessor: EmploymentContract
+  notes: String
+  createdBy: User
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type EmploymentContractEdge { node: EmploymentContract!, cursor: String! }
+type EmploymentContractConnection { edges: [EmploymentContractEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
+
 type EmployeeEdge { node: Employee!, cursor: String! }
 type EmployeeConnection { edges: [EmployeeEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
 
 input EmployeeFilter {
-  """nama / email / employeeCode"""
+  """nama / email / nomor induk (via kontrak aktif)"""
   search: String
   unitId: ID
   jobRoleId: ID
@@ -225,22 +288,104 @@ input EmployeeFilter {
 }
 
 input CreateEmployeeInput {
+  """NIK 16 digit — unik, disimpan terenkripsi (FR-42)."""
+  nik: String!
   fullName: String!
-  employeeCode: String!
   email: String!
-  unitId: ID!
-  jobRoleId: ID!
+  birthDate: Date!
+  gender: String
+  phone: String
+  address: String
   joinedAt: Date!
   status: EmployeeStatus
+  """Auto-create akun Entra saat data tersimpan (FR-43); default true."""
+  autoCreateEntra: Boolean = true
 }
 
 input UpdateEmployeeInput {
   fullName: String
   email: String
-  unitId: ID
-  jobRoleId: ID
+  birthDate: Date
+  gender: String
+  phone: String
+  address: String
   joinedAt: Date
   status: EmployeeStatus
+}
+
+input CreateEmploymentContractInput {
+  employeeId: ID!
+  contractNo: String!
+  contractType: ContractType!
+  officeEmail: String
+  nomorInduk: String!
+  bandPosition: String
+  jobRoleId: ID!
+  jobTitle: String
+  jobLevel: String
+  workLocation: String
+  unitId: ID!
+  startDate: Date!
+  """Wajib untuk PKWT, null untuk PKWTT."""
+  endDate: Date
+  notes: String
+}
+
+input UpdateEmploymentContractInput {
+  contractNo: String
+  officeEmail: String
+  bandPosition: String
+  jobTitle: String
+  jobLevel: String
+  workLocation: String
+  notes: String
+}
+
+"""Perpanjangan PKWT — kontrak baru mulai setelah kontrak lama berakhir (FR-36)."""
+input RenewContractInput {
+  predecessorContractId: ID!
+  contractNo: String!
+  contractType: ContractType! = PKWT
+  officeEmail: String
+  nomorInduk: String!
+  bandPosition: String
+  jobRoleId: ID!
+  jobTitle: String
+  jobLevel: String
+  workLocation: String
+  unitId: ID!
+  startDate: Date!
+  endDate: Date
+  notes: String
+}
+
+"""Mutasi di tengah kontrak — akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38)."""
+input RecordMutationInput {
+  employeeId: ID!
+  effectiveDate: Date!
+  contractNo: String!
+  nomorInduk: String!
+  jobRoleId: ID!
+  unitId: ID!
+  officeEmail: String
+  bandPosition: String
+  jobTitle: String
+  jobLevel: String
+  workLocation: String
+  endDate: Date
+  notes: String
+}
+
+input EmploymentContractFilter {
+  """nama karyawan / nomor kontrak / nomor induk"""
+  search: String
+  employeeId: ID
+  unitId: ID
+  jobRoleId: ID
+  contractType: ContractType
+  status: EmploymentContractStatus
+  """Kontrak yang berakhir pada/before tanggal ini (jendela H-90/H-30)."""
+  expiringBefore: Date
 }
 
 # --------------------------------- Audit ------------------------------------
@@ -575,6 +720,10 @@ type OperationDashboard {
   employeesPerUnit: [UnitCount!]!
   nonAssignableEmployees: Int!
   recentEmployeeChanges: [Employee!]!
+  """Kontrak berakhir dalam jendela H-90/H-30 (FR-40)."""
+  expiringContracts: [EmploymentContract!]!
+  """Karyawan memasuki jendela pra-pensiun (FR-40)."""
+  preRetirementEmployees: [Employee!]!
 }
 
 type ChapterDashboard {
@@ -620,8 +769,18 @@ type Query {
   employees(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
   employee(id: ID!): Employee
 
-  """Kandidat assignment/IDP baru: karyawan aktif dan assignable (FR-04, FR-23)."""
+  """Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35)."""
   assignableTalents(search: String, first: Int = 25, after: String): EmployeeConnection!
+
+  # --- Kontrak kerja (Operation) ---
+  employmentContracts(filter: EmploymentContractFilter, first: Int = 25, after: String): EmploymentContractConnection!
+  employmentContract(id: ID!): EmploymentContract
+  """Kontrak berakhir dalam jendela hari (default 90) — kandidat perpanjangan (FR-40, US10)."""
+  expiringContracts(days: Int = 90, first: Int = 25, after: String): EmploymentContractConnection!
+  """Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation (US10 skenario 4)."""
+  employeesNeedingFollowUp(first: Int = 25, after: String): EmployeeConnection!
+  """Talent yang belum memiliki akun Entra (FR-44)."""
+  employeesWithoutEntra(first: Int = 25, after: String): EmployeeConnection!
 
   # --- Assignment ---
   assignments(filter: AssignmentFilter, first: Int = 25, after: String): AssignmentConnection!
@@ -690,6 +849,22 @@ type Mutation {
   createEmployee(input: CreateEmployeeInput!): Employee!
   updateEmployee(id: ID!, input: UpdateEmployeeInput!): Employee!
   deactivateEmployee(id: ID!, acknowledgeActiveWork: Boolean = false): Employee!
+  """Resign: akhiri kontrak aktif (end_reason=resign), status → RESIGNED, nonaktifkan akun + Entra (FR-37, FR-46)."""
+  resignEmployee(id: ID!, effectiveDate: Date!, reason: String, acknowledgeActiveWork: Boolean = false): Employee!
+  """Pensiun: akhiri kontrak aktif (end_reason=retirement), status → RETIRED (FR-39)."""
+  retireEmployee(id: ID!, effectiveDate: Date!, acknowledgeActiveWork: Boolean = false): Employee!
+
+  # --- Kontrak kerja (Operation) ---
+  createEmploymentContract(input: CreateEmploymentContractInput!): EmploymentContract!
+  updateEmploymentContract(id: ID!, input: UpdateEmploymentContractInput!): EmploymentContract!
+  """Perpanjangan PKWT — kontrak baru terkait predecessor (FR-36)."""
+  renewEmploymentContract(input: RenewContractInput!): EmploymentContract!
+  """Mutasi: akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38)."""
+  recordEmployeeMutation(input: RecordMutationInput!): EmploymentContract!
+
+  # --- Provisi Entra (Operation, FR-43–FR-46) ---
+  """Provisioning manual/ulang akun Entra untuk talent yang belum punya (FR-44)."""
+  provisionEntraAccount(employeeId: ID!): Employee!
 
   # --- Assignment (Chapter) ---
   createAssignment(input: CreateAssignmentInput!): Assignment!

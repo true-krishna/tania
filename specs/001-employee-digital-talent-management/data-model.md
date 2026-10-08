@@ -37,7 +37,8 @@ dilayani backend per 2026-10-01.
 | `Chapter` | `id`, `name`, `isActive`, `jobRoles` | belum |
 | `JobRole` | `id`, `name`, `isActive`, `chapter` (null = tidak assignable) | belum |
 | `Project` | `id`, `name`, `unit`, `isActive` | belum |
-| `Employee` | `id`, `fullName`, `employeeCode`, `email`, `unit`, `jobRole`, `chapter`, `assignable`, `joinedAt`, `status`, `account`, `assignments`, `idps` | belum |
+| `Employee` | `id`, `fullName`, `nikMasked`, `email`, `birthDate`, `gender`, `phone`, `address`, `nomorInduk` (turunan kontrak aktif), `unit`, `jobRole`, `chapter`, `assignable`, `joinedAt`, `status`, `account`, `contracts`, `assignments`, `idps` | belum (amandemen 002) |
+| `EmploymentContract` | `id`, `employee`, `contractNo`, `contractType`, `officeEmail`, `nomorInduk`, `bandPosition`, `jobRole`, `jobTitle`, `jobLevel`, `workLocation`, `unit`, `startDate`, `endDate`, `status` (turunan), `endReason`, `predecessor`, `notes` | belum (amandemen 002) |
 | `Assignment` | `id`, `employee`, `project`, `jobRole`, `periodStart`, `periodEnd`, `status` | belum |
 | `Idp` | `id`, `employee`, `status`, `developmentObjective`, `currentAssessment`, `gapAnalysis`, `timelineStart`, `timelineEnd`, `successIndicators`, `developmentActions`, `reviewLogs` | belum |
 | `DevelopmentAction` | `id`, `description`, `method`, `status`, `dueDate` | belum |
@@ -54,9 +55,9 @@ dilayani backend per 2026-10-01.
 
 ## 3. Identitas cache & hubungan normalisasi
 
-- `User`, `Unit`, `Chapter`, `JobRole`, `Project`, `Employee`, `Assignment`, `Idp`,
-  `DevelopmentAction`, `ReviewLog`, `CvProfile` + sub-entri, `EvaluationTemplate`,
-  `EvaluationPeriod`, `PerformanceEvaluation`, `AuditLog` → `keyFields: ["id"]`.
+- `User`, `Unit`, `Chapter`, `JobRole`, `Project`, `Employee`, `EmploymentContract`,
+  `Assignment`, `Idp`, `DevelopmentAction`, `ReviewLog`, `CvProfile` + sub-entri,
+  `EvaluationTemplate`, `EvaluationPeriod`, `PerformanceEvaluation`, `AuditLog` → `keyFields: ["id"]`.
 - Relasi objek (`Employee.unit`, `Employee.jobRole`, `Assignment.project`, `Idp.employee`, …)
   sudah normalisasi otomatis karena mengembalikan tipe ber-`id` — satu entitas diperbarui di
   satu tempat, seluruh layar ikut segar.
@@ -72,8 +73,11 @@ dilayani backend per 2026-10-01.
 
 | Field | Arti | Dipakai di |
 | --- | --- | --- |
-| `Employee.assignable` | `status = ACTIVE` **dan** `jobRole.chapter != null` (FR-23) | kandidat talent pada form assignment/IDP; filter karyawan |
-| `Employee.chapter` | chapter pemilik Role posisi (FR-23) | kolom daftar karyawan; konteks Chapter |
+| `Employee.assignable` | `status = ACTIVE`, punya kontrak aktif, **dan** `jobRole.chapter != null` (FR-23/FR-35) | kandidat talent pada form assignment/IDP; filter karyawan |
+| `Employee.unit` / `Employee.jobRole` | turunan **kontrak aktif** (FR-35) — jangan dihitung ulang dari data diri | kolom daftar karyawan; filter divisi/posisi |
+| `Employee.nomorInduk` | nomor induk dari kontrak aktif (FR-34) | pencarian employee ID |
+| `Employee.nikMasked` | NIK tersamar 4 digit akhir (FR-42) — nilai penuh hanya lewat tampilan berizin | daftar & detail karyawan |
+| `EmploymentContract.status` | turunan tanggal + `terminatedAt`, tanpa cron (FR-34) | daftar kontrak; indikator "segera berakhir" (H-90/H-30) |
 | `CvProfile.workExperience` | ringkasan riwayat assignment (termasuk yang berakhir) → bagian pengalaman kerja CV (FR-12) | halaman CV Talent & tampilan read-only Chapter |
 | `EvaluationPeriod.state` | periode berjalan vs berakhir (terkunci) (FR-25) | roster & form evaluasi: hanya-baca setelah berakhir |
 | `Idp.status` → `NEEDS_REVIEW` | IDP melewati timeline tanpa penutupan (FR-10) | filter & badge daftar IDP |
@@ -101,7 +105,9 @@ UI memakai `first` (default 25, maks 100 dari konvensi API) + `endCursor` sebaga
 
 | Model | Field | Aturan UI yang dicerminkan |
 | --- | --- | --- |
-| Form karyawan | `fullName`, `employeeCode`, `email`, `unitId`, `jobRoleId`, `joinedAt`, `status` | divisi & posisi **wajib dipilih dari master** (FR-01); `unitId`/`jobRoleId` tidak pernah input bebas |
+| Form karyawan (data diri) | `fullName`, `nik`, `email`, `birthDate`, `gender`, `phone`, `address`, `joinedAt`, `status`, `autoCreateEntra` | murni data diri (FR-33) — tanpa employee ID/divisi/posisi; NIK wajib 16 digit, tampil tersamar (FR-42); toggle auto-create Entra (FR-43) |
+| Form kontrak kerja | `contractNo`, `contractType`, `officeEmail`, `nomorInduk`, `bandPosition`, `jobRoleId`, `jobTitle`, `jobLevel`, `workLocation`, `unitId`, `startDate`, `endDate?`, `notes` | unit & posisi wajib dari master (FR-34); `nomorInduk` wajib, unik antar kontrak aktif; `endDate` wajib untuk PKWT |
+| Form perpanjangan/mutasi | input kontrak baru + `predecessorContractId` / `effectiveDate` | periode tidak boleh tumpang tindih (FR-36/FR-38); dapat mengganti unit/posisi |
 | Form assignment | `employeeId`, `projectId`, `jobRoleId`, `periodStart`, `periodEnd?`, `status` | `employeeId` hanya dari `assignableTalents`; `projectId` dari master Project (FR-05) |
 | Form IDP | 7 komponen (objective, kondisi saat ini, gap, aksi, timeline, success indicators) | aksi pengembangan diinput sebagai daftar entri terpisah (FR-08) |
 | Form CV | `summary` + daftar pendidikan/sertifikasi/keahlian | pengalaman kerja **tidak** diinput (turunan, FR-12) |
@@ -117,7 +123,8 @@ dialog terbuka/tertutup, dan pesan validasi. Tidak ada state manager global (lih
 
 ## 7. Enum yang dipakai sebagai label/badge
 
-`AccessRole`, `AccountStatus`, `EmployeeStatus`, `AssignmentStatus`, `IdpStatus`,
+`AccessRole`, `AccountStatus`, `EmployeeStatus` (+ `RESIGNED`, `RETIRED`), `ContractType`,
+`EmploymentContractStatus`, `ContractEndReason`, `AssignmentStatus`, `IdpStatus`,
 `DevelopmentActionStatus`, `DevelopmentMethod`, `EvaluationAnswerType`,
 `PerformanceEvaluationStatus`, `EvaluationPeriodState`, `EvaluationFillState`, `AuditAction`.
 
