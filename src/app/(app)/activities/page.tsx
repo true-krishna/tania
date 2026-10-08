@@ -1,25 +1,18 @@
 "use client";
 
-import { Card } from "@/components/Card";
-import { PageHeader } from "@/components/PageHeader";
+import { ActivitiesPageView, ActivitiesProvider } from "@/features/activities";
 
 /**
- * Placeholder for the activity-capture surface (US1 form). Added so the
- * `Aktivitas saya` nav entry resolves; the form itself is not part of TAN-125.
+ * `/activities` — the Talent-facing activity-capture surface (US1).
+ *
+ * The fixture store is mounted here; GraphQL wiring (TAN-108/T005) replaces it
+ * behind the same provider. The route carries no `tmsId` or other personal data
+ * in its URL or query string (SC-006).
  */
 export default function ActivitiesPage() {
   return (
-    <section className="flex flex-col gap-4">
-      <PageHeader
-        title="Aktivitas saya"
-        subtitle="Catat aktivitas kerja dan pelatihan yang menjadi sumber angka workload."
-      />
-      <Card className="max-w-2xl">
-        <p className="text-sm text-zinc-600">
-          Form pencatatan aktivitas belum tersedia di slice ini. Halaman ini disiapkan sebagai
-          tujuan navigasi; isian aktivitas akan menyusul pada pekerjaan US1.
-        </p>
-      </Card>
-    </section>
+    <ActivitiesProvider>
+      <ActivitiesPageView />
+    </ActivitiesProvider>
   );
 }
