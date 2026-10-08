@@ -14,6 +14,10 @@ export type IconName =
   | "accounts"
   | "masterData"
   | "audit"
+  | "timesheet"
+  | "workload"
+  | "search"
+  | "sinyal"
   | "chevronDown"
   | "chevronLeft"
   | "chevronRight"
@@ -80,6 +84,28 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <circle cx="12" cy="12" r="8" />
       <path d="M12 8v4.2l2.8 1.8" />
+    </>
+  ),
+  // TANIA Pulse Indigo icons (design spec TAN-124 §11; shipped-name contract
+  // `i-timesheet`, `i-workload`, `i-search`, `i-sinyal`). Rendered single-hue
+  // via `currentColor` instead of the mockup's two-tone accents.
+  timesheet: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
+  workload: <path d="M5 20v-8M19 20V9M12 20V5" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6" />
+      <path d="M20 20l-4.5-4.5" />
+    </>
+  ),
+  sinyal: (
+    <>
+      <path d="M4 9a11 11 0 0 1 16 0M7 12.5a7 7 0 0 1 10 0M10 16a3 3 0 0 1 4 0" />
+      <circle cx="12" cy="19.5" r="1" strokeWidth={3} />
     </>
   ),
   chevronDown: <path d="M6 9.5l6 6 6-6" />,

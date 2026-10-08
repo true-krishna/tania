@@ -37,6 +37,8 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  */
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/dashboard", label: "Dashboard", icon: "dashboard", roles: ALL },
+  { kind: "link", href: "/activities", label: "Aktivitas saya", icon: "timesheet", roles: ALL },
+  { kind: "link", href: "/workload", label: "Workload", icon: "workload", roles: ALL },
   { kind: "link", href: "/employees", label: "Employees", icon: "employees", roles: ["OPERATION", "ADMIN"] },
   { kind: "link", href: "/assignments", label: "Assignments", icon: "assignments", roles: ["CHAPTER", "ADMIN"] },
   { kind: "link", href: "/idp", label: "IDP", icon: "idp", roles: ["CHAPTER", "TALENT", "ADMIN"] },

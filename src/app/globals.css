@@ -34,6 +34,42 @@
   --header-row: #f9fafb;
   --surface: #ffffff;
   --surface-border: #d0d5dd;
+
+  /*
+   * TANIA Pulse Indigo tokens (design spec TAN-124 §5). The workload feature
+   * (TAN-125) renders against these values, taken verbatim from the ratified
+   * `mockup-workload.html`. They are additive: no existing Legion token is
+   * changed, so the rest of the app is unaffected. Values flagged
+   * [non-canonical] in the spec (freshness strip, skeleton, stacked bar …)
+   * reuse these same tokens rather than inventing new colors. Dark-mode
+   * variants are intentionally omitted: the shipped canon is light-only
+   * (constitution-design.md, Additional Constraints).
+   */
+  --tp-midnight: #101a47;
+  --tp-primary: #6246ea;
+  --tp-primary-deep: #4d34c9;
+  --tp-lilac: #a998f5;
+  --tp-mint: #3ccfb0;
+  --tp-mint-ink: #0e8f7a;
+  --tp-sun: #f6d65a;
+  --tp-peach: #ff8f7a;
+  --tp-bg: #f2f5fb;
+  --tp-surface: #ffffff;
+  --tp-line: #dfe5f1;
+  --tp-text: #101a47;
+  --tp-muted: #5b6785;
+  --tp-nav: #241b63;
+  --tp-on-nav: #ffffff;
+  --tp-tint-peach: #ffede8;
+  --tp-tint-mint: #ddf7f1;
+  --tp-tint-sun: #fff4c9;
+  --tp-tint-violet: #eeebff;
+  --tp-ink-peach: #b3412f;
+  --tp-ink-mint: #0a6b5b;
+  --tp-ink-sun: #7a5b00;
+  --tp-ink-violet: #4a32c8;
+  --tp-neutral: #5b6785;
+  --tp-font-display: Sora, Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 @theme inline {
@@ -63,8 +99,33 @@
   --color-header-row: var(--header-row);
   --color-surface: var(--surface);
   --color-surface-border: var(--surface-border);
+  --color-tp-midnight: var(--tp-midnight);
+  --color-tp-primary: var(--tp-primary);
+  --color-tp-primary-deep: var(--tp-primary-deep);
+  --color-tp-lilac: var(--tp-lilac);
+  --color-tp-mint: var(--tp-mint);
+  --color-tp-mint-ink: var(--tp-mint-ink);
+  --color-tp-sun: var(--tp-sun);
+  --color-tp-peach: var(--tp-peach);
+  --color-tp-bg: var(--tp-bg);
+  --color-tp-surface: var(--tp-surface);
+  --color-tp-line: var(--tp-line);
+  --color-tp-text: var(--tp-text);
+  --color-tp-muted: var(--tp-muted);
+  --color-tp-nav: var(--tp-nav);
+  --color-tp-on-nav: var(--tp-on-nav);
+  --color-tp-tint-peach: var(--tp-tint-peach);
+  --color-tp-tint-mint: var(--tp-tint-mint);
+  --color-tp-tint-sun: var(--tp-tint-sun);
+  --color-tp-tint-violet: var(--tp-tint-violet);
+  --color-tp-ink-peach: var(--tp-ink-peach);
+  --color-tp-ink-mint: var(--tp-ink-mint);
+  --color-tp-ink-sun: var(--tp-ink-sun);
+  --color-tp-ink-violet: var(--tp-ink-violet);
+  --color-tp-neutral: var(--tp-neutral);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-tp-display: var(--tp-font-display);
 }
 
 body {
