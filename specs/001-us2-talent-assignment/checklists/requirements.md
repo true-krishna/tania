@@ -33,4 +33,4 @@
 
 - Spesifikasi diturunkan dari User Story 2 spesifikasi induk (`specs/001-employee-digital-talent-management/spec.md`) yang telah melalui 11 putaran klarifikasi — tidak ada keputusan terbuka yang perlu dibuka kembali, sehingga tidak ada marker [NEEDS CLARIFICATION].
 - Validasi pertama lolos seluruh butir tanpa revisi.
-- Satu butir warisan dari spesifikasi induk tetap terbuka di luar kualitas dokumen: konfirmasi pemilik produk atas Out of Scope (butir Review & Acceptance terakhir di spec.md).
+- Butir warisan dari spesifikasi induk telah tertutup: konfirmasi pemilik produk atas Out of Scope diterima 2026-10-08 (keputusan pada TAN-133) dan dicatat pada Review & Acceptance Checklist `spec.md`.
