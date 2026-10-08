@@ -145,8 +145,9 @@ specs/001-us2-talent-assignment/          # di tania-dashboard (rumah spec, TAN-
 
 > Mengikuti keputusan "opsi C" plan induk: artefak spesifikasi ditulis di repo dashboard;
 > `spec.md` + `checklists/requirements.md` di-mirror byte-identik ke repo backend (keputusan
-> O1, 2026-10-08). `tasks.md` (Phase 2 `/speckit.tasks`) **belum dibuat** dan bukan keluaran
-> plan ini; gelombang verifikasi backend K1 dicatat di `tasks.md` repo backend.
+> O1, 2026-10-08). `tasks.md` (Phase 2) ada di repo ini (task lokal T001–T009, gelombang K2–K6);
+> gelombang verifikasi backend K1 tereksekusi sebagai **T144** di `tasks.md` repo backend.
+> Backlog eksekusi dibuat sebagai sub-issue TAN-133 (2026-10-08).
 
 ### Source Code (delta yang diubah plan ini)
 
@@ -218,7 +219,8 @@ kerja CV dan angka dashboard berubah konsisten.
 
 ## Roadmap (gelombang konvergensi)
 
-Urutan eksekusi; rincian task menyusul di `tasks.md` (Phase 2):
+Urutan eksekusi; rincian task ada di `tasks.md` (Phase 2) dan backlog Multica sebagai sub-issue
+TAN-133 (dibuat 2026-10-08, status backlog):
 
 | Gelombang | Pekerjaan | Menutup |
 | --- | --- | --- |
