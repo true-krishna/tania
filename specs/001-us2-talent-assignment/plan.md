@@ -1,6 +1,6 @@
 # Implementation Plan: Manajemen Assignment Talent
 
-**Branch**: `001-us2-talent-assignment` | **Date**: 2026-10-08 | **Spec**: `specs/001-us2-talent-assignment/spec.md` (TAN-97, Draft)
+**Branch**: `feat/talent-assignment-specs` | **Date**: 2026-10-08 | **Spec**: `specs/001-us2-talent-assignment/spec.md` (TAN-97, Draft)
 
 **Input**: Feature specification dari `/specs/001-us2-talent-assignment/spec.md`
 
