@@ -8,6 +8,14 @@ import { Card } from "@/components/Card";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
+import {
+  IconClipboardCheck,
+  IconClipboardText,
+  IconDatabase,
+  IconTarget,
+  IconUserShield,
+  IconUsers,
+} from "@tabler/icons-react";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
 import type {
@@ -109,16 +117,16 @@ export default function DashboardPage() {
       {dash.__typename === "AdminDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="Akun tidak aktif" value={dash.inactiveAccounts} icon="accounts" />
+            <StatCard label="Akun tidak aktif" value={dash.inactiveAccounts} icon={IconUserShield} />
             <StatCard
               label="Talent per chapter"
               value={dash.talentsPerChapter.reduce((sum, c) => sum + c.count, 0)}
-              icon="idp"
+              icon={IconTarget}
             />
             <StatCard
               label="Total akun"
               value={dash.accountsPerRole.reduce((sum, c) => sum + c.count, 0)}
-              icon="employees"
+              icon={IconUsers}
             />
           </div>
 
@@ -163,9 +171,9 @@ export default function DashboardPage() {
       {dash.__typename === "OperationDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="Karyawan aktif" value={dash.totalActiveEmployees} icon="employees" />
-            <StatCard label="Tidak assignable" value={dash.nonAssignableEmployees} icon="assignments" />
-            <StatCard label="Unit" value={dash.employeesPerUnit.length} icon="masterData" />
+            <StatCard label="Karyawan aktif" value={dash.totalActiveEmployees} icon={IconUsers} />
+            <StatCard label="Tidak assignable" value={dash.nonAssignableEmployees} icon={IconClipboardText} />
+            <StatCard label="Unit" value={dash.employeesPerUnit.length} icon={IconDatabase} />
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -195,16 +203,16 @@ export default function DashboardPage() {
       {dash.__typename === "ChapterDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="IDP perlu review" value={dash.idpsNeedingReview} icon="idp" />
+            <StatCard label="IDP perlu review" value={dash.idpsNeedingReview} icon={IconTarget} />
             <StatCard
               label="Talent tanpa penugasan"
               value={dash.unassignedTalents.length}
-              icon="assignments"
+              icon={IconClipboardText}
             />
             <StatCard
               label="Periode evaluasi"
               value={dash.currentEvaluationPeriod ? PERIOD_STATE_LABEL[dash.currentEvaluationPeriod.state] : "—"}
-              icon="evaluations"
+              icon={IconClipboardCheck}
             />
           </div>
 
@@ -243,13 +251,13 @@ export default function DashboardPage() {
       {dash.__typename === "TalentDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="Penugasan aktif" value={dash.activeAssignments.length} icon="assignments" />
+            <StatCard label="Penugasan aktif" value={dash.activeAssignments.length} icon={IconClipboardText} />
             <StatCard
               label="Evaluasi terakhir"
               value={dash.latestEvaluation ? EVAL_STATUS_LABEL[dash.latestEvaluation.status] : "—"}
-              icon="evaluations"
+              icon={IconClipboardCheck}
             />
-            <StatCard label="Aksi segera" value={dash.upcomingActionDeadlines.length} icon="idp" />
+            <StatCard label="Aksi segera" value={dash.upcomingActionDeadlines.length} icon={IconTarget} />
           </div>
 
           <Panel title="Penugasan Aktif">

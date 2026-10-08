@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Icon } from "@/components/Icon";
+import { IconSearch } from "@tabler/icons-react";
 import { TalentRow } from "./TalentRow";
 import type { TalentSummary } from "./types";
 
@@ -48,9 +48,9 @@ export function TalentList({
     <div className="flex flex-col gap-3.5">
       <div className="flex flex-wrap gap-2.5">
         <div className="relative min-w-[220px] max-w-[340px] flex-1">
-          <Icon
-            name="search"
+          <IconSearch
             className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
+            aria-hidden
           />
           <input
             type="search"

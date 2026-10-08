@@ -1,5 +1,18 @@
+import {
+  IconChartBar,
+  IconClipboardCheck,
+  IconClipboardText,
+  IconClock,
+  IconClockHour3,
+  IconDatabase,
+  IconFileCv,
+  IconLayoutGrid,
+  IconTarget,
+  IconUserShield,
+  IconUsers,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import type { AccessRole } from "@/generated/graphql";
-import type { IconName } from "@/components/Icon";
 
 export interface NavLink {
   href: string;
@@ -11,7 +24,7 @@ export interface NavStandalone {
   kind: "link";
   href: string;
   label: string;
-  icon: IconName;
+  icon: TablerIcon;
   roles: readonly AccessRole[];
 }
 
@@ -19,7 +32,7 @@ export interface NavSubmenu {
   kind: "group";
   id: string;
   label: string;
-  icon: IconName;
+  icon: TablerIcon;
   roles: readonly AccessRole[];
   /** Multi-page section, rendered as an expandable submenu in the sidebar. */
   children: readonly NavLink[];
@@ -36,18 +49,18 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * authorization (FR-16).
  */
 export const NAV: readonly NavEntry[] = [
-  { kind: "link", href: "/dashboard", label: "Dashboard", icon: "dashboard", roles: ALL },
-  { kind: "link", href: "/activities", label: "Aktivitas saya", icon: "timesheet", roles: ALL },
-  { kind: "link", href: "/workload", label: "Workload", icon: "workload", roles: ALL },
-  { kind: "link", href: "/employees", label: "Employees", icon: "employees", roles: ["OPERATION", "ADMIN"] },
-  { kind: "link", href: "/assignments", label: "Assignments", icon: "assignments", roles: ["CHAPTER", "ADMIN"] },
-  { kind: "link", href: "/idp", label: "IDP", icon: "idp", roles: ["CHAPTER", "TALENT", "ADMIN"] },
-  { kind: "link", href: "/cv", label: "CV", icon: "cv", roles: ["TALENT", "CHAPTER"] },
+  { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
+  { kind: "link", href: "/activities", label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
+  { kind: "link", href: "/workload", label: "Workload", icon: IconChartBar, roles: ALL },
+  { kind: "link", href: "/employees", label: "Employees", icon: IconUsers, roles: ["OPERATION", "ADMIN"] },
+  { kind: "link", href: "/assignments", label: "Assignments", icon: IconClipboardText, roles: ["CHAPTER", "ADMIN"] },
+  { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: ["CHAPTER", "TALENT", "ADMIN"] },
+  { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER"] },
   {
     kind: "group",
     id: "evaluations",
     label: "Evaluations",
-    icon: "evaluations",
+    icon: IconClipboardCheck,
     roles: ["CHAPTER", "TALENT", "ADMIN"],
     children: [
       { href: "/evaluations", label: "Roster", roles: ["CHAPTER", "ADMIN"] },
@@ -56,12 +69,12 @@ export const NAV: readonly NavEntry[] = [
       { href: "/evaluations/my", label: "Evaluasi Saya", roles: ["TALENT"] },
     ],
   },
-  { kind: "link", href: "/accounts", label: "Accounts", icon: "accounts", roles: ["ADMIN"] },
+  { kind: "link", href: "/accounts", label: "Accounts", icon: IconUserShield, roles: ["ADMIN"] },
   {
     kind: "group",
     id: "master-data",
     label: "Master Data",
-    icon: "masterData",
+    icon: IconDatabase,
     roles: ["ADMIN"],
     children: [
       { href: "/master-data/units", label: "Unit", roles: ["ADMIN"] },
@@ -70,7 +83,7 @@ export const NAV: readonly NavEntry[] = [
       { href: "/master-data/projects", label: "Project", roles: ["ADMIN"] },
     ],
   },
-  { kind: "link", href: "/audit", label: "Audit", icon: "audit", roles: ["ADMIN"] },
+  { kind: "link", href: "/audit", label: "Audit", icon: IconClock, roles: ["ADMIN"] },
 ];
 
 /** Sidebar section label for the current route, shown in the top bar. */

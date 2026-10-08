@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Icon } from "@/components/Icon";
+import { IconClockHour3 } from "@tabler/icons-react";
 
 export type EmptyStateVariant = "no-data" | "tms-null-self" | "tms-null-other";
 
@@ -51,7 +51,7 @@ export function WorkloadEmptyState({ variant }: { variant: EmptyStateVariant }) 
               href="/activities"
               className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-primary bg-tp-primary px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-primary-deep"
             >
-              <Icon name="timesheet" className="h-5 w-5" />
+              <IconClockHour3 className="h-5 w-5" aria-hidden />
               Catat aktivitas
             </Link>
             <p className="mt-2 text-[13px] text-tp-muted">Anda juga dapat memilih periode lain.</p>

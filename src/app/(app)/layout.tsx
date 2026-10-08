@@ -4,8 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { LogoutDocument } from "@/generated/graphql";
+import { IconLogout } from "@tabler/icons-react";
 import { Avatar } from "@/components/Avatar";
-import { Icon } from "@/components/Icon";
 import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { roleLabel } from "@/features/accounts/roles";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
@@ -81,7 +81,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 onClick={handleLogout}
                 className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
               >
-                <Icon name="signOut" className="h-4 w-4" />
+                <IconLogout className="h-4 w-4" aria-hidden />
                 <span className="hidden sm:inline">Sign out</span>
               </button>
             </div>
