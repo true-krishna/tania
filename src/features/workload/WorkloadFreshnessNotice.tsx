@@ -1,4 +1,4 @@
-import { Icon } from "@/components/Icon";
+import { IconWifi } from "@tabler/icons-react";
 import { cn } from "@/lib/cn";
 import { formatUpdatedAt } from "./formatUpdatedAt";
 import type { WorkloadFreshness } from "./types";
@@ -23,7 +23,7 @@ export function WorkloadFreshnessNotice({
         role="status"
         className={cn(shell, "flex flex-wrap items-start gap-2.5 border border-tp-tint-peach bg-tp-tint-peach font-medium text-tp-ink-peach")}
       >
-        <Icon name="sinyal" className="mt-0.5 h-5 w-5 shrink-0" />
+        <IconWifi className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
         <div className="min-w-0 flex-1">
           <strong className="block font-semibold">Tidak dapat menghubungi sumber data WAD.</strong>
           <span>

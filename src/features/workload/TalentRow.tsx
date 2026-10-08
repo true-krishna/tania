@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Icon } from "@/components/Icon";
+import { IconChevronRight } from "@tabler/icons-react";
 import { LoadClassificationBadge } from "./LoadClassificationBadge";
 import { LoadPercentageBar } from "./LoadPercentageBar";
 import type { TalentSummary } from "./types";
@@ -68,7 +68,7 @@ export function TalentRow({
       <span className="hidden min-[860px]:block">{badge}</span>
 
       <span className="hidden text-tp-muted min-[860px]:grid min-[860px]:place-items-center">
-        <Icon name="chevronRight" className="h-5 w-5" />
+        <IconChevronRight className="h-5 w-5" aria-hidden />
       </span>
     </Link>
   );

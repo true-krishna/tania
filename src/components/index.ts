@@ -1,6 +1,5 @@
 export { BarList, type BarItem } from "./BarList";
 export { StatCard } from "./StatCard";
-export { Icon, type IconName } from "./Icon";
 export { Sidebar } from "./Sidebar";
 export { Avatar } from "./Avatar";
 export { BoardTable } from "./BoardTable";

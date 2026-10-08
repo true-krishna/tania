@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import * as React from "react";
-import { Icon } from "@/components/Icon";
+import { IconChevronDown, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { cn } from "@/lib/cn";
 import type { AccessRole } from "@/generated/graphql";
 import { SIDEBAR_WIDTH_COLLAPSED, SIDEBAR_WIDTH_EXPANDED } from "@/lib/sidebar-state";
@@ -88,7 +88,7 @@ export function Sidebar({ role, pathname, collapsed, onToggle }: SidebarProps) {
                     title={collapsed ? entry.label : undefined}
                     className={itemClass(active)}
                   >
-                    <Icon name={entry.icon} className="h-[18px] w-[18px] shrink-0" />
+                    <entry.icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
                     {collapsed ? null : <span className="truncate">{entry.label}</span>}
                   </Link>
                 </li>
@@ -118,13 +118,13 @@ export function Sidebar({ role, pathname, collapsed, onToggle }: SidebarProps) {
                   }}
                   className={cn(itemClass(groupActive), "w-full")}
                 >
-                  <Icon name={entry.icon} className="h-[18px] w-[18px] shrink-0" />
+                  <entry.icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
                   {collapsed ? null : (
                     <>
                       <span className="flex-1 truncate text-left">{entry.label}</span>
-                      <Icon
-                        name="chevronDown"
+                      <IconChevronDown
                         className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")}
+                        aria-hidden
                       />
                     </>
                   )}
@@ -174,7 +174,11 @@ export function Sidebar({ role, pathname, collapsed, onToggle }: SidebarProps) {
             collapsed ? "h-9 w-9 justify-center" : "w-full px-3 py-2",
           )}
         >
-          <Icon name={collapsed ? "chevronRight" : "chevronLeft"} className="h-4 w-4 shrink-0" />
+          {collapsed ? (
+            <IconChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+          ) : (
+            <IconChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
+          )}
           {collapsed ? null : <span className="truncate">Collapse</span>}
         </button>
       </div>
