@@ -37,7 +37,7 @@ dilayani backend per 2026-10-01.
 | `Chapter` | `id`, `name`, `isActive`, `jobRoles` | belum |
 | `JobRole` | `id`, `name`, `isActive`, `chapter` (null = tidak assignable) | belum |
 | `Project` | `id`, `name`, `unit`, `isActive` | belum |
-| `Employee` | `id`, `fullName`, `nikMasked`, `email`, `birthDate`, `gender`, `phone`, `address`, `nomorInduk` (turunan kontrak aktif), `unit`, `jobRole`, `chapter`, `assignable`, `joinedAt`, `status`, `account`, `contracts`, `assignments`, `idps` | belum (amandemen 002) |
+| `Employee` | `id`, `fullName`, `nikMasked`, `email`, `birthDate`, `gender`, `phone`, `address`, `latestEducation`, `institutionName`, `major`, `nomorInduk` (turunan kontrak aktif), `unit`, `jobRole`, `chapter`, `assignable`, `joinedAt`, `status`, `account`, `contracts`, `assignments`, `idps` | belum (amandemen 002) |
 | `EmploymentContract` | `id`, `employee`, `contractNo`, `contractType`, `officeEmail`, `nomorInduk`, `bandPosition`, `jobRole`, `jobTitle`, `jobLevel`, `workLocation`, `unit`, `startDate`, `endDate`, `status` (turunan), `endReason`, `predecessor`, `notes` | belum (amandemen 002) |
 | `Assignment` | `id`, `employee`, `project`, `jobRole`, `periodStart`, `periodEnd`, `status` | belum |
 | `Idp` | `id`, `employee`, `status`, `developmentObjective`, `currentAssessment`, `gapAnalysis`, `timelineStart`, `timelineEnd`, `successIndicators`, `developmentActions`, `reviewLogs` | belum |
@@ -105,7 +105,7 @@ UI memakai `first` (default 25, maks 100 dari konvensi API) + `endCursor` sebaga
 
 | Model | Field | Aturan UI yang dicerminkan |
 | --- | --- | --- |
-| Form karyawan (data diri) | `fullName`, `nik`, `email`, `birthDate`, `gender`, `phone`, `address`, `joinedAt`, `status`, `autoCreateEntra` | murni data diri (FR-33) — tanpa employee ID/divisi/posisi; NIK wajib 16 digit, tampil tersamar (FR-42); toggle auto-create Entra (FR-43) |
+| Form karyawan (data diri) | `fullName`, `nik`, `email`, `birthDate`, `gender`, `phone`, `address`, `latestEducation`, `institutionName`, `major`, `joinedAt`, `status`, `autoCreateEntra` | murni data diri (FR-33) — tanpa employee ID/divisi/posisi; NIK wajib 16 digit, tampil tersamar (FR-42); toggle auto-create Entra (FR-43) |
 | Form kontrak kerja | `contractNo`, `contractType`, `officeEmail`, `nomorInduk`, `bandPosition`, `jobRoleId`, `jobTitle`, `jobLevel`, `workLocation`, `unitId`, `startDate`, `endDate?`, `notes` | unit & posisi wajib dari master (FR-34); `nomorInduk` wajib, unik antar kontrak aktif; `endDate` wajib untuk PKWT |
 | Form perpanjangan/mutasi | input kontrak baru + `predecessorContractId` / `effectiveDate` | periode tidak boleh tumpang tindih (FR-36/FR-38); dapat mengganti unit/posisi |
 | Form assignment | `employeeId`, `projectId`, `jobRoleId`, `periodStart`, `periodEnd?`, `status` | `employeeId` hanya dari `assignableTalents`; `projectId` dari master Project (FR-05) |

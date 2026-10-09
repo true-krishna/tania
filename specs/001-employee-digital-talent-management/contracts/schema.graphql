@@ -221,6 +221,9 @@ type Employee {
   gender: String
   phone: String
   address: String
+  latestEducation: String
+  institutionName: String
+  major: String
   """Nomor induk karyawan dari kontrak aktif (FR-34); null bila tanpa kontrak aktif."""
   nomorInduk: String
   """Turunan kontrak aktif (FR-35)."""
@@ -296,6 +299,9 @@ input CreateEmployeeInput {
   gender: String
   phone: String
   address: String
+  latestEducation: String
+  institutionName: String
+  major: String
   joinedAt: Date!
   status: EmployeeStatus
   """Auto-create akun Entra saat data tersimpan (FR-43); default true."""
@@ -309,6 +315,9 @@ input UpdateEmployeeInput {
   gender: String
   phone: String
   address: String
+  latestEducation: String
+  institutionName: String
+  major: String
   joinedAt: Date
   status: EmployeeStatus
 }

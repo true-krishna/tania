@@ -44,7 +44,7 @@ Stack dipin dari plan induk (konstitusi v1.1.0); **satu dependensi baru**: klien
 
 ### Backend (`tania-backend`, `master`)
 
-- `employees` (`internal/platform/migrations/sql/0002_core_model.sql:70-85`): `id`, `user_id` (UNIQUE, 1:1 akun), `full_name`, `employee_code` (UNIQUE), `email` (citext UNIQUE), `unit_id`, `job_role_id`, `joined_at`, `status` (`ACTIVE`/`INACTIVE`). **Belum ada**: NIK, tanggal lahir, jenis kelamin, telepon, alamat; belum ada tabel kontrak; status belum mengenal `RESIGNED`/`RETIRED`.
+- `employees` (`internal/platform/migrations/sql/0002_core_model.sql:70-85`): `id`, `user_id` (UNIQUE, 1:1 akun), `full_name`, `employee_code` (UNIQUE), `email` (citext UNIQUE), `unit_id`, `job_role_id`, `joined_at`, `status` (`ACTIVE`/`INACTIVE`). **Belum ada**: NIK, tanggal lahir, jenis kelamin, telepon, alamat, pendidikan terakhir/nama institusi/jurusan; belum ada tabel kontrak; status belum mengenal `RESIGNED`/`RETIRED`.
 - Domain `internal/domain/employee.go:8-32`: `DeriveAssignable()` = `Status == ACTIVE && JobRole.Chapter != nil` — definisi tunggal yang dipakai semua read path; `UpdateEmployeeInput` membuat `employeeCode` tidak dapat diubah.
 - GraphQL (`graph/schema.graphqls`): `Employee` (193-213), `CreateEmployeeInput` (227), `UpdateEmployeeInput` (237), mutasi `createEmployee`/`updateEmployee`/`deactivateEmployee(id, acknowledgeActiveWork)` (690-692), `assignableTalents` (624). **Tidak ada** tipe/mutasi kontrak kerja.
 - Turunan chapter: `employee_chapter_scope` view (`0002_core_model.sql:88-91`, join `employees.job_role_id → job_roles`) ada di DB tapi read path memakai join kode (`internal/repository/postgres/employeerow.go:12-22`).
@@ -55,7 +55,7 @@ Stack dipin dari plan induk (konstitusi v1.1.0); **satu dependensi baru**: klien
 ### Frontend (`tania-dashboard`, `master`)
 
 - Halaman karyawan: `src/app/(app)/employees/page.tsx` (daftar + filter search/status), `/employees/new` (form create), `/employees/[id]` (detail + kartu nonaktifkan; tab Ringkasan + Workload). **Tidak ada halaman ubah data** (`updateEmployee` ada di SDL & generated types, belum ada dokumen/hook/UI).
-- Form create saat ini: `fullName`, `employeeCode`, `email`, `unitId`, `jobRoleId`, `joinedAt` — belum ada field data diri baru (NIK, ttl, gender, telepon, alamat).
+- Form create saat ini: `fullName`, `employeeCode`, `email`, `unitId`, `jobRoleId`, `joinedAt` — belum ada field data diri baru (NIK, ttl, gender, telepon, alamat, pendidikan terakhir/nama institusi/jurusan).
 - Daftar: kolom Nama (+kode), Email, Unit, Job Role, Status; filter `unitId`/`jobRoleId`/`assignableOnly` di SDL belum tampil di UI; tanpa pagination UI (fetch 100).
 - Dashboard Operation (`src/app/(app)/dashboard/page.tsx` + `src/features/dashboard/`): StatCards aktif/non-assignable/unit + "Karyawan per Unit" + "Perubahan Karyawan Terbaru" — **belum ada** widget kontrak segera berakhir / pra-pensiun.
 - Jejak audit: halaman `/audit` (Admin-only, `src/features/audit/useAuditLogs.ts`) dengan cursor pagination; **belum ada** "riwayat perubahan per record" untuk Operation (pola historis per record baru ada di IDP: `src/app/(app)/idp/[id]/page.tsx:290,348`).
@@ -70,7 +70,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 
 | Spec | Status | Bukti / Gap |
 | --- | --- | --- |
-| FR-33 data diri (+NIK, tanpa employee ID) | **Gap G1** | Kolom `nik`/`birth_date`/`gender`/`phone`/`address` belum ada; `employee_code` dihapus dari `employees` (keputusan 2026-10-08) → migrasi ke `employment_contracts.nomor_induk`; form & `CreateEmployeeInput` ikut berubah |
+| FR-33 data diri (+NIK, tanpa employee ID) | **Gap G1** | Kolom `nik`/`birth_date`/`gender`/`phone`/`address`/`latest_education`/`institution_name`/`major` belum ada; `employee_code` dihapus dari `employees` (keputusan 2026-10-08) → migrasi ke `employment_contracts.nomor_induk`; form & `CreateEmployeeInput` ikut berubah |
 | FR-34 kontrak kerja terpisah (atribut TMS) | **Gap G2** | Tabel/tipe `employment_contracts` belum ada — greenfield: migrasi + domain + repository + GraphQL type/CRUD + UI daftar/form/detail |
 | FR-35 turunan unit/posisi/chapter via kontrak aktif | **Gap G3** | Saat ini `employees.unit_id`/`job_role_id` kolom langsung; derivasi harus berpindah ke kontrak aktif (`DeriveAssignable` + `employee_chapter_scope` + filter `EmployeeFilter`) |
 | FR-36 perpanjangan kontrak (+pindah unit) | **Gap G4** | Greenfield: `predecessor_contract_id`, anti-overlap server, UI wizard perpanjangan + daftar "segera berakhir" |
@@ -101,6 +101,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 | `id`, `full_name`, `email` (unik), `joined_at`, `user_id` | tetap |
 | `nik_hash`, `nik_enc` | **baru** — 16 digit; `nik_hash` untuk keunikan (tidak pernah plaintext), `nik_enc` AES-256-GCM |
 | `birth_date`, `gender`, `phone`, `address` | **baru** — field data diri (wajib: `birth_date` untuk kalkulasi pra-pensiun) |
+| `latest_education`, `institution_name`, `major` | **baru** — field data diri (pendidikan terakhir, nama institusi, jurusan; opsional) |
 | `status` | diperluas: `ACTIVE` / `RESIGNED` / `RETIRED` / `INACTIVE` |
 | `employee_code`, `unit_id`, `job_role_id` | **dihapus** — identitas/penugasan pindah ke kontrak (keputusan 2026-10-08); kolom lama di-deprecate dua fase sesuai `docs/migrations.md` |
 
@@ -118,7 +119,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 
 ### Kontrak GraphQL (delta atas `graph/schema.graphqls`)
 
-- `Employee`: + `nikMasked`, + `nomorInduk` (turunan kontrak aktif), `unit`/`jobRole` berubah sumber (turunan kontrak aktif — bentuk field tetap), `status` enum diperluas, + `contracts(first, after)`; `employeeCode` **dihapus** (breaking — frontend disesuaikan pada gelombang yang sama).
+- `Employee`: + `nikMasked`, + `latestEducation`/`institutionName`/`major`, + `nomorInduk` (turunan kontrak aktif), `unit`/`jobRole` berubah sumber (turunan kontrak aktif — bentuk field tetap), `status` enum diperluas, + `contracts(first, after)`; `employeeCode` **dihapus** (breaking — frontend disesuaikan pada gelombang yang sama).
 - Tipe baru `EmploymentContract` (+ `EmploymentContractStatus`, `ContractType`, `EndReason`), input `CreateEmploymentContractInput`, `RenewContractInput`, `MutationInput` (mutasi), `ResignInput`/`RetireInput`.
 - Mutasi baru: `createEmploymentContract`, `updateEmploymentContract` (field terbatas selama aktif), `renewEmploymentContract` (predecessor + anti-overlap + boleh ganti unit/posisi), `resignEmployee` (tanggal efektif + alasan + `acknowledgeActiveWork`), `recordEmployeeMutation` (unit/posisi baru + tanggal efektif → akhiri + kontrak baru satu transaksi), `retireEmployee`, `provisionEntraAccount(employeeId)`.
 - Query baru: `employmentContracts(filter: unitId/jobRoleId/contractType/status/expiringBefore/search)`, `employeesNeedingFollowUp` (kontrak habis tanpa perpanjangan), `expiringContracts(days: 90)`, `employeesWithoutEntra`.
