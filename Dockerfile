@@ -14,12 +14,14 @@ RUN npm run build
 # Stage 3: Production runtime image
 FROM node:20-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV production
+ENV NODE_ENV=production
+ENV PORT=80
+ENV HOSTNAME=0.0.0.0
 
 # Copy only necessary build artifacts and static files
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-EXPOSE 3000
+EXPOSE 80
 CMD ["node", "server.js"]
