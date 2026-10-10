@@ -44,7 +44,7 @@ Stack dipin dari plan induk (konstitusi v1.1.0); **satu dependensi baru**: klien
 
 ### Backend (`tania-backend`, `master`)
 
-- `employees` (`internal/platform/migrations/sql/0002_core_model.sql:70-85`): `id`, `user_id` (UNIQUE, 1:1 akun), `full_name`, `employee_code` (UNIQUE), `email` (citext UNIQUE), `unit_id`, `job_role_id`, `joined_at`, `status` (`ACTIVE`/`INACTIVE`). **Belum ada**: NIK, tanggal lahir, jenis kelamin, telepon, alamat; belum ada tabel kontrak; status belum mengenal `RESIGNED`/`RETIRED`.
+- `employees` (`internal/platform/migrations/sql/0002_core_model.sql:70-85`): `id`, `user_id` (UNIQUE, 1:1 akun), `full_name`, `employee_code` (UNIQUE), `email` (citext UNIQUE), `unit_id`, `job_role_id`, `joined_at`, `status` (`ACTIVE`/`INACTIVE`). **Belum ada**: NIK, tanggal lahir, jenis kelamin, telepon, alamat, pendidikan terakhir/nama institusi/jurusan; belum ada tabel kontrak; status belum mengenal `RESIGNED`/`RETIRED`.
 - Domain `internal/domain/employee.go:8-32`: `DeriveAssignable()` = `Status == ACTIVE && JobRole.Chapter != nil` — definisi tunggal yang dipakai semua read path; `UpdateEmployeeInput` membuat `employeeCode` tidak dapat diubah.
 - GraphQL (`graph/schema.graphqls`): `Employee` (193-213), `CreateEmployeeInput` (227), `UpdateEmployeeInput` (237), mutasi `createEmployee`/`updateEmployee`/`deactivateEmployee(id, acknowledgeActiveWork)` (690-692), `assignableTalents` (624). **Tidak ada** tipe/mutasi kontrak kerja.
 - Turunan chapter: `employee_chapter_scope` view (`0002_core_model.sql:88-91`, join `employees.job_role_id → job_roles`) ada di DB tapi read path memakai join kode (`internal/repository/postgres/employeerow.go:12-22`).
@@ -55,7 +55,7 @@ Stack dipin dari plan induk (konstitusi v1.1.0); **satu dependensi baru**: klien
 ### Frontend (`tania-dashboard`, `master`)
 
 - Halaman karyawan: `src/app/(app)/employees/page.tsx` (daftar + filter search/status), `/employees/new` (form create), `/employees/[id]` (detail + kartu nonaktifkan; tab Ringkasan + Workload). **Tidak ada halaman ubah data** (`updateEmployee` ada di SDL & generated types, belum ada dokumen/hook/UI).
-- Form create saat ini: `fullName`, `employeeCode`, `email`, `unitId`, `jobRoleId`, `joinedAt` — belum ada field data diri baru (NIK, ttl, gender, telepon, alamat).
+- Form create saat ini: `fullName`, `employeeCode`, `email`, `unitId`, `jobRoleId`, `joinedAt` — belum ada field data diri baru (NIK, ttl, gender, telepon, alamat, pendidikan terakhir/nama institusi/jurusan).
 - Daftar: kolom Nama (+kode), Email, Unit, Job Role, Status; filter `unitId`/`jobRoleId`/`assignableOnly` di SDL belum tampil di UI; tanpa pagination UI (fetch 100).
 - Dashboard Operation (`src/app/(app)/dashboard/page.tsx` + `src/features/dashboard/`): StatCards aktif/non-assignable/unit + "Karyawan per Unit" + "Perubahan Karyawan Terbaru" — **belum ada** widget kontrak segera berakhir / pra-pensiun.
 - Jejak audit: halaman `/audit` (Admin-only, `src/features/audit/useAuditLogs.ts`) dengan cursor pagination; **belum ada** "riwayat perubahan per record" untuk Operation (pola historis per record baru ada di IDP: `src/app/(app)/idp/[id]/page.tsx:290,348`).
@@ -70,16 +70,16 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 
 | Spec | Status | Bukti / Gap |
 | --- | --- | --- |
-| FR-33 data diri (+NIK, tanpa employee ID) | **Gap G1** | Kolom `nik`/`birth_date`/`gender`/`phone`/`address` belum ada; `employee_code` dihapus dari `employees` (keputusan 2026-10-08) → migrasi ke `employment_contracts.nomor_induk`; form & `CreateEmployeeInput` ikut berubah |
+| FR-33 data diri (+NIK, tanpa employee ID) | **Gap G1** | Kolom `nik`/`birth_date`/`gender`/`phone`/`address`/`latest_education`/`institution_name`/`major` belum ada; `employee_code` dihapus dari `employees` (keputusan 2026-10-08) → migrasi ke `employment_contracts.nomor_induk`; form & `CreateEmployeeInput` ikut berubah |
 | FR-34 kontrak kerja terpisah (atribut TMS) | **Gap G2** | Tabel/tipe `employment_contracts` belum ada — greenfield: migrasi + domain + repository + GraphQL type/CRUD + UI daftar/form/detail |
 | FR-35 turunan unit/posisi/chapter via kontrak aktif | **Gap G3** | Saat ini `employees.unit_id`/`job_role_id` kolom langsung; derivasi harus berpindah ke kontrak aktif (`DeriveAssignable` + `employee_chapter_scope` + filter `EmployeeFilter`) |
 | FR-36 perpanjangan kontrak (+pindah unit) | **Gap G4** | Greenfield: `predecessor_contract_id`, anti-overlap server, UI wizard perpanjangan + daftar "segera berakhir" |
 | FR-37 resign | **Gap G5** | `deactivateEmployee` hanya `ACTIVE`→`INACTIVE`; perlu aksi resign (akhiri kontrak `end_reason=resign`, status `RESIGNED`, nonaktifkan akun + Entra, peringatan dependensi — pola `acknowledgeActiveWork` sudah ada) |
 | FR-38 mutasi (opsi B: akhiri + kontrak baru) | **Gap G6** | Greenfield: satu transaksi akhiri kontrak lama + buat kontrak baru efektif tanggal mutasi; turunan chapter/assignable mengikuti sejak tanggal efektif |
 | FR-39 pensiun | **Gap G7** | Sama seperti resign dengan `end_reason=retirement`, status `RETIRED` |
-| FR-40 dashboard H-90/H-30 + pra-pensiun | **Gap G8** | Widget belum ada; data turunan tanggal (indeks `end_date`), usia pensiun 56 (parametri) dari `birth_date` |
+| FR-40 dashboard H-90/H-30 + pra-pensiun | **Gap G8** | Widget belum ada; data turunan tanggal (indeks `end_date`), usia pensiun dari setelan Admin (default 56, keputusan 2026-10-10) berbasis `birth_date` |
 | FR-41 jejak audit lifecycle + riwayat per record | **Partial** | `recordChange` siap dipakai; cakupan perlu entity `employment_contract` + aksi lifecycle (RENEW/RESIGN/MUTATE/RETIRE/END); UI riwayat per record untuk Operation belum ada (baca `auditLogs` filter `entityType`+`entityId`) |
-| FR-42 enkripsi & masking NIK | **Gap G9** | Greenfield: `nik_hash` (unik) + `nik_enc`, masking 4 digit akhir di API (resolver) & UI, nilai penuh lewat tampilan khusus berizin, audit menyimpan NIK tersamar |
+| FR-42 enkripsi & masking NIK | **Gap G9** | Greenfield: `nik_hash` (unik) + `nik_enc`, masking 4 digit akhir di API (resolver) & UI untuk semua peran — nilai penuh tidak pernah diekspos (keputusan 2026-10-10), audit menyimpan NIK tersamar |
 | FR-43 auto-create Entra di form | **Gap G10** | Greenfield — toggle di form create; provisioning pasca-commit; gagal tidak menggagalkan penyimpanan karyawan |
 | FR-44 UI daftar "belum ada Entra" + provisioning manual | **Gap G11** | Greenfield — query status provisi + halaman khusus Operation |
 | FR-45 aturan domain + UPN | **Gap G12** | `telkom.co.id` → invitation; selain itu → create account UPN `nama-depan.nama-belakang@digitaltelkom.id` (sufiks angka bila bentrok); hasil tercatat |
@@ -100,25 +100,26 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 | --- | --- |
 | `id`, `full_name`, `email` (unik), `joined_at`, `user_id` | tetap |
 | `nik_hash`, `nik_enc` | **baru** — 16 digit; `nik_hash` untuk keunikan (tidak pernah plaintext), `nik_enc` AES-256-GCM |
-| `birth_date`, `gender`, `phone`, `address` | **baru** — field data diri (wajib: `birth_date` untuk kalkulasi pra-pensiun) |
+| `birth_date`, `gender`, `phone`, `address` | **baru** — field data diri (wajib: `birth_date` untuk kalkulasi pra-pensiun; `gender` enum wajib `female`/`male` — keputusan 2026-10-10) |
+| `latest_education`, `institution_name`, `major` | **baru** — field data diri (pendidikan terakhir, nama institusi, jurusan; opsional) |
 | `status` | diperluas: `ACTIVE` / `RESIGNED` / `RETIRED` / `INACTIVE` |
 | `employee_code`, `unit_id`, `job_role_id` | **dihapus** — identitas/penugasan pindah ke kontrak (keputusan 2026-10-08); kolom lama di-deprecate dua fase sesuai `docs/migrations.md` |
 
 **`employment_contracts` (baru — atribut selaras TMS)**
 
-`id`, `employee_id`, `contract_no` (unik), `contract_type` (`pkwt`/`pkwtt`), `office_email`, **`nomor_induk`** (wajib, unik antar kontrak aktif — `uq_employment_contracts_nomor_induk_active`), `band_position`, `job_role_id` (Master Data Role), `job_title`, `job_level`, `work_location` (isian terstruktur), `unit_id` (Master Data Unit), `start_date`, `end_date` (NULL untuk PKWTT), `end_reason` (nullable: `expiry`/`resign`/`retirement`/`mutation`), `terminated_at`, `predecessor_contract_id` (nullable), `notes`, `created_by`, timestamps.
+`id`, `employee_id`, `contract_no` (unik), `contract_type` (`pkwt`/`pkwtt`), `office_email`, **`nomor_induk`** (wajib, unik antar kontrak aktif — `uq_employment_contracts_nomor_induk_active`), `band_position` (enum `I`–`VI`/`undefined` — keputusan 2026-10-10), `job_role_id` (Master Data Role), `job_title`, `job_level`, `work_location` (enum wajib `Jakarta`/`Bandung` — keputusan 2026-10-10), `unit_id` (Master Data Unit), `start_date`, `end_date` (NULL untuk PKWTT), `end_reason` (nullable, hanya pengakhiran dini: `resign`/`retirement`/`mutation`), `terminated_at`, `predecessor_contract_id` (nullable), `notes`, `created_by`, timestamps.
 
 **Aturan indeks & turunan (keputusan teknis):**
 
-- **D1 — status kontrak turunan, tanpa cron.** Kolom tersimpan hanya `terminated_at` + `end_reason` (untuk pengakhiran dini). Status efektif diturunkan saat query: `active` bila `start_date ≤ hari ini` dan (`end_date IS NULL` atau `end_date ≥ hari ini`) dan `terminated_at IS NULL`; `terminated` bila `terminated_at` terisi; selain itu `ended` (habis masa). Menutup FR-34 & AC TAN-127 "status berakhir otomatis diturunkan dari tanggal".
+- **D1 — status kontrak turunan, tanpa cron.** Kolom tersimpan hanya `terminated_at` + `end_reason` (untuk pengakhiran dini — `resign`/`retirement`/`mutation`; `expiry` tidak pernah dituliskan — alasan habis masa diturunkan dari status `ended`). Status efektif diturunkan saat query: `active` bila `start_date ≤ hari ini` dan (`end_date IS NULL` atau `end_date ≥ hari ini`) dan `terminated_at IS NULL`; `terminated` bila `terminated_at` terisi; selain itu `ended` (habis masa). Menutup FR-34 & AC TAN-127 "status berakhir otomatis diturunkan dari tanggal".
 - **D2 — satu kontrak aktif per karyawan**: partial unique index (`WHERE status-aktif`) — race-safe, mengikuti pola FR-25; validasi server tetap ada untuk pesan yang ramah.
 - **D3 — turunan aktif**: unit/posisi/jobRole/email kantor/lokasi aktif = nilai pada kontrak aktif. `assignable` = karyawan `ACTIVE` **dan** punya kontrak aktif **dan** `job_role.chapter_id IS NOT NULL`. Kontrak habis tanpa perpanjangan → otomatis non-assignable, status karyawan tetap `ACTIVE`, muncul di daftar "perlu tindak lanjut" (OQ-3).
 - **D4 — migrasi dua fase** (konstitusi: perubahan destruktif dua fase): fase 1 tambah tabel/kolom + pindahkan data (`employee_code` eksisting → `nomor_induk` kontrak awal per karyawan; `unit_id`/`job_role_id` → kontrak awal; satu kontrak awal per karyawan yang punya data); fase 2 deprecate kolom lama setelah kode beralih. View `employee_chapter_scope` diubah join via kontrak aktif.
-- **D5 — enkripsi NIK**: AES-256-GCM application-level (`internal/platform/secret` memperluas pola key management), `nik_hash` = SHA-256 ter-salted untuk keunikan; masking (4 digit akhir) dilakukan di layer resolver — model GraphQL tidak pernah membawa NIK plaintext kecuali lewat field berizin terpisah.
+- **D5 — enkripsi NIK**: AES-256-GCM application-level (`internal/platform/secret` memperluas pola key management), `nik_hash` = SHA-256 ter-salted untuk keunikan; masking (4 digit akhir) dilakukan di layer resolver — model GraphQL tidak pernah membawa NIK plaintext; nilai penuh tidak diekspos ke peran mana pun (keputusan 2026-10-10).
 
 ### Kontrak GraphQL (delta atas `graph/schema.graphqls`)
 
-- `Employee`: + `nikMasked`, + `nomorInduk` (turunan kontrak aktif), `unit`/`jobRole` berubah sumber (turunan kontrak aktif — bentuk field tetap), `status` enum diperluas, + `contracts(first, after)`; `employeeCode` **dihapus** (breaking — frontend disesuaikan pada gelombang yang sama).
+- `Employee`: + `nikMasked`, + `latestEducation`/`institutionName`/`major`, + `nomorInduk` (turunan kontrak aktif), `unit`/`jobRole` berubah sumber (turunan kontrak aktif — bentuk field tetap), `status` enum diperluas, + `contracts(first, after)`; `employeeCode` **dihapus** (breaking — frontend disesuaikan pada gelombang yang sama).
 - Tipe baru `EmploymentContract` (+ `EmploymentContractStatus`, `ContractType`, `EndReason`), input `CreateEmploymentContractInput`, `RenewContractInput`, `MutationInput` (mutasi), `ResignInput`/`RetireInput`.
 - Mutasi baru: `createEmploymentContract`, `updateEmploymentContract` (field terbatas selama aktif), `renewEmploymentContract` (predecessor + anti-overlap + boleh ganti unit/posisi), `resignEmployee` (tanggal efektif + alasan + `acknowledgeActiveWork`), `recordEmployeeMutation` (unit/posisi baru + tanggal efektif → akhiri + kontrak baru satu transaksi), `retireEmployee`, `provisionEntraAccount(employeeId)`.
 - Query baru: `employmentContracts(filter: unitId/jobRoleId/contractType/status/expiringBefore/search)`, `employeesNeedingFollowUp` (kontrak habis tanpa perpanjangan), `expiringContracts(days: 90)`, `employeesWithoutEntra`.
@@ -127,7 +128,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 ### Provisi Entra (FR-43–FR-46)
 
 - **Alur**: form create mengirim `autoCreateEntra` (default `true`); setelah transaksi karyawan commit, provisioning dijalankan best-of-effort **di luar transaksi DB** (fail tidak membatalkan penyimpanan karyawan — edge case spec) dan hasilnya (jenis aksi, status berhasil/gagal, UPN/object-id) dicatat + masuk audit. Kegagalan → tampil di daftar FR-44 untuk retry manual.
-- **Aturan**: domain email data diri `telkom.co.id` → **invitation**; selain itu → **create account** dengan UPN `nama-depan.nama-belakang@digitaltelkom.id` (titik); bentrok dengan akun eksisting → sufiks angka di belakang nama belakang. Karyawan yang sudah terlink `entra_object_id` tidak diprovisi ulang.
+- **Aturan**: domain email data diri `telkom.co.id` → **invitation**; selain itu → **create account** dengan UPN `nama-depan.nama-belakang@digitaltelkom.id` (titik; `nama-depan` = kata pertama, `nama-belakang` = kata kedua nama lengkap — kata ke-3 dst diabaikan, mis. `Rina Kusuma Wardani` → `rina.kusuma@…`); partikel (`bin`, `binti`, `van`, `de`, `al`) tidak dihitung sebagai kata (`Muhammad bin Abdullah` → `muhammad.abdullah@…`); nama satu kata tanpa titik (`Sukarno` → `sukarno@…`); setiap kandidat UPN wajib dicek terhadap daftar email yang ada (anti-duplikat); bentrok → angka mulai dari `1` di belakang bagian akhir UPN (`rina.kusuma1`, `sukarno1`, …) sampai unik. Karyawan yang sudah terlink `entra_object_id` tidak diprovisi ulang.
 - **Terminasi**: resign/pensiun memanggil penonaktifan akun Entra yang dikelola (`FR-46`) + audit; akun lokal terkait tetap nonaktif seperti pola `SetStatus` eksisting.
 - **Konfigurasi**: tenant ID, client ID, client secret lewat environment/secret store (konstitusi III — tidak pernah di-commit); klien Graph API modular (`internal/platform/entra/`) agar lifecycle tetap teruji via fake tanpa jaringan.
 
@@ -137,12 +138,12 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 
 *GATE: harus lulus sebelum fase eksekusi; dievaluasi ulang setelah desain rinci.*
 
-| Prinsip (konstitusi v1.1.0) | Pemeriksaan | Status |
+| Prinsip (konstitusi v1.2.0) | Pemeriksaan | Status |
 | --- | --- | --- |
 | I. Lawful basis & purpose limitation | Pemrosesan NIK/KTP punya tujuan eksplisit (identitas kepegawaian & kepatuhan) yang terdokumentasi di amandemen §2; field baru diklasifikasi (NIK = data spesifik) di data-model | **Lulus** |
 | II. Data minimization & klasifikasi | `employees` justru dipangkas; NIK masked di API/UI; tanpa PII di URL/log (akses via `id`) | **Lulus** |
-| III. Security by design | NIK terenkripsi at-rest (D5); RBAC Operation untuk alur, Admin untuk audit penuh — ditegakkan server (`RequireRole`, `ChapterScope`); secret Entra via secret store | **Lulus** |
-| IV. Data subject rights & retention | Penghapusan tetap semantik "tanpa hard delete" (keputusan disetujui); riwayat kontrak/audit retained append-only | **Lulus** |
+| III. Security by design | NIK terenkripsi at-rest (D5); RBAC Operation untuk alur — ditegakkan server (`RequireRole`, `ChapterScope`); secret Entra via secret store. `audit_logs` + permukaan audit penuh tetap Admin-only; riwayat per record untuk Operation = proyeksi turunan bertopeng & terbatas cakupan, diizinkan eksplisit oleh pin konstitusi v1.2.0 (amandemen MINOR 2026-10-10) | **Lulus** |
+| IV. Data subject rights & retention | Penghapusan tetap semantik "tanpa hard delete" (keputusan disetujui); riwayat kontrak/audit retained append-only; retensi dataset `employees`/`employment_contracts` **5 tahun** setelah resign/pensiun → data pribadi dianonimkan (keputusan 2026-10-09) oleh job berjadwal (T041, K6) | **Lulus** |
 | V. Smallest change | Hanya menutup FR-33–FR-46 + dampak turunannya; master data `work_location` tidak dibuat (keputusan); tanpa notifikasi email (out of scope) | **Lulus** |
 | VI. Quality by machines | `make lint vet test` (backend), `npm run lint typecheck test` (frontend), `make generate`/`npm run generate` idempoten di CI | **Lulus** |
 | VII. Testing non-negotiable | Unit usecase (fake) untuk semua aturan lifecycle + constraint migrasi + test kontrak GraphQL + RTL per layar + e2e jalur siklus | **Lulus** |
@@ -206,8 +207,8 @@ tania-dashboard/
 
 ## Security (rekap slice)
 
-- **NIK (data spesifik)**: terenkripsi at-rest (`nik_enc`), keunikan via `nik_hash`, tampil tersamar 4 digit akhir; nilai penuh hanya lewat field berizin terpisah (role Operation/Admin, ikut diaudit); audit menyimpan bentuk tersamar — tidak pernah plaintext (FR-42).
-- **RBAC**: seluruh alur kontrak & siklus kerja milik **Operation** (OQ-4); Talent/Chapter tidak punya akses tulis; baca lintas cakupan tetap `ErrNotFound` (pola `CanAccessEmployee`); jejak audit penuh Admin — riwayat per record untuk Operation hanya untuk entitas karyawan/kontrak miliknya.
+- **NIK (data spesifik)**: terenkripsi at-rest (`nik_enc`), keunikan via `nik_hash`, tampil tersamar 4 digit akhir untuk **semua peran** — nilai penuh tidak pernah ditampilkan (keputusan 2026-10-10); audit menyimpan bentuk tersamar — tidak pernah plaintext (FR-42).
+- **RBAC**: seluruh alur kontrak & siklus kerja milik **Operation** (OQ-4); Talent/Chapter tidak punya akses tulis; baca lintas cakupan tetap `ErrNotFound` (pola `CanAccessEmployee`); jejak audit penuh Admin — riwayat per record untuk Operation hanya untuk entitas karyawan/kontrak miliknya (pin konstitusi v1.2.0).
 - **Entra**: client secret dari secret store; UPN dibangun dari nama (bukan input bebas) untuk mencegah injection identitas; penonaktifan akun saat terminasi (FR-46) mencegah akses liar pasca-resign; hasil provisioning dicatat tanpa menyimpan kredensial.
 - **Input validation**: semua input eksternal divalidasi di usecase (tanggal, enum, 16 digit NIK, format email); frontend hanya untuk UX.
 
@@ -233,9 +234,9 @@ tania-dashboard/
 | **K1 — Skema & migrasi** | Migrasi `employment_contracts` + kolom data diri (NIK hash/enc), enum status, indeks (satu aktif, nomor induk unik), view turunan, migrasi dua fase employee_code → nomor_induk; sinkron `data-model.md`/ERD | **TAN-127** (stage 1) | G1–G3 (bagian data), D1–D5 |
 | **K2 — API kontrak & siklus kerja** | GraphQL CRUD kontrak, perpanjangan, resign, mutasi, pensiun, "perlu tindak lanjut"; derivasi assignability; audit tiap aksi; hook nonaktif-akun untuk Entra | **TAN-126** (stage 2) | G2, G4–G7, FR-41 (server) |
 | **K3 — UI data diri & kontrak** | Form data diri (+NIK masked, tanpa employee ID), form ubah data diri (gap), daftar/filter karyawan, daftar/form/detail kontrak, riwayat kontrak & riwayat perubahan per record | **TAN-128** (stage 3) | G1, G2, G14 (UI), bagian FR-41 (UI) |
-| **K4 — UI alur siklus & dashboard** | Wizard perpanjangan (+pindah unit), aksi resign/mutasi/pensiun + peringatan dependensi, widget "segera berakhir" (H-90/H-30) & pra-pensiun (usia 56, parametri) | **TAN-129** (stage 3) | G4–G8 (UI) |
+| **K4 — UI alur siklus & dashboard** | Wizard perpanjangan (+pindah unit), aksi resign/mutasi/pensiun + peringatan dependensi, widget "segera berakhir" (H-90/H-30) & pra-pensiun (usia dari setelan Admin, default 56) | **TAN-129** (stage 3) | G4–G8 (UI) |
 | **K5 — Provisi Entra** | Klien Graph API (invitation vs create per domain, UPN + sufiks), toggle auto-create di form, UI daftar "belum ada Entra" + retry, penonaktifan saat terminasi | **TAN-131** (stage 3) | G10–G13 |
-| **K6 — Jejak audit** | Audit diperluas ke entitas kontrak + aksi lifecycle; tampilan riwayat per record untuk Operation (baca `auditLogs` per entitas) | **TAN-130** (stage 4) | FR-41 (tampilan) |
+| **K6 — Jejak audit** | Audit diperluas ke entitas kontrak + aksi lifecycle; tampilan riwayat per record untuk Operation (baca `auditLogs` per entitas); job anonimisasi retensi 5 tahun (T041) | **TAN-130** (stage 4) | FR-41 (tampilan) |
 
 K1 menjadi prasyarat K2; K2 menjadi prasyarat K3–K5 (kontrak API); K6 menyusul namun dependensi skemanya sudah ikut K1. K3, K4, dan K5 dapat berjalan paralel setelah K2.
 

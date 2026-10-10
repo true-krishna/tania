@@ -61,6 +61,28 @@ enum ContractEndReason {
   MUTATION
 }
 
+"""Keputusan 2026-10-10 — domain nilai dikunci pemilik produk."""
+enum Gender {
+  FEMALE
+  MALE
+}
+
+enum WorkLocation {
+  JAKARTA
+  BANDUNG
+}
+
+enum BandPosition {
+  I
+  II
+  III
+  IV
+  V
+  VI
+  """Belum ditetapkan."""
+  UNDEFINED
+}
+
 enum AuditAction {
   CREATE
   UPDATE
@@ -214,13 +236,16 @@ type Project {
 type Employee {
   id: ID!
   fullName: String!
-  """NIK tersamar — 4 digit akhir (FR-42); nilai penuh hanya lewat tampilan berizin."""
+  """NIK tersamar — 4 digit akhir (FR-42); nilai penuh tidak pernah diekspos."""
   nikMasked: String!
   email: String!
   birthDate: Date!
-  gender: String
+  gender: Gender!
   phone: String
   address: String
+  latestEducation: String
+  institutionName: String
+  major: String
   """Nomor induk karyawan dari kontrak aktif (FR-34); null bila tanpa kontrak aktif."""
   nomorInduk: String
   """Turunan kontrak aktif (FR-35)."""
@@ -252,11 +277,11 @@ type EmploymentContract {
   officeEmail: String
   """Employee ID yang berlaku pada kontrak ini (snapshot historis)."""
   nomorInduk: String!
-  bandPosition: String
+  bandPosition: BandPosition!
   jobRole: JobRole!
   jobTitle: String
   jobLevel: String
-  workLocation: String
+  workLocation: WorkLocation!
   unit: Unit!
   startDate: Date!
   """null untuk PKWTT."""
@@ -293,9 +318,12 @@ input CreateEmployeeInput {
   fullName: String!
   email: String!
   birthDate: Date!
-  gender: String
+  gender: Gender!
   phone: String
   address: String
+  latestEducation: String
+  institutionName: String
+  major: String
   joinedAt: Date!
   status: EmployeeStatus
   """Auto-create akun Entra saat data tersimpan (FR-43); default true."""
@@ -306,9 +334,12 @@ input UpdateEmployeeInput {
   fullName: String
   email: String
   birthDate: Date
-  gender: String
+  gender: Gender
   phone: String
   address: String
+  latestEducation: String
+  institutionName: String
+  major: String
   joinedAt: Date
   status: EmployeeStatus
 }
@@ -319,11 +350,11 @@ input CreateEmploymentContractInput {
   contractType: ContractType!
   officeEmail: String
   nomorInduk: String!
-  bandPosition: String
+  bandPosition: BandPosition = UNDEFINED
   jobRoleId: ID!
   jobTitle: String
   jobLevel: String
-  workLocation: String
+  workLocation: WorkLocation!
   unitId: ID!
   startDate: Date!
   """Wajib untuk PKWT, null untuk PKWTT."""
@@ -334,10 +365,10 @@ input CreateEmploymentContractInput {
 input UpdateEmploymentContractInput {
   contractNo: String
   officeEmail: String
-  bandPosition: String
+  bandPosition: BandPosition
   jobTitle: String
   jobLevel: String
-  workLocation: String
+  workLocation: WorkLocation
   notes: String
 }
 
@@ -348,11 +379,11 @@ input RenewContractInput {
   contractType: ContractType! = PKWT
   officeEmail: String
   nomorInduk: String!
-  bandPosition: String
+  bandPosition: BandPosition = UNDEFINED
   jobRoleId: ID!
   jobTitle: String
   jobLevel: String
-  workLocation: String
+  workLocation: WorkLocation!
   unitId: ID!
   startDate: Date!
   endDate: Date
@@ -368,10 +399,10 @@ input RecordMutationInput {
   jobRoleId: ID!
   unitId: ID!
   officeEmail: String
-  bandPosition: String
+  bandPosition: BandPosition = UNDEFINED
   jobTitle: String
   jobLevel: String
-  workLocation: String
+  workLocation: WorkLocation!
   endDate: Date
   notes: String
 }
