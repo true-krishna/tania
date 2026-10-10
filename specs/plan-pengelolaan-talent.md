@@ -138,11 +138,11 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 
 *GATE: harus lulus sebelum fase eksekusi; dievaluasi ulang setelah desain rinci.*
 
-| Prinsip (konstitusi v1.1.0) | Pemeriksaan | Status |
+| Prinsip (konstitusi v1.2.0) | Pemeriksaan | Status |
 | --- | --- | --- |
 | I. Lawful basis & purpose limitation | Pemrosesan NIK/KTP punya tujuan eksplisit (identitas kepegawaian & kepatuhan) yang terdokumentasi di amandemen §2; field baru diklasifikasi (NIK = data spesifik) di data-model | **Lulus** |
 | II. Data minimization & klasifikasi | `employees` justru dipangkas; NIK masked di API/UI; tanpa PII di URL/log (akses via `id`) | **Lulus** |
-| III. Security by design | NIK terenkripsi at-rest (D5); RBAC Operation untuk alur, Admin untuk audit penuh — ditegakkan server (`RequireRole`, `ChapterScope`); secret Entra via secret store | **Lulus** |
+| III. Security by design | NIK terenkripsi at-rest (D5); RBAC Operation untuk alur — ditegakkan server (`RequireRole`, `ChapterScope`); secret Entra via secret store. `audit_logs` + permukaan audit penuh tetap Admin-only; riwayat per record untuk Operation = proyeksi turunan bertopeng & terbatas cakupan, diizinkan eksplisit oleh pin konstitusi v1.2.0 (amandemen MINOR 2026-10-10) | **Lulus** |
 | IV. Data subject rights & retention | Penghapusan tetap semantik "tanpa hard delete" (keputusan disetujui); riwayat kontrak/audit retained append-only; retensi dataset `employees`/`employment_contracts` **5 tahun** setelah resign/pensiun → data pribadi dianonimkan (keputusan 2026-10-09) | **Lulus** |
 | V. Smallest change | Hanya menutup FR-33–FR-46 + dampak turunannya; master data `work_location` tidak dibuat (keputusan); tanpa notifikasi email (out of scope) | **Lulus** |
 | VI. Quality by machines | `make lint vet test` (backend), `npm run lint typecheck test` (frontend), `make generate`/`npm run generate` idempoten di CI | **Lulus** |
@@ -208,7 +208,7 @@ tania-dashboard/
 ## Security (rekap slice)
 
 - **NIK (data spesifik)**: terenkripsi at-rest (`nik_enc`), keunikan via `nik_hash`, tampil tersamar 4 digit akhir; nilai penuh hanya lewat field berizin terpisah (role Operation/Admin, ikut diaudit); audit menyimpan bentuk tersamar — tidak pernah plaintext (FR-42).
-- **RBAC**: seluruh alur kontrak & siklus kerja milik **Operation** (OQ-4); Talent/Chapter tidak punya akses tulis; baca lintas cakupan tetap `ErrNotFound` (pola `CanAccessEmployee`); jejak audit penuh Admin — riwayat per record untuk Operation hanya untuk entitas karyawan/kontrak miliknya.
+- **RBAC**: seluruh alur kontrak & siklus kerja milik **Operation** (OQ-4); Talent/Chapter tidak punya akses tulis; baca lintas cakupan tetap `ErrNotFound` (pola `CanAccessEmployee`); jejak audit penuh Admin — riwayat per record untuk Operation hanya untuk entitas karyawan/kontrak miliknya (pin konstitusi v1.2.0).
 - **Entra**: client secret dari secret store; UPN dibangun dari nama (bukan input bebas) untuk mencegah injection identitas; penonaktifan akun saat terminasi (FR-46) mencegah akses liar pasca-resign; hasil provisioning dicatat tanpa menyimpan kredensial.
 - **Input validation**: semua input eksternal divalidasi di usecase (tanggal, enum, 16 digit NIK, format email); frontend hanya untuk UX.
 
