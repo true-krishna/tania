@@ -100,14 +100,14 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 | --- | --- |
 | `id`, `full_name`, `email` (unik), `joined_at`, `user_id` | tetap |
 | `nik_hash`, `nik_enc` | **baru** — 16 digit; `nik_hash` untuk keunikan (tidak pernah plaintext), `nik_enc` AES-256-GCM |
-| `birth_date`, `gender`, `phone`, `address` | **baru** — field data diri (wajib: `birth_date` untuk kalkulasi pra-pensiun) |
+| `birth_date`, `gender`, `phone`, `address` | **baru** — field data diri (wajib: `birth_date` untuk kalkulasi pra-pensiun; `gender` enum wajib `female`/`male` — keputusan 2026-10-10) |
 | `latest_education`, `institution_name`, `major` | **baru** — field data diri (pendidikan terakhir, nama institusi, jurusan; opsional) |
 | `status` | diperluas: `ACTIVE` / `RESIGNED` / `RETIRED` / `INACTIVE` |
 | `employee_code`, `unit_id`, `job_role_id` | **dihapus** — identitas/penugasan pindah ke kontrak (keputusan 2026-10-08); kolom lama di-deprecate dua fase sesuai `docs/migrations.md` |
 
 **`employment_contracts` (baru — atribut selaras TMS)**
 
-`id`, `employee_id`, `contract_no` (unik), `contract_type` (`pkwt`/`pkwtt`), `office_email`, **`nomor_induk`** (wajib, unik antar kontrak aktif — `uq_employment_contracts_nomor_induk_active`), `band_position`, `job_role_id` (Master Data Role), `job_title`, `job_level`, `work_location` (isian terstruktur), `unit_id` (Master Data Unit), `start_date`, `end_date` (NULL untuk PKWTT), `end_reason` (nullable, hanya pengakhiran dini: `resign`/`retirement`/`mutation`), `terminated_at`, `predecessor_contract_id` (nullable), `notes`, `created_by`, timestamps.
+`id`, `employee_id`, `contract_no` (unik), `contract_type` (`pkwt`/`pkwtt`), `office_email`, **`nomor_induk`** (wajib, unik antar kontrak aktif — `uq_employment_contracts_nomor_induk_active`), `band_position` (enum `I`–`VI`/`undefined` — keputusan 2026-10-10), `job_role_id` (Master Data Role), `job_title`, `job_level`, `work_location` (enum wajib `Jakarta`/`Bandung` — keputusan 2026-10-10), `unit_id` (Master Data Unit), `start_date`, `end_date` (NULL untuk PKWTT), `end_reason` (nullable, hanya pengakhiran dini: `resign`/`retirement`/`mutation`), `terminated_at`, `predecessor_contract_id` (nullable), `notes`, `created_by`, timestamps.
 
 **Aturan indeks & turunan (keputusan teknis):**
 

@@ -7,6 +7,7 @@
 **Revisi**: 2026-10-09 — penambahan 3 field data diri talent ke tabel `employees`: `latest_education` (pendidikan terakhir), `institution_name` (nama institusi), `major` (jurusan) (arahan pemilik produk, TAN-145).
 **Revisi**: 2026-10-10 — Aturan tokenisasi UPN diperinci (arahan pemilik produk): `nama-depan` = **kata pertama** nama lengkap, `nama-belakang` = **kata kedua** (kata ke-3 dst diabaikan — `Rina Kusuma Wardani` → `rina.kusuma@digitaltelkom.id`); kata partikel (`bin`, `binti`, `van`, `de`, `al`) tidak dihitung sebagai kata (`Muhammad bin Abdullah` → `muhammad.abdullah@digitaltelkom.id`); **nama satu kata** dipakai apa adanya **tanpa titik** (`Sukarno` → `sukarno@digitaltelkom.id`); setiap pembuatan UPN **wajib memeriksa daftar email** agar tidak ada duplikasi; bila kandidat sudah dipakai, angka **mulai dari 1** ditambahkan di belakang bagian akhir UPN (`rina.kusuma1@…`, `sukarno1@…`) sampai unik (§2.3, FR-45, §6 butir 7).
 **Revisi**: 2026-10-10 (tampilan NIK) — Semua peran melihat NIK **selalu tersamar** (4 digit akhir); **nilai penuh tidak pernah ditampilkan** kepada siapa pun — tidak ada tampilan/field khusus berizin (arahan pemilik produk; FR-42, §6 butir 11).
+**Revisi**: 2026-10-10 (bentuk field) — Bentuk field diputuskan pemilik produk: `work_location` enum wajib `Jakarta`/`Bandung`; `band_position` enum `I`–`VI` + `undefined` (belum ditetapkan); `gender` enum wajib `female`/`male` (§2.1–2.2, FR-33/FR-34, §6 butir 12).
 
 ## 1. Ringkasan Perubahan
 
@@ -27,7 +28,7 @@
 | `id`, `full_name`, `email` (unik) | tetap |
 | **`nik` (nomor KTP)** | **baru** — 16 digit, unik, wajib; **terenkripsi at-rest, tampil tersamar** (hanya 4 digit akhir pada daftar/detail) |
 | `birth_date` | wajib — dasar perhitungan usia pensiun |
-| `gender`, `phone`, `address` | field data diri tambahan |
+| `gender`, `phone`, `address` | field data diri tambahan — `gender` enum wajib `female`/`male` (keputusan 2026-10-10) |
 | `latest_education`, `institution_name`, `major` | field data diri tambahan (2026-10-09) — pendidikan terakhir, nama institusi, jurusan |
 | `status` | diperluas: `active` / `resigned` / `retired` / `inactive` |
 | `joined_at` | tanggal masuk pertama (mulai kontrak pertama) |
@@ -43,11 +44,11 @@
 | `contract_type` | jenis kontrak | `pkwt` (waktu tertentu) / `pkwtt` (tetap) |
 | **`office_email`** | **email office** | email kantor selama kontrak berlaku; email kantor aktif diturunkan dari kontrak aktif |
 | **`nomor_induk`** | **nomor induk karyawan** | wajib diisi Operation pada setiap kontrak (tidak otomatis dari data diri); berlaku sebagai employee ID selama kontrak tersebut; satu nomor induk hanya boleh aktif pada satu kontrak (partial unique index `uq_employment_contracts_nomor_induk_active`); snapshot historis per kontrak bila berubah antar-kontrak |
-| **`band_position`** | **band_position** | band jabatan (mis. Band III/IV/V) |
+| **`band_position`** | **band_position** | enum `I`–`VI` + `undefined` (belum ditetapkan) — keputusan 2026-10-10 |
 | `job_role_id` | **jobRole** | merujuk Master Data Role — dasar turunan chapter & keter-assign-an (FR-23) |
 | **`job_title`** | **jobTitle** | jabatan tertulis pada SK |
 | **`job_level`** | **jobLevel** | level jabatan |
-| **`work_location`** | **work location** | lokasi kerja (kota/kantor); isian terstruktur pada kontrak |
+| **`work_location`** | **work location** | enum wajib `Jakarta`/`Bandung` (kontrak) — keputusan 2026-10-10 |
 | `unit_id` | unit/divisi | tetap merujuk Master Data Unit — dasar filter & ringkasan divisi yang sudah ada |
 | `start_date`, `end_date` | periode | `end_date` NULL untuk PKWTT |
 | `status` *(turunan query — bukan kolom DDL)* | status | `active` / `ended` (habis masa) / `terminated` (dihentikan dini: resign/pensiun/mutasi) — diturunkan dari `start_date`/`end_date`/`terminated_at`, **tidak disimpan** |
@@ -124,8 +125,8 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 
 ## 4. FR Baru (berlanjut dari FR-32)
 
-- **FR-33**: `employees` hanya menyimpan data diri: nama lengkap, **nomor KTP (NIK — unik, wajib, terenkripsi)**, email, tanggal lahir, jenis kelamin, telepon, alamat, pendidikan terakhir, nama institusi, jurusan, status kepegawaian (`active/resigned/retired/inactive`), tanggal masuk pertama. *(Memodifikasi FR-01; employee ID tidak lagi disimpan di `employees` — keputusan 2026-10-08.)*
-- **FR-34**: Sistem menyediakan pengelolaan kontrak kerja terpisah per karyawan dengan atribut selaras TMS: nomor kontrak, jenis (`pkwt/pkwtt`), **email kantor, nomor induk karyawan, band_position, jobRole (Master Data Role), jobTitle, jobLevel, work location**, unit (Master Data Unit), tanggal mulai–selesai, status (turunan query — bukan kolom tersimpan), alasan berakhir, keterkaitan perpanjangan. Nomor induk karyawan wajib diisi per kontrak dan unik antar kontrak aktif. Maksimal satu kontrak aktif per karyawan; validasi ditolak di server bila periode bertumpang tindih.
+- **FR-33**: `employees` hanya menyimpan data diri: nama lengkap, **nomor KTP (NIK — unik, wajib, terenkripsi)**, email, tanggal lahir, jenis kelamin (enum wajib `female`/`male`), telepon, alamat, pendidikan terakhir, nama institusi, jurusan, status kepegawaian (`active/resigned/retired/inactive`), tanggal masuk pertama. *(Memodifikasi FR-01; employee ID tidak lagi disimpan di `employees` — keputusan 2026-10-08.)*
+- **FR-34**: Sistem menyediakan pengelolaan kontrak kerja terpisah per karyawan dengan atribut selaras TMS: nomor kontrak, jenis (`pkwt/pkwtt`), **email kantor, nomor induk karyawan, band_position (enum `I`–`VI`/`undefined`), jobRole (Master Data Role), jobTitle, jobLevel, work location (enum `Jakarta`/`Bandung`)**, unit (Master Data Unit), tanggal mulai–selesai, status (turunan query — bukan kolom tersimpan), alasan berakhir, keterkaitan perpanjangan. Nomor induk karyawan wajib diisi per kontrak dan unik antar kontrak aktif. Maksimal satu kontrak aktif per karyawan; validasi ditolak di server bila periode bertumpang tindih.
 - **FR-35**: Unit dan posisi aktif karyawan **diturunkan dari kontrak aktif** — bukan kolom pada `employees`. Seluruh turunan FR-23 (chapter talent, keter-assign-an, cakupan Chapter) mengacu `kontrak aktif → jobRole → chapter pemilik`. *(Memodifikasi FR-01, FR-23.)*
 - **FR-36**: Perpanjangan kontrak menghasilkan kontrak baru yang dimulai setelah kontrak lama berakhir dan terkait ke kontrak sebelumnya; riwayat kontrak lama tetap tersimpan. Perpanjangan dapat menyertakan perpindahan unit/posisi yang efektif pada kontrak baru. *(Implikasi: US4/CV "pengalaman kerja" tetap dari riwayat assignment — tidak berubah.)*
 - **FR-37**: Resign mengakhiri kontrak aktif pada tanggal efektif, mengubah status karyawan menjadi `resigned`, dan menonaktifkan akun user terkait; dependensi (assignment aktif/IDP berjalan) diperingatkan sebelum konfirmasi.
@@ -167,6 +168,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 | 9. Field data diri talent (2026-10-09) | **`latest_education`** (pendidikan terakhir), **`institution_name`** (nama institusi), **`major`** (jurusan) ditambahkan ke tabel `employees` — field opsional (nullable text). |
 | 10. Retensi data (2026-10-09) | Dataset `employees`/`employment_contracts` (data pribadi) — retensi **5 tahun** setelah karyawan resign/pensiun, setelah itu **dianonimkan** pada jadwal berikutnya (konstitusi IV); record tetap, identitas dihapus. Sebelumnya "delete" tetap semantik nonaktif (tanpa hard delete). |
 | 11. Tampilan NIK (2026-10-10) | **Semua peran melihat NIK selalu tersamar** (4 digit akhir, mis. `************1234`) — **nilai penuh tidak pernah ditampilkan** kepada siapa pun; tidak ada tampilan/field khusus berizin (memperinci FR-42). |
+| 12. Bentuk field (2026-10-10) | **`work_location`** enum wajib **`Jakarta`/`Bandung`**; **`band_position`** enum **`I`–`VI` + `undefined`** (belum ditetapkan); **`gender`** enum wajib **`female`/`male`**. |
 
 Catatan arahan yang juga sudah diakomodasi: (1) keselarasan TMS → pemetaan atribut pada §2.2; (2) enkripsi → FR-42; (3) log telusur → FR-41; (4) tanpa hard delete karyawan — "delete" dipetakan ke pengakhiran/nonaktif yang tetap terlog (disetujui); (5) `work_location` isian terstruktur pada kontrak, bukan master data baru (disetujui); (6) `employee_code` → `nomor_induk` kontrak, tabel `employees` murni data diri (keputusan 2026-10-08).
 
@@ -175,7 +177,7 @@ Catatan arahan yang juga sudah diakomodasi: (1) keselarasan TMS → pemetaan atr
 - Integrasi HRIS/payroll, dokumen digital tanda tangan (e-sign), upload file SK sebagai syarat validasi.
 - Notifikasi email/reminder otomatis — indikator disajikan di dashboard/daftar.
 - Perhitungan kompensasi/kenaikan gaji akibat perpanjangan atau mutasi.
-- Master Data Work Location terpisah — `work_location` cukup isian terstruktur pada kontrak; promosi ke master data dapat menyusul bila dibutuhkan konsistensi.
+- Master Data Work Location terpisah — `work_location` cukup enum `Jakarta`/`Bandung` pada kontrak (keputusan 2026-10-10); promosi ke master data dapat menyusul bila dibutuhkan konsistensi.
 - Integrasi langsung dengan TMS — atribut TMS dipetakan sebagai struktur data, bukan integrasi sistem.
 
 ## 8. Status Keputusan
