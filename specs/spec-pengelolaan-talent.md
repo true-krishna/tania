@@ -8,6 +8,7 @@
 **Revisi**: 2026-10-10 — Aturan tokenisasi UPN diperinci (arahan pemilik produk): `nama-depan` = **kata pertama** nama lengkap, `nama-belakang` = **kata kedua** (kata ke-3 dst diabaikan — `Rina Kusuma Wardani` → `rina.kusuma@digitaltelkom.id`); kata partikel (`bin`, `binti`, `van`, `de`, `al`) tidak dihitung sebagai kata (`Muhammad bin Abdullah` → `muhammad.abdullah@digitaltelkom.id`); **nama satu kata** dipakai apa adanya **tanpa titik** (`Sukarno` → `sukarno@digitaltelkom.id`); setiap pembuatan UPN **wajib memeriksa daftar email** agar tidak ada duplikasi; bila kandidat sudah dipakai, angka **mulai dari 1** ditambahkan di belakang bagian akhir UPN (`rina.kusuma1@…`, `sukarno1@…`) sampai unik (§2.3, FR-45, §6 butir 7).
 **Revisi**: 2026-10-10 (tampilan NIK) — Semua peran melihat NIK **selalu tersamar** (4 digit akhir); **nilai penuh tidak pernah ditampilkan** kepada siapa pun — tidak ada tampilan/field khusus berizin (arahan pemilik produk; FR-42, §6 butir 11).
 **Revisi**: 2026-10-10 (bentuk field) — Bentuk field diputuskan pemilik produk: `work_location` enum wajib `Jakarta`/`Bandung`; `band_position` enum `I`–`VI` + `undefined` (belum ditetapkan); `gender` enum wajib `female`/`male` (§2.1–2.2, FR-33/FR-34, §6 butir 12).
+**Revisi**: 2026-10-10 (parameter usia pensiun & retensi) — Parameter usia pensiun **56 tahun** = setelan aplikasi yang dikelola Admin, hanya Admin boleh mengubah (§6 butir 13; menutup A3); job anonimisasi retensi 5 tahun ditetapkan sebagai **T041 gelombang K6** pada `tasks-pengelolaan-talent.md`.
 
 ## 1. Ringkasan Perubahan
 
@@ -112,7 +113,7 @@ Sebagai **Operation**, saya dapat mencatat mutasi unit/posisi karyawan di tengah
 Sebagai **Operation**, saya dapat mencatat pensiun karyawan sehingga berakhirnya masa kerja karena usia terdokumentasi.
 
 1. **Given** karyawan aktif, **When** Operation mencatat pensiun (tanggal efektif), **Then** kontrak aktif diakhiri (`end_reason = retirement`), status karyawan → `retired`, akun (termasuk Entra — FR-46) dinonaktifkan.
-2. **Given** karyawan mendekati usia pensiun, **When** dashboard Operation dibuka, **Then** tampil indikator karyawan yang memasuki jendela pra-pensiun (usia pensiun 56 tahun, parametri; jendela peringatan H-90/H-30).
+2. **Given** karyawan mendekati usia pensiun, **When** dashboard Operation dibuka, **Then** tampil indikator karyawan yang memasuki jendela pra-pensiun (usia pensiun dari setelan aplikasi Admin — default 56 tahun, hanya Admin boleh mengubah; jendela peringatan H-90/H-30).
 
 ### US14 — Operation memprovision akun Entra talent (P1)
 
@@ -161,7 +162,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 | 2. Jenis kontrak | **PKWT dan PKWTT keduanya dicatat**; perpanjangan hanya relevan untuk PKWT. |
 | 3. Kontrak habis tanpa perpanjangan | Otomatis **non-assignable** (turunan tanggal); status karyawan tetap `active` menunggu keputusan; tampil di daftar "perlu tindak lanjut"; setiap tindak lanjutan Operation tercatat log. |
 | 4. Aktor | Seluruh alur kontrak & siklus kerja milik **Operation**; Operation melihat riwayat perubahan pada record; jejak audit penuh tetap Admin. |
-| 5. Field data diri & parameter | Data diri: tanggal lahir, jenis kelamin, telepon, alamat **+ nomor KTP**. Parameter: usia pensiun **56 tahun** (parametri) & jendela peringatan **H-90/H-30**. |
+| 5. Field data diri & parameter | Data diri: tanggal lahir, jenis kelamin, telepon, alamat **+ nomor KTP**. Parameter: usia pensiun **56 tahun** — **setelan aplikasi yang dikelola Admin**, hanya Admin boleh mengubah (keputusan 2026-10-10) & jendela peringatan **H-90/H-30**. |
 | 6. Entra lifecycle | Akun Entra dibuat saat talent dibuat (auto, dapat dimatikan) dan **dinonaktifkan saat resign/pensiun** (FR-46). `telkom.co.id` → invitation; domain lain → create account. |
 | 7. Format UPN (diperinci 2026-10-10) | **`nama-depan.nama-belakang@digitaltelkom.id`** (dengan titik); `nama-depan` = kata pertama, `nama-belakang` = kata kedua nama lengkap (kata ke-3 dst diabaikan — `Rina Kusuma Wardani` → `rina.kusuma@…`); partikel (`bin`, `binti`, `van`, `de`, `al`) tidak dihitung (`Muhammad bin Abdullah` → `muhammad.abdullah@…`); **nama satu kata tanpa titik** (`Sukarno` → `sukarno@…`); setiap pembuatan UPN wajib memeriksa daftar email agar tidak ada duplikasi; bila kandidat sudah dipakai → angka **mulai dari 1** di belakang bagian akhir UPN (`rina.kusuma1@…`, `sukarno1@…`) sampai unik. |
 | 8. Identitas kepegawaian (2026-10-08) | **`employee_code` disimpan di tabel kontrak saja** (`employment_contracts.nomor_induk`) — tabel `employees` khusus data diri talent. Nomor induk wajib diisi Operation per kontrak, unik antar kontrak aktif, dan menjadi snapshot historis per kontrak. |
@@ -169,6 +170,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 | 10. Retensi data (2026-10-09) | Dataset `employees`/`employment_contracts` (data pribadi) — retensi **5 tahun** setelah karyawan resign/pensiun, setelah itu **dianonimkan** pada jadwal berikutnya (konstitusi IV); record tetap, identitas dihapus. Sebelumnya "delete" tetap semantik nonaktif (tanpa hard delete). |
 | 11. Tampilan NIK (2026-10-10) | **Semua peran melihat NIK selalu tersamar** (4 digit akhir, mis. `************1234`) — **nilai penuh tidak pernah ditampilkan** kepada siapa pun; tidak ada tampilan/field khusus berizin (memperinci FR-42). |
 | 12. Bentuk field (2026-10-10) | **`work_location`** enum wajib **`Jakarta`/`Bandung`**; **`band_position`** enum **`I`–`VI` + `undefined`** (belum ditetapkan); **`gender`** enum wajib **`female`/`male`**. |
+| 13. Parameter usia pensiun (2026-10-10) | Usia pensiun **56 tahun** disimpan sebagai **setelan aplikasi yang dikelola Admin** (application setting, default `56`) — **hanya Admin** yang boleh mengubah (menutup A3); kalkulasi pra-pensiun (FR-40) dan aksi pensiun (FR-39) membaca setelan ini. |
 
 Catatan arahan yang juga sudah diakomodasi: (1) keselarasan TMS → pemetaan atribut pada §2.2; (2) enkripsi → FR-42; (3) log telusur → FR-41; (4) tanpa hard delete karyawan — "delete" dipetakan ke pengakhiran/nonaktif yang tetap terlog (disetujui); (5) `work_location` isian terstruktur pada kontrak, bukan master data baru (disetujui); (6) `employee_code` → `nomor_induk` kontrak, tabel `employees` murni data diri (keputusan 2026-10-08).
 

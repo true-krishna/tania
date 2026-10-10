@@ -50,6 +50,7 @@
 - [ ] T015 [K2] Sinkron `specs/001-employee-digital-talent-management/contracts/schema.graphql` dengan SDL terpasang + mirror byte-identik ke `tania-dashboard` (pola T131)
 - [ ] T016 [K2] Test unit usecase (fake repositori, `now` injeksi, `internal/usecase/*_test.go`): satu kontrak aktif per karyawan, anti-overlap periode, nomor induk unik antar kontrak aktif, perpanjangan (predecessor + pindah unit), resign/mutasi/pensiun (end_reason + status + nonaktifkan akun), kontrak habis → non-assignable + "perlu tindak lanjut", audit `recordChange` before/after setiap aksi
 - [ ] T017 [K2] Test e2e GraphQL (`internal/transport/httpapi/e2e_test.go`): alur lengkap create karyawan → kontrak → perpanjangan → mutasi → resign/pensiun; otorisasi Operation-only (Talent/Chapter tanpa akses tulis — OQ-4); pesan validasi per kasus (periode tumpang tindih, nomor induk duplikat, field wajib)
+- [ ] T042 [K2] Setelan parameter usia pensiun (keputusan 2026-10-10): disimpan sebagai **setelan aplikasi** (application setting, default `56`) — **hanya Admin** boleh mengubah (mutation Admin-only, divalidasi server); dibaca kalkulasi pra-pensiun (T027) dan aksi pensiun (T011); perubahan setelan tercatat di jejak audit
 
 **Checkpoint**: `make generate` idempoten; `make lint vet test` + `make test-integration` hijau; `contracts/schema.graphql` tersinkron (T015).
 
@@ -73,7 +74,7 @@
 
 - [ ] T025 [P] [K4] Wizard perpanjangan kontrak (FR-36) dari daftar "segera berakhir" / detail karyawan-kontrak pada `src/app/(app)/contracts/[id]/` + `src/features/contracts/`: periode baru mulai setelah kontrak lama, opsi perpindahan unit/posisi, hasil terkait `predecessor_contract_id`
 - [ ] T026 [K4] Aksi resign/mutasi/pensiun pada `src/app/(app)/contracts/[id]/page.tsx` (satu pintu — Structure Decision plan): resign (tanggal efektif + alasan), mutasi (unit/posisi baru + tanggal efektif), pensiun (tanggal efektif); **peringatan dependensi** (assignment aktif/IDP berjalan) sebelum konfirmasi (pola `acknowledgeActiveWork`)
-- [ ] T027 [K4] Widget dashboard Operation `src/features/dashboard/` + `src/app/(app)/dashboard/page.tsx`: **kontrak segera berakhir** (jendela H-90/H-30, query `expiringContracts`), **perlu tindak lanjut** (`employeesNeedingFollowUp`), **pra-pensiun** (usia pensiun 56 parametri dari `birth_date`)
+- [ ] T027 [K4] Widget dashboard Operation `src/features/dashboard/` + `src/app/(app)/dashboard/page.tsx`: **kontrak segera berakhir** (jendela H-90/H-30, query `expiringContracts`), **perlu tindak lanjut** (`employeesNeedingFollowUp`), **pra-pensiun** (usia pensiun dari **setelan Admin** — default 56 tahun, hanya Admin boleh mengubah (T042); dihitung dari `birth_date`)
 - [ ] T028 [K4] Test Vitest + RTL alur siklus + widget: wizard perpanjangan (termasuk pindah unit → turunan baru efektif sejak kontrak baru), konfirmasi + peringatan dependensi resign/mutasi/pensiun, daftar "perlu tindak lanjut", angka widget H-90/H-30 & pra-pensiun konsisten dengan data
 
 **Checkpoint**: US10–US13 tertutup di UI; `npm run lint` + `npm run typecheck` + `vitest run` hijau.
@@ -99,6 +100,7 @@
 - [ ] T036 [K6] Audit diperluas ke entitas `employment_contract` + seluruh aksi lifecycle (RENEW/RESIGN/MUTATE/RETIRE/END) pada `internal/usecase/contract.go` — semua lewat `recordChange` (before/after per kontrak & per karyawan dalam satu transaksi, FR-41)
 - [ ] T037 [K6] Riwayat per record untuk Operation: query `auditLogs` filter `entityType` + `entityId`, dibatasi entitas karyawan/kontrak dalam cakupannya (pola historis per record IDP); jejak audit penuh tetap Admin-only; NIK pada audit selalu tersamar (FR-42)
 - [ ] T038 [K6] Test cakupan audit (`internal/usecase/audit_test.go` + e2e): setiap jenis aksi siklus tercatat dengan aktor, waktu, aksi, nilai sebelum→sesudah; NIK tidak pernah plaintext di audit; Operation hanya melihat riwayat entitas miliknya
+- [ ] T041 [K6] Job anonimisasi retensi (keputusan 2026-10-09, penempatan 2026-10-10): penjadwalan berkala yang menganonimkan data pribadi `employees`/`employment_contracts` (nama, NIK, email, telepon, alamat, pendidikan, kontak) **5 tahun** setelah status `resigned`/`retired` (mutasi tidak memulai hitungan); record tetap tersimpan agar referensi assignment/IDP/evaluasi/audit tetap utuh (bukan hard delete); setiap eksekusi job tercatat di jejak audit (konstitusi IV)
 
 **Checkpoint**: FR-41 tertutup penuh (jejak + tampilan).
 

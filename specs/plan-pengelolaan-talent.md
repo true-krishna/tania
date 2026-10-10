@@ -77,7 +77,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 | FR-37 resign | **Gap G5** | `deactivateEmployee` hanya `ACTIVE`→`INACTIVE`; perlu aksi resign (akhiri kontrak `end_reason=resign`, status `RESIGNED`, nonaktifkan akun + Entra, peringatan dependensi — pola `acknowledgeActiveWork` sudah ada) |
 | FR-38 mutasi (opsi B: akhiri + kontrak baru) | **Gap G6** | Greenfield: satu transaksi akhiri kontrak lama + buat kontrak baru efektif tanggal mutasi; turunan chapter/assignable mengikuti sejak tanggal efektif |
 | FR-39 pensiun | **Gap G7** | Sama seperti resign dengan `end_reason=retirement`, status `RETIRED` |
-| FR-40 dashboard H-90/H-30 + pra-pensiun | **Gap G8** | Widget belum ada; data turunan tanggal (indeks `end_date`), usia pensiun 56 (parametri) dari `birth_date` |
+| FR-40 dashboard H-90/H-30 + pra-pensiun | **Gap G8** | Widget belum ada; data turunan tanggal (indeks `end_date`), usia pensiun dari setelan Admin (default 56, keputusan 2026-10-10) berbasis `birth_date` |
 | FR-41 jejak audit lifecycle + riwayat per record | **Partial** | `recordChange` siap dipakai; cakupan perlu entity `employment_contract` + aksi lifecycle (RENEW/RESIGN/MUTATE/RETIRE/END); UI riwayat per record untuk Operation belum ada (baca `auditLogs` filter `entityType`+`entityId`) |
 | FR-42 enkripsi & masking NIK | **Gap G9** | Greenfield: `nik_hash` (unik) + `nik_enc`, masking 4 digit akhir di API (resolver) & UI untuk semua peran — nilai penuh tidak pernah diekspos (keputusan 2026-10-10), audit menyimpan NIK tersamar |
 | FR-43 auto-create Entra di form | **Gap G10** | Greenfield — toggle di form create; provisioning pasca-commit; gagal tidak menggagalkan penyimpanan karyawan |
@@ -143,7 +143,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 | I. Lawful basis & purpose limitation | Pemrosesan NIK/KTP punya tujuan eksplisit (identitas kepegawaian & kepatuhan) yang terdokumentasi di amandemen §2; field baru diklasifikasi (NIK = data spesifik) di data-model | **Lulus** |
 | II. Data minimization & klasifikasi | `employees` justru dipangkas; NIK masked di API/UI; tanpa PII di URL/log (akses via `id`) | **Lulus** |
 | III. Security by design | NIK terenkripsi at-rest (D5); RBAC Operation untuk alur — ditegakkan server (`RequireRole`, `ChapterScope`); secret Entra via secret store. `audit_logs` + permukaan audit penuh tetap Admin-only; riwayat per record untuk Operation = proyeksi turunan bertopeng & terbatas cakupan, diizinkan eksplisit oleh pin konstitusi v1.2.0 (amandemen MINOR 2026-10-10) | **Lulus** |
-| IV. Data subject rights & retention | Penghapusan tetap semantik "tanpa hard delete" (keputusan disetujui); riwayat kontrak/audit retained append-only; retensi dataset `employees`/`employment_contracts` **5 tahun** setelah resign/pensiun → data pribadi dianonimkan (keputusan 2026-10-09) | **Lulus** |
+| IV. Data subject rights & retention | Penghapusan tetap semantik "tanpa hard delete" (keputusan disetujui); riwayat kontrak/audit retained append-only; retensi dataset `employees`/`employment_contracts` **5 tahun** setelah resign/pensiun → data pribadi dianonimkan (keputusan 2026-10-09) oleh job berjadwal (T041, K6) | **Lulus** |
 | V. Smallest change | Hanya menutup FR-33–FR-46 + dampak turunannya; master data `work_location` tidak dibuat (keputusan); tanpa notifikasi email (out of scope) | **Lulus** |
 | VI. Quality by machines | `make lint vet test` (backend), `npm run lint typecheck test` (frontend), `make generate`/`npm run generate` idempoten di CI | **Lulus** |
 | VII. Testing non-negotiable | Unit usecase (fake) untuk semua aturan lifecycle + constraint migrasi + test kontrak GraphQL + RTL per layar + e2e jalur siklus | **Lulus** |
@@ -234,9 +234,9 @@ tania-dashboard/
 | **K1 — Skema & migrasi** | Migrasi `employment_contracts` + kolom data diri (NIK hash/enc), enum status, indeks (satu aktif, nomor induk unik), view turunan, migrasi dua fase employee_code → nomor_induk; sinkron `data-model.md`/ERD | **TAN-127** (stage 1) | G1–G3 (bagian data), D1–D5 |
 | **K2 — API kontrak & siklus kerja** | GraphQL CRUD kontrak, perpanjangan, resign, mutasi, pensiun, "perlu tindak lanjut"; derivasi assignability; audit tiap aksi; hook nonaktif-akun untuk Entra | **TAN-126** (stage 2) | G2, G4–G7, FR-41 (server) |
 | **K3 — UI data diri & kontrak** | Form data diri (+NIK masked, tanpa employee ID), form ubah data diri (gap), daftar/filter karyawan, daftar/form/detail kontrak, riwayat kontrak & riwayat perubahan per record | **TAN-128** (stage 3) | G1, G2, G14 (UI), bagian FR-41 (UI) |
-| **K4 — UI alur siklus & dashboard** | Wizard perpanjangan (+pindah unit), aksi resign/mutasi/pensiun + peringatan dependensi, widget "segera berakhir" (H-90/H-30) & pra-pensiun (usia 56, parametri) | **TAN-129** (stage 3) | G4–G8 (UI) |
+| **K4 — UI alur siklus & dashboard** | Wizard perpanjangan (+pindah unit), aksi resign/mutasi/pensiun + peringatan dependensi, widget "segera berakhir" (H-90/H-30) & pra-pensiun (usia dari setelan Admin, default 56) | **TAN-129** (stage 3) | G4–G8 (UI) |
 | **K5 — Provisi Entra** | Klien Graph API (invitation vs create per domain, UPN + sufiks), toggle auto-create di form, UI daftar "belum ada Entra" + retry, penonaktifan saat terminasi | **TAN-131** (stage 3) | G10–G13 |
-| **K6 — Jejak audit** | Audit diperluas ke entitas kontrak + aksi lifecycle; tampilan riwayat per record untuk Operation (baca `auditLogs` per entitas) | **TAN-130** (stage 4) | FR-41 (tampilan) |
+| **K6 — Jejak audit** | Audit diperluas ke entitas kontrak + aksi lifecycle; tampilan riwayat per record untuk Operation (baca `auditLogs` per entitas); job anonimisasi retensi 5 tahun (T041) | **TAN-130** (stage 4) | FR-41 (tampilan) |
 
 K1 menjadi prasyarat K2; K2 menjadi prasyarat K3–K5 (kontrak API); K6 menyusul namun dependensi skemanya sudah ikut K1. K3, K4, dan K5 dapat berjalan paralel setelah K2.
 

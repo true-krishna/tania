@@ -177,7 +177,7 @@ Sebagai **Operation**, saya dapat mencatat pensiun karyawan sehingga berakhirnya
 **Acceptance Scenarios:**
 
 1. **Given** karyawan aktif, **When** Operation mencatat pensiun (tanggal efektif), **Then** kontrak aktif diakhiri (`end_reason = retirement`), status karyawan → `retired`, akun (termasuk Entra — FR-46) dinonaktifkan.
-2. **Given** karyawan mendekati usia pensiun, **When** dashboard Operation dibuka, **Then** tampil indikator karyawan yang memasuki jendela pra-pensiun (usia pensiun 56 tahun, parametri; jendela peringatan H-90/H-30).
+2. **Given** karyawan mendekati usia pensiun, **When** dashboard Operation dibuka, **Then** tampil indikator karyawan yang memasuki jendela pra-pensiun (usia pensiun dari setelan aplikasi Admin — default 56 tahun, hanya Admin boleh mengubah; jendela peringatan H-90/H-30).
 
 ### User Story 14 — Operation memprovision akun Entra talent (Priority: P1)
 
@@ -275,7 +275,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 - **FR-37**: Resign mengakhiri kontrak aktif pada tanggal efektif (`end_reason = resign`), mengubah status karyawan menjadi `resigned`, dan menonaktifkan akun user terkait (termasuk akun Entra — FR-46); dependensi (assignment aktif/IDP berjalan) diperingatkan sebelum konfirmasi.
 - **FR-38**: Mutasi mengubah unit/posisi karyawan di tengah kontrak dengan mekanisme kontrak baru yang efektif pada tanggal mutasi (kontrak lama diakhiri `end_reason = mutation`); turunan chapter/keter-assign-an mengikuti posisi baru sejak tanggal efektif.
 - **FR-39**: Pensiun mengakhiri kontrak aktif (`end_reason = retirement`), mengubah status karyawan menjadi `retired`, dan menonaktifkan akun user terkait (termasuk akun Entra — FR-46).
-- **FR-40**: Dashboard Operation menampilkan indikator kontrak segera berakhir (jendela H-90/H-30) dan karyawan pra-pensiun (usia pensiun 56 tahun, parametri); tidak ada notifikasi email. *(Memperluas FR-29/US8 skenario 3.)*
+- **FR-40**: Dashboard Operation menampilkan indikator kontrak segera berakhir (jendela H-90/H-30) dan karyawan pra-pensiun (usia pensiun dari setelan aplikasi Admin — default 56 tahun, hanya Admin boleh mengubah); tidak ada notifikasi email. *(Memperluas FR-29/US8 skenario 3.)*
 - **FR-41**: Setiap **pembuatan, perubahan, dan pengakhiran** data karyawan maupun kontrak — termasuk **perpanjangan kontrak**, resign, mutasi, pensiun — **tercatat pada jejak audit** (aktor, waktu, jenis aksi, nilai sebelum→sesudah) dan **dapat ditelusuri** per karyawan/kontrak. Riwayat perubahan ditampilkan pada detail karyawan/kontrak untuk Operation; jejak audit penuh tetap milik Admin (memperluas FR-17). Hard delete karyawan tidak disediakan — pengakhiran dicatat sebagai aksi yang berlog.
 - **FR-42**: Nomor KTP disimpan **terenkripsi at-rest**; pada daftar dan detail hanya ditampilkan **tersamar** (4 digit akhir, mis. `************1234`) — **nilai penuh tidak pernah ditampilkan kepada peran mana pun**: semua role melihat NIK selalu tersamar, tidak ada tampilan/field khusus berizin (keputusan 2026-10-10). Jejak audit menyimpan NIK dalam bentuk tersamar, tidak pernah plaintext.
 
@@ -337,7 +337,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 - Atribut kontrak kerja mengikuti daftar atribut talent & kontrak TMS yang diberikan pemilik produk (2026-10-07); bila TMS memiliki atribut lain, melengkapi sebelum implementasi.
 - "Delete" karyawan dipetakan ke pengakhiran/nonaktif yang tetap berlog — aplikasi tidak menyediakan hard delete karyawan (selaras semantik FR-21).
 - `work_location` adalah enum `Jakarta`/`Bandung` pada kontrak (keputusan 2026-10-10), bukan master data baru.
-- Usia pensiun 56 tahun (parametri) dan jendela peringatan kontrak H-90/H-30 (keputusan 2026-10-07).
+- Usia pensiun 56 tahun (setelan aplikasi yang dikelola Admin — hanya Admin boleh mengubah, keputusan 2026-10-10) dan jendela peringatan kontrak H-90/H-30 (keputusan 2026-10-07).
 - Kontrak habis tanpa perpanjangan: karyawan otomatis non-assignable dengan status kepegawaian tetap `active` menunggu aksi Operation.
 - Mutasi di tengah kontrak: kontrak lama diakhiri (`end_reason = mutation`) + kontrak baru efektif tanggal mutasi (bukan revisi kontrak aktif).
 - Seluruh alur kontrak & siklus kerja milik Operation; jejak audit penuh tetap milik Admin.
