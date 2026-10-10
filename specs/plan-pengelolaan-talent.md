@@ -79,7 +79,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 | FR-39 pensiun | **Gap G7** | Sama seperti resign dengan `end_reason=retirement`, status `RETIRED` |
 | FR-40 dashboard H-90/H-30 + pra-pensiun | **Gap G8** | Widget belum ada; data turunan tanggal (indeks `end_date`), usia pensiun 56 (parametri) dari `birth_date` |
 | FR-41 jejak audit lifecycle + riwayat per record | **Partial** | `recordChange` siap dipakai; cakupan perlu entity `employment_contract` + aksi lifecycle (RENEW/RESIGN/MUTATE/RETIRE/END); UI riwayat per record untuk Operation belum ada (baca `auditLogs` filter `entityType`+`entityId`) |
-| FR-42 enkripsi & masking NIK | **Gap G9** | Greenfield: `nik_hash` (unik) + `nik_enc`, masking 4 digit akhir di API (resolver) & UI, nilai penuh lewat tampilan khusus berizin, audit menyimpan NIK tersamar |
+| FR-42 enkripsi & masking NIK | **Gap G9** | Greenfield: `nik_hash` (unik) + `nik_enc`, masking 4 digit akhir di API (resolver) & UI untuk semua peran — nilai penuh tidak pernah diekspos (keputusan 2026-10-10), audit menyimpan NIK tersamar |
 | FR-43 auto-create Entra di form | **Gap G10** | Greenfield — toggle di form create; provisioning pasca-commit; gagal tidak menggagalkan penyimpanan karyawan |
 | FR-44 UI daftar "belum ada Entra" + provisioning manual | **Gap G11** | Greenfield — query status provisi + halaman khusus Operation |
 | FR-45 aturan domain + UPN | **Gap G12** | `telkom.co.id` → invitation; selain itu → create account UPN `nama-depan.nama-belakang@digitaltelkom.id` (sufiks angka bila bentrok); hasil tercatat |
@@ -115,7 +115,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 - **D2 — satu kontrak aktif per karyawan**: partial unique index (`WHERE status-aktif`) — race-safe, mengikuti pola FR-25; validasi server tetap ada untuk pesan yang ramah.
 - **D3 — turunan aktif**: unit/posisi/jobRole/email kantor/lokasi aktif = nilai pada kontrak aktif. `assignable` = karyawan `ACTIVE` **dan** punya kontrak aktif **dan** `job_role.chapter_id IS NOT NULL`. Kontrak habis tanpa perpanjangan → otomatis non-assignable, status karyawan tetap `ACTIVE`, muncul di daftar "perlu tindak lanjut" (OQ-3).
 - **D4 — migrasi dua fase** (konstitusi: perubahan destruktif dua fase): fase 1 tambah tabel/kolom + pindahkan data (`employee_code` eksisting → `nomor_induk` kontrak awal per karyawan; `unit_id`/`job_role_id` → kontrak awal; satu kontrak awal per karyawan yang punya data); fase 2 deprecate kolom lama setelah kode beralih. View `employee_chapter_scope` diubah join via kontrak aktif.
-- **D5 — enkripsi NIK**: AES-256-GCM application-level (`internal/platform/secret` memperluas pola key management), `nik_hash` = SHA-256 ter-salted untuk keunikan; masking (4 digit akhir) dilakukan di layer resolver — model GraphQL tidak pernah membawa NIK plaintext kecuali lewat field berizin terpisah.
+- **D5 — enkripsi NIK**: AES-256-GCM application-level (`internal/platform/secret` memperluas pola key management), `nik_hash` = SHA-256 ter-salted untuk keunikan; masking (4 digit akhir) dilakukan di layer resolver — model GraphQL tidak pernah membawa NIK plaintext; nilai penuh tidak diekspos ke peran mana pun (keputusan 2026-10-10).
 
 ### Kontrak GraphQL (delta atas `graph/schema.graphqls`)
 
@@ -207,7 +207,7 @@ tania-dashboard/
 
 ## Security (rekap slice)
 
-- **NIK (data spesifik)**: terenkripsi at-rest (`nik_enc`), keunikan via `nik_hash`, tampil tersamar 4 digit akhir; nilai penuh hanya lewat field berizin terpisah (role Operation/Admin, ikut diaudit); audit menyimpan bentuk tersamar — tidak pernah plaintext (FR-42).
+- **NIK (data spesifik)**: terenkripsi at-rest (`nik_enc`), keunikan via `nik_hash`, tampil tersamar 4 digit akhir untuk **semua peran** — nilai penuh tidak pernah ditampilkan (keputusan 2026-10-10); audit menyimpan bentuk tersamar — tidak pernah plaintext (FR-42).
 - **RBAC**: seluruh alur kontrak & siklus kerja milik **Operation** (OQ-4); Talent/Chapter tidak punya akses tulis; baca lintas cakupan tetap `ErrNotFound` (pola `CanAccessEmployee`); jejak audit penuh Admin — riwayat per record untuk Operation hanya untuk entitas karyawan/kontrak miliknya (pin konstitusi v1.2.0).
 - **Entra**: client secret dari secret store; UPN dibangun dari nama (bukan input bebas) untuk mencegah injection identitas; penonaktifan akun saat terminasi (FR-46) mencegah akses liar pasca-resign; hasil provisioning dicatat tanpa menyimpan kredensial.
 - **Input validation**: semua input eksternal divalidasi di usecase (tanggal, enum, 16 digit NIK, format email); frontend hanya untuk UX.

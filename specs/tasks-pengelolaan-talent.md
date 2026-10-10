@@ -59,7 +59,7 @@
 
 - [ ] T018 [P] [K3] Operasi `.graphql` + hooks pada `src/features/employees/` dan `src/features/contracts/` (pola modul `assignments`): create/update data diri, daftar + filter, detail, CRUD kontrak; jalankan `npm run generate` sampai bersih (R4)
 - [ ] T019 [K3] Form data diri baru `src/app/(app)/employees/new/page.tsx`: field wajib NIK (16 digit), tanggal lahir, jenis kelamin, telepon, alamat, pendidikan terakhir/nama institusi/jurusan (opsional) — **tanpa field employee ID** (identitas kepegawaian hanya pada kontrak); validasi unik email & NIK dengan pesan per field (G14)
-- [ ] T020 [K3] Form ubah data diri `src/app/(app)/employees/[id]/edit/page.tsx` (gap form ubah — memakai `updateEmployee` yang sudah dilayani server): field data diri; NIK tampil tersamar dengan nilai penuh hanya lewat tampilan khusus berizin (FR-42)
+- [ ] T020 [K3] Form ubah data diri `src/app/(app)/employees/[id]/edit/page.tsx` (gap form ubah — memakai `updateEmployee` yang sudah dilayani server): field data diri; NIK selalu tampil tersamar untuk semua peran — nilai penuh tidak pernah ditampilkan (FR-42; saat edit, NIK hanya berubah bila diisi ulang)
 - [ ] T021 [K3] Daftar karyawan `src/app/(app)/employees/page.tsx`: kolom data diri (NIK masked 4 digit akhir), pencarian nomor induk (via kontrak), filter divisi/status dari kontrak aktif, pagination cursor di UI (saat ini fetch 100 tanpa pagination)
 - [ ] T022 [K3] Detail karyawan `src/app/(app)/employees/[id]/page.tsx`: data diri + **riwayat kontrak berurutan** (kontrak lama tetap terbaca, atribut TMS lengkap) + **riwayat perubahan per record** untuk Operation (FR-41 UI — membaca `auditLogs` per entitas; NIK selalu tersamar)
 - [ ] T023 [K3] Daftar/form/detail kontrak `src/app/(app)/contracts/` (+ `[id]/`): atribut TMS (no kontrak, jenis, unit, posisi/jobRole, jobTitle, jobLevel, band_position, work location, email kantor, **nomor induk wajib — unik antar kontrak aktif**), periode, status turunan, alasan berakhir; error server dipetakan per field via `src/lib/errors.ts` (`INVALID`/`CONFLICT`)
@@ -123,7 +123,7 @@
 
 - Semua mutasi lifecycle memakai `recordChange` (persist + audit satu transaksi) — tidak ada aksi yang mengubah data tanpa jejak (FR-41)
 - `employeeCode` dihapus dari SDL (R4): backend + frontend digabung gelombang berurutan (K2 sebelum K3); `make generate`/`npm run generate` wajib bersih
-- NIK tidak pernah plaintext di mana pun (API, log, audit, URL) — masking 4 digit akhir; nilai penuh hanya lewat tampilan khusus berizin (FR-42)
+- NIK tidak pernah plaintext di mana pun (API, log, audit, URL) — masking 4 digit akhir; nilai penuh tidak pernah ditampilkan ke peran mana pun (FR-42)
 - Provisioning Entra tidak pernah memblokir penyimpanan karyawan (R1); kegagalan tercatat + retry manual FR-44
 - Otorisasi 100% di server: seluruh alur kontrak & siklus kerja milik **Operation**; audit penuh Admin (OQ-4); UI hanya menyembunyikan
 - Commit per task atau kelompok logis; jalankan test sebelum commit

@@ -277,7 +277,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 - **FR-39**: Pensiun mengakhiri kontrak aktif (`end_reason = retirement`), mengubah status karyawan menjadi `retired`, dan menonaktifkan akun user terkait (termasuk akun Entra — FR-46).
 - **FR-40**: Dashboard Operation menampilkan indikator kontrak segera berakhir (jendela H-90/H-30) dan karyawan pra-pensiun (usia pensiun 56 tahun, parametri); tidak ada notifikasi email. *(Memperluas FR-29/US8 skenario 3.)*
 - **FR-41**: Setiap **pembuatan, perubahan, dan pengakhiran** data karyawan maupun kontrak — termasuk **perpanjangan kontrak**, resign, mutasi, pensiun — **tercatat pada jejak audit** (aktor, waktu, jenis aksi, nilai sebelum→sesudah) dan **dapat ditelusuri** per karyawan/kontrak. Riwayat perubahan ditampilkan pada detail karyawan/kontrak untuk Operation; jejak audit penuh tetap milik Admin (memperluas FR-17). Hard delete karyawan tidak disediakan — pengakhiran dicatat sebagai aksi yang berlog.
-- **FR-42**: Nomor KTP disimpan **terenkripsi at-rest**; pada daftar dan detail hanya ditampilkan **tersamar** (4 digit akhir); nilai penuh hanya melalui tampilan khusus berizin. Jejak audit menyimpan NIK dalam bentuk tersamar, tidak pernah plaintext.
+- **FR-42**: Nomor KTP disimpan **terenkripsi at-rest**; pada daftar dan detail hanya ditampilkan **tersamar** (4 digit akhir, mis. `************1234`) — **nilai penuh tidak pernah ditampilkan kepada peran mana pun**: semua role melihat NIK selalu tersamar, tidak ada tampilan/field khusus berizin (keputusan 2026-10-10). Jejak audit menyimpan NIK dalam bentuk tersamar, tidak pernah plaintext.
 
 **Provisi akun Microsoft Entra (Operation)**
 

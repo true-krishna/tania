@@ -76,7 +76,7 @@ dilayani backend per 2026-10-01.
 | `Employee.assignable` | `status = ACTIVE`, punya kontrak aktif, **dan** `jobRole.chapter != null` (FR-23/FR-35) | kandidat talent pada form assignment/IDP; filter karyawan |
 | `Employee.unit` / `Employee.jobRole` | turunan **kontrak aktif** (FR-35) — jangan dihitung ulang dari data diri | kolom daftar karyawan; filter divisi/posisi |
 | `Employee.nomorInduk` | nomor induk dari kontrak aktif (FR-34) | pencarian employee ID |
-| `Employee.nikMasked` | NIK tersamar 4 digit akhir (FR-42) — nilai penuh hanya lewat tampilan berizin | daftar & detail karyawan |
+| `Employee.nikMasked` | NIK tersamar 4 digit akhir (FR-42) — nilai penuh tidak pernah diekspos ke peran mana pun | daftar & detail karyawan |
 | `EmploymentContract.status` | turunan tanggal + `terminatedAt`, tanpa cron (FR-34) | daftar kontrak; indikator "segera berakhir" (H-90/H-30) |
 | `CvProfile.workExperience` | ringkasan riwayat assignment (termasuk yang berakhir) → bagian pengalaman kerja CV (FR-12) | halaman CV Talent & tampilan read-only Chapter |
 | `EvaluationPeriod.state` | periode berjalan vs berakhir (terkunci) (FR-25) | roster & form evaluasi: hanya-baca setelah berakhir |

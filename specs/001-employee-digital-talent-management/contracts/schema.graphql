@@ -214,7 +214,7 @@ type Project {
 type Employee {
   id: ID!
   fullName: String!
-  """NIK tersamar — 4 digit akhir (FR-42); nilai penuh hanya lewat tampilan berizin."""
+  """NIK tersamar — 4 digit akhir (FR-42); nilai penuh tidak pernah diekspos."""
   nikMasked: String!
   email: String!
   birthDate: Date!
