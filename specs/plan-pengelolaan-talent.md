@@ -128,7 +128,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 ### Provisi Entra (FR-43–FR-46)
 
 - **Alur**: form create mengirim `autoCreateEntra` (default `true`); setelah transaksi karyawan commit, provisioning dijalankan best-of-effort **di luar transaksi DB** (fail tidak membatalkan penyimpanan karyawan — edge case spec) dan hasilnya (jenis aksi, status berhasil/gagal, UPN/object-id) dicatat + masuk audit. Kegagalan → tampil di daftar FR-44 untuk retry manual.
-- **Aturan**: domain email data diri `telkom.co.id` → **invitation**; selain itu → **create account** dengan UPN `nama-depan.nama-belakang@digitaltelkom.id` (titik); bentrok dengan akun eksisting → sufiks angka di belakang nama belakang. Karyawan yang sudah terlink `entra_object_id` tidak diprovisi ulang.
+- **Aturan**: domain email data diri `telkom.co.id` → **invitation**; selain itu → **create account** dengan UPN `nama-depan.nama-belakang@digitaltelkom.id` (titik; `nama-depan` = kata pertama, `nama-belakang` = kata kedua nama lengkap — kata ke-3 dst diabaikan, mis. `Rina Kusuma Wardani` → `rina.kusuma@…`); setiap kandidat UPN wajib dicek terhadap daftar email yang ada (anti-duplikat); bentrok → sufiks angka mulai dari `1` di belakang nama belakang (`rina.kusuma1`, `rina.kusuma2`, …) sampai unik. Karyawan yang sudah terlink `entra_object_id` tidak diprovisi ulang.
 - **Terminasi**: resign/pensiun memanggil penonaktifan akun Entra yang dikelola (`FR-46`) + audit; akun lokal terkait tetap nonaktif seperti pola `SetStatus` eksisting.
 - **Konfigurasi**: tenant ID, client ID, client secret lewat environment/secret store (konstitusi III — tidak pernah di-commit); klien Graph API modular (`internal/platform/entra/`) agar lifecycle tetap teruji via fake tanpa jaringan.
 
