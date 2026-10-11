@@ -25,6 +25,18 @@ describe("Sidebar", () => {
     expect(screen.queryByText("Accounts")).toBeNull();
   });
 
+  it("keeps the Laporan Talent nav scoped to Operation and Chapter", () => {
+    const { view } = renderSidebar({ role: "TALENT" });
+    expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    view.unmount();
+
+    renderSidebar({ role: "ADMIN" });
+    expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+
+    renderSidebar({ role: "OPERATION" });
+    expect(screen.getByRole("link", { name: "Laporan Talent" })).toBeInTheDocument();
+  });
+
   it("expands a multi-page section on click", () => {
     renderSidebar();
     const group = screen.getByRole("button", { name: /Master Data/ });

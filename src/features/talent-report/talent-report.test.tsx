@@ -24,6 +24,7 @@ import {
   TALENT_REPORT_RANGE_QUERY,
   useTalentReport,
 } from "./useTalentReport";
+import { TalentReportPageView } from "./TalentReportPageView";
 import {
   MOCK_TALENT_REPORT,
   MOCK_TALENT_REPORT_EMPTY,
@@ -73,6 +74,46 @@ vi.mock("echarts/components", () => ({
 vi.mock("echarts/renderers", () => ({ CanvasRenderer: {} }));
 
 vi.stubGlobal("ResizeObserver", echartsMock.ResizeObserverStub);
+
+const fullPeriod: TalentReportPeriod = {
+  startMonth: MOCK_TALENT_REPORT_RANGE.startMonth,
+  endMonth: MOCK_TALENT_REPORT_RANGE.endMonth,
+};
+
+const rangeMock: MockedResponse = {
+  request: { query: TALENT_REPORT_RANGE_QUERY },
+  result: {
+    data: {
+      talentReportRange: { __typename: "TalentReportRange", ...MOCK_TALENT_REPORT_RANGE },
+    },
+  },
+};
+
+function reportData(report: TalentReport) {
+  const categories = (items: ReportCategoryCount[]) =>
+    items.map((c) => ({ __typename: "ReportCategoryCount", ...c }));
+  return {
+    talentReport: {
+      __typename: "TalentReport",
+      ...report,
+      roleDistribution: categories(report.roleDistribution),
+      generationDistribution: categories(report.generationDistribution),
+      educationDistribution: categories(report.educationDistribution),
+      workLocationDistribution: categories(report.workLocationDistribution),
+      movementTrend: report.movementTrend.map((m) => ({
+        __typename: "ReportMonthlyMovement",
+        ...m,
+      })),
+    },
+  };
+}
+
+function reportMock(period: TalentReportPeriod, report: TalentReport): MockedResponse {
+  return {
+    request: { query: TALENT_REPORT_QUERY, variables: { period } },
+    result: { data: reportData(report) },
+  };
+}
 
 describe("chart-theme (T017 / D1)", () => {
   afterEach(() => {
@@ -369,46 +410,6 @@ describe("PeriodFilter (T021 / FR-11)", () => {
 });
 
 describe("useTalentReport (T022 / FR-11, FR-12, FR-15)", () => {
-  const fullPeriod: TalentReportPeriod = {
-    startMonth: MOCK_TALENT_REPORT_RANGE.startMonth,
-    endMonth: MOCK_TALENT_REPORT_RANGE.endMonth,
-  };
-
-  const rangeMock: MockedResponse = {
-    request: { query: TALENT_REPORT_RANGE_QUERY },
-    result: {
-      data: {
-        talentReportRange: { __typename: "TalentReportRange", ...MOCK_TALENT_REPORT_RANGE },
-      },
-    },
-  };
-
-  function reportData(report: TalentReport) {
-    const categories = (items: ReportCategoryCount[]) =>
-      items.map((c) => ({ __typename: "ReportCategoryCount", ...c }));
-    return {
-      talentReport: {
-        __typename: "TalentReport",
-        ...report,
-        roleDistribution: categories(report.roleDistribution),
-        generationDistribution: categories(report.generationDistribution),
-        educationDistribution: categories(report.educationDistribution),
-        workLocationDistribution: categories(report.workLocationDistribution),
-        movementTrend: report.movementTrend.map((m) => ({
-          __typename: "ReportMonthlyMovement",
-          ...m,
-        })),
-      },
-    };
-  }
-
-  function reportMock(period: TalentReportPeriod, report: TalentReport): MockedResponse {
-    return {
-      request: { query: TALENT_REPORT_QUERY, variables: { period } },
-      result: { data: reportData(report) },
-    };
-  }
-
   function HookProbe() {
     const { period, status, report, message, applyPeriod } = useTalentReport();
     return (
@@ -484,5 +485,112 @@ describe("useTalentReport (T022 / FR-11, FR-12, FR-15)", () => {
 
     await screen.findByText("forbidden");
     expect(screen.getByTestId("message")).toHaveTextContent("Akses ditolak.");
+  });
+});
+
+describe("TalentReportPageView (T023 / SC-04, SC-05)", () => {
+  function renderPage(mocks: MockedResponse[]) {
+    return render(
+      <MockedProvider mocks={mocks}>
+        <TalentReportPageView />
+      </MockedProvider>,
+    );
+  }
+
+  it("renders the five report cards with n = … totals", async () => {
+    renderPage([rangeMock, reportMock(fullPeriod, MOCK_TALENT_REPORT)]);
+
+    expect(await screen.findByText("Talent per role")).toBeInTheDocument();
+    expect(screen.getByText("Talent per generasi")).toBeInTheDocument();
+    expect(screen.getByText("Talent per jenjang pendidikan")).toBeInTheDocument();
+    expect(screen.getByText("Talent per lokasi kerja")).toBeInTheDocument();
+    expect(screen.getByText("Tren churn vs new talent")).toBeInTheDocument();
+    expect(screen.getAllByText("n = 25")).toHaveLength(4);
+    expect(screen.getByText("n = 31")).toBeInTheDocument();
+  });
+
+  it("shows the empty state with a hint to pick another range (not an error)", async () => {
+    renderPage([rangeMock, reportMock(fullPeriod, MOCK_TALENT_REPORT_EMPTY)]);
+
+    expect(
+      await screen.findByText(
+        "Tidak ada data pada rentang ini. Pilih rentang bulan lain untuk melihat laporan.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Terapkan" })).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("shows the access-denied page on FORBIDDEN (SC-05)", async () => {
+    renderPage([
+      rangeMock,
+      {
+        request: { query: TALENT_REPORT_QUERY, variables: { period: fullPeriod } },
+        result: {
+          errors: [
+            new GraphQLError("Akses ditolak.", { extensions: { code: "FORBIDDEN" } }),
+          ],
+        },
+      },
+    ]);
+
+    expect(await screen.findByText("Akses ditolak.")).toBeInTheDocument();
+    expect(screen.queryByText("Talent per role")).toBeNull();
+  });
+
+  it("shows an error state for non-authz failures", async () => {
+    renderPage([
+      rangeMock,
+      {
+        request: { query: TALENT_REPORT_QUERY, variables: { period: fullPeriod } },
+        result: { errors: [new GraphQLError("Gangguan jaringan.")] },
+      },
+    ]);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Gangguan jaringan.");
+  });
+
+  it("shows the loading state until the report arrives", async () => {
+    renderPage([
+      { ...rangeMock, delay: 100 },
+      { ...reportMock(fullPeriod, MOCK_TALENT_REPORT), delay: 100 },
+    ]);
+
+    expect(screen.getByText("Memuat laporan…")).toBeInTheDocument();
+    expect(await screen.findByText("Talent per role")).toBeInTheDocument();
+    expect(screen.queryByText("Memuat laporan…")).toBeNull();
+  });
+
+  it("updates all five cards from one refetch when the period changes (SC-04)", async () => {
+    const updated: TalentReport = {
+      snapshotMonth: "2026-10",
+      roleDistribution: [{ label: "Engineer", count: 99, kind: "VALUE" }],
+      generationDistribution: [{ label: "Milenial", count: 50, kind: "VALUE" }],
+      educationDistribution: [{ label: "S1", count: 40, kind: "VALUE" }],
+      workLocationDistribution: [{ label: "Jakarta", count: 30, kind: "VALUE" }],
+      movementTrend: [{ month: "2026-01", newTalent: 5, churn: 4 }],
+    };
+    renderPage([
+      rangeMock,
+      reportMock(fullPeriod, MOCK_TALENT_REPORT),
+      reportMock({ startMonth: "2026-01", endMonth: "2026-10" }, updated),
+    ]);
+
+    await screen.findByText("Talent per role");
+    expect(screen.getAllByText("n = 25")).toHaveLength(4);
+
+    fireEvent.change(screen.getByLabelText("Bulan mulai"), {
+      target: { value: "2026-01" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan" }));
+
+    expect(await screen.findByText("n = 99")).toBeInTheDocument();
+    expect(screen.getByText("n = 50")).toBeInTheDocument();
+    expect(screen.getByText("n = 40")).toBeInTheDocument();
+    expect(screen.getByText("n = 30")).toBeInTheDocument();
+    expect(screen.getByText("n = 9")).toBeInTheDocument();
+    expect(screen.queryByText("n = 25")).toBeNull();
+    expect(screen.getByLabelText("Bulan mulai")).toHaveValue("2026-01");
   });
 });
