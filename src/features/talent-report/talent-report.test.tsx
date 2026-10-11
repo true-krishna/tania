@@ -2,9 +2,22 @@
 
 import * as React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { resolveChartTheme } from "./chart-theme";
 import { EChart, type EChartHandle } from "./EChart";
+import { ChartCard } from "./ChartCard";
+import {
+  buildDistributionOption,
+  EDUCATION_ORDER,
+  GENERATION_ORDER,
+  prepareDistribution,
+} from "./DistributionChart";
+import {
+  formatMonthLabel,
+  monthRange,
+  PeriodFilter,
+} from "./PeriodFilter";
+import type { ReportCategoryCount, TalentReportPeriod, TalentReportRange } from "./types";
 
 const echartsMock = vi.hoisted(() => {
   const instance = {
@@ -149,5 +162,191 @@ describe("EChart wrapper (T018)", () => {
       pixelRatio: 2,
       backgroundColor: "#ffffff",
     });
+  });
+});
+
+describe("ChartCard (T019 / US1, US4)", () => {
+  it("renders title, total subtitle and the chart slot", () => {
+    render(
+      <ChartCard title="Talent per role" subtitle="n = 25">
+        <div data-testid="chart-slot" />
+      </ChartCard>,
+    );
+    expect(screen.getByRole("heading", { name: "Talent per role" })).toBeInTheDocument();
+    expect(screen.getByText("n = 25")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-slot")).toBeInTheDocument();
+  });
+
+  it("keeps the Unduh PNG action disabled until the handler is wired (T027)", () => {
+    render(
+      <ChartCard title="Talent per role" subtitle="n = 25">
+        <div />
+      </ChartCard>,
+    );
+    expect(screen.getByRole("button", { name: /Unduh PNG/ })).toBeDisabled();
+  });
+
+  it("invokes the download handler per card (US4 AC-3)", () => {
+    const onDownload = vi.fn();
+    render(
+      <ChartCard title="Talent per role" subtitle="n = 25" onDownload={onDownload}>
+        <div />
+      </ChartCard>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Unduh PNG/ }));
+    expect(onDownload).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("DistributionChart data-prep (T020)", () => {
+  const category = (label: string, count: number): ReportCategoryCount => ({
+    label,
+    count,
+    kind: "VALUE",
+  });
+
+  it("sorts unordered categories largest-first (V-1 role / V-4 lokasi)", () => {
+    const prepared = prepareDistribution([
+      category("Bandung", 6),
+      category("Jakarta", 10),
+      category("Surabaya", 3),
+    ]);
+    expect(prepared.map((d) => d.label)).toEqual(["Jakarta", "Bandung", "Surabaya"]);
+  });
+
+  it("keeps the intrinsic order of ordinal categories (V-2 generasi / V-3 jenjang)", () => {
+    const generation = prepareDistribution(
+      [
+        category("Gen Z", 7),
+        category("Baby Boomer", 1),
+        category("Milenial", 14),
+        category("Gen X", 3),
+      ],
+      GENERATION_ORDER,
+    );
+    expect(generation.map((d) => d.label)).toEqual([
+      "Baby Boomer",
+      "Gen X",
+      "Milenial",
+      "Gen Z",
+    ]);
+
+    const education = prepareDistribution(
+      [
+        category("S2", 5),
+        category("SMA/SMK Sederajat", 2),
+        category("S1", 13),
+        category("S3", 1),
+        category("D3", 3),
+      ],
+      EDUCATION_ORDER,
+    );
+    expect(education.map((d) => d.label)).toEqual([
+      "SMA/SMK Sederajat",
+      "D3",
+      "S1",
+      "S2",
+      "S3",
+    ]);
+  });
+
+  it("always places MISSING last and labels OTHER as Lainnya", () => {
+    const prepared = prepareDistribution([
+      { label: "Belum diisi", count: 2, kind: "MISSING" },
+      { label: "Out of town", count: 4, kind: "OTHER" },
+      category("Jakarta", 10),
+      { label: "Belum diisi", count: 1, kind: "MISSING" },
+    ]);
+    expect(prepared.at(-1)).toMatchObject({ label: "Belum diisi", isMissing: true });
+    expect(prepared.at(-2)).toMatchObject({ label: "Belum diisi", isMissing: true });
+    expect(prepared[1]).toMatchObject({ label: "Lainnya", count: 4, isMissing: false });
+  });
+
+  it("keeps backend order among equal counts and for unknown ordinal labels", () => {
+    const ties = prepareDistribution([category("Bandung", 5), category("Jakarta", 5)]);
+    expect(ties.map((d) => d.label)).toEqual(["Bandung", "Jakarta"]);
+
+    const unknown = prepareDistribution(
+      [category("Gen Alpha", 9), category("Gen Z", 7), category("Milenial", 14)],
+      GENERATION_ORDER,
+    );
+    expect(unknown.map((d) => d.label)).toEqual(["Milenial", "Gen Z", "Gen Alpha"]);
+  });
+
+  it("builds the chart option with MISSING grey and the horizontal-bar axis rules (D1)", () => {
+    const theme = resolveChartTheme();
+    const option = buildDistributionOption(
+      [
+        { label: "Jakarta", count: 10, isMissing: false },
+        { label: "Belum diisi", count: 2, isMissing: true },
+      ],
+      "bar",
+      theme,
+    );
+    const series = (
+      option as {
+        series: Array<{ data: Array<{ value: number; itemStyle: { color: string } }> }>;
+      }
+    ).series[0];
+    expect(series.data[0].itemStyle.color).toBe(theme.distributionColor);
+    expect(series.data[1].itemStyle.color).toBe(theme.missingColor);
+    expect((option.yAxis as { inverse?: boolean }).inverse).toBe(true);
+    expect((option.xAxis as { type?: string }).type).toBe("value");
+
+    const column = buildDistributionOption([], "column", theme);
+    expect((column.xAxis as { type?: string }).type).toBe("category");
+    expect((column.yAxis as { inverse?: boolean }).inverse).toBeUndefined();
+  });
+});
+
+describe("PeriodFilter (T021 / FR-11)", () => {
+  const range: TalentReportRange = { startMonth: "2025-01", endMonth: "2026-10" };
+  const fullRange: TalentReportPeriod = { startMonth: "2025-01", endMonth: "2026-10" };
+
+  it("formats month labels and expands the month range inclusively", () => {
+    expect(formatMonthLabel("2025-01")).toBe("Januari 2025");
+    expect(formatMonthLabel("2026-10")).toBe("Oktober 2026");
+    const months = monthRange("2025-11", "2026-02");
+    expect(months).toEqual(["2025-11", "2025-12", "2026-01", "2026-02"]);
+  });
+
+  it("defaults to the whole available range and bounds the month options (FR-11)", () => {
+    render(<PeriodFilter range={range} value={fullRange} onApply={vi.fn()} />);
+    const start = screen.getByLabelText("Bulan mulai") as HTMLSelectElement;
+    const end = screen.getByLabelText("Bulan akhir") as HTMLSelectElement;
+    expect(start.value).toBe("2025-01");
+    expect(end.value).toBe("2026-10");
+    const options = Array.from(start.options).map((o) => o.value);
+    expect(options[0]).toBe("2025-01");
+    expect(options.at(-1)).toBe("2026-10");
+    expect(options).toHaveLength(22);
+  });
+
+  it("applies a changed period in one action (SC-04)", () => {
+    const onApply = vi.fn();
+    render(<PeriodFilter range={range} value={fullRange} onApply={onApply} />);
+    const apply = screen.getByRole("button", { name: "Terapkan" });
+    expect(apply).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText("Bulan mulai"), {
+      target: { value: "2026-01" },
+    });
+    expect(apply).toBeEnabled();
+    fireEvent.click(apply);
+    expect(onApply).toHaveBeenCalledTimes(1);
+    expect(onApply).toHaveBeenCalledWith({ startMonth: "2026-01", endMonth: "2026-10" });
+  });
+
+  it("clamps the pair so start never exceeds end", () => {
+    const onApply = vi.fn();
+    render(<PeriodFilter range={range} value={fullRange} onApply={onApply} />);
+    fireEvent.change(screen.getByLabelText("Bulan mulai"), {
+      target: { value: "2026-10" },
+    });
+    fireEvent.change(screen.getByLabelText("Bulan akhir"), {
+      target: { value: "2025-06" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan" }));
+    expect(onApply).toHaveBeenCalledWith({ startMonth: "2025-06", endMonth: "2025-06" });
   });
 });
