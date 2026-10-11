@@ -82,11 +82,23 @@ export type AssignmentStatus =
   | 'COMPLETED';
 
 export type AuditAction =
+  /** Anonimisasi retensi data pribadi (T041). */
+  | 'ANONYMIZE'
   | 'CREATE'
   | 'DEACTIVATE'
   | 'DELETE'
+  /** Pengakhiran kontrak lama pada mutasi (FR-38/FR-41). */
+  | 'END'
   | 'LOGIN'
   | 'LOGOUT'
+  /** Mutasi (FR-38/FR-41). */
+  | 'MUTATE'
+  /** Perpanjangan kontrak (FR-36/FR-41). */
+  | 'RENEW'
+  /** Resign (FR-37/FR-41). */
+  | 'RESIGN'
+  /** Pensiun (FR-39/FR-41). */
+  | 'RETIRE'
   | 'UPDATE';
 
 /** One entry of the audit trail (FR-17), append-only. */
@@ -138,6 +150,16 @@ export type AuthPayload = {
   user: User;
 };
 
+export type BandPosition =
+  | 'I'
+  | 'II'
+  | 'III'
+  | 'IV'
+  /** Belum ditetapkan. */
+  | 'UNDEFINED'
+  | 'V'
+  | 'VI';
+
 /** Chapter master data (FR-24). */
 export type Chapter = {
   __typename?: 'Chapter';
@@ -165,6 +187,16 @@ export type ChapterDashboard = {
   unassignedTalents: Array<Employee>;
 };
 
+export type ContractEndReason =
+  | 'EXPIRY'
+  | 'MUTATION'
+  | 'RESIGN'
+  | 'RETIREMENT';
+
+export type ContractType =
+  | 'PKWT'
+  | 'PKWTT';
+
 export type CreateAssignmentInput = {
   employeeId: Scalars['ID']['input'];
   jobRoleId: Scalars['ID']['input'];
@@ -180,13 +212,37 @@ export type CreateDevelopmentActionInput = {
 };
 
 export type CreateEmployeeInput = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  birthDate: Scalars['Date']['input'];
   email: Scalars['String']['input'];
-  employeeCode: Scalars['String']['input'];
   fullName: Scalars['String']['input'];
-  jobRoleId: Scalars['ID']['input'];
+  gender: Gender;
+  institutionName?: InputMaybe<Scalars['String']['input']>;
   joinedAt: Scalars['Date']['input'];
+  latestEducation?: InputMaybe<Scalars['String']['input']>;
+  major?: InputMaybe<Scalars['String']['input']>;
+  /** NIK 16 digit — unik, disimpan terenkripsi (FR-42). */
+  nik: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<EmployeeStatus>;
+};
+
+export type CreateEmploymentContractInput = {
+  bandPosition?: InputMaybe<BandPosition>;
+  contractNo: Scalars['String']['input'];
+  contractType: ContractType;
+  employeeId: Scalars['ID']['input'];
+  /** Wajib untuk PKWT, null untuk PKWTT. */
+  endDate?: InputMaybe<Scalars['Date']['input']>;
+  jobLevel?: InputMaybe<Scalars['String']['input']>;
+  jobRoleId: Scalars['ID']['input'];
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
+  nomorInduk: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  officeEmail?: InputMaybe<Scalars['String']['input']>;
+  startDate: Scalars['Date']['input'];
   unitId: Scalars['ID']['input'];
+  workLocation: WorkLocation;
 };
 
 export type CreateEvaluationPeriodInput = {
@@ -302,28 +358,48 @@ export type DevelopmentMethod =
 export type Employee = {
   __typename?: 'Employee';
   account?: Maybe<User>;
-  /** status aktif DAN jobRole memiliki chapter. */
+  address?: Maybe<Scalars['String']['output']>;
+  /** status aktif, punya kontrak aktif, DAN jobRole memiliki chapter. */
   assignable: Scalars['Boolean']['output'];
   /** Riwayat assignment talent, terbaru lebih dulu (FR-07). */
   assignments: AssignmentConnection;
-  /** Turunan jobRole.chapter (FR-23); null bila role tanpa chapter. */
+  birthDate: Scalars['Date']['output'];
+  /** Turunan kontrak aktif → jobRole.chapter (FR-23/FR-35); null bila role tanpa chapter. */
   chapter?: Maybe<Chapter>;
+  /** Riwayat kontrak kerja, terbaru lebih dulu (FR-34). */
+  contracts: EmploymentContractConnection;
   createdAt: Scalars['Time']['output'];
   email: Scalars['String']['output'];
-  employeeCode: Scalars['String']['output'];
   fullName: Scalars['String']['output'];
+  gender: Gender;
   id: Scalars['ID']['output'];
   /** IDP talent dalam cakupan pemanggil (FR-11). */
   idps: IdpConnection;
-  jobRole: JobRole;
+  institutionName?: Maybe<Scalars['String']['output']>;
+  /** Turunan kontrak aktif (FR-35). */
+  jobRole?: Maybe<JobRole>;
   joinedAt: Scalars['Date']['output'];
+  latestEducation?: Maybe<Scalars['String']['output']>;
+  major?: Maybe<Scalars['String']['output']>;
+  /** NIK tersamar — 4 digit akhir (FR-42); nilai penuh tidak pernah diekspos. */
+  nikMasked: Scalars['String']['output'];
+  /** Nomor induk karyawan dari kontrak aktif (FR-34); null bila tanpa kontrak aktif. */
+  nomorInduk?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
   status: EmployeeStatus;
-  unit: Unit;
+  /** Turunan kontrak aktif (FR-35). */
+  unit?: Maybe<Unit>;
   updatedAt: Scalars['Time']['output'];
 };
 
 
 export type EmployeeAssignmentsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type EmployeeContractsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -350,7 +426,7 @@ export type EmployeeEdge = {
 export type EmployeeFilter = {
   assignableOnly?: InputMaybe<Scalars['Boolean']['input']>;
   jobRoleId?: InputMaybe<Scalars['ID']['input']>;
-  /** nama / email / employeeCode */
+  /** nama / email / nomor induk (via kontrak aktif) */
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<EmployeeStatus>;
   unitId?: InputMaybe<Scalars['ID']['input']>;
@@ -358,7 +434,69 @@ export type EmployeeFilter = {
 
 export type EmployeeStatus =
   | 'ACTIVE'
-  | 'INACTIVE';
+  | 'INACTIVE'
+  | 'RESIGNED'
+  | 'RETIRED';
+
+export type EmploymentContract = {
+  __typename?: 'EmploymentContract';
+  bandPosition: BandPosition;
+  contractNo: Scalars['String']['output'];
+  contractType: ContractType;
+  createdAt: Scalars['Time']['output'];
+  createdBy?: Maybe<User>;
+  employee: Employee;
+  /** null untuk PKWTT. */
+  endDate?: Maybe<Scalars['Date']['output']>;
+  endReason?: Maybe<ContractEndReason>;
+  id: Scalars['ID']['output'];
+  jobLevel?: Maybe<Scalars['String']['output']>;
+  jobRole: JobRole;
+  jobTitle?: Maybe<Scalars['String']['output']>;
+  /** Employee ID yang berlaku pada kontrak ini (snapshot historis). */
+  nomorInduk: Scalars['String']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  officeEmail?: Maybe<Scalars['String']['output']>;
+  predecessor?: Maybe<EmploymentContract>;
+  startDate: Scalars['Date']['output'];
+  /** Turunan tanggal + terminatedAt, tanpa cron (FR-34). */
+  status: EmploymentContractStatus;
+  terminatedAt?: Maybe<Scalars['Time']['output']>;
+  unit: Unit;
+  updatedAt: Scalars['Time']['output'];
+  workLocation: WorkLocation;
+};
+
+export type EmploymentContractConnection = {
+  __typename?: 'EmploymentContractConnection';
+  edges: Array<EmploymentContractEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type EmploymentContractEdge = {
+  __typename?: 'EmploymentContractEdge';
+  cursor: Scalars['String']['output'];
+  node: EmploymentContract;
+};
+
+export type EmploymentContractFilter = {
+  contractType?: InputMaybe<ContractType>;
+  employeeId?: InputMaybe<Scalars['ID']['input']>;
+  /** Kontrak yang berakhir pada/before tanggal ini (jendela H-90/H-30). */
+  expiringBefore?: InputMaybe<Scalars['Date']['input']>;
+  jobRoleId?: InputMaybe<Scalars['ID']['input']>;
+  /** nama karyawan / nomor kontrak / nomor induk */
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<EmploymentContractStatus>;
+  unitId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type EmploymentContractStatus =
+  /** Turunan tanggal, tanpa cron (FR-34). */
+  | 'ACTIVE'
+  | 'ENDED'
+  | 'TERMINATED';
 
 export type EvaluationAnswer = {
   __typename?: 'EvaluationAnswer';
@@ -438,6 +576,11 @@ export type EvaluationTemplate = {
   name: Scalars['String']['output'];
   updatedAt: Scalars['Time']['output'];
 };
+
+/** Keputusan 2026-10-10 — domain nilai dikunci pemilik produk. */
+export type Gender =
+  | 'FEMALE'
+  | 'MALE';
 
 export type Health = {
   __typename?: 'Health';
@@ -539,6 +682,7 @@ export type Mutation = {
   createAssignment: Assignment;
   createChapter: Chapter;
   createEmployee: Employee;
+  createEmploymentContract: EmploymentContract;
   createEvaluationPeriod: EvaluationPeriod;
   createEvaluationTemplate: EvaluationTemplate;
   createIdp: Idp;
@@ -555,8 +699,16 @@ export type Mutation = {
   login: AuthPayload;
   /** Revoke the current access token and, when supplied, the refresh token. */
   logout: Scalars['Boolean']['output'];
+  /** Mutasi: akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38). */
+  recordEmployeeMutation: EmploymentContract;
   /** Exchange a refresh token for a new token pair (rotating). */
   refreshSession: AuthPayload;
+  /** Perpanjangan PKWT — kontrak baru terkait predecessor (FR-36). */
+  renewEmploymentContract: EmploymentContract;
+  /** Resign: akhiri kontrak aktif (end_reason=resign), status → RESIGNED, nonaktifkan akun (FR-37, FR-46). */
+  resignEmployee: Employee;
+  /** Pensiun: akhiri kontrak aktif (end_reason=retirement), status → RETIRED (FR-39). */
+  retireEmployee: Employee;
   revokeUserSessions: Scalars['Boolean']['output'];
   setChapterActive: Chapter;
   setEvaluationPeriodActive: EvaluationPeriod;
@@ -564,6 +716,8 @@ export type Mutation = {
   setJobRoleActive: JobRole;
   setJobRoleChapter: JobRole;
   setProjectActive: Project;
+  /** Ubah usia pensiun (tahun); hanya Admin (T042). */
+  setRetirementAge: Scalars['Int']['output'];
   setUnitActive: Unit;
   setUserAccountStatus: User;
   submitPerformanceEvaluation: PerformanceEvaluation;
@@ -576,6 +730,7 @@ export type Mutation = {
   /** Talent pemilik atau Chapter chapter terkait (FR-09). */
   updateDevelopmentActionStatus: DevelopmentAction;
   updateEmployee: Employee;
+  updateEmploymentContract: EmploymentContract;
   updateEvaluationPeriod: EvaluationPeriod;
   updateEvaluationTemplate: EvaluationTemplate;
   updateIdp: Idp;
@@ -632,6 +787,11 @@ export type MutationCreateChapterArgs = {
 
 export type MutationCreateEmployeeArgs = {
   input: CreateEmployeeInput;
+};
+
+
+export type MutationCreateEmploymentContractArgs = {
+  input: CreateEmploymentContractInput;
 };
 
 
@@ -717,8 +877,33 @@ export type MutationLogoutArgs = {
 };
 
 
+export type MutationRecordEmployeeMutationArgs = {
+  input: RecordMutationInput;
+};
+
+
 export type MutationRefreshSessionArgs = {
   refreshToken: Scalars['String']['input'];
+};
+
+
+export type MutationRenewEmploymentContractArgs = {
+  input: RenewContractInput;
+};
+
+
+export type MutationResignEmployeeArgs = {
+  acknowledgeActiveWork?: InputMaybe<Scalars['Boolean']['input']>;
+  effectiveDate: Scalars['Date']['input'];
+  id: Scalars['ID']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationRetireEmployeeArgs = {
+  acknowledgeActiveWork?: InputMaybe<Scalars['Boolean']['input']>;
+  effectiveDate: Scalars['Date']['input'];
+  id: Scalars['ID']['input'];
 };
 
 
@@ -760,6 +945,11 @@ export type MutationSetJobRoleChapterArgs = {
 export type MutationSetProjectActiveArgs = {
   id: Scalars['ID']['input'];
   isActive: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetRetirementAgeArgs = {
+  years: Scalars['Int']['input'];
 };
 
 
@@ -827,6 +1017,12 @@ export type MutationUpdateDevelopmentActionStatusArgs = {
 export type MutationUpdateEmployeeArgs = {
   id: Scalars['ID']['input'];
   input: UpdateEmployeeInput;
+};
+
+
+export type MutationUpdateEmploymentContractArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateEmploymentContractInput;
 };
 
 
@@ -946,7 +1142,7 @@ export type Project = {
 
 export type Query = {
   __typename?: 'Query';
-  /** Kandidat assignment/IDP baru: karyawan aktif dan assignable (FR-04, FR-23). */
+  /** Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35). */
   assignableTalents: EmployeeConnection;
   assignments: AssignmentConnection;
   auditLogs: AuditLogConnection;
@@ -957,9 +1153,15 @@ export type Query = {
   dashboard: Dashboard;
   employee?: Maybe<Employee>;
   employees: EmployeeConnection;
+  /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation (US10 skenario 4). */
+  employeesNeedingFollowUp: EmployeeConnection;
+  employmentContract?: Maybe<EmploymentContract>;
+  employmentContracts: EmploymentContractConnection;
   evaluationPeriods: Array<EvaluationPeriod>;
   evaluationRoster: Array<EvaluationPeriodRosterEntry>;
   evaluationTemplates: Array<EvaluationTemplate>;
+  /** Kontrak berakhir dalam jendela hari (default 90) — kandidat perpanjangan (FR-40, US10). */
+  expiringContracts: EmploymentContractConnection;
   /** Liveness and build information; no authentication required. */
   health: Health;
   idp?: Maybe<Idp>;
@@ -974,6 +1176,8 @@ export type Query = {
   myPerformanceEvaluations: Array<PerformanceEvaluation>;
   performanceEvaluations: PerformanceEvaluationConnection;
   projects: Array<Project>;
+  /** Usia pensiun (tahun) dari setelan aplikasi Admin (FR-40, T042). */
+  retirementAge: Scalars['Int']['output'];
   units: Array<Unit>;
   users: Array<User>;
 };
@@ -1022,6 +1226,24 @@ export type QueryEmployeesArgs = {
 };
 
 
+export type QueryEmployeesNeedingFollowUpArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryEmploymentContractArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryEmploymentContractsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<EmploymentContractFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryEvaluationPeriodsArgs = {
   includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -1036,6 +1258,13 @@ export type QueryEvaluationRosterArgs = {
 
 export type QueryEvaluationTemplatesArgs = {
   includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryExpiringContractsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  days?: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1079,6 +1308,41 @@ export type QueryUsersArgs = {
   accessRole?: InputMaybe<AccessRole>;
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<AccountStatus>;
+};
+
+/** Mutasi di tengah kontrak — akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38). */
+export type RecordMutationInput = {
+  bandPosition?: InputMaybe<BandPosition>;
+  contractNo: Scalars['String']['input'];
+  effectiveDate: Scalars['Date']['input'];
+  employeeId: Scalars['ID']['input'];
+  endDate?: InputMaybe<Scalars['Date']['input']>;
+  jobLevel?: InputMaybe<Scalars['String']['input']>;
+  jobRoleId: Scalars['ID']['input'];
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
+  nomorInduk: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  officeEmail?: InputMaybe<Scalars['String']['input']>;
+  unitId: Scalars['ID']['input'];
+  workLocation: WorkLocation;
+};
+
+/** Perpanjangan PKWT — kontrak baru mulai setelah kontrak lama berakhir (FR-36). */
+export type RenewContractInput = {
+  bandPosition?: InputMaybe<BandPosition>;
+  contractNo: Scalars['String']['input'];
+  contractType?: ContractType;
+  endDate?: InputMaybe<Scalars['Date']['input']>;
+  jobLevel?: InputMaybe<Scalars['String']['input']>;
+  jobRoleId: Scalars['ID']['input'];
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
+  nomorInduk: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  officeEmail?: InputMaybe<Scalars['String']['input']>;
+  predecessorContractId: Scalars['ID']['input'];
+  startDate: Scalars['Date']['input'];
+  unitId: Scalars['ID']['input'];
+  workLocation: WorkLocation;
 };
 
 export type ReviewLog = {
@@ -1131,12 +1395,29 @@ export type UpdateAssignmentInput = {
 };
 
 export type UpdateEmployeeInput = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  birthDate?: InputMaybe<Scalars['Date']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   fullName?: InputMaybe<Scalars['String']['input']>;
-  jobRoleId?: InputMaybe<Scalars['ID']['input']>;
+  gender?: InputMaybe<Gender>;
+  institutionName?: InputMaybe<Scalars['String']['input']>;
   joinedAt?: InputMaybe<Scalars['Date']['input']>;
+  latestEducation?: InputMaybe<Scalars['String']['input']>;
+  major?: InputMaybe<Scalars['String']['input']>;
+  /** NIK diisi ulang hanya bila ingin mengubahnya (FR-42). */
+  nik?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<EmployeeStatus>;
-  unitId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type UpdateEmploymentContractInput = {
+  bandPosition?: InputMaybe<BandPosition>;
+  contractNo?: InputMaybe<Scalars['String']['input']>;
+  jobLevel?: InputMaybe<Scalars['String']['input']>;
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  officeEmail?: InputMaybe<Scalars['String']['input']>;
+  workLocation?: InputMaybe<WorkLocation>;
 };
 
 export type UpdateIdpInput = {
@@ -1174,3 +1455,7 @@ export type User = {
   status: AccountStatus;
   updatedAt: Scalars['Time']['output'];
 };
+
+export type WorkLocation =
+  | 'BANDUNG'
+  | 'JAKARTA';

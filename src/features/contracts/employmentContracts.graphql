@@ -1,0 +1,38 @@
+query EmploymentContracts($filter: EmploymentContractFilter, $first: Int = 25, $after: String) {
+  employmentContracts(filter: $filter, first: $first, after: $after) {
+    totalCount
+    edges {
+      node {
+        id
+        contractNo
+        contractType
+        officeEmail
+        nomorInduk
+        bandPosition
+        jobTitle
+        jobLevel
+        workLocation
+        startDate
+        endDate
+        status
+        endReason
+        employee {
+          id
+          fullName
+        }
+        unit {
+          id
+          name
+        }
+        jobRole {
+          id
+          name
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

@@ -22,7 +22,7 @@ const talent = {
   __typename: "Employee",
   id: "emp-1",
   fullName: "Andi Pratama",
-  employeeCode: "EMP-001",
+  nomorInduk: "EMP-001",
   assignable: true,
 };
 
@@ -42,7 +42,7 @@ const idpNode = {
   developmentObjective: "Menjadi Go backend engineer yang andal",
   timelineStart: "2025-07-01",
   timelineEnd: "2025-09-30",
-  talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", employeeCode: "EMP-001" },
+  talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
   actions: [
     { __typename: "DevelopmentAction", id: "act-1", status: "COMPLETED" },
     { __typename: "DevelopmentAction", id: "act-2", status: "IN_PROGRESS" },
@@ -75,7 +75,7 @@ const idpDetail = {
     __typename: "Employee",
     id: "emp-1",
     fullName: "Andi Pratama",
-    employeeCode: "EMP-001",
+    nomorInduk: "EMP-001",
     jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
   },
   actions: [
