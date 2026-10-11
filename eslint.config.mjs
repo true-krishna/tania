@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated GraphQL codegen output — never hand-edited (constitution:
+    // generated clients), so it is excluded from lint (T031, zero warnings).
+    "src/generated/**",
   ]),
 ]);
 
