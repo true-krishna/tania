@@ -25,6 +25,11 @@ const config: CodegenConfig = {
   schema: "./graph/schema.graphqls",
   documents: [
     "src/features/**/*.graphql",
+    // Kontrak sementara spek 003 (T015): dokumen `talent-report.graphql` belum
+    // valid terhadap SDL dilayani karena fragmen §5 baru di-R1-kan backend.
+    // DIKECUALIKAN sementara agar `npm run codegen` tetap hijau; LEPAS baris
+    // ini di T025 (codegen swap) setelah `graph/schema.graphqls` tersinkron.
+    "!src/features/talent-report/talent-report.graphql",
   ],
   ignoreNoDocuments: true,
   generates: {
