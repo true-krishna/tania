@@ -3,7 +3,7 @@
  * plan-003 (kontrak beku D10) untuk `tania-dashboard`.
  *
  * ⚠️ KONTRAK SEMENTARA — bukan mock produksi dan bukan sumber data. Tipe ini
- * menemani `talent-report.graphql` sampai **T025 (codegen swap)**: setelah
+ * menemani `talent-report.graphql.pending` sampai **T025 (codegen swap)**: setelah
  * `graph/schema.graphqls` tersinkron dengan SDL dilayani backend, jalankan
  * `npm run codegen` lalu ganti impor `./types` dengan `@/generated/graphql`.
  * Jangan menambah/mengubah field di sini tanpa revisi plan (D10).

@@ -1,12 +1,12 @@
 # T015 — dokumen query laporan talent (kontrak sementara untuk client-preset).
 #
 # Dituju codegen (`preset: "client"`) saat T025 (codegen swap): setelah
-# `graph/schema.graphqls` memuat fragmen §5 plan-003, jalankan `npm run codegen`
-# lalu ganti dokumen hand-built di `useTalentReport.ts` dengan hasil generate.
+# `graph/schema.graphqls` memuat fragmen §5 plan-003, **rename file ini kembali
+# ke `talent-report.graphql`** (akhiran `.pending` sengaja di luar glob
+# `src/features/**/*.graphql` agar `npm run codegen` tetap hijau tanpa
+# pengecualian konfigurasi — T032), jalankan `npm run codegen`, lalu ganti
+# dokumen hand-built di `useTalentReport.ts` dengan hasil generate.
 # Sumber kebenaran: plan-003 (TAN-151) §5 — kontrak beku (D10).
-#
-# Catatan: file ini sengaja DIKECUALIKAN dari glob codegen di `codegen.ts`
-# selama SDL dilayani belum memuat `talentReport` — lihat komentar di sana.
 
 query TalentReportRange {
   talentReportRange {

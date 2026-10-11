@@ -13,7 +13,7 @@ import type {
 /**
  * T022 — hook laporan talent.
  *
- * ⚠️ Dokumen `gql` di bawah adalah pasangan sementara `talent-report.graphql`
+ * ⚠️ Dokumen `gql` di bawah adalah pasangan sementara `talent-report.graphql.pending`
  * (T015) — diganti `TalentReportDocument`/`TalentReportRangeDocument` hasil
  * codegen saat T025 (codegen swap). Tipe hasil memakai `types.ts` (kontrak
  * sementara) sampai saat itu.

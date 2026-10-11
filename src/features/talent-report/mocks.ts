@@ -3,7 +3,7 @@
  *
  * ⚠️ BUKAN MOCK PRODUKSI — modul ini hanya boleh diimpor oleh berkas test.
  * Kode produksi (`useTalentReport`, `TalentReportPageView`, …) mengambil data
- * lewat GraphQL (`talent-report.graphql`); fixture di sini memasok `MockedProvider`
+ * lewat GraphQL (`talent-report.graphql.pending`); fixture di sini memasok `MockedProvider`
  * dan uji data-prep sampai T025 (codegen swap). Tidak ada jalur yang membaca
  * fixture ini saat runtime aplikasi (aturan merge FE: tanpa mock produksi).
  *
