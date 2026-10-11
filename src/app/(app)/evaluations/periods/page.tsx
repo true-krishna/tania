@@ -5,7 +5,7 @@ import { BoardTable } from "@/components/BoardTable";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { useEvaluationPeriods } from "@/features/evaluations/useEvaluationPeriods";
-import { PeriodStateBadge } from "../page";
+import { PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
 
 /**
  * Evaluation periods (Admin) — US7 / FR-25.
