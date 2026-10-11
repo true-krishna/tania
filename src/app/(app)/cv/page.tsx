@@ -6,6 +6,7 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
+import { Select } from "@/components/Select";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
 import { useSessionRole } from "@/lib/auth/guard";
@@ -28,6 +29,9 @@ import {
 const BLOCK = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 const LABEL =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm";
+
+/** D11 — dropdown terkontrol lima nilai jenjang (disahkan pemilik produk 2026-10-10). */
+const EDUCATION_LEVELS = ["SMA/SMK Sederajat", "D3", "S1", "S2", "S3"] as const;
 
 /**
  * CV profile (FR-12/FR-13) — US4.
@@ -135,7 +139,7 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
         variables: {
           input: {
             institution: institution.trim(),
-            degree: degree.trim() || null,
+            degree: degree || null,
             fieldOfStudy: fieldOfStudy.trim() || null,
             startYear: startYear ? Number(startYear) : null,
             endYear: endYear ? Number(endYear) : null,
@@ -192,7 +196,14 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
 
       <form onSubmit={onAdd} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Institusi (wajib)" required />
-        <Input value={degree} onChange={(e) => setDegree(e.target.value)} placeholder="Gelar (cth: S.Kom)" />
+        <Select value={degree} onChange={(e) => setDegree(e.target.value)} aria-label="Jenjang pendidikan">
+          <option value="">— pilih jenjang (opsional) —</option>
+          {EDUCATION_LEVELS.map((level) => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
+        </Select>
         <Input value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} placeholder="Jurusan" />
         <div className="flex gap-2">
           <Input value={startYear} onChange={(e) => setStartYear(e.target.value)} placeholder="Tahun mulai" inputMode="numeric" />
