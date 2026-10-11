@@ -3,6 +3,8 @@
 import * as React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
+import { GraphQLError } from "graphql";
 import { resolveChartTheme } from "./chart-theme";
 import { EChart, type EChartHandle } from "./EChart";
 import { ChartCard } from "./ChartCard";
@@ -17,7 +19,22 @@ import {
   monthRange,
   PeriodFilter,
 } from "./PeriodFilter";
-import type { ReportCategoryCount, TalentReportPeriod, TalentReportRange } from "./types";
+import {
+  TALENT_REPORT_QUERY,
+  TALENT_REPORT_RANGE_QUERY,
+  useTalentReport,
+} from "./useTalentReport";
+import {
+  MOCK_TALENT_REPORT,
+  MOCK_TALENT_REPORT_EMPTY,
+  MOCK_TALENT_REPORT_RANGE,
+} from "./mocks";
+import type {
+  ReportCategoryCount,
+  TalentReport,
+  TalentReportPeriod,
+  TalentReportRange,
+} from "./types";
 
 const echartsMock = vi.hoisted(() => {
   const instance = {
@@ -348,5 +365,124 @@ describe("PeriodFilter (T021 / FR-11)", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Terapkan" }));
     expect(onApply).toHaveBeenCalledWith({ startMonth: "2025-06", endMonth: "2025-06" });
+  });
+});
+
+describe("useTalentReport (T022 / FR-11, FR-12, FR-15)", () => {
+  const fullPeriod: TalentReportPeriod = {
+    startMonth: MOCK_TALENT_REPORT_RANGE.startMonth,
+    endMonth: MOCK_TALENT_REPORT_RANGE.endMonth,
+  };
+
+  const rangeMock: MockedResponse = {
+    request: { query: TALENT_REPORT_RANGE_QUERY },
+    result: {
+      data: {
+        talentReportRange: { __typename: "TalentReportRange", ...MOCK_TALENT_REPORT_RANGE },
+      },
+    },
+  };
+
+  function reportData(report: TalentReport) {
+    const categories = (items: ReportCategoryCount[]) =>
+      items.map((c) => ({ __typename: "ReportCategoryCount", ...c }));
+    return {
+      talentReport: {
+        __typename: "TalentReport",
+        ...report,
+        roleDistribution: categories(report.roleDistribution),
+        generationDistribution: categories(report.generationDistribution),
+        educationDistribution: categories(report.educationDistribution),
+        workLocationDistribution: categories(report.workLocationDistribution),
+        movementTrend: report.movementTrend.map((m) => ({
+          __typename: "ReportMonthlyMovement",
+          ...m,
+        })),
+      },
+    };
+  }
+
+  function reportMock(period: TalentReportPeriod, report: TalentReport): MockedResponse {
+    return {
+      request: { query: TALENT_REPORT_QUERY, variables: { period } },
+      result: { data: reportData(report) },
+    };
+  }
+
+  function HookProbe() {
+    const { period, status, report, message, applyPeriod } = useTalentReport();
+    return (
+      <div>
+        <span data-testid="period">
+          {period ? `${period.startMonth}..${period.endMonth}` : "none"}
+        </span>
+        <span data-testid="status">{status}</span>
+        <span data-testid="top">{report?.roleDistribution[0]?.count ?? "none"}</span>
+        <span data-testid="message">{message ?? ""}</span>
+        <button
+          type="button"
+          onClick={() => applyPeriod({ startMonth: "2026-01", endMonth: "2026-10" })}
+        >
+          Ubah periode
+        </button>
+      </div>
+    );
+  }
+
+  function renderHook(mocks: MockedResponse[]) {
+    return render(
+      <MockedProvider mocks={mocks}>
+        <HookProbe />
+      </MockedProvider>,
+    );
+  }
+
+  it("defaults the filter to the whole available range (FR-11)", async () => {
+    renderHook([rangeMock, reportMock(fullPeriod, MOCK_TALENT_REPORT)]);
+
+    await screen.findByText("ready");
+    expect(screen.getByTestId("period")).toHaveTextContent("2025-01..2026-10");
+    expect(screen.getByTestId("top")).toHaveTextContent("12");
+  });
+
+  it("updates all visuals from one refetch when the period changes (SC-04)", async () => {
+    const updated: TalentReport = {
+      ...MOCK_TALENT_REPORT,
+      roleDistribution: [{ label: "Engineer", count: 99, kind: "VALUE" }],
+    };
+    renderHook([
+      rangeMock,
+      reportMock(fullPeriod, MOCK_TALENT_REPORT),
+      reportMock({ startMonth: "2026-01", endMonth: "2026-10" }, updated),
+    ]);
+
+    await screen.findByText("12");
+
+    fireEvent.click(screen.getByRole("button", { name: "Ubah periode" }));
+    await screen.findByText("99");
+    expect(screen.getByTestId("period")).toHaveTextContent("2026-01..2026-10");
+  });
+
+  it("reports empty for a range without any data (edge case spek)", async () => {
+    renderHook([rangeMock, reportMock(fullPeriod, MOCK_TALENT_REPORT_EMPTY)]);
+
+    await screen.findByText("empty");
+  });
+
+  it("maps a server FORBIDDEN to the forbidden status (SC-05)", async () => {
+    renderHook([
+      rangeMock,
+      {
+        request: { query: TALENT_REPORT_QUERY, variables: { period: fullPeriod } },
+        result: {
+          errors: [
+            new GraphQLError("Akses ditolak.", { extensions: { code: "FORBIDDEN" } }),
+          ],
+        },
+      },
+    ]);
+
+    await screen.findByText("forbidden");
+    expect(screen.getByTestId("message")).toHaveTextContent("Akses ditolak.");
   });
 });
