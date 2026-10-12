@@ -29,7 +29,7 @@ import {
   TALENT_REPORT_RANGE_QUERY,
   useTalentReport,
 } from "./useTalentReport";
-import { TalentReportPageView } from "./TalentReportPageView";
+import { TalentReportContent } from "./TalentReportPageView";
 import {
   MOCK_MOVEMENT_TREND,
   MOCK_TALENT_REPORT,
@@ -361,6 +361,20 @@ describe("DistributionChart data-prep (T020)", () => {
     expect((column.xAxis as { type?: string }).type).toBe("category");
     expect((column.yAxis as { inverse?: boolean }).inverse).toBeUndefined();
   });
+
+  it("renders judul & rentang via TitleComponent di dalam kanvas saat disuplai (T034 / SC-03)", () => {
+    const theme = resolveChartTheme();
+    const titled = buildDistributionOption([], "bar", theme, "Talent per role", "Januari 2025 – Oktober 2026");
+    const title = (titled as { title: { text: string; subtext: string; left: string } }).title;
+    expect(title.text).toBe("Talent per role");
+    expect(title.subtext).toBe("Januari 2025 – Oktober 2026");
+    expect(title.left).toBe("center");
+    expect((titled.grid as { top: number }).top).toBe(52);
+
+    const plain = buildDistributionOption([], "bar", theme);
+    expect((plain as { title?: unknown }).title).toBeUndefined();
+    expect((plain.grid as { top: number }).top).toBe(8);
+  });
 });
 
 describe("PeriodFilter (T021 / FR-11)", () => {
@@ -494,11 +508,13 @@ describe("useTalentReport (T022 / FR-11, FR-12, FR-15)", () => {
   });
 });
 
-describe("TalentReportPageView (T023 / SC-04, SC-05)", () => {
+// Amandemen penempatan (TAN-154, 2026-10-12): konten laporan kini di-embed ke
+// Dashboard untuk Operation/Chapter — komponennya `TalentReportContent`.
+describe("TalentReportContent (T023 / SC-04, SC-05)", () => {
   function renderPage(mocks: MockedResponse[]) {
     return render(
       <MockedProvider mocks={mocks}>
-        <TalentReportPageView />
+        <TalentReportContent />
       </MockedProvider>,
     );
   }
@@ -527,7 +543,7 @@ describe("TalentReportPageView (T023 / SC-04, SC-05)", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("shows the access-denied page on FORBIDDEN (SC-05)", async () => {
+  it("shows the access-denied state on FORBIDDEN (SC-05)", async () => {
     renderPage([
       rangeMock,
       {
@@ -620,6 +636,25 @@ describe("MovementTrendChart (T026 / V-5)", () => {
     expect(series.map((s) => s.type)).toEqual(["bar", "bar"]);
     expect(series[1].data).toEqual(MOCK_MOVEMENT_TREND.map((m) => -m.churn));
     expect(series[0].data).toEqual(MOCK_MOVEMENT_TREND.map((m) => m.newTalent));
+  });
+
+  it("renders judul & rentang via TitleComponent di dalam kanvas saat disuplai (T034 / SC-03)", () => {
+    const option = buildMovementOption(
+      MOCK_MOVEMENT_TREND,
+      "line",
+      resolveChartTheme(),
+      "Tren churn vs new talent",
+      "Januari 2025 – Oktober 2026",
+    );
+    const title = (option as { title: { text: string; subtext: string } }).title;
+    expect(title.text).toBe("Tren churn vs new talent");
+    expect(title.subtext).toBe("Januari 2025 – Oktober 2026");
+    const legend = (option as { legend: { top?: number } }).legend;
+    expect(legend.top).toBe(44);
+    expect((option.grid as { top: number }).top).toBe(72);
+
+    const plain = buildMovementOption(MOCK_MOVEMENT_TREND, "line", resolveChartTheme());
+    expect((plain as { title?: unknown }).title).toBeUndefined();
   });
 
   it("allows the diverging toggle only up to 12 months (plan §7)", () => {

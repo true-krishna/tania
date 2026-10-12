@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { PageHeader } from "@/components/PageHeader";
 import { ChartCard } from "./ChartCard";
 import {
   DistributionChart,
@@ -12,7 +11,7 @@ import {
 import { MovementTrendChart } from "./MovementTrendChart";
 import { chartFileName, downloadChart } from "./downloadChart";
 import type { EChartHandle } from "./EChart";
-import { PeriodFilter } from "./PeriodFilter";
+import { formatMonthLabel, PeriodFilter } from "./PeriodFilter";
 import { useTalentReport } from "./useTalentReport";
 import type { ReportCategoryCount, TalentReport } from "@/generated/graphql/types";
 
@@ -25,12 +24,16 @@ function movementTotal(report: TalentReport): number {
 }
 
 /**
- * T023 — halaman laporan talent: layout 5 kartu (V-1…V-4 + slot tren V-5),
- * filter rentang (FR-11), state loading / empty / FORBIDDEN / error.
- * Nav "Laporan Talent" hanya untuk Operation & Chapter (guard UI) —
- * penegakan authz tetap di server (FR-01/SC-05).
+ * T023 + amandemen penempatan (2026-10-12, keputusan pemilik produk pada
+ * TAN-154): konten laporan TIDAK lagi menjadi halaman tersendiri — ia
+ * MENGKANTIKAN konten Dashboard untuk Operation & Chapter; entri nav
+ * "Laporan Talent" dihapus dan `/reports/talent` hanya redirect ke
+ * `/dashboard`. `TalentReportContent` = lima kartu + filter rentang + state
+ * loading/empty/FORBIDDEN/error, tanpa PageHeader (Dashboard sudah punya).
+ * FORBIDDEN (SC-05) tetap sebagai state defensif — penegakan authz di server
+ * (FR-01); Dashboard memilih konten ini hanya untuk Operation/Chapter.
  */
-export function TalentReportPageView() {
+export function TalentReportContent() {
   const { range, period, applyPeriod, status, report, message } = useTalentReport();
   const roleRef = React.useRef<EChartHandle>(null);
   const generationRef = React.useRef<EChartHandle>(null);
@@ -43,13 +46,12 @@ export function TalentReportPageView() {
     downloadChart(chartRef.current, chartFileName(chartName, period.startMonth, period.endMonth));
   };
 
+  // T034: judul & rentang ikut dirender TitleComponent DI DALAM kanvas
+  // sehingga PNG unduhan memuat keduanya (SC-03/FR-13).
+  const periodLabel = period ? `${formatMonthLabel(period.startMonth)} – ${formatMonthLabel(period.endMonth)}` : undefined;
+
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader
-        title="Laporan Talent"
-        subtitle="Komposisi talent serta gerakan churn & new talent — agregat tanpa data individual."
-      />
-
       {status === "loading" ? <LoadingState label="Memuat laporan…" /> : null}
 
       {status === "forbidden" ? (
@@ -76,6 +78,8 @@ export function TalentReportPageView() {
                   data={report.roleDistribution}
                   orientation="bar"
                   ariaLabel="Talent per role"
+                  title="Talent per role"
+                  periodLabel={periodLabel}
                   chartRef={roleRef}
                 />
               </ChartCard>
@@ -89,6 +93,8 @@ export function TalentReportPageView() {
                   orientation="column"
                   ordinal={GENERATION_ORDER}
                   ariaLabel="Talent per generasi"
+                  title="Talent per generasi"
+                  periodLabel={periodLabel}
                   chartRef={generationRef}
                 />
               </ChartCard>
@@ -102,6 +108,8 @@ export function TalentReportPageView() {
                   orientation="column"
                   ordinal={EDUCATION_ORDER}
                   ariaLabel="Talent per jenjang pendidikan"
+                  title="Talent per jenjang pendidikan"
+                  periodLabel={periodLabel}
                   chartRef={educationRef}
                 />
               </ChartCard>
@@ -114,6 +122,8 @@ export function TalentReportPageView() {
                   data={report.workLocationDistribution}
                   orientation="bar"
                   ariaLabel="Talent per lokasi kerja"
+                  title="Talent per lokasi kerja"
+                  periodLabel={periodLabel}
                   chartRef={workLocationRef}
                 />
               </ChartCard>
@@ -126,6 +136,8 @@ export function TalentReportPageView() {
                   <MovementTrendChart
                     data={report.movementTrend}
                     ariaLabel="Tren churn vs new talent"
+                    title="Tren churn vs new talent"
+                    periodLabel={periodLabel}
                     chartRef={movementRef}
                   />
                 </ChartCard>

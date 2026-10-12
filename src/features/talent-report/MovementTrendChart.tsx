@@ -26,14 +26,32 @@ export function buildMovementOption(
   data: readonly ReportMonthlyMovement[],
   view: MovementView,
   theme: ChartTheme,
+  title?: string,
+  periodLabel?: string,
 ): EChartsCoreOption {
   const months = data.map((m) => m.month);
   const axisLabel = { color: theme.textColor, fontFamily: theme.fontFamily };
   const common = {
     textStyle: { fontFamily: theme.fontFamily, color: theme.textColor },
-    grid: { left: 8, right: 16, top: 24, bottom: 8, containLabel: true },
+    // T034: judul & rentang di dalam kanvas (plan §2) — PNG identik tampilan (SC-03).
+    title: title
+      ? {
+          text: title,
+          subtext: periodLabel,
+          left: "center",
+          top: 0,
+          textStyle: {
+            color: theme.textColor,
+            fontFamily: theme.fontFamily,
+            fontSize: 14,
+            fontWeight: 600 as const,
+          },
+          subtextStyle: { color: theme.mutedColor, fontFamily: theme.fontFamily, fontSize: 11 },
+        }
+      : undefined,
+    legend: { top: title ? 44 : undefined, data: ["New talent", "Churn"], textStyle: { color: theme.textColor } },
+    grid: { left: 8, right: 16, top: title ? 72 : 24, bottom: 8, containLabel: true },
     tooltip: { trigger: "axis" as const },
-    legend: { data: ["New talent", "Churn"], textStyle: { color: theme.textColor } },
     xAxis: {
       type: "category" as const,
       data: months,
@@ -98,6 +116,10 @@ interface MovementTrendChartProps {
   data: readonly ReportMonthlyMovement[];
   ariaLabel?: string;
   className?: string;
+  /** Judul grafik — dirender TitleComponent di dalam kanvas (T034/SC-03). */
+  title?: string;
+  /** Label rentang periode — subtext judul di dalam kanvas (T034/FR-13). */
+  periodLabel?: string;
   chartRef?: React.Ref<EChartHandle>;
 }
 
@@ -110,6 +132,8 @@ export function MovementTrendChart({
   data,
   ariaLabel,
   className,
+  title,
+  periodLabel,
   chartRef,
 }: MovementTrendChartProps) {
   const theme = React.useMemo(() => resolveChartTheme(), []);
@@ -117,8 +141,8 @@ export function MovementTrendChart({
   const divergingAvailable = canUseDivergingBars(data);
   const effectiveView = divergingAvailable ? view : "line";
   const option = React.useMemo(
-    () => buildMovementOption(data, effectiveView, theme),
-    [data, effectiveView, theme],
+    () => buildMovementOption(data, effectiveView, theme, title, periodLabel),
+    [data, effectiveView, theme, title, periodLabel],
   );
   return (
     <div className="flex flex-col gap-2">

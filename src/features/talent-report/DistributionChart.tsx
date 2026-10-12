@@ -60,11 +60,15 @@ export function prepareDistribution(
   });
 }
 
-/** Opsi ECharts V-1…V-4: warna per-datum (MISSING abu-abu) dari tema (D1). */
+/** Opsi ECharts V-1…V-4: warna per-datum (MISSING abu-abu) dari tema (D1).
+ * T034: judul & rentang dirender `TitleComponent` DI DALAM kanvas (plan §2)
+ * agar PNG unduhan memuat judul + rentang — identik dengan tampilan (SC-03). */
 export function buildDistributionOption(
   data: readonly DistributionDatum[],
   orientation: DistributionOrientation,
   theme: ChartTheme,
+  title?: string,
+  periodLabel?: string,
 ): EChartsCoreOption {
   const categories = data.map((d) => d.label);
   const values = data.map((d) => ({
@@ -84,7 +88,22 @@ export function buildDistributionOption(
   };
   return {
     textStyle: { fontFamily: theme.fontFamily, color: theme.textColor },
-    grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
+    title: title
+      ? {
+          text: title,
+          subtext: periodLabel,
+          left: "center",
+          top: 0,
+          textStyle: {
+            color: theme.textColor,
+            fontFamily: theme.fontFamily,
+            fontSize: 14,
+            fontWeight: 600 as const,
+          },
+          subtextStyle: { color: theme.mutedColor, fontFamily: theme.fontFamily, fontSize: 11 },
+        }
+      : undefined,
+    grid: { left: 8, right: 16, top: title ? 52 : 8, bottom: 8, containLabel: true },
     tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
     xAxis: orientation === "bar" ? valueAxis : categoryAxis,
     yAxis: orientation === "bar" ? { ...categoryAxis, inverse: true } : valueAxis,
@@ -98,6 +117,10 @@ interface DistributionChartProps {
   ordinal?: readonly string[];
   ariaLabel?: string;
   className?: string;
+  /** Judul grafik — dirender TitleComponent di dalam kanvas (T034/SC-03). */
+  title?: string;
+  /** Label rentang periode — subtext judul di dalam kanvas (T034/FR-13). */
+  periodLabel?: string;
   /** Ref handle `getDataURL` untuk tombol Unduh PNG (T027). */
   chartRef?: React.Ref<import("./EChart").EChartHandle>;
 }
@@ -108,12 +131,21 @@ export function DistributionChart({
   ordinal,
   ariaLabel,
   className,
+  title,
+  periodLabel,
   chartRef,
 }: DistributionChartProps) {
   const theme = React.useMemo(() => resolveChartTheme(), []);
   const option = React.useMemo(
-    () => buildDistributionOption(prepareDistribution(data, ordinal), orientation, theme),
-    [data, ordinal, orientation, theme],
+    () =>
+      buildDistributionOption(
+        prepareDistribution(data, ordinal),
+        orientation,
+        theme,
+        title,
+        periodLabel,
+      ),
+    [data, ordinal, orientation, theme, title, periodLabel],
   );
   return (
     <EChart
