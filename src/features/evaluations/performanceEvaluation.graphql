@@ -9,7 +9,7 @@ query PerformanceEvaluationForTalent($periodId: ID!, $employeeId: ID!, $first: I
         talent {
           id
           fullName
-          employeeCode
+          nomorInduk
         }
         status
         summaryAchievement

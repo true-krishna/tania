@@ -3,7 +3,7 @@ query EvaluationRoster($periodId: ID!) {
     talent {
       id
       fullName
-      employeeCode
+      nomorInduk
       jobRole {
         id
         name

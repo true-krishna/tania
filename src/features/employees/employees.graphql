@@ -5,10 +5,11 @@ query Employees($filter: EmployeeFilter, $first: Int = 25, $after: String) {
       node {
         id
         fullName
-        employeeCode
+        nikMasked
         email
         status
         assignable
+        nomorInduk
         unit {
           id
           name

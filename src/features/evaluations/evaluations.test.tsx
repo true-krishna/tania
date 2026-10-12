@@ -45,7 +45,7 @@ const rosterEntry = (employeeId: string, fullName: string, fillState: "NOT_EVALU
     __typename: "Employee",
     id: employeeId,
     fullName,
-    employeeCode: "EMP-001",
+    nomorInduk: "EMP-001",
     jobRole: { __typename: "JobRole", id: "role-1", name: "Go Engineer" },
   },
   fillState,
@@ -146,7 +146,7 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
               status: "DRAFT",
               summaryAchievement: null,
               developmentNotes: null,
-              talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", employeeCode: "EMP-001" },
+              talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
               period: detailPeriod,
               answers: [
                 {

@@ -16,7 +16,7 @@ type AssignmentRowData = {
   status: AssignmentStatus;
   periodStart: string;
   periodEnd: string | null;
-  talent: { fullName: string; employeeCode: string };
+  talent: { fullName: string; nomorInduk: string | null };
   project: { name: string };
   jobRole: { name: string };
 };
@@ -31,7 +31,7 @@ function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
         >
           {assignment.talent.fullName}
         </Link>
-        <span className="block text-xs text-zinc-500">{assignment.talent.employeeCode}</span>
+        <span className="block text-xs text-zinc-500">{assignment.talent.nomorInduk ?? "—"}</span>
       </td>
       <td className="px-4 py-2.5 text-zinc-600">{assignment.project.name}</td>
       <td className="px-4 py-2.5 text-zinc-600">{assignment.jobRole.name}</td>
@@ -77,7 +77,7 @@ export default function AssignmentsPage() {
           <span>Talent</span>
           <Select value={talentId} onChange={(e) => setTalentId(e.target.value)}>
             <option value="">Semua</option>
-            {employees.data?.map((emp) => (
+            {employees.employees?.map((emp) => (
               <option key={emp.id} value={emp.id}>
                 {emp.fullName}
               </option>

@@ -34,7 +34,7 @@ type PeriodLike = {
   template: { criteria: CriterionLike[] } | null;
 };
 
-type TalentLike = { id: string; fullName: string; employeeCode?: string };
+type TalentLike = { id: string; fullName: string; nomorInduk?: string | null };
 
 type AnswerLike = {
   criterion: Pick<CriterionLike, "id" | "answerType">;

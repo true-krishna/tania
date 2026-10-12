@@ -18,6 +18,7 @@ import {
 } from "@tabler/icons-react";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
+import { OperationCycleWidgets } from "@/features/contracts/OperationCycleWidgets";
 import type {
   AssignmentStatus,
   DevelopmentActionStatus,
@@ -84,13 +85,13 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-zinc-500">{children}</p>;
 }
 
-function PersonRow({ name, code }: { name: string; code: string }) {
+function PersonRow({ name, code }: { name: string; code: string | null }) {
   return (
     <li className="flex items-center gap-3 rounded-lg border border-surface-border px-3 py-2">
       <Avatar name={name} />
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
-        <p className="truncate text-xs text-zinc-500">{code}</p>
+        <p className="truncate text-xs text-zinc-500">{code ?? "—"}</p>
       </div>
     </li>
   );
@@ -189,7 +190,7 @@ export default function DashboardPage() {
               {dash.recentEmployeeChanges.length ? (
                 <ul className="flex flex-col gap-2">
                   {dash.recentEmployeeChanges.map((e) => (
-                    <PersonRow key={e.id} name={e.fullName} code={e.employeeCode} />
+                    <PersonRow key={e.id} name={e.fullName} code={e.nomorInduk} />
                   ))}
                 </ul>
               ) : (
@@ -197,6 +198,8 @@ export default function DashboardPage() {
               )}
             </Panel>
           </div>
+
+          <OperationCycleWidgets />
         </>
       ) : null}
 
@@ -238,7 +241,7 @@ export default function DashboardPage() {
             {dash.unassignedTalents.length ? (
               <ul className="flex flex-col gap-2">
                 {dash.unassignedTalents.map((e) => (
-                  <PersonRow key={e.id} name={e.fullName} code={e.employeeCode} />
+                  <PersonRow key={e.id} name={e.fullName} code={e.nomorInduk} />
                 ))}
               </ul>
             ) : (

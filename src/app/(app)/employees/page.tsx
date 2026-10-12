@@ -2,28 +2,33 @@
 
 import Link from "next/link";
 import * as React from "react";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable, type Column } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useEmployees } from "@/features/employees/useEmployees";
+import { EMPLOYEE_STATUS_LABEL } from "@/features/employees/labels";
+import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
 
 type EmployeeRowData = {
   id: string;
   fullName: string;
-  employeeCode: string;
+  nikMasked: string;
   email: string;
   status: EmployeeStatus;
-  unit: { name: string };
-  jobRole: { name: string };
+  nomorInduk: string | null;
+  unit: { name: string } | null;
+  jobRole: { name: string } | null;
 };
+
 const COLUMNS: Column[] = [
   { key: "name", label: "Nama" },
+  { key: "nik", label: "NIK" },
   { key: "email", label: "Email" },
-  { key: "unit", label: "Unit" },
+  { key: "unit", label: "Divisi" },
   { key: "jobRole", label: "Job Role" },
   { key: "status", label: "Status" },
 ];
@@ -38,13 +43,16 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
         >
           {employee.fullName}
         </Link>
-        <span className="block text-xs text-zinc-500">{employee.employeeCode}</span>
+        <span className="block text-xs text-zinc-500">{employee.nomorInduk ?? "—"}</span>
       </td>
+      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">{employee.nikMasked}</td>
       <td className="px-4 py-2.5 text-zinc-600">{employee.email}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.unit.name}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.jobRole.name}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{employee.unit?.name ?? "—"}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{employee.jobRole?.name ?? "—"}</td>
       <td className="px-4 py-2.5">
-        <StatusBadge active={employee.status === "ACTIVE"} />
+        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+          {EMPLOYEE_STATUS_LABEL[employee.status]}
+        </span>
       </td>
     </tr>
   );
@@ -52,11 +60,15 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
 
 export default function EmployeesPage() {
   const [search, setSearch] = React.useState("");
+  const [unitId, setUnitId] = React.useState("");
   const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
-  const { status: query, data, error } = useEmployees({
-    search: search || undefined,
-    status: status === "ALL" ? undefined : status,
-  });
+  const units = useUnits();
+  const { status: query, employees, totalCount, hasNextPage, loadingMore, error, loadMore } =
+    useEmployees({
+      search: search || undefined,
+      unitId: unitId || undefined,
+      status: status === "ALL" ? undefined : status,
+    });
 
   return (
     <section className="flex flex-col gap-4">
@@ -77,9 +89,24 @@ export default function EmployeesPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama, email, atau kode…"
+            placeholder="Cari nama, email, atau nomor induk…"
             className="max-w-xs"
           />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-zinc-700">
+          <span>Divisi</span>
+          <Select
+            value={unitId}
+            onChange={(e) => setUnitId(e.target.value)}
+            className="w-auto"
+          >
+            <option value="">Semua</option>
+            {(units.data ?? []).map((unit) => (
+              <option key={unit.id} value={unit.id}>
+                {unit.name}
+              </option>
+            ))}
+          </Select>
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-700">
           <span>Status</span>
@@ -89,8 +116,13 @@ export default function EmployeesPage() {
             className="w-auto"
           >
             <option value="ALL">Semua</option>
-            <option value="ACTIVE">Aktif</option>
-            <option value="INACTIVE">Nonaktif</option>
+            {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
+              (value) => (
+                <option key={value} value={value}>
+                  {EMPLOYEE_STATUS_LABEL[value]}
+                </option>
+              )
+            )}
           </Select>
         </label>
       </div>
@@ -99,17 +131,24 @@ export default function EmployeesPage() {
         <LoadingState />
       ) : query === "error" ? (
         <ErrorState message={error ?? "Gagal memuat data."} />
-      ) : !data || data.length === 0 ? (
+      ) : !employees || employees.length === 0 ? (
         <EmptyState message="Tidak ada karyawan yang cocok dengan pencarian/filter." />
       ) : (
-        <BoardTable caption="Daftar karyawan" columns={COLUMNS}>
-          {data.map((employee) => (
-            <EmployeeRow key={employee.id} employee={employee} />
-          ))}
-        </BoardTable>
+        <>
+          <BoardTable caption="Daftar karyawan" columns={COLUMNS}>
+            {employees.map((employee) => (
+              <EmployeeRow key={employee.id} employee={employee} />
+            ))}
+          </BoardTable>
+          {hasNextPage ? (
+            <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? "Memuat…" : "Muat lebih banyak"}
+            </Button>
+          ) : null}
+        </>
       )}
       <p className="text-xs text-zinc-500">
-        {data ? `${data.length} karyawan ditampilkan.` : ""}
+        {employees ? `${employees.length} dari ${totalCount} karyawan ditampilkan.` : ""}
       </p>
     </section>
   );

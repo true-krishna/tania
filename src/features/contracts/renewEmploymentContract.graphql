@@ -1,0 +1,18 @@
+mutation RenewEmploymentContract($input: RenewContractInput!) {
+  renewEmploymentContract(input: $input) {
+    id
+    contractNo
+    contractType
+    status
+    startDate
+    endDate
+    employee {
+      id
+      fullName
+    }
+    predecessor {
+      id
+      contractNo
+    }
+  }
+}

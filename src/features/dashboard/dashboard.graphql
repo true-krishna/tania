@@ -33,7 +33,7 @@ query Dashboard {
       recentEmployeeChanges {
         id
         fullName
-        employeeCode
+        nomorInduk
       }
     }
     ... on ChapterDashboard {
@@ -48,7 +48,7 @@ query Dashboard {
       unassignedTalents {
         id
         fullName
-        employeeCode
+        nomorInduk
       }
       idpsNeedingReview
       currentEvaluationPeriod {
