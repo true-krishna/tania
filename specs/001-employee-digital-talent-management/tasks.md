@@ -82,7 +82,7 @@ Aturan yang mengikat:
 **Independent Test**: Login Admin → CRUD master data dengan pesan validasi server tampil benar (Project wajib Unit; penonaktifan yang melanggar referensi ditolak) → buat akun & ubah peran.
 
 - [x] T052 [P] [US6] Frontend feature `master-data`: halaman `src/app/(app)/master-data/` + hooks/query pada `src/features/master-data/`
-- [ ] T053 [P] [US6] Frontend feature `accounts`: halaman `src/app/(app)/accounts/` + hooks/mutation pada `src/features/accounts/`
+- [x] T053 [P] [US6] Frontend feature `accounts`: halaman `src/app/(app)/accounts/` + hooks/mutation pada `src/features/accounts/` — **terpenuhi (TAN-149)**: 4 mutation (`createUserAccount`, `updateUserAccessRole`, `setUserAccountStatus`, `revokeUserSessions`) sesuai SDL backend, form buat akun (employee picker + 4 peran akses tetap + password sementara opsional), ubah peran, aktif/nonaktif, revoke sesi dengan konfirmasi, pesan validasi server ditampilkan (plan.md §10.2) + test `src/features/accounts/accounts.test.tsx` 8 test mencakup skenario 7–8 — **terverifikasi** 2026-10-09 (test hijau terisolasi; suite penuh terkendala load host); MR !31 (commit `0c35682`)
 - [x] T054 [P] [US6] Test Vitest + RTL form master data termasuk tampilan pesan validasi server (`plan.md` §10.2) pada `src/features/master-data/master-data.test.tsx`
 
 **Checkpoint**: US6 UI berfungsi terhadap endpoint backend US6.
