@@ -241,7 +241,8 @@ export type CvEducation = {
 };
 
 export type CvEducationInput = {
-  degree?: InputMaybe<Scalars['String']['input']>;
+  /** Jenjang terbatas lima nilai (D11, spek 003); null = tidak diisi (data lama). */
+  degree?: InputMaybe<EducationLevel>;
   endYear?: InputMaybe<Scalars['Int']['input']>;
   fieldOfStudy?: InputMaybe<Scalars['String']['input']>;
   institution: Scalars['String']['input'];
@@ -298,6 +299,17 @@ export type DevelopmentMethod =
   | 'PROJECT_ASSIGNMENT'
   | 'SELF_STUDY'
   | 'TRAINING';
+
+/**
+ * Jenjang pendidikan terkontrol (D11 spek 003) — lima nilai; label tampilan
+ * "SMA/SMK Sederajat", "D3", "S1", "S2", "S3".
+ */
+export type EducationLevel =
+  | 'D3'
+  | 'S1'
+  | 'S2'
+  | 'S3'
+  | 'SMA_SMK_SEDERAJAT';
 
 export type Employee = {
   __typename?: 'Employee';
@@ -974,6 +986,8 @@ export type Query = {
   myPerformanceEvaluations: Array<PerformanceEvaluation>;
   performanceEvaluations: PerformanceEvaluationConnection;
   projects: Array<Project>;
+  talentReport: TalentReport;
+  talentReportRange: TalentReportRange;
   units: Array<Unit>;
   users: Array<User>;
 };
@@ -1070,6 +1084,11 @@ export type QueryProjectsArgs = {
 };
 
 
+export type QueryTalentReportArgs = {
+  period: TalentReportPeriodInput;
+};
+
+
 export type QueryUnitsArgs = {
   includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -1079,6 +1098,29 @@ export type QueryUsersArgs = {
   accessRole?: InputMaybe<AccessRole>;
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<AccountStatus>;
+};
+
+export type ReportCategoryCount = {
+  __typename?: 'ReportCategoryCount';
+  count: Scalars['Int']['output'];
+  kind: ReportCategoryKind;
+  label: Scalars['String']['output'];
+};
+
+export type ReportCategoryKind =
+  /** Kategori "Belum diisi" — selalu ditempatkan paling akhir, abu-abu. */
+  | 'MISSING'
+  /** Kategori "Lainnya" — agregat di luar Top 10 lokasi kerja. */
+  | 'OTHER'
+  /** Kategori data sah. */
+  | 'VALUE';
+
+export type ReportMonthlyMovement = {
+  __typename?: 'ReportMonthlyMovement';
+  churn: Scalars['Int']['output'];
+  /** Bulan (YYYY-MM); setiap bulan rentang selalu hadir, tanpa kejadian bernilai 0. */
+  month: Scalars['String']['output'];
+  newTalent: Scalars['Int']['output'];
 };
 
 export type ReviewLog = {
@@ -1103,6 +1145,31 @@ export type TalentDashboard = {
   idpProgress: Array<ActionStatusCount>;
   latestEvaluation?: Maybe<PerformanceEvaluation>;
   upcomingActionDeadlines: Array<DevelopmentAction>;
+};
+
+export type TalentReport = {
+  __typename?: 'TalentReport';
+  educationDistribution: Array<ReportCategoryCount>;
+  generationDistribution: Array<ReportCategoryCount>;
+  movementTrend: Array<ReportMonthlyMovement>;
+  roleDistribution: Array<ReportCategoryCount>;
+  /** Bulan snapshot distribusi = bulan akhir rentang terpilih (FR-04). */
+  snapshotMonth: Scalars['String']['output'];
+  workLocationDistribution: Array<ReportCategoryCount>;
+};
+
+export type TalentReportPeriodInput = {
+  /** Bulan akhir rentang inklusif, format YYYY-MM, harus >= startMonth. */
+  endMonth: Scalars['String']['input'];
+  /** Bulan awal rentang inklusif, format YYYY-MM. */
+  startMonth: Scalars['String']['input'];
+};
+
+/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest s.d. Desember tahun berjalan. */
+export type TalentReportRange = {
+  __typename?: 'TalentReportRange';
+  endMonth: Scalars['String']['output'];
+  startMonth: Scalars['String']['output'];
 };
 
 /** Unit master data (FR-18). */
