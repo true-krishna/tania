@@ -15,6 +15,11 @@ import {
   prepareDistribution,
 } from "./DistributionChart";
 import {
+  buildMovementOption,
+  canUseDivergingBars,
+} from "./MovementTrendChart";
+import { chartFileName, downloadChart } from "./downloadChart";
+import {
   formatMonthLabel,
   monthRange,
   PeriodFilter,
@@ -26,6 +31,7 @@ import {
 } from "./useTalentReport";
 import { TalentReportPageView } from "./TalentReportPageView";
 import {
+  MOCK_MOVEMENT_TREND,
   MOCK_TALENT_REPORT,
   MOCK_TALENT_REPORT_EMPTY,
   MOCK_TALENT_REPORT_RANGE,
@@ -592,5 +598,70 @@ describe("TalentReportPageView (T023 / SC-04, SC-05)", () => {
     expect(screen.getByText("n = 9")).toBeInTheDocument();
     expect(screen.queryByText("n = 25")).toBeNull();
     expect(screen.getByLabelText("Bulan mulai")).toHaveValue("2026-01");
+  });
+});
+
+describe("MovementTrendChart (T026 / V-5)", () => {
+  it("prepares a two-series line option by default, keeping zero months (US2 AC-9)", () => {
+    const option = buildMovementOption(MOCK_MOVEMENT_TREND, "line", resolveChartTheme());
+    const series = option.series as Array<{ type: string; data: number[]; name: string }>;
+    expect(series).toHaveLength(2);
+    expect(series.map((s) => s.type)).toEqual(["line", "line"]);
+    expect(series[0].name).toBe("New talent");
+    expect(series[1].name).toBe("Churn");
+    expect(series[0].data).toEqual(MOCK_MOVEMENT_TREND.map((m) => m.newTalent));
+    expect(series[1].data).toEqual(MOCK_MOVEMENT_TREND.map((m) => m.churn));
+    expect(series[0].data).toContain(0);
+  });
+
+  it("renders churn as negative values in diverging-bar view (churn di bawah nol)", () => {
+    const option = buildMovementOption(MOCK_MOVEMENT_TREND, "diverging", resolveChartTheme());
+    const series = option.series as Array<{ type: string; data: number[] }>;
+    expect(series.map((s) => s.type)).toEqual(["bar", "bar"]);
+    expect(series[1].data).toEqual(MOCK_MOVEMENT_TREND.map((m) => -m.churn));
+    expect(series[0].data).toEqual(MOCK_MOVEMENT_TREND.map((m) => m.newTalent));
+  });
+
+  it("allows the diverging toggle only up to 12 months (plan §7)", () => {
+    expect(canUseDivergingBars(MOCK_MOVEMENT_TREND.slice(0, 12))).toBe(true);
+    expect(canUseDivergingBars(MOCK_MOVEMENT_TREND)).toBe(false);
+    const thirteen = Array.from({ length: 13 }, (_, i) => ({
+      month: `2025-${String((i % 12) + 1).padStart(2, "0")}`,
+      newTalent: 0,
+      churn: 0,
+    }));
+    expect(canUseDivergingBars(thirteen)).toBe(false);
+    expect(canUseDivergingBars([])).toBe(false);
+  });
+});
+
+describe("downloadChart (T027 / FR-13/FR-14)", () => {
+  it("names files <nama-grafik>-<mulai>-<akhir>.png (FR-14)", () => {
+    expect(chartFileName("talent-per-role", "2025-01", "2026-10")).toBe(
+      "talent-per-role-2025-01-2026-10.png",
+    );
+    expect(chartFileName("tren-churn-vs-new-talent", "2025-01", "2025-01")).toBe(
+      "tren-churn-vs-new-talent-2025-01-2025-01.png",
+    );
+  });
+
+  it("exports PNG at 2× pixel ratio with white background and downloads it (FR-13)", () => {
+    const getDataURL = vi.fn(() => "data:image/png;base64,AAAA");
+    const click = vi.fn();
+    const createElement = vi.spyOn(document, "createElement").mockReturnValue({
+      click,
+      set href(_v: string) {},
+      set download(_v: string) {},
+    } as unknown as HTMLAnchorElement);
+
+    downloadChart({ getDataURL }, "grafik-2025-01-2026-10.png");
+
+    expect(getDataURL).toHaveBeenCalledWith({ pixelRatio: 2, backgroundColor: "#ffffff" });
+    expect(click).toHaveBeenCalledTimes(1);
+    createElement.mockRestore();
+  });
+
+  it("fails safe without a chart handle", () => {
+    expect(() => downloadChart(null, "grafik.png")).not.toThrow();
   });
 });

@@ -98,6 +98,8 @@ interface DistributionChartProps {
   ordinal?: readonly string[];
   ariaLabel?: string;
   className?: string;
+  /** Ref handle `getDataURL` untuk tombol Unduh PNG (T027). */
+  chartRef?: React.Ref<import("./EChart").EChartHandle>;
 }
 
 export function DistributionChart({
@@ -106,6 +108,7 @@ export function DistributionChart({
   ordinal,
   ariaLabel,
   className,
+  chartRef,
 }: DistributionChartProps) {
   const theme = React.useMemo(() => resolveChartTheme(), []);
   const option = React.useMemo(
@@ -114,6 +117,7 @@ export function DistributionChart({
   );
   return (
     <EChart
+      ref={chartRef}
       option={option}
       ariaLabel={ariaLabel}
       className={className ?? "h-64 w-full"}

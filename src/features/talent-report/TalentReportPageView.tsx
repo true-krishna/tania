@@ -9,6 +9,9 @@ import {
   EDUCATION_ORDER,
   GENERATION_ORDER,
 } from "./DistributionChart";
+import { MovementTrendChart } from "./MovementTrendChart";
+import { chartFileName, downloadChart } from "./downloadChart";
+import type { EChartHandle } from "./EChart";
 import { PeriodFilter } from "./PeriodFilter";
 import { useTalentReport } from "./useTalentReport";
 import type { ReportCategoryCount, TalentReport } from "@/generated/graphql/types";
@@ -29,6 +32,16 @@ function movementTotal(report: TalentReport): number {
  */
 export function TalentReportPageView() {
   const { range, period, applyPeriod, status, report, message } = useTalentReport();
+  const roleRef = React.useRef<EChartHandle>(null);
+  const generationRef = React.useRef<EChartHandle>(null);
+  const educationRef = React.useRef<EChartHandle>(null);
+  const workLocationRef = React.useRef<EChartHandle>(null);
+  const movementRef = React.useRef<EChartHandle>(null);
+
+  const download = (chartRef: React.RefObject<EChartHandle | null>, chartName: string) => {
+    if (!period) return;
+    downloadChart(chartRef.current, chartFileName(chartName, period.startMonth, period.endMonth));
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -57,53 +70,64 @@ export function TalentReportPageView() {
               <ChartCard
                 title="Talent per role"
                 subtitle={`n = ${total(report.roleDistribution)}`}
+                onDownload={() => download(roleRef, "talent-per-role")}
               >
                 <DistributionChart
                   data={report.roleDistribution}
                   orientation="bar"
                   ariaLabel="Talent per role"
+                  chartRef={roleRef}
                 />
               </ChartCard>
               <ChartCard
                 title="Talent per generasi"
                 subtitle={`n = ${total(report.generationDistribution)}`}
+                onDownload={() => download(generationRef, "talent-per-generasi")}
               >
                 <DistributionChart
                   data={report.generationDistribution}
                   orientation="column"
                   ordinal={GENERATION_ORDER}
                   ariaLabel="Talent per generasi"
+                  chartRef={generationRef}
                 />
               </ChartCard>
               <ChartCard
                 title="Talent per jenjang pendidikan"
                 subtitle={`n = ${total(report.educationDistribution)}`}
+                onDownload={() => download(educationRef, "talent-per-jenjang-pendidikan")}
               >
                 <DistributionChart
                   data={report.educationDistribution}
                   orientation="column"
                   ordinal={EDUCATION_ORDER}
                   ariaLabel="Talent per jenjang pendidikan"
+                  chartRef={educationRef}
                 />
               </ChartCard>
               <ChartCard
                 title="Talent per lokasi kerja"
                 subtitle={`n = ${total(report.workLocationDistribution)}`}
+                onDownload={() => download(workLocationRef, "talent-per-lokasi-kerja")}
               >
                 <DistributionChart
                   data={report.workLocationDistribution}
                   orientation="bar"
                   ariaLabel="Talent per lokasi kerja"
+                  chartRef={workLocationRef}
                 />
               </ChartCard>
               <div className="lg:col-span-2">
                 <ChartCard
                   title="Tren churn vs new talent"
                   subtitle={`n = ${movementTotal(report)}`}
+                  onDownload={() => download(movementRef, "tren-churn-vs-new-talent")}
                 >
-                  <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-zinc-300 text-sm text-zinc-500">
-                    Grafik tren menyusul (T026 — gelombang R3).
-                  </div>
+                  <MovementTrendChart
+                    data={report.movementTrend}
+                    ariaLabel="Tren churn vs new talent"
+                    chartRef={movementRef}
+                  />
                 </ChartCard>
               </div>
             </div>
