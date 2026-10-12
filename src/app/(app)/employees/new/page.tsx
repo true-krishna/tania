@@ -23,6 +23,7 @@ type FormValues = {
   institutionName: string;
   major: string;
   joinedAt: string;
+  autoCreateEntra: boolean;
 };
 
 const EMPTY: FormValues = {
@@ -37,6 +38,7 @@ const EMPTY: FormValues = {
   institutionName: "",
   major: "",
   joinedAt: "",
+  autoCreateEntra: true,
 };
 
 const CONFLICT_MESSAGE =
@@ -89,6 +91,7 @@ export default function NewEmployeePage() {
       phone: values.phone.trim(),
       address: values.address.trim(),
       joinedAt: values.joinedAt,
+      autoCreateEntra: values.autoCreateEntra,
     };
     const optional = {
       latestEducation: values.latestEducation.trim(),
@@ -258,6 +261,24 @@ export default function NewEmployeePage() {
             onChange={(e) => set("joinedAt", e.target.value)}
           />
         </Label>
+
+        <label className="flex items-start gap-2 text-sm font-medium text-zinc-800">
+          <input
+            type="checkbox"
+            checked={values.autoCreateEntra}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, autoCreateEntra: e.target.checked }))
+            }
+            className="mt-0.5 h-4 w-4"
+          />
+          <span>
+            Buatkan akun Microsoft Entra
+            <span className="block text-xs font-normal text-zinc-500">
+              Dinonaktifkan bila akun dibuat manual. Karyawan tanpa akun Entra
+              dapat diprovisi dari halaman Provisi Akun Entra (FR-43).
+            </span>
+          </span>
+        </label>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>

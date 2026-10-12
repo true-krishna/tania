@@ -1,0 +1,24 @@
+query EmployeesWithoutEntra($first: Int = 25, $after: String) {
+  employeesWithoutEntra(first: $first, after: $after) {
+    totalCount
+    edges {
+      node {
+        id
+        fullName
+        email
+        status
+        entraProvision {
+          status
+          action
+          upn
+          lastError
+          updatedAt
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

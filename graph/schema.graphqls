@@ -42,6 +42,37 @@ enum EmployeeStatus {
   RETIRED
 }
 
+"""Status hasil provisi akun Entra (FR-44/FR-45); tanpa record = belum dibuat."""
+enum EntraProvisionStatus {
+  """Undangan Entra terkirim (email telkom.co.id, FR-45)."""
+  INVITED
+  """Akun dibuat dengan UPN digitaltelkom.id (domain lain, FR-45)."""
+  CREATED
+  """Provisi gagal — menunggu provisioning ulang (FR-44)."""
+  FAILED
+  """Akun dinonaktifkan saat terminasi (FR-46)."""
+  DISABLED
+}
+
+"""Jenis aksi provisi Entra (FR-45)."""
+enum EntraProvisionAction {
+  INVITE
+  CREATE
+}
+
+"""Hasil provisioning akun Entra seorang talent (FR-44, FR-45)."""
+type EntraProvision {
+  status: EntraProvisionStatus!
+  action: EntraProvisionAction!
+  """UPN hasil create; untuk invitation berisi email yang diundang (FR-45)."""
+  upn: String
+  """Object ID akun yang terlink — penanda anti-duplikat (FR-43)."""
+  objectId: String
+  """Pesan kegagalan terakhir; null bila berhasil (FR-44)."""
+  lastError: String
+  updatedAt: Time!
+}
+
 enum ContractType {
   PKWT
   PKWTT
@@ -271,6 +302,8 @@ type Employee {
   joinedAt: Date!
   status: EmployeeStatus!
   account: User
+  """Hasil provisi akun Entra (FR-43–FR-45); null = belum pernah diprovisi."""
+  entraProvision: EntraProvision
   """Riwayat kontrak kerja, terbaru lebih dulu (FR-34)."""
   contracts(first: Int = 25, after: String): EmploymentContractConnection!
   """Riwayat assignment talent, terbaru lebih dulu (FR-07)."""
@@ -338,6 +371,8 @@ input CreateEmployeeInput {
   major: String
   joinedAt: Date!
   status: EmployeeStatus
+  """Auto-create akun Entra saat data tersimpan (FR-43); default true."""
+  autoCreateEntra: Boolean = true
 }
 
 input UpdateEmployeeInput {
@@ -820,6 +855,8 @@ type Query {
   employeesNeedingFollowUp(first: Int = 25, after: String): EmployeeConnection!
   """Usia pensiun (tahun) dari setelan aplikasi Admin (FR-40, T042)."""
   retirementAge: Int!
+  """Talent yang belum memiliki akun Entra (FR-44)."""
+  employeesWithoutEntra(first: Int = 25, after: String): EmployeeConnection!
 
   # --- Assignment ---
   assignments(filter: AssignmentFilter, first: Int = 25, after: String): AssignmentConnection!
@@ -902,6 +939,11 @@ type Mutation {
   recordEmployeeMutation(input: RecordMutationInput!): EmploymentContract!
   """Ubah usia pensiun (tahun); hanya Admin (T042)."""
   setRetirementAge(years: Int!): Int!
+
+  # --- Provisi Entra (Operation, FR-43–FR-46) ---
+  """Provisioning manual/ulang akun Entra untuk talent yang belum punya (FR-44).
+Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FAILED) tanpa menggagalkan mutasi."""
+  provisionEntraAccount(employeeId: ID!): Employee!
 
   # --- Assignment (Chapter) ---
   createAssignment(input: CreateAssignmentInput!): Assignment!

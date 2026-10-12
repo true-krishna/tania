@@ -213,6 +213,8 @@ export type CreateDevelopmentActionInput = {
 
 export type CreateEmployeeInput = {
   address?: InputMaybe<Scalars['String']['input']>;
+  /** Auto-create akun Entra saat data tersimpan (FR-43); default true. */
+  autoCreateEntra?: InputMaybe<Scalars['Boolean']['input']>;
   birthDate: Scalars['Date']['input'];
   email: Scalars['String']['input'];
   fullName: Scalars['String']['input'];
@@ -370,6 +372,8 @@ export type Employee = {
   contracts: EmploymentContractConnection;
   createdAt: Scalars['Time']['output'];
   email: Scalars['String']['output'];
+  /** Hasil provisi akun Entra (FR-43–FR-45); null = belum pernah diprovisi. */
+  entraProvision?: Maybe<EntraProvision>;
   fullName: Scalars['String']['output'];
   gender: Gender;
   id: Scalars['ID']['output'];
@@ -497,6 +501,36 @@ export type EmploymentContractStatus =
   | 'ACTIVE'
   | 'ENDED'
   | 'TERMINATED';
+
+/** Hasil provisioning akun Entra seorang talent (FR-44, FR-45). */
+export type EntraProvision = {
+  __typename?: 'EntraProvision';
+  action: EntraProvisionAction;
+  /** Pesan kegagalan terakhir; null bila berhasil (FR-44). */
+  lastError?: Maybe<Scalars['String']['output']>;
+  /** Object ID akun yang terlink — penanda anti-duplikat (FR-43). */
+  objectId?: Maybe<Scalars['String']['output']>;
+  status: EntraProvisionStatus;
+  updatedAt: Scalars['Time']['output'];
+  /** UPN hasil create; untuk invitation berisi email yang diundang (FR-45). */
+  upn?: Maybe<Scalars['String']['output']>;
+};
+
+/** Jenis aksi provisi Entra (FR-45). */
+export type EntraProvisionAction =
+  | 'CREATE'
+  | 'INVITE';
+
+/** Status hasil provisi akun Entra (FR-44/FR-45); tanpa record = belum dibuat. */
+export type EntraProvisionStatus =
+  /** Akun dibuat dengan UPN digitaltelkom.id (domain lain, FR-45). */
+  | 'CREATED'
+  /** Akun dinonaktifkan saat terminasi (FR-46). */
+  | 'DISABLED'
+  /** Provisi gagal — menunggu provisioning ulang (FR-44). */
+  | 'FAILED'
+  /** Undangan Entra terkirim (email telkom.co.id, FR-45). */
+  | 'INVITED';
 
 export type EvaluationAnswer = {
   __typename?: 'EvaluationAnswer';
@@ -699,6 +733,11 @@ export type Mutation = {
   login: AuthPayload;
   /** Revoke the current access token and, when supplied, the refresh token. */
   logout: Scalars['Boolean']['output'];
+  /**
+   * Provisioning manual/ulang akun Entra untuk talent yang belum punya (FR-44).
+   * Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FAILED) tanpa menggagalkan mutasi.
+   */
+  provisionEntraAccount: Employee;
   /** Mutasi: akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38). */
   recordEmployeeMutation: EmploymentContract;
   /** Exchange a refresh token for a new token pair (rotating). */
@@ -874,6 +913,11 @@ export type MutationLoginArgs = {
 
 export type MutationLogoutArgs = {
   refreshToken?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationProvisionEntraAccountArgs = {
+  employeeId: Scalars['ID']['input'];
 };
 
 
@@ -1155,6 +1199,8 @@ export type Query = {
   employees: EmployeeConnection;
   /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation (US10 skenario 4). */
   employeesNeedingFollowUp: EmployeeConnection;
+  /** Talent yang belum memiliki akun Entra (FR-44). */
+  employeesWithoutEntra: EmployeeConnection;
   employmentContract?: Maybe<EmploymentContract>;
   employmentContracts: EmploymentContractConnection;
   evaluationPeriods: Array<EvaluationPeriod>;
@@ -1227,6 +1273,12 @@ export type QueryEmployeesArgs = {
 
 
 export type QueryEmployeesNeedingFollowUpArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryEmployeesWithoutEntraArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
 };
