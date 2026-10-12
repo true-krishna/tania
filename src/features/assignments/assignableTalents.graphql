@@ -4,7 +4,7 @@ query AssignableTalents($search: String, $first: Int = 25, $after: String) {
       node {
         id
         fullName
-        employeeCode
+        nomorInduk
       }
     }
   }

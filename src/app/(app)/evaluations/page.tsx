@@ -105,7 +105,7 @@ export default function EvaluationsPage() {
               <tr key={entry.talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
                 <td className="px-4 py-2.5">
                   <span className="text-sm font-medium text-zinc-900">{entry.talent.fullName}</span>
-                  <span className="ml-2 text-xs text-zinc-400">{entry.talent.employeeCode}</span>
+                  <span className="ml-2 text-xs text-zinc-400">{entry.talent.nomorInduk ?? "—"}</span>
                 </td>
                 <td className="px-4 py-2.5 text-zinc-600">{entry.talent.jobRole?.name ?? "—"}</td>
                 <td className="px-4 py-2.5">

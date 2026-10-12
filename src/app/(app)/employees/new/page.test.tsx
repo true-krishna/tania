@@ -3,71 +3,81 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
+import { GraphQLError } from "graphql";
 import NewEmployeePage from "./page";
-import {
-  CreateEmployeeDocument,
-  JobRolesDocument,
-  UnitsDocument,
-} from "@/generated/graphql";
+import { CreateEmployeeDocument } from "@/generated/graphql";
 
-const mocks = [
-  {
-    request: { query: UnitsDocument, variables: { includeInactive: true } },
-    result: {
-      data: {
-        units: [
-          { id: "u-1", name: "Digital", isActive: true, projects: [], __typename: "Unit" },
-        ],
+const validInput = {
+  nik: "3273012345678901",
+  fullName: "Ahmad Fauzi",
+  email: "ahmad@tania.co.id",
+  birthDate: "1990-05-01",
+  gender: "MALE",
+  phone: "081234567890",
+  address: "Jl. Merdeka 1",
+  joinedAt: "2025-01-01",
+};
+
+const createMock = {
+  request: { query: CreateEmployeeDocument, variables: { input: validInput } },
+  result: {
+    data: {
+      createEmployee: {
+        __typename: "Employee",
+        id: "emp-100",
+        fullName: "Ahmad Fauzi",
+        nikMasked: "************8901",
+        email: "ahmad@tania.co.id",
+        status: "ACTIVE",
       },
     },
   },
-  {
-    request: { query: JobRolesDocument, variables: { includeInactive: true } },
-    result: {
-      data: {
-        jobRoles: [
-          { id: "jr-1", name: "Engineer", isActive: true, chapter: null, __typename: "JobRole" },
-        ],
-      },
-    },
+};
+
+const conflictMock = {
+  request: { query: CreateEmployeeDocument, variables: { input: validInput } },
+  result: {
+    errors: [new GraphQLError("resource already exists", { extensions: { code: "CONFLICT" } })],
   },
-  {
-    request: {
-      query: CreateEmployeeDocument,
-      variables: {
-        input: {
-          fullName: "Ahmad Fauzi",
-          employeeCode: "EMP-0100",
-          email: "ahmad@tania.co.id",
-          unitId: "u-1",
-          jobRoleId: "jr-1",
-          joinedAt: "2025-01-01",
-        },
-      },
-    },
-    result: {
-      data: {
-        createEmployee: {
-          id: "emp-100",
-          fullName: "Ahmad Fauzi",
-          employeeCode: "EMP-0100",
-          __typename: "Employee",
-        },
-      },
-    },
-  },
-];
+};
 
 function submitForm() {
-  const form = screen.getByRole("textbox", { name: /email/i }).closest("form");
+  const form = screen.getByRole("button", { name: /simpan/i }).closest("form");
   if (!form) throw new Error("form not found");
   fireEvent.submit(form);
 }
 
-describe("NewEmployeePage (Apollo form)", () => {
+function fillValidForm() {
+  fireEvent.change(screen.getByLabelText(/^nik/i), {
+    target: { value: validInput.nik },
+  });
+  fireEvent.change(screen.getByLabelText(/nama lengkap/i), {
+    target: { value: validInput.fullName },
+  });
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: validInput.email },
+  });
+  fireEvent.change(screen.getByLabelText(/tanggal lahir/i), {
+    target: { value: validInput.birthDate },
+  });
+  fireEvent.change(screen.getByRole("combobox"), {
+    target: { value: validInput.gender },
+  });
+  fireEvent.change(screen.getByLabelText(/telepon/i), {
+    target: { value: validInput.phone },
+  });
+  fireEvent.change(screen.getByLabelText(/^alamat/i), {
+    target: { value: validInput.address },
+  });
+  fireEvent.change(screen.getByLabelText(/tanggal bergabung/i), {
+    target: { value: validInput.joinedAt },
+  });
+}
+
+describe("NewEmployeePage (form data diri, T019)", () => {
   it("shows required-field errors when submitting an empty form", async () => {
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mocks={[createMock]}>
         <NewEmployeePage />
       </MockedProvider>
     );
@@ -75,55 +85,61 @@ describe("NewEmployeePage (Apollo form)", () => {
 
     submitForm();
 
+    expect(screen.getByText(/nik wajib diisi/i)).toBeInTheDocument();
     expect(screen.getByText(/nama lengkap wajib diisi/i)).toBeInTheDocument();
-    expect(screen.getByText(/kode karyawan wajib diisi/i)).toBeInTheDocument();
     expect(screen.getByText(/email wajib diisi/i)).toBeInTheDocument();
-    expect(screen.getByText(/unit wajib dipilih/i)).toBeInTheDocument();
-    expect(screen.getByText(/job role wajib dipilih/i)).toBeInTheDocument();
+    expect(screen.getByText(/tanggal lahir wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByText(/jenis kelamin wajib dipilih/i)).toBeInTheDocument();
+    expect(screen.getByText(/telepon wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByText(/alamat wajib diisi/i)).toBeInTheDocument();
     expect(screen.getByText(/tanggal bergabung wajib diisi/i)).toBeInTheDocument();
   });
 
-  it("rejects an invalid email format", async () => {
+  it("rejects a NIK that is not 16 digits and an invalid email format", async () => {
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mocks={[createMock]}>
         <NewEmployeePage />
       </MockedProvider>
     );
     await screen.findByRole("heading", { name: /tambah karyawan/i });
 
-    fireEvent.change(screen.getByRole("textbox", { name: /email/i }), {
+    fireEvent.change(screen.getByLabelText(/^nik/i), { target: { value: "12345" } });
+    fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: "bukan-email" },
     });
     submitForm();
 
+    expect(screen.getByText(/nik harus terdiri dari 16 digit angka/i)).toBeInTheDocument();
     expect(screen.getByText(/format email tidak valid/i)).toBeInTheDocument();
   });
 
   it("shows a success state after creating the employee", async () => {
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mocks={[createMock]}>
         <NewEmployeePage />
       </MockedProvider>
     );
     await screen.findByRole("heading", { name: /tambah karyawan/i });
 
-    fireEvent.change(screen.getByRole("textbox", { name: /nama lengkap/i }), {
-      target: { value: "Ahmad Fauzi" },
-    });
-    fireEvent.change(screen.getByRole("textbox", { name: /kode karyawan/i }), {
-      target: { value: "EMP-0100" },
-    });
-    fireEvent.change(screen.getByRole("textbox", { name: /email/i }), {
-      target: { value: "ahmad@tania.co.id" },
-    });
-    fireEvent.change(screen.getAllByRole("combobox")[0], { target: { value: "u-1" } });
-    fireEvent.change(screen.getAllByRole("combobox")[1], { target: { value: "jr-1" } });
-    fireEvent.change(screen.getByLabelText(/tanggal bergabung/i), {
-      target: { value: "2025-01-01" },
-    });
-
+    fillValidForm();
     submitForm();
 
     expect(await screen.findByText(/ahmad fauzi berhasil dibuat/i)).toBeInTheDocument();
+  });
+
+  it("rejects a duplicate email/NIK with a clear message", async () => {
+    render(
+      <MockedProvider mocks={[conflictMock]}>
+        <NewEmployeePage />
+      </MockedProvider>
+    );
+    await screen.findByRole("heading", { name: /tambah karyawan/i });
+
+    fillValidForm();
+    submitForm();
+
+    expect(
+      await screen.findByText(/email atau nik sudah terdaftar/i)
+    ).toBeInTheDocument();
   });
 });

@@ -106,3 +106,21 @@ export function errorMessage(
   // leak the raw transport detail (constitution §IX).
   return fallback;
 }
+
+export type SubmitError = { field: string | null; message: string };
+
+/**
+ * Maps a failed mutation to a form error. `extensions.field` targets a form
+ * field (BAD_USER_INPUT); CONFLICT has no field on the wire, so the caller
+ * supplies the clear per-form message naming its uniqueness constraints.
+ */
+export function mapSubmitError(
+  error: ApolloError | null | undefined,
+  conflictMessage: string,
+  fallback: string
+): SubmitError {
+  if (graphQLErrorCode(error) === "CONFLICT") {
+    return { field: null, message: conflictMessage };
+  }
+  return { field: errorField(error), message: errorMessage(error, fallback) };
+}
