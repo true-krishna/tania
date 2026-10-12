@@ -1,0 +1,30 @@
+/* TANIA Pulse (selaras Legion): kelas komponen (.tp-*) */
+*{box-sizing:border-box}
+body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var(--tp-font-body)}
+.tp-h1{font:700 clamp(30px,5vw,40px)/1.1 var(--tp-font-display);margin:0}
+.tp-h2{font:700 22px/1.25 var(--tp-font-display);margin:0}
+.tp-h3{font:700 17px/1.3 var(--tp-font-display);margin:0}
+.tp-label{font-size:13px;color:var(--tp-muted)}
+.tp-card{background:var(--tp-surface);border:1px solid var(--tp-line);border-radius:var(--tp-r-lg);padding:20px;box-shadow:var(--tp-shadow)}
+.tp-btn{font:600 14px var(--tp-font-body);min-height:40px;padding:0 18px;border-radius:var(--tp-r-pill);border:1.5px solid var(--tp-text);background:transparent;color:var(--tp-text);cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none;transition:background var(--tp-dur) var(--tp-ease)}
+.tp-btn:hover{background:var(--tp-bg)}
+.tp-btn--primary{background:var(--tp-primary);border-color:var(--tp-primary);color:#fff}
+.tp-btn--primary:hover{background:var(--tp-primary-deep)}
+.tp-btn:focus-visible,.tp-input:focus-visible,.tp-tab:focus-visible,.tp-nav-item:focus-visible{outline:2px solid var(--tp-mint-ink);outline-offset:2px}
+.tp-input{width:100%;min-height:44px;padding:0 16px;border:1px solid var(--tp-line);border-radius:var(--tp-r-pill);background:var(--tp-surface);color:var(--tp-text);font:400 14px var(--tp-font-body)}
+.tp-chip{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:var(--tp-r-pill)}
+.tp-chip--peach{background:var(--tp-tint-peach);color:var(--tp-ink-peach)}
+.tp-chip--mint{background:var(--tp-tint-mint);color:var(--tp-ink-mint)}
+.tp-chip--sun{background:var(--tp-tint-sun);color:var(--tp-ink-sun)}
+.tp-chip--violet{background:var(--tp-tint-violet);color:var(--tp-ink-violet)}
+.tp-tabs{display:flex;gap:4px;overflow-x:auto;padding:4px;background:var(--tp-bg);border:1px solid var(--tp-line);border-radius:var(--tp-r-md)}
+.tp-tab{flex:none;font:600 14px var(--tp-font-body);padding:8px 14px;border:0;border-radius:var(--tp-r-sm);background:transparent;color:var(--tp-muted);cursor:pointer}
+.tp-tab[aria-selected="true"]{background:var(--tp-surface);color:var(--tp-text);box-shadow:0 0 0 1px var(--tp-line)}
+.tp-nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;color:var(--tp-text);text-decoration:none;font-weight:600}
+.tp-nav-item:hover{background:var(--tp-bg)}
+.tp-nav-item[aria-current="page"]{background:var(--tp-nav);color:var(--tp-on-nav);font-weight:600;--tp-primary:#c3b5fd;--tp-mint-ink:#6ce9a6}
+.tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-tint-violet)}
+.tp-empty{color:var(--tp-muted);font-size:14px;margin:0}
+.tp-empty strong{display:block;color:var(--tp-text);font-weight:600}
+.tp-icon{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
