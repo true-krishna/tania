@@ -1,0 +1,13 @@
+mutation ProvisionEntraAccount($employeeId: ID!) {
+  provisionEntraAccount(employeeId: $employeeId) {
+    id
+    fullName
+    entraProvision {
+      status
+      action
+      upn
+      lastError
+      updatedAt
+    }
+  }
+}

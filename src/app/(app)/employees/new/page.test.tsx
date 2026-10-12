@@ -19,7 +19,10 @@ const validInput = {
 };
 
 const createMock = {
-  request: { query: CreateEmployeeDocument, variables: { input: validInput } },
+  request: {
+    query: CreateEmployeeDocument,
+    variables: { input: { ...validInput, autoCreateEntra: true } },
+  },
   result: {
     data: {
       createEmployee: {
@@ -34,8 +37,19 @@ const createMock = {
   },
 };
 
+const createWithoutEntraMock = {
+  request: {
+    query: CreateEmployeeDocument,
+    variables: { input: { ...validInput, autoCreateEntra: false } },
+  },
+  result: createMock.result,
+};
+
 const conflictMock = {
-  request: { query: CreateEmployeeDocument, variables: { input: validInput } },
+  request: {
+    query: CreateEmployeeDocument,
+    variables: { input: { ...validInput, autoCreateEntra: true } },
+  },
   result: {
     errors: [new GraphQLError("resource already exists", { extensions: { code: "CONFLICT" } })],
   },
@@ -141,5 +155,48 @@ describe("NewEmployeePage (form data diri, T019)", () => {
     expect(
       await screen.findByText(/email atau nik sudah terdaftar/i)
     ).toBeInTheDocument();
+  });
+});
+
+describe("NewEmployeePage (toggle auto-create Entra, FR-43)", () => {
+  it("offers the Entra auto-create toggle enabled by default", async () => {
+    render(
+      <MockedProvider mocks={[createMock]}>
+        <NewEmployeePage />
+      </MockedProvider>
+    );
+    await screen.findByRole("heading", { name: /tambah karyawan/i });
+
+    expect(screen.getByRole("checkbox", { name: /buatkan akun microsoft entra/i })).toBeChecked();
+  });
+
+  it("sends autoCreateEntra true by default", async () => {
+    render(
+      <MockedProvider mocks={[createMock]}>
+        <NewEmployeePage />
+      </MockedProvider>
+    );
+    await screen.findByRole("heading", { name: /tambah karyawan/i });
+
+    fillValidForm();
+    submitForm();
+
+    expect(await screen.findByText(/ahmad fauzi berhasil dibuat/i)).toBeInTheDocument();
+  });
+
+  it("sends autoCreateEntra false when the toggle is switched off", async () => {
+    render(
+      <MockedProvider mocks={[createWithoutEntraMock]}>
+        <NewEmployeePage />
+      </MockedProvider>
+    );
+    await screen.findByRole("heading", { name: /tambah karyawan/i });
+
+    fireEvent.click(screen.getByRole("checkbox", { name: /buatkan akun microsoft entra/i }));
+    expect(screen.getByRole("checkbox", { name: /buatkan akun microsoft entra/i })).not.toBeChecked();
+    fillValidForm();
+    submitForm();
+
+    expect(await screen.findByText(/ahmad fauzi berhasil dibuat/i)).toBeInTheDocument();
   });
 });
