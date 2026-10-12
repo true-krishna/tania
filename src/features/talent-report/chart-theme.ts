@@ -10,14 +10,14 @@
  * - "Belum diisi" (MISSING) → `--tp-neutral` (abu-abu, selalu terakhir & berbeda visual)
  * - new talent (V-5) → `--tp-mint-ink` (hijau; fallback `--tp-mint` bila perlu lebih terang)
  * - churn (V-5) → **`--tp-ink-peach` (merah)** — keputusan O-R4 dicatat di sini:
- *   kandidat `--tp-peach` (#ff8f7a, terlalu terang untuk seri di atas kanvas putih)
- *   vs `--tp-ink-peach` (#b3412f, satu-satunya token merah-ink di palet, kontras
+ *   kandidat `--tp-peach` (#f97066, terlalu terang untuk seri di atas kanvas putih)
+ *   vs `--tp-ink-peach` (#b32318, satu-satunya token merah-ink di palet, kontras
  *   memadai untuk garis/bar dan sejajar pasangan `--tp-mint-ink` new talent).
  *   Dipilih `--tp-ink-peach`; keputusan visual, mudah ditukar di satu tempat ini.
  *
- * Fallback hex mengikuti nilai `src/app/globals.css` saat ini agar hasil tetap
- * deterministik di SSR/jsdom (token tak ter-resolve) — uji di
- * `talent-report.test.tsx`.
+ * Fallback mengikuti nilai `--tp-*` v4.0.0 di `src/app/globals.css` (TANIA Pulse
+ * selaras Legion) agar hasil tetap deterministik di SSR/jsdom (token tak
+ * ter-resolve) — uji di `talent-report.test.tsx`.
  */
 
 export interface ChartTheme {
@@ -38,16 +38,16 @@ export interface ChartTheme {
   churnColor: string;
 }
 
-/** Nilai fallback = literal token `--tp-*` di `src/app/globals.css`. */
+/** Nilai fallback = literal token `--tp-*` v4.0.0 di `src/app/globals.css`. */
 const FALLBACK: ChartTheme = {
-  fontFamily: 'Sora, Inter, system-ui, -apple-system, "Segoe UI", sans-serif',
-  textColor: "#101a47",
-  mutedColor: "#5b6785",
-  lineColor: "#dfe5f1",
-  distributionColor: "#6246ea",
-  missingColor: "#5b6785",
-  newTalentColor: "#0e8f7a",
-  churnColor: "#b3412f",
+  fontFamily: 'Nunito Sans, system-ui, sans-serif',
+  textColor: "#212121",
+  mutedColor: "#667085",
+  lineColor: "#d0d5dd",
+  distributionColor: "#875bf7",
+  missingColor: "#667085",
+  newTalentColor: "#027a48",
+  churnColor: "#b32318",
 };
 
 function readToken(root: Element | undefined, name: string, fallback: string): string {
