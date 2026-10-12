@@ -9,7 +9,7 @@ This constitution establishes the governance framework for all Tania engineering
 | Pillar | Document | Grounded in |
 |---|---|---|
 | Security | `constitution-security.md` | UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi (Indonesia) |
-| Design | `constitution-design.md` | Legion design system analysis (`DESIGN-legion.md`, version alpha) |
+| Design | `constitution-design.md` | `DESIGN-legion.md` (Legion ramps — values) + the `tania-design-system` package "TANIA Pulse, Legion-aligned" (executable adaptation, shipped as `design/`) |
 | Technical | `constitution-technical.md` | Code quality, testing, and maintainability engineering standards |
 
 The principles below are the binding summary for planning and review. Where this summary and a pillar document disagree on detail, the pillar document wins.

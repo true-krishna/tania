@@ -1,0 +1,18 @@
+/* TANIA Pulse (selaras Legion): tokens (terang + gelap). Nilai warna & font mengikuti ramp Legion — sumber: DESIGN-legion.md */
+:root{--tp-midnight:#212121;--tp-primary:#875bf7;--tp-primary-deep:#7839ee;--tp-lilac:#c3b5fd;--tp-mint:#12b76a;--tp-mint-ink:#027a48;--tp-sun:#fec84b;--tp-peach:#f97066;
+--tp-bg:#f2f4f7;--tp-surface:#FFFFFF;--tp-line:#d0d5dd;--tp-text:#212121;--tp-muted:#667085;--tp-nav:#491c96;--tp-on-nav:#FFFFFF;
+--tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-violet:#ece9fe;
+--tp-ink-peach:#b32318;--tp-ink-mint:#027a48;--tp-ink-sun:#b54708;--tp-ink-violet:#6927da;
+--tp-neutral:#667085;
+--tp-font-display:Nunito Sans,system-ui,sans-serif;--tp-font-body:Nunito Sans,system-ui,-apple-system,"Segoe UI",sans-serif;
+--tp-r-sm:10px;--tp-r-md:14px;--tp-r-lg:20px;--tp-r-xl:28px;--tp-r-pill:999px;
+--tp-shadow:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.06);
+--tp-ease:cubic-bezier(.2,.8,.2,1);--tp-dur:200ms;}
+
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;--tp-nav:#5720b7;
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
+
+:root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;--tp-nav:#5720b7;
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}

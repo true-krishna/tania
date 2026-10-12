@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 /*
- * Legion design tokens (constitution-design.md §I–§II).
- * `primary-500` #875bf7 is the only interactive color; the ladder is
- * 500 (default) -> 600 (hover) -> 700 (press), with 200 for focus tint.
+ * Legion design tokens (constitution-design.md v4.0.0 — every value a
+ * DESIGN-legion.md ramp step). The legacy brand ramp stays until components
+ * adopt the `.tp-*` canon (design/tokens/components.css).
  */
 :root {
   --background: #f4f4f8;
@@ -36,40 +36,72 @@
   --surface-border: #d0d5dd;
 
   /*
-   * TANIA Pulse Indigo tokens (design spec TAN-124 §5). The workload feature
-   * (TAN-125) renders against these values, taken verbatim from the ratified
-   * `mockup-workload.html`. They are additive: no existing Legion token is
-   * changed, so the rest of the app is unaffected. Values flagged
-   * [non-canonical] in the spec (freshness strip, skeleton, stacked bar …)
-   * reuse these same tokens rather than inventing new colors. Dark-mode
-   * variants are intentionally omitted: the shipped canon is light-only
-   * (constitution-design.md, Additional Constraints).
+   * TANIA Pulse tokens (constitution-design.md v4.0.0) — re-based verbatim
+   * onto Legion ramps from the shipped `design/tokens/tokens.css`; the v3
+   * Pulse Indigo values (#6246ea, Sora, #101a47) are retired. Still additive:
+   * no legacy Legion token is changed, so existing screens keep rendering.
+   * Dark values ship with the canon (Additional Constraints) but activate
+   * only via `data-theme="dark"` for now — auto `prefers-color-scheme` dark
+   * lands when components adopt the `.tp-*` classes (several screens still
+   * hardcode light Tailwind colors).
    */
-  --tp-midnight: #101a47;
-  --tp-primary: #6246ea;
-  --tp-primary-deep: #4d34c9;
-  --tp-lilac: #a998f5;
-  --tp-mint: #3ccfb0;
-  --tp-mint-ink: #0e8f7a;
-  --tp-sun: #f6d65a;
-  --tp-peach: #ff8f7a;
-  --tp-bg: #f2f5fb;
+  --tp-midnight: #212121;
+  --tp-primary: #875bf7;
+  --tp-primary-deep: #7839ee;
+  --tp-lilac: #c3b5fd;
+  --tp-mint: #12b76a;
+  --tp-mint-ink: #027a48;
+  --tp-sun: #fec84b;
+  --tp-peach: #f97066;
+  --tp-bg: #f2f4f7;
   --tp-surface: #ffffff;
-  --tp-line: #dfe5f1;
-  --tp-text: #101a47;
-  --tp-muted: #5b6785;
-  --tp-nav: #241b63;
+  --tp-line: #d0d5dd;
+  --tp-text: #212121;
+  --tp-muted: #667085;
+  --tp-nav: #491c96;
   --tp-on-nav: #ffffff;
-  --tp-tint-peach: #ffede8;
-  --tp-tint-mint: #ddf7f1;
-  --tp-tint-sun: #fff4c9;
-  --tp-tint-violet: #eeebff;
-  --tp-ink-peach: #b3412f;
-  --tp-ink-mint: #0a6b5b;
-  --tp-ink-sun: #7a5b00;
-  --tp-ink-violet: #4a32c8;
-  --tp-neutral: #5b6785;
-  --tp-font-display: Sora, Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tp-tint-peach: #fee4e2;
+  --tp-tint-mint: #d1fadf;
+  --tp-tint-sun: #feefc6;
+  --tp-tint-violet: #ece9fe;
+  --tp-ink-peach: #b32318;
+  --tp-ink-mint: #027a48;
+  --tp-ink-sun: #b54708;
+  --tp-ink-violet: #6927da;
+  --tp-neutral: #667085;
+  --tp-font-display: Nunito Sans, system-ui, sans-serif;
+  --tp-font-body: Nunito Sans, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tp-r-sm: 10px;
+  --tp-r-md: 14px;
+  --tp-r-lg: 20px;
+  --tp-r-xl: 28px;
+  --tp-r-pill: 999px;
+  --tp-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 6px 20px rgba(16, 24, 40, 0.06);
+  --tp-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --tp-dur: 200ms;
+}
+
+/* Dark theme (constitution-design.md v4.0.0, Additional Constraints) — values
+ * verbatim from design/tokens/tokens.css. Explicit opt-in only until
+ * components stop hardcoding light colors. */
+:root[data-theme="dark"] {
+  --tp-mint-ink: #6ce9a6;
+  --tp-bg: #101828;
+  --tp-surface: #1d2939;
+  --tp-line: #344054;
+  --tp-text: #fcfcfd;
+  --tp-muted: #98a2b3;
+  --tp-nav: #5720b7;
+  --tp-tint-peach: #7a271a;
+  --tp-tint-mint: #054f31;
+  --tp-tint-sun: #792e0d;
+  --tp-tint-violet: #491c96;
+  --tp-ink-peach: #fda19b;
+  --tp-ink-mint: #6ce9a6;
+  --tp-ink-sun: #fec84b;
+  --tp-ink-violet: #c3b5fd;
+  --tp-neutral: #98a2b3;
+  --tp-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {
@@ -126,6 +158,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-tp-display: var(--tp-font-display);
+  --font-tp-body: var(--tp-font-body);
 }
 
 body {
@@ -134,10 +167,11 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Focus indication is a 2px tint at primary-200 (constitution §IV) — applied
- * globally so every interactive component shares one focus color. */
+/* Focus indication per constitution-design.md v4.0.0 §VI — applied globally
+ * so every interactive component shares one focus color (mint-ink; light
+ * mint in dark theme via the --tp-* overrides). */
 :focus-visible {
-  outline: 2px solid var(--brand-200);
+  outline: 2px solid var(--tp-mint-ink);
   outline-offset: 2px;
 }
 
