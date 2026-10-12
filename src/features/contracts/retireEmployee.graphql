@@ -1,0 +1,15 @@
+mutation RetireEmployee(
+  $id: ID!
+  $effectiveDate: Date!
+  $acknowledgeActiveWork: Boolean = false
+) {
+  retireEmployee(
+    id: $id
+    effectiveDate: $effectiveDate
+    acknowledgeActiveWork: $acknowledgeActiveWork
+  ) {
+    id
+    status
+    assignable
+  }
+}

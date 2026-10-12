@@ -18,6 +18,7 @@ import {
   WORK_LOCATION_LABEL,
 } from "@/features/contracts/labels";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
+import { ContractCycleActions } from "@/features/contracts/ContractCycleActions";
 import {
   EmploymentContractDocument,
   UpdateEmploymentContractDocument,
@@ -56,6 +57,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
       <PageHeader
         title={contract.contractNo}
         subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
+        actions={
+          contract.contractType === "PKWT" ? (
+            <Link href={`/contracts/${id}/renew`} className="no-underline">
+              <Button variant="primary">Perpanjang kontrak</Button>
+            </Link>
+          ) : undefined
+        }
       />
 
       <Card className="max-w-3xl">
@@ -155,6 +163,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </dl>
       </Card>
+
+      <ContractCycleActions contract={contract} />
 
       <Card className="max-w-3xl">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">Ubah data kontrak</h2>

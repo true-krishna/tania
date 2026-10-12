@@ -18,6 +18,7 @@ import {
 } from "@tabler/icons-react";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
+import { OperationCycleWidgets } from "@/features/contracts/OperationCycleWidgets";
 import type {
   AssignmentStatus,
   DevelopmentActionStatus,
@@ -197,6 +198,8 @@ export default function DashboardPage() {
               )}
             </Panel>
           </div>
+
+          <OperationCycleWidgets />
         </>
       ) : null}
 

@@ -1,0 +1,17 @@
+mutation ResignEmployee(
+  $id: ID!
+  $effectiveDate: Date!
+  $reason: String
+  $acknowledgeActiveWork: Boolean = false
+) {
+  resignEmployee(
+    id: $id
+    effectiveDate: $effectiveDate
+    reason: $reason
+    acknowledgeActiveWork: $acknowledgeActiveWork
+  ) {
+    id
+    status
+    assignable
+  }
+}
