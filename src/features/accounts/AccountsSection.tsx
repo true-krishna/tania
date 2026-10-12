@@ -65,7 +65,7 @@ export function AccountsSection({
   const [busy, setBusy] = React.useState(false);
   const [confirmRevokeId, setConfirmRevokeId] = React.useState<string | null>(null);
 
-  const employees = useEmployees({ search: employeeSearch || undefined });
+  const employees = useEmployees({ search: employeeSearch || undefined }, 100);
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -132,9 +132,9 @@ export function AccountsSection({
               <option value="">
                 {employees.status === "loading" ? "— Memuat karyawan… —" : "— Pilih karyawan —"}
               </option>
-              {(employees.data ?? []).map((employee) => (
+              {(employees.employees ?? []).map((employee) => (
                 <option key={employee.id} value={employee.id}>
-                  {employee.fullName} ({employee.employeeCode})
+                  {employee.fullName} ({employee.nomorInduk ?? "—"})
                 </option>
               ))}
             </Select>

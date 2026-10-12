@@ -1,0 +1,30 @@
+query ExpiringContracts($days: Int = 90, $first: Int = 25, $after: String) {
+  expiringContracts(days: $days, first: $first, after: $after) {
+    totalCount
+    edges {
+      node {
+        id
+        contractNo
+        contractType
+        endDate
+        status
+        employee {
+          id
+          fullName
+        }
+        unit {
+          id
+          name
+        }
+        jobRole {
+          id
+          name
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
