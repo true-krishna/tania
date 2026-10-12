@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* TAN-161 Fase 0: wire the shipped .tp-* component classes (constitution
+ * design v4.0.0, Principle V) into the bundle — this also brings the
+ * prefers-reduced-motion kill and the canon body rule (Nunito Sans on Mist). */
+@import "../../design/tokens/components.css";
 
 /*
  * Legion design tokens (constitution-design.md v4.0.0 — every value a
@@ -69,8 +73,11 @@
   --tp-ink-sun: #b54708;
   --tp-ink-violet: #6927da;
   --tp-neutral: #667085;
-  --tp-font-display: Nunito Sans, system-ui, sans-serif;
-  --tp-font-body: Nunito Sans, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Wiring: next/font loads Nunito Sans and exposes it as --font-nunito-sans;
+   * the shipped token stacks (design/tokens/tokens.css) remain canonical as
+   * the fallback chain. */
+  --tp-font-display: var(--font-nunito-sans), Nunito Sans, system-ui, sans-serif;
+  --tp-font-body: var(--font-nunito-sans), Nunito Sans, system-ui, -apple-system, "Segoe UI", sans-serif;
   --tp-r-sm: 10px;
   --tp-r-md: 14px;
   --tp-r-lg: 20px;
@@ -159,13 +166,20 @@
   --font-mono: var(--font-geist-mono);
   --font-tp-display: var(--tp-font-display);
   --font-tp-body: var(--tp-font-body);
+  /* Radius & shadow mirror (constitution v4.0.0, I/IV): rounded-tp-sm/md/lg/xl
+   * and shadow-card resolve straight to the shipped --tp-* tokens (`inline`),
+   * so migration targets (replacing off-canon rounded-md/lg and shadow-sm)
+   * always track tokens.css. */
+  --radius-tp-sm: var(--tp-r-sm);
+  --radius-tp-md: var(--tp-r-md);
+  --radius-tp-lg: var(--tp-r-lg);
+  --radius-tp-xl: var(--tp-r-xl);
+  --shadow-card: var(--tp-shadow);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
+/* Body rule removed (TAN-161 Fase 0): the imported components.css body rule
+ * now governs — margin 0, bg var(--tp-bg) (Mist), color var(--tp-text),
+ * font 400 16px/1.6 var(--tp-font-body) (Nunito Sans). */
 
 /* Focus indication per constitution-design.md v4.0.0 §VI — applied globally
  * so every interactive component shares one focus color (mint-ink; light

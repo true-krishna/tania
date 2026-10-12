@@ -25,7 +25,7 @@ export function BoardTable({ caption, columns, children }: BoardTableProps) {
                 key={col.key}
                 scope="col"
                 className={cn(
-                  "px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-zinc-700",
+                  "px-4 py-2.5 text-xs font-semibold text-zinc-700",
                   col.className,
                 )}
               >
