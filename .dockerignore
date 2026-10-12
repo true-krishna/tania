@@ -1,0 +1,7 @@
+# Build context image — hanya sumber aplikasi yang dibutuhkan Dockerfile.
+node_modules
+.next
+.git
+e2e
+coverage
+*.log

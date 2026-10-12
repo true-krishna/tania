@@ -1,17 +1,108 @@
-import { expect, test } from "@playwright/test";
+import * as fs from "node:fs";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Critical-path E2E smoke (constitution §VII, tasks T129/T133).
+ * Critical-path E2E (constitution §VII; tasks T129/T133 + T028 laporan talent).
  *
- * Prerequisite: the app is running with `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` (dev
- * mode — guard assumes a signed-in default role, see src/lib/auth/config.ts),
- * and `NEXT_PUBLIC_DEFAULT_ACCESS_ROLE` selects the role under test. This
- * proves the shell boot, role-scoped navigation, and the dashboard render.
+ * Harness: `docker-compose` kedua repo hidup (runbook `e2e/README.md`) —
+ * stack backend (postgres + redis + api) dengan fixture
+ * `e2e/seed-talent-report.sql` di atas migrasi 0004/0005, dan aplikasi Next
+ * pada `E2E_BASE_URL` (default `http://localhost:3000`; tanpa env itu
+ * `playwright.config.ts` mem-boot `npm run dev` sendiri).
  *
- * The full database-backed multi-role flow (login 4 roles → CRUD) requires the
- * backend `docker-compose` stack and is exercised by the wider T129 harness.
+ * Login memakai akun quickstart `0004_seed.sql` (sandi sama
+ * `correct horse battery`, dapat ditimpa `E2E_SEED_PASSWORD`).
+ *
+ * Mode `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` (dev, tanpa backend) tetap didukung
+ * untuk smoke shell: `loginAs` menjadi no-op dan peran datang dari
+ * `NEXT_PUBLIC_DEFAULT_ACCESS_ROLE`.
  */
+
+const SEED_PASSWORD = process.env.E2E_SEED_PASSWORD ?? "correct horse battery";
+
+const SEED_USERS: Record<string, string> = {
+  ADMIN: "admin@tania.test",
+  OPERATION: "operation@tania.test",
+  CHAPTER: "chapter@tania.test",
+  TALENT: "talent@tania.test",
+};
+
+/**
+ * Ekspektasi angka `n = …` dari fixture (backend 0004_seed.sql + backfill
+ * kontrak 0005 + `e2e/seed-talent-report.sql`); rincian hitungan ada di
+ * komentar seed. Rentang default = `talentReportRange` penuh (2022-01 ..
+ * Desember tahun berjalan).
+ */
+const OPERATION_FULL_RANGE = { distribution: 6, movement: 10 };
+const OPERATION_2025_ONLY = { distribution: 4, movement: 3 };
+const CHAPTER_FULL_RANGE = { distribution: 4, movement: 6 };
+
+const CHART_LABELS = [
+  "Talent per role",
+  "Talent per generasi",
+  "Talent per jenjang pendidikan",
+  "Talent per lokasi kerja",
+  "Tren churn vs new talent",
+] as const;
+
+async function loginAs(page: Page, email: string): Promise<void> {
+  await page.goto("/login");
+  const emailInput = page.locator("#login-email");
+  try {
+    await emailInput.waitFor({ state: "visible", timeout: 15_000 });
+  } catch {
+    // Mode local-only: LoginForm tidak dirender, guard sudah langsung ke /dashboard.
+  }
+  if (await emailInput.isVisible()) {
+    await emailInput.fill(email);
+    await page.locator("#login-password").fill(SEED_PASSWORD);
+    await page.getByRole("button", { name: "Login" }).click();
+  }
+  await page.waitForURL(/\/dashboard/);
+}
+
+function chartOf(page: Page, ariaLabel: string) {
+  return page.getByRole("img", { name: ariaLabel });
+}
+
+function totalOf(page: Page, chartTitle: string) {
+  return page
+    .getByRole("heading", { name: chartTitle, level: 2 })
+    .locator("xpath=following-sibling::p[1]");
+}
+
+async function readTotal(page: Page, chartTitle: string): Promise<number> {
+  const text = (await totalOf(page, chartTitle).textContent()) ?? "";
+  const match = text.match(/n = (\d+)/);
+  if (!match) throw new Error(`subjudul total tidak terbaca untuk "${chartTitle}": "${text}"`);
+  return Number(match[1]);
+}
+
+async function readAllTotals(page: Page) {
+  return {
+    role: await readTotal(page, "Talent per role"),
+    generation: await readTotal(page, "Talent per generasi"),
+    education: await readTotal(page, "Talent per jenjang pendidikan"),
+    workLocation: await readTotal(page, "Talent per lokasi kerja"),
+    movement: await readTotal(page, "Tren churn vs new talent"),
+  };
+}
+
+function downloadButtonOf(page: Page, chartTitle: string) {
+  return page
+    .getByRole("heading", { name: chartTitle, level: 2 })
+    .locator("xpath=../..")
+    .getByRole("button", { name: "Unduh PNG" });
+}
+
+/** Dimensi PNG dari header IHDR (tanpa dependensi pembaca gambar). */
+function pngSize(file: string): { width: number; height: number } {
+  const buf = fs.readFileSync(file);
+  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+}
+
 test("app boots and the shell renders with navigation", async ({ page }) => {
+  await loginAs(page, SEED_USERS.OPERATION);
   await page.goto("/dashboard");
 
   await expect(page.getByText("Tania")).toBeVisible();
@@ -22,13 +113,15 @@ test("app boots and the shell renders with navigation", async ({ page }) => {
 });
 
 test("dashboard renders a widget heading", async ({ page }) => {
+  await loginAs(page, SEED_USERS.OPERATION);
   await page.goto("/dashboard");
 
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 });
 
 test("audit route is only reachable for ADMIN", async ({ page }) => {
-  const role = process.env.NEXT_PUBLIC_DEFAULT_ACCESS_ROLE ?? "TALENT";
+  const role = process.env.E2E_ROLE ?? process.env.NEXT_PUBLIC_DEFAULT_ACCESS_ROLE ?? "TALENT";
+  await loginAs(page, SEED_USERS[role] ?? SEED_USERS.TALENT);
   await page.goto("/audit");
 
   if (role === "ADMIN") {
@@ -37,4 +130,109 @@ test("audit route is only reachable for ADMIN", async ({ page }) => {
     // Non-admin sees the access note, not the viewer.
     await expect(page.getByText(/hanya dapat diakses oleh peran Admin/i)).toBeVisible();
   }
+});
+
+test("T028 — Operation melihat 5 grafik laporan talent", async ({ page }) => {
+  await loginAs(page, SEED_USERS.OPERATION);
+  await page.goto("/reports/talent");
+
+  for (const label of CHART_LABELS) {
+    await expect(chartOf(page, label)).toBeVisible();
+    await expect(chartOf(page, label).locator("canvas")).toBeVisible();
+  }
+
+  const totals = await readAllTotals(page);
+  expect(totals).toEqual({
+    role: OPERATION_FULL_RANGE.distribution,
+    generation: OPERATION_FULL_RANGE.distribution,
+    education: OPERATION_FULL_RANGE.distribution,
+    workLocation: OPERATION_FULL_RANGE.distribution,
+    movement: OPERATION_FULL_RANGE.movement,
+  });
+});
+
+test("T028 — satu aksi filter memperbarui kelima grafik (SC-04)", async ({ page }) => {
+  await loginAs(page, SEED_USERS.OPERATION);
+  await page.goto("/reports/talent");
+  await expect(chartOf(page, "Talent per role").locator("canvas")).toBeVisible();
+
+  const before = await readAllTotals(page);
+  expect(before.role).toBe(OPERATION_FULL_RANGE.distribution);
+  expect(before.movement).toBe(OPERATION_FULL_RANGE.movement);
+
+  await page.getByLabel("Bulan mulai").selectOption("2025-01");
+  await page.getByLabel("Bulan akhir").selectOption("2025-12");
+  await page.getByRole("button", { name: "Terapkan" }).click();
+
+  await expect(totalOf(page, "Tren churn vs new talent")).toHaveText(
+    `n = ${OPERATION_2025_ONLY.movement}`,
+  );
+  const after = await readAllTotals(page);
+  expect(after).toEqual({
+    role: OPERATION_2025_ONLY.distribution,
+    generation: OPERATION_2025_ONLY.distribution,
+    education: OPERATION_2025_ONLY.distribution,
+    workLocation: OPERATION_2025_ONLY.distribution,
+    movement: OPERATION_2025_ONLY.movement,
+  });
+
+  // Kelima angka berubah dari satu aksi "Terapkan".
+  for (const key of Object.keys(before) as (keyof typeof before)[]) {
+    expect(after[key], `total ${key} berubah`).not.toBe(before[key]);
+  }
+});
+
+test("T028 — Unduh PNG per grafik: event, pola nama, dimensi ≥ 2× (SC-03)", async ({ page }) => {
+  await loginAs(page, SEED_USERS.OPERATION);
+  await page.goto("/reports/talent");
+  await expect(chartOf(page, "Talent per role").locator("canvas")).toBeVisible();
+
+  const startMonth = await page.getByLabel("Bulan mulai").inputValue();
+  const endMonth = await page.getByLabel("Bulan akhir").inputValue();
+
+  for (const chartTitle of ["Talent per role", "Tren churn vs new talent"]) {
+    const downloadPromise = page.waitForEvent("download");
+    await downloadButtonOf(page, chartTitle).click();
+    const download = await downloadPromise;
+
+    // Pola nama file FR-14: <nama-grafik>-<mulai>-<akhir>.png.
+    const slug = chartTitle === "Talent per role" ? "talent-per-role" : "tren-churn-vs-new-talent";
+    expect(download.suggestedFilename()).toBe(`${slug}-${startMonth}-${endMonth}.png`);
+
+    // SC-03: resolusi PNG ≥ 2× ukuran tampil kanvas.
+    const file = await download.path();
+    expect(file).not.toBeNull();
+    const box = await chartOf(page, chartTitle).boundingBox();
+    expect(box).not.toBeNull();
+    const { width, height } = pngSize(file as string);
+    expect(width, "lebar PNG ≥ 2×").toBeGreaterThanOrEqual(Math.floor(2 * (box as { width: number }).width));
+    expect(height, "tinggi PNG ≥ 2×").toBeGreaterThanOrEqual(Math.floor(2 * (box as { height: number }).height));
+  }
+});
+
+test("T028 — Chapter hanya melihat cakupan chapter-nya (SC-05)", async ({ page }) => {
+  await loginAs(page, SEED_USERS.CHAPTER);
+  await page.goto("/reports/talent");
+  await expect(chartOf(page, "Talent per role").locator("canvas")).toBeVisible();
+
+  const totals = await readAllTotals(page);
+  expect(totals).toEqual({
+    role: CHAPTER_FULL_RANGE.distribution,
+    generation: CHAPTER_FULL_RANGE.distribution,
+    education: CHAPTER_FULL_RANGE.distribution,
+    workLocation: CHAPTER_FULL_RANGE.distribution,
+    movement: CHAPTER_FULL_RANGE.movement,
+  });
+
+  // Cakupan Chapter (role Engineer) lebih kecil daripada milik Operation.
+  expect(totals.role).toBeLessThan(OPERATION_FULL_RANGE.distribution);
+  expect(totals.movement).toBeLessThan(OPERATION_FULL_RANGE.movement);
+});
+
+test("T028 — Talent ditolak membuka laporan (FR-01)", async ({ page }) => {
+  await loginAs(page, SEED_USERS.TALENT);
+  await page.goto("/reports/talent");
+
+  await expect(page.getByText(/Akses ditolak/i)).toBeVisible();
+  await expect(chartOf(page, "Talent per role")).toHaveCount(0);
 });

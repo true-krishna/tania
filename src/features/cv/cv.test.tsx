@@ -118,7 +118,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
       __typename: "CvEducation",
       id: "edu-2",
       institution: "Institut Teknologi Bandung",
-      degree: "M.T",
+      degree: "S1",
       fieldOfStudy: "Teknik Informatika",
       startYear: 2021,
       endYear: 2023,
@@ -135,7 +135,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
                 variables: {
                   input: {
                     institution: "Institut Teknologi Bandung",
-                    degree: "M.T",
+                    degree: "S1",
                     fieldOfStudy: "Teknik Informatika",
                     startYear: 2021,
                     endYear: 2023,
@@ -157,8 +157,8 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
     fireEvent.change(screen.getByPlaceholderText("Institusi (wajib)"), {
       target: { value: "Institut Teknologi Bandung" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Gelar (cth: S.Kom)"), {
-      target: { value: "M.T" },
+    fireEvent.change(screen.getByLabelText("Jenjang pendidikan"), {
+      target: { value: "S1" },
     });
     fireEvent.change(screen.getByPlaceholderText("Jurusan"), {
       target: { value: "Teknik Informatika" },
@@ -172,6 +172,36 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
     fireEvent.click(screen.getByRole("button", { name: "+ Tambah Pendidikan" }));
 
     expect(await screen.findByText("Riwayat pendidikan ditambahkan.")).toBeInTheDocument();
+  });
+
+  it("offers only the five controlled degree values (D11)", async () => {
+    render(
+      <ToastProvider>
+        <MockedProvider mocks={[{ request: { query: MyCvProfileDocument }, result: myCvResult }]}>
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    await screen.findByText(/Universitas Indonesia/);
+
+    const degreeSelect = screen.getByLabelText("Jenjang pendidikan");
+    const options = Array.from(degreeSelect.querySelectorAll("option")).map(
+      (o) => (o as HTMLOptionElement).value,
+    );
+    // Nilai = enum EducationLevel (kontrak SDL); label tampilan tetap D11.
+    expect(options).toEqual(["", "SMA_SMK_SEDERAJAT", "D3", "S1", "S2", "S3"]);
+    const labels = Array.from(degreeSelect.querySelectorAll("option")).map(
+      (o) => (o as HTMLOptionElement).textContent,
+    );
+    expect(labels).toEqual([
+      "— pilih jenjang (opsional) —",
+      "SMA/SMK Sederajat",
+      "D3",
+      "S1",
+      "S2",
+      "S3",
+    ]);
   });
 });
 

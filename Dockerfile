@@ -7,6 +7,10 @@ RUN npm ci
 # Stage 2: Build the application
 FROM node:20-alpine AS builder
 WORKDIR /app
+# Endpoint GraphQL di-inline Next saat build (NEXT_PUBLIC_*); dapat ditimpa
+# untuk stack E2E (e2e/docker-compose.e2e.yml). Default = perilaku lama.
+ARG NEXT_PUBLIC_GRAPHQL_URL
+ENV NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
