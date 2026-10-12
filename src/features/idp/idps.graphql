@@ -11,7 +11,7 @@ query Idps($filter: IdpFilter, $first: Int = 25, $after: String) {
         talent {
           id
           fullName
-          employeeCode
+          nomorInduk
         }
         actions {
           id

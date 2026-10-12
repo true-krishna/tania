@@ -8,27 +8,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { useSessionRole } from "@/lib/auth/guard";
 import { roleLabel } from "@/features/accounts/roles";
 import { useAuditLogs } from "@/features/audit/useAuditLogs";
-import type { AuditAction, AccessRole } from "@/generated/graphql/types";
-
-const ACTION_LABEL: Record<AuditAction, string> = {
-  CREATE: "Buat",
-  UPDATE: "Ubah",
-  DEACTIVATE: "Nonaktifkan",
-  DELETE: "Hapus",
-  LOGIN: "Login",
-  LOGOUT: "Logout",
-};
+import { ACTION_LABEL, ACTION_PILL } from "@/features/audit/actionLabels";
+import type { AccessRole } from "@/generated/graphql/types";
 
 const ROLE_LABEL: Record<AccessRole, string> = roleLabel;
-
-const ACTION_PILL: Record<AuditAction, string> = {
-  CREATE: "bg-green-100 text-green-700",
-  UPDATE: "bg-brand-100 text-brand-700",
-  DEACTIVATE: "bg-amber-100 text-amber-700",
-  DELETE: "bg-red-100 text-red-700",
-  LOGIN: "bg-zinc-100 text-zinc-700",
-  LOGOUT: "bg-zinc-100 text-zinc-700",
-};
 
 /**
  * Admin audit trail viewer (FR-17) — US5.

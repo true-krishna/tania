@@ -2,8 +2,16 @@ query Employee($id: ID!) {
   employee(id: $id) {
     id
     fullName
-    employeeCode
+    nikMasked
     email
+    birthDate
+    gender
+    phone
+    address
+    latestEducation
+    institutionName
+    major
+    nomorInduk
     status
     assignable
     joinedAt
@@ -18,6 +26,38 @@ query Employee($id: ID!) {
     chapter {
       id
       name
+    }
+    contracts(first: 50) {
+      totalCount
+      edges {
+        node {
+          id
+          contractNo
+          contractType
+          officeEmail
+          nomorInduk
+          bandPosition
+          jobTitle
+          jobLevel
+          workLocation
+          startDate
+          endDate
+          status
+          endReason
+          terminatedAt
+          notes
+          unit {
+            id
+            name
+          }
+          jobRole {
+            id
+            name
+          }
+          createdAt
+          updatedAt
+        }
+      }
     }
   }
 }

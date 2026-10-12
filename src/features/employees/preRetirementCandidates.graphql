@@ -1,0 +1,16 @@
+query PreRetirementCandidates($first: Int = 100) {
+  employees(filter: { status: ACTIVE }, first: $first) {
+    edges {
+      node {
+        id
+        fullName
+        birthDate
+        nomorInduk
+        unit {
+          id
+          name
+        }
+      }
+    }
+  }
+}

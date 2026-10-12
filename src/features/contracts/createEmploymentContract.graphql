@@ -1,0 +1,8 @@
+mutation CreateEmploymentContract($input: CreateEmploymentContractInput!) {
+  createEmploymentContract(input: $input) {
+    id
+    contractNo
+    status
+    nomorInduk
+  }
+}

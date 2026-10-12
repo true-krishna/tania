@@ -71,7 +71,7 @@ const employee = {
   __typename: "Employee",
   id: "emp-1",
   fullName: "Andi Pratama",
-  employeeCode: "EMP-001",
+  nomorInduk: "EMP-001",
   email: "andi@example.com",
   status: "ACTIVE",
   assignable: true,
@@ -213,7 +213,7 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
         <MockedProvider
           mocks={[
             {
-              request: { query: EmployeesDocument, variables: { filter: { assignableOnly: true }, first: 100 } },
+              request: { query: EmployeesDocument, variables: { filter: { assignableOnly: true }, first: 25, after: null } },
               result: employeesResult,
             },
             {

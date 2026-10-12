@@ -1,0 +1,28 @@
+query EmployeesNeedingFollowUp($first: Int = 25, $after: String) {
+  employeesNeedingFollowUp(first: $first, after: $after) {
+    totalCount
+    edges {
+      node {
+        id
+        fullName
+        nomorInduk
+        email
+        status
+        contracts(first: 1) {
+          edges {
+            node {
+              id
+              contractNo
+              endDate
+              endReason
+            }
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

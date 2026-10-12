@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TANIA Pulse · Referensi developer</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap">
+<style id="tp-tokens">:root{--tp-midnight:#212121;--tp-primary:#875bf7;--tp-primary-deep:#7839ee;--tp-lilac:#c3b5fd;--tp-mint:#12b76a;--tp-mint-ink:#027a48;--tp-sun:#fec84b;--tp-peach:#f97066;
+--tp-bg:#f2f4f7;--tp-surface:#FFFFFF;--tp-line:#d0d5dd;--tp-text:#212121;--tp-muted:#667085;--tp-nav:#491c96;--tp-on-nav:#FFFFFF;
+--tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-violet:#ece9fe;
+--tp-ink-peach:#b32318;--tp-ink-mint:#027a48;--tp-ink-sun:#b54708;--tp-ink-violet:#6927da;
+--tp-neutral:#667085;
+--tp-font-display:Nunito Sans,system-ui,sans-serif;--tp-font-body:Nunito Sans,system-ui,-apple-system,"Segoe UI",sans-serif;
+--tp-r-sm:10px;--tp-r-md:14px;--tp-r-lg:20px;--tp-r-xl:28px;--tp-r-pill:999px;
+--tp-shadow:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.06);
+--tp-ease:cubic-bezier(.2,.8,.2,1);--tp-dur:200ms;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;--tp-nav:#5720b7;
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
+:root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;--tp-nav:#5720b7;
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}</style><style id="tp-components">*{box-sizing:border-box}
+body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var(--tp-font-body)}
+.tp-h1{font:700 clamp(30px,5vw,40px)/1.1 var(--tp-font-display);margin:0}
+.tp-h2{font:700 22px/1.25 var(--tp-font-display);margin:0}
+.tp-h3{font:700 17px/1.3 var(--tp-font-display);margin:0}
+.tp-label{font-size:13px;color:var(--tp-muted)}
+.tp-card{background:var(--tp-surface);border:1px solid var(--tp-line);border-radius:var(--tp-r-lg);padding:20px;box-shadow:var(--tp-shadow)}
+.tp-btn{font:600 14px var(--tp-font-body);min-height:40px;padding:0 18px;border-radius:var(--tp-r-pill);border:1.5px solid var(--tp-text);background:transparent;color:var(--tp-text);cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none;transition:background var(--tp-dur) var(--tp-ease)}
+.tp-btn:hover{background:var(--tp-bg)}
+.tp-btn--primary{background:var(--tp-primary);border-color:var(--tp-primary);color:#fff}
+.tp-btn--primary:hover{background:var(--tp-primary-deep)}
+.tp-btn:focus-visible,.tp-input:focus-visible,.tp-tab:focus-visible,.tp-nav-item:focus-visible{outline:2px solid var(--tp-mint-ink);outline-offset:2px}
+.tp-input{width:100%;min-height:44px;padding:0 16px;border:1px solid var(--tp-line);border-radius:var(--tp-r-pill);background:var(--tp-surface);color:var(--tp-text);font:400 14px var(--tp-font-body)}
+.tp-chip{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:var(--tp-r-pill)}
+.tp-chip--peach{background:var(--tp-tint-peach);color:var(--tp-ink-peach)}
+.tp-chip--mint{background:var(--tp-tint-mint);color:var(--tp-ink-mint)}
+.tp-chip--sun{background:var(--tp-tint-sun);color:var(--tp-ink-sun)}
+.tp-chip--violet{background:var(--tp-tint-violet);color:var(--tp-ink-violet)}
+.tp-tabs{display:flex;gap:4px;overflow-x:auto;padding:4px;background:var(--tp-bg);border:1px solid var(--tp-line);border-radius:var(--tp-r-md)}
+.tp-tab{flex:none;font:600 14px var(--tp-font-body);padding:8px 14px;border:0;border-radius:var(--tp-r-sm);background:transparent;color:var(--tp-muted);cursor:pointer}
+.tp-tab[aria-selected="true"]{background:var(--tp-surface);color:var(--tp-text);box-shadow:0 0 0 1px var(--tp-line)}
+.tp-nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;color:var(--tp-text);text-decoration:none;font-weight:600}
+.tp-nav-item:hover{background:var(--tp-bg)}
+.tp-nav-item[aria-current="page"]{background:var(--tp-nav);color:var(--tp-on-nav);font-weight:600;--tp-primary:#c3b5fd;--tp-mint-ink:#6ce9a6}
+.tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-tint-violet)}
+.tp-empty{color:var(--tp-muted);font-size:14px;margin:0}
+.tp-empty strong{display:block;color:var(--tp-text);font-weight:600}
+.tp-icon{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}</style><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}.w{max-width:980px;margin:0 auto;padding:40px 20px 80px}
+h2.tp-h2{margin:44px 0 8px}p.lead{color:var(--tp-muted);max-width:66ch;margin:0 0 16px}
+.g{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+pre{margin:0;background:#212121;color:#eaecf0;border-radius:14px;padding:16px;overflow:auto;max-height:340px;font:500 12.5px/1.6 ui-monospace,Menlo,monospace}
+.cb{position:relative;margin:10px 0}.cp{position:absolute;right:10px;top:10px;font:600 12px var(--tp-font-body);padding:4px 10px;border-radius:99px;border:0;background:#fff;color:#212121;cursor:pointer}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--tp-line);vertical-align:top}th{color:var(--tp-muted);font-weight:600}
+code{font:500 12.5px ui-monospace,Menlo,monospace}
+.demo{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+ul{color:var(--tp-muted);padding-left:20px;max-width:70ch}li{margin:4px 0}</style></head><body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></g><symbol id="i-beranda" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/><path stroke="var(--tp-primary)" d="M10 19v-5h4v5"/></symbol><symbol id="i-dashboard" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="9" rx="2"/><rect x="13" y="4" width="7" height="5" rx="2"/><rect x="4" y="15" width="7" height="5" rx="2"/><rect stroke="var(--tp-mint-ink)" x="13" y="12" width="7" height="8" rx="2"/></symbol><symbol id="i-profil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path stroke="var(--tp-primary)" d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></symbol><symbol id="i-talent" viewBox="0 0 24 24"><circle cx="12" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M10.5 9l-3 6M13.5 9l3 6"/><path stroke="var(--tp-primary)" d="M8.5 17h7"/></symbol><symbol id="i-timesheet" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path stroke="var(--tp-primary)" d="M12 7v5l3 2"/></symbol><symbol id="i-workload" viewBox="0 0 24 24"><path d="M5 20v-8M19 20V9"/><path stroke="var(--tp-mint-ink)" d="M12 20V5"/></symbol><symbol id="i-feasibility" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M8.5 14.5a6 6 0 1 1 7 0c-.8.7-1.5 1.5-1.5 2.5h-4c0-1-.7-1.8-1.5-2.5z"/><path stroke="var(--tp-mint-ink)" d="M10.5 11.5L12 13l1.5-1.5"/></symbol><symbol id="i-budget" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18"/><path stroke="var(--tp-primary)" d="M16 15h.01" stroke-width="3"/></symbol><symbol id="i-ask" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path stroke="var(--tp-mint-ink)" d="M19 17v4M17 19h4"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path stroke="var(--tp-primary)" d="M20 20l-4.5-4.5"/></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M5 19h14"/><path stroke="var(--tp-mint-ink)" d="M12 4v10M8 10l4 4 4-4"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 6h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3v-3H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/></symbol></defs></svg><div class="w"><span class="tp-chip tp-chip--violet">v2.0 · selaras Legion · untuk developer</span>
+<h1 class="tp-h1" style="margin-top:12px">TANIA Pulse: referensi developer</h1>
+<p class="lead" style="margin-top:10px">Token, kelas komponen, dan aturan yang dipakai di halaman Profil talent versi Pulse. Kode di bawah diambil langsung dari stylesheet halaman ini, jadi yang kamu lihat adalah yang dipakai.</p>
+<h2 class="tp-h2">1. Mulai cepat</h2>
+<p class="lead">Pasang font, tempel token, tempel komponen. Ikon ada di paket <code>tania-icons</code> (sprite SVG dan komponen React).</p>
+<div class="cb"><button class="cp" data-for="c-font">Salin</button><pre id="c-font"><code>&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&amp;display=swap"&gt;</code></pre></div>
+<p class="tp-label">tokens.css</p><div class="cb"><button class="cp" data-for="c-tok">Salin</button><pre id="c-tok"><code></code></pre></div><p class="tp-label">components.css</p><div class="cb"><button class="cp" data-for="c-comp">Salin</button><pre id="c-comp"><code></code></pre></div>
+<h2 class="tp-h2">2. Warna</h2>
+<div class="tp-card sc" style="padding:6px 8px"><table><tr><th>Token</th><th>Nilai</th><th>Pemakaian</th><th>Kontras</th></tr><tr><td><code>--tp-midnight / --tp-text</code></td><td>#212121</td><td>Teks utama, judul</td><td>≈15:1 di atas latar halaman</td></tr><tr><td><code>--tp-primary</code></td><td>#875bf7</td><td>Tombol utama, penanda aktif, aksen ikon</td><td>4.3:1 dengan teks putih (karakteristik Legion; pakai --tp-primary-deep bila butuh AA ketat)</td></tr><tr><td><code>--tp-primary-deep</code></td><td>#7839ee</td><td>Hover dan tekan tombol utama</td><td>5.8:1</td></tr><tr><td><code>--tp-nav</code></td><td>#491c96</td><td>Kartu gelap dan menu aktif (teks putih)</td><td>11:1</td></tr><tr><td><code>--tp-lilac</code></td><td>#c3b5fd</td><td>Dekorasi, ilustrasi, bentuk bertingkat</td><td>Dekoratif, bukan untuk teks</td></tr><tr><td><code>--tp-mint / --tp-mint-ink</code></td><td>#12b76a / #027a48</td><td>Selesai, info, aksen ikon. Ink untuk ikon di atas putih</td><td>Ink 5.4:1 di atas putih</td></tr><tr><td><code>--tp-peach</code></td><td>#f97066</td><td>Perlu perhatian, sorotan hangat. Teks pakai --tp-ink-peach</td><td>Dekoratif</td></tr><tr><td><code>--tp-sun</code></td><td>#fec84b</td><td>Pencapaian; teks di atasnya ink #212121</td><td>—</td></tr><tr><td><code>--tp-bg / --tp-surface / --tp-line</code></td><td>#f2f4f7 / #FFFFFF / #d0d5dd</td><td>Latar halaman dan header profil (latar netral, tanpa gradasi) / kartu / garis</td><td>—</td></tr><tr><td><code>--tp-neutral / --tp-muted</code></td><td>#667085 (gelap: #98a2b3)</td><td>Progres, border blok AI, label, nilai kosong. Satu warna</td><td>4.5:1 di atas latar halaman</td></tr></table></div>
+<p class="lead" style="margin-top:12px">Palet mengikuti ramp Legion: ungu primary-500 sebagai satu-satunya warna interaktif, netral tertiary sebagai kanvas, success/error/warning sebagai aksen semantik. Lilac (primary-300) dan hijau (success-500) hanya untuk dekorasi dan ikon, bukan teks. Antarmuka tidak memakai gradien. Tema gelap tersedia lewat <code>prefers-color-scheme</code> atau <code>data-theme="dark"</code>.</p>
+<h2 class="tp-h2">3. Tipografi dan bentuk</h2>
+<div class="tp-card sc" style="padding:6px 8px"><table><tr><th>Peran</th><th>Font</th><th>Ukuran</th><th>Line-height</th><th>Tracking</th></tr><tr><td>Judul halaman</td><td>Nunito Sans 700</td><td>clamp(30px,5vw,40px)</td><td>1.1</td><td>0</td></tr><tr><td>Judul seksi</td><td>Nunito Sans 700</td><td>22px</td><td>1.25</td><td>0</td></tr><tr><td>Judul kartu</td><td>Nunito Sans 700</td><td>17px</td><td>1.3</td><td>0</td></tr><tr><td>Isi</td><td>Nunito Sans 400</td><td>16px</td><td>1.6</td><td>0</td></tr><tr><td>Label & metadata</td><td>Nunito Sans 400</td><td>13–14px</td><td>1.5</td><td>0</td></tr><tr><td>Tombol & tab</td><td>Nunito Sans 600</td><td>14px</td><td>1</td><td>0</td></tr></table></div>
+<p class="lead" style="margin-top:12px">Radius: 10 px (tombol kecil, tab), 14 px (grup), 20 px (kartu), 28 px (panel besar), pill penuh untuk tombol, input, dan chip. Tidak ada gradien di antarmuka: header profil memakai latar netral, progres dan border blok AI memakai satu warna netral.</p>
+<h2 class="tp-h2">4. Komponen</h2>
+<div class="g">
+<div class="tp-card"><h3 class="tp-h3">Tombol</h3><div class="demo"><button class="tp-btn tp-btn--primary"><svg class="tp-icon" aria-hidden="true"><use href="#i-ask"/></svg>Ask TANIA</button><button class="tp-btn"><svg class="tp-icon" aria-hidden="true"><use href="#i-download"/></svg>Export profil</button></div><p class="tp-label"><code>.tp-btn</code> <code>.tp-btn--primary</code>. Satu tombol primer per area.</p></div>
+<div class="tp-card"><h3 class="tp-h3">Input &amp; chip</h3><div class="demo"><input class="tp-input" placeholder="Cari data atau tanya TANIA…" aria-label="Cari"></div><div class="demo"><span class="tp-chip tp-chip--mint">Project Manager</span><span class="tp-chip tp-chip--peach">IDP berjalan</span><span class="tp-chip tp-chip--sun">Review Q4</span><span class="tp-chip tp-chip--violet">Squad A</span></div></div>
+<div class="tp-card"><h3 class="tp-h3">Tab</h3><div class="tp-tabs" role="tablist"><button class="tp-tab" role="tab" aria-selected="true">Overview</button><button class="tp-tab" role="tab" aria-selected="false">Journey</button><button class="tp-tab" role="tab" aria-selected="false">Gap Analysis</button></div><p class="tp-label" style="margin-top:10px"><code>aria-selected="true"</code> menandai tab aktif.</p></div>
+<div class="tp-card"><h3 class="tp-h3">Item menu</h3><div style="display:grid;gap:4px"><a class="tp-nav-item" href="#" aria-current="page"><svg class="tp-icon" aria-hidden="true"><use href="#i-profil"/></svg>Profil Saya</a><a class="tp-nav-item" href="#"><svg class="tp-icon" aria-hidden="true"><use href="#i-workload"/></svg>Workload</a></div><p class="tp-label" style="margin-top:10px"><code>aria-current="page"</code> menandai halaman aktif.</p></div>
+<div class="tp-ai"><h3 class="tp-h3"><svg class="tp-icon" aria-hidden="true"><use href="#i-ask"/></svg> AI Insight</h3><p class="tp-empty">Border netral satu warna. Hanya muncul atas permintaan pengguna.</p></div>
+<div class="tp-card"><h3 class="tp-h3">Data kosong</h3><p class="tp-empty" style="margin-top:8px"><strong>Assessment belum dilakukan.</strong>Tulis apa yang belum ada dan siapa yang bisa mengisinya. Nilai kosong ditulis “—”.</p></div>
+</div>
+<h2 class="tp-h2">5. Tailwind</h2><div class="cb"><button class="cp" data-for="c-tw">Salin</button><pre id="c-tw"><code>module.exports = {
+  theme: { extend: {
+    colors: {
+      midnight:'#212121', mist:'#f2f4f7', line:'#d0d5dd', muted:'#667085', neutral:'#667085', nav:'#491c96',
+      primary:{ DEFAULT:'#875bf7', deep:'#7839ee' }, lilac:'#c3b5fd',
+      mint:{ DEFAULT:'#12b76a', ink:'#027a48' }, peach:'#f97066', sun:'#fec84b'
+    },
+    fontFamily:{ display:['Nunito Sans','system-ui','sans-serif'], sans:['Nunito Sans','system-ui','sans-serif'] },
+    borderRadius:{ sm:'10px', md:'14px', lg:'20px', xl:'28px' },
+    boxShadow:{ card:'0 1px 2px rgba(16,24,40,.06), 0 6px 20px rgba(16,24,40,.06)' }
+    // tanpa gradien: bg-mist untuk header, bg-neutral untuk progres
+  } }
+}</code></pre></div>
+<h2 class="tp-h2">6. Aturan wajib</h2>
+<ul><li>Ikon: outline 2 px, ujung membulat, 24 px (20 px untuk menu padat), satu detail ungu atau hijau (success) per ikon.</li><li>Fokus keyboard selalu terlihat (outline mint-ink 2 px). Jangan menghapus outline.</li><li>Hormati <code>prefers-reduced-motion</code>. Satu-satunya animasi otomatis adalah riak sinyal di header profil.</li><li>Teks isi minimal 4.5:1, ikon dan elemen UI minimal 3:1.</li><li>Sentence case di semua teks. Nama aksi sama di seluruh alur (“Simpan perubahan” lalu “Perubahan disimpan”).</li><li>Mode hanya baca ditandai teks “Hanya baca” dan tanpa tombol ubah.</li><li>Logo Telkom Indonesia dan wordmark TANIA resmi dipakai dari aset asli, bukan dari teks di halaman contoh.</li></ul></div><script>
+function fill(id,src){var e=document.getElementById(id),s=document.getElementById(src);if(e&&s)e.firstChild.textContent=s.textContent.trim().replace(/\}\s*(?=[.@:\*a-z])/g,"}\n")}
+fill("c-tok","tp-tokens");fill("c-comp","tp-components");
+document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=document.getElementById(b.dataset.for).textContent;
+try{navigator.clipboard.writeText(t).then(function(){b.textContent="Tersalin"},function(){b.textContent="Salin manual"})}catch(e){b.textContent="Salin manual"}setTimeout(function(){b.textContent="Salin"},1800)})});
+</script></body></html>

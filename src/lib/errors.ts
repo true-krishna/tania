@@ -14,6 +14,7 @@ export const ERROR_CODES = [
   "NOT_FOUND",
   "BAD_USER_INPUT",
   "CONFLICT",
+  "PRECONDITION_FAILED",
   "RATE_LIMITED",
   "INTERNAL",
 ] as const;
@@ -31,6 +32,7 @@ export const ERROR_LABEL: Record<ErrorCode, string> = {
   NOT_FOUND: "Data tidak ditemukan.",
   BAD_USER_INPUT: "Input tidak valid.",
   CONFLICT: "Data sudah ada atau bertentangan.",
+  PRECONDITION_FAILED: "Aturan bisnis belum terpenuhi.",
   RATE_LIMITED: "Terlalu banyak permintaan. Silakan coba lagi.",
   INTERNAL: "Terjadi kesalahan. Silakan coba lagi.",
 };
@@ -61,6 +63,7 @@ export function mapErrorBehavior(code: ErrorCode): ErrorBehavior {
     case "BAD_USER_INPUT":
       return { kind: "field", field: null };
     case "CONFLICT":
+    case "PRECONDITION_FAILED":
     case "RATE_LIMITED":
     case "INTERNAL":
       return { kind: "action" };
@@ -105,4 +108,22 @@ export function errorMessage(
   // Network failure with no GraphQL payload — show the caller fallback, never
   // leak the raw transport detail (constitution §IX).
   return fallback;
+}
+
+export type SubmitError = { field: string | null; message: string };
+
+/**
+ * Maps a failed mutation to a form error. `extensions.field` targets a form
+ * field (BAD_USER_INPUT); CONFLICT has no field on the wire, so the caller
+ * supplies the clear per-form message naming its uniqueness constraints.
+ */
+export function mapSubmitError(
+  error: ApolloError | null | undefined,
+  conflictMessage: string,
+  fallback: string
+): SubmitError {
+  if (graphQLErrorCode(error) === "CONFLICT") {
+    return { field: null, message: conflictMessage };
+  }
+  return { field: errorField(error), message: errorMessage(error, fallback) };
 }

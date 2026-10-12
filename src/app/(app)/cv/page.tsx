@@ -434,9 +434,9 @@ function ChapterCvViewer() {
           className={LABEL}
         >
           <option value="">— pilih talent —</option>
-          {(talents.data ?? []).map((emp) => (
+          {(talents.employees ?? []).map((emp) => (
             <option key={emp.id} value={emp.id}>
-              {emp.fullName} ({emp.employeeCode})
+              {emp.fullName} ({emp.nomorInduk ?? "—"})
             </option>
           ))}
         </select>

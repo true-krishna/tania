@@ -1,0 +1,179 @@
+"use client";
+
+import Link from "next/link";
+import * as React from "react";
+import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
+import { BoardTable, type Column } from "@/components/BoardTable";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { PageHeader } from "@/components/PageHeader";
+import { Select } from "@/components/Select";
+import { useEmploymentContracts } from "@/features/contracts/useContracts";
+import {
+  CONTRACT_STATUS_LABEL,
+  CONTRACT_TYPE_LABEL,
+} from "@/features/contracts/labels";
+import type {
+  ContractType,
+  EmploymentContractFilter,
+  EmploymentContractStatus,
+} from "@/generated/graphql/types";
+
+type ContractRowData = {
+  id: string;
+  contractNo: string;
+  contractType: ContractType;
+  nomorInduk: string;
+  startDate: string;
+  endDate: string | null;
+  status: EmploymentContractStatus;
+  employee: { id: string; fullName: string };
+  unit: { name: string };
+  jobRole: { name: string };
+};
+
+const COLUMNS: Column[] = [
+  { key: "contractNo", label: "No Kontrak" },
+  { key: "employee", label: "Karyawan" },
+  { key: "type", label: "Jenis" },
+  { key: "unit", label: "Unit" },
+  { key: "role", label: "Posisi" },
+  { key: "nomorInduk", label: "Nomor Induk" },
+  { key: "period", label: "Periode" },
+  { key: "status", label: "Status" },
+];
+
+function ContractRow({ contract }: { contract: ContractRowData }) {
+  return (
+    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
+      <td className="px-4 py-2.5">
+        <Link
+          href={`/contracts/${contract.id}`}
+          className="font-medium text-zinc-900 hover:underline"
+        >
+          {contract.contractNo}
+        </Link>
+      </td>
+      <td className="px-4 py-2.5">
+        <Link
+          href={`/employees/${contract.employee.id}`}
+          className="text-zinc-900 hover:underline"
+        >
+          {contract.employee.fullName}
+        </Link>
+      </td>
+      <td className="px-4 py-2.5 text-zinc-600">{CONTRACT_TYPE_LABEL[contract.contractType]}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{contract.unit.name}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{contract.jobRole.name}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{contract.nomorInduk}</td>
+      <td className="px-4 py-2.5 text-zinc-600">
+        {contract.startDate} — {contract.endDate ?? "tidak berbatas"}
+      </td>
+      <td className="px-4 py-2.5">
+        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+          {CONTRACT_STATUS_LABEL[contract.status]}
+        </span>
+      </td>
+    </tr>
+  );
+}
+
+export default function ContractsPage() {
+  const [search, setSearch] = React.useState("");
+  const [contractType, setContractType] = React.useState<ContractType | "ALL">("ALL");
+  const [status, setStatus] = React.useState<EmploymentContractStatus | "ALL">("ALL");
+  const filter: EmploymentContractFilter = {
+    search: search || undefined,
+    contractType: contractType === "ALL" ? undefined : contractType,
+    status: status === "ALL" ? undefined : status,
+  };
+  const {
+    status: query,
+    contracts,
+    totalCount,
+    hasNextPage,
+    loadingMore,
+    error,
+    loadMore,
+  } = useEmploymentContracts(filter);
+
+  return (
+    <section className="flex flex-col gap-4">
+      <PageHeader
+        title="Kontrak Kerja"
+        subtitle="Kelola kontrak kerja karyawan (Operation)."
+        actions={
+          <Link href="/contracts/new" className="no-underline">
+            <Button variant="primary">+ Tambah Kontrak</Button>
+          </Link>
+        }
+      />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex flex-1 items-center gap-2 text-sm text-zinc-700">
+          <span className="sr-only">Cari kontrak</span>
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cari nama karyawan, no kontrak, atau nomor induk…"
+            className="max-w-xs"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-zinc-700">
+          <span>Jenis</span>
+          <Select
+            value={contractType}
+            onChange={(e) => setContractType(e.target.value as ContractType | "ALL")}
+            className="w-auto"
+          >
+            <option value="ALL">Semua</option>
+            <option value="PKWT">PKWT</option>
+            <option value="PKWTT">PKWTT</option>
+          </Select>
+        </label>
+        <label className="flex items-center gap-2 text-sm text-zinc-700">
+          <span>Status</span>
+          <Select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as EmploymentContractStatus | "ALL")}
+            className="w-auto"
+          >
+            <option value="ALL">Semua</option>
+            {(Object.keys(CONTRACT_STATUS_LABEL) as Array<
+              keyof typeof CONTRACT_STATUS_LABEL
+            >).map((value) => (
+              <option key={value} value={value}>
+                {CONTRACT_STATUS_LABEL[value]}
+              </option>
+            ))}
+          </Select>
+        </label>
+      </div>
+
+      {query === "loading" ? (
+        <LoadingState />
+      ) : query === "error" ? (
+        <ErrorState message={error ?? "Gagal memuat data kontrak."} />
+      ) : !contracts || contracts.length === 0 ? (
+        <EmptyState message="Tidak ada kontrak yang cocok dengan pencarian/filter." />
+      ) : (
+        <>
+          <BoardTable caption="Daftar kontrak kerja" columns={COLUMNS}>
+            {contracts.map((contract) => (
+              <ContractRow key={contract.id} contract={contract} />
+            ))}
+          </BoardTable>
+          {hasNextPage ? (
+            <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? "Memuat…" : "Muat lebih banyak"}
+            </Button>
+          ) : null}
+        </>
+      )}
+      <p className="text-xs text-zinc-500">
+        {contracts ? `${contracts.length} dari ${totalCount} kontrak ditampilkan.` : ""}
+      </p>
+    </section>
+  );
+}

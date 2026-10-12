@@ -20,8 +20,8 @@ import {
 const unit = { __typename: "Unit", id: "u-1", name: "Digital" };
 
 const employeeNodes = [
-  { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", employeeCode: "EMP-001", assignable: true },
-  { __typename: "Employee", id: "emp-5", fullName: "Eko Prasetyo", employeeCode: "EMP-005", assignable: false },
+  { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001", assignable: true },
+  { __typename: "Employee", id: "emp-5", fullName: "Eko Prasetyo", nomorInduk: "EMP-005", assignable: false },
 ];
 const employeesResult = {
   data: {
@@ -54,7 +54,7 @@ const assignableTalentNode = {
   __typename: "Employee",
   id: "emp-1",
   fullName: "Andi Pratama",
-  employeeCode: "EMP-001",
+  nomorInduk: "EMP-001",
 };
 
 const assignmentNode = {
@@ -63,7 +63,7 @@ const assignmentNode = {
   status: "ACTIVE",
   periodStart: "2025-07-01",
   periodEnd: "2025-12-31",
-  talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", employeeCode: "EMP-001" },
+  talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
   project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
   jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
 };
@@ -84,7 +84,7 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: EmployeesDocument, variables: { filter: {}, first: 100 } }, result: employeesResult },
+          { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
           { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
           { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
         ]}
@@ -101,7 +101,7 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: EmployeesDocument, variables: { filter: {}, first: 100 } }, result: employeesResult },
+          { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
           { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
           {
             request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },

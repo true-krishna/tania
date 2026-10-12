@@ -1,4 +1,5 @@
 import {
+  IconBriefcase,
   IconChartBar,
   IconClipboardCheck,
   IconClipboardText,
@@ -55,6 +56,7 @@ export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/workload", label: "Workload", icon: IconChartBar, roles: ALL },
   { kind: "link", href: "/reports/talent", label: "Laporan Talent", icon: IconReportAnalytics, roles: ["OPERATION", "CHAPTER"] },
   { kind: "link", href: "/employees", label: "Employees", icon: IconUsers, roles: ["OPERATION", "ADMIN"] },
+  { kind: "link", href: "/contracts", label: "Kontrak", icon: IconBriefcase, roles: ["OPERATION", "ADMIN"] },
   { kind: "link", href: "/assignments", label: "Assignments", icon: IconClipboardText, roles: ["CHAPTER", "ADMIN"] },
   { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: ["CHAPTER", "TALENT", "ADMIN"] },
   { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER"] },

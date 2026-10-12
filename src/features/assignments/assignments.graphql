@@ -10,7 +10,7 @@ query Assignments($filter: AssignmentFilter, $first: Int = 25, $after: String) {
         talent {
           id
           fullName
-          employeeCode
+          nomorInduk
         }
         project {
           id

@@ -1,0 +1,43 @@
+query EmploymentContract($id: ID!) {
+  employmentContract(id: $id) {
+    id
+    contractNo
+    contractType
+    officeEmail
+    nomorInduk
+    bandPosition
+    jobTitle
+    jobLevel
+    workLocation
+    startDate
+    endDate
+    status
+    endReason
+    terminatedAt
+    notes
+    employee {
+      id
+      fullName
+      nikMasked
+      email
+    }
+    unit {
+      id
+      name
+    }
+    jobRole {
+      id
+      name
+    }
+    predecessor {
+      id
+      contractNo
+    }
+    createdBy {
+      id
+      fullName
+    }
+    createdAt
+    updatedAt
+  }
+}
