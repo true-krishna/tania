@@ -48,7 +48,7 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
       employeesPerUnit: [{ __typename: "UnitCount", unit, count: 7 }],
       nonAssignableEmployees: 2,
       recentEmployeeChanges: [
-        { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", employeeCode: "EMP-001" },
+        { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
       ],
     });
 
@@ -68,7 +68,7 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
         { __typename: "ActionStatusCount", status: "COMPLETED", count: 4 },
       ],
       unassignedTalents: [
-        { __typename: "Employee", id: "emp-2", fullName: "Sari Dewi", employeeCode: "EMP-002" },
+        { __typename: "Employee", id: "emp-2", fullName: "Sari Dewi", nomorInduk: "EMP-002" },
       ],
       idpsNeedingReview: 1,
       currentEvaluationPeriod: {

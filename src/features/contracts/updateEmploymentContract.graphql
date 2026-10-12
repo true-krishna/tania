@@ -1,0 +1,12 @@
+mutation UpdateEmploymentContract($id: ID!, $input: UpdateEmploymentContractInput!) {
+  updateEmploymentContract(id: $id, input: $input) {
+    id
+    contractNo
+    officeEmail
+    bandPosition
+    jobTitle
+    jobLevel
+    workLocation
+    notes
+  }
+}

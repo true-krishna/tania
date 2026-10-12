@@ -38,7 +38,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Talent</dt>
             <dd className="text-zinc-900">
-              {assignment.talent.fullName} ({assignment.talent.employeeCode})
+              {assignment.talent.fullName} ({assignment.talent.nomorInduk ?? "—"})
             </dd>
           </div>
           <div>

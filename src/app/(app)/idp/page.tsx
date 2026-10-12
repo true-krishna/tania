@@ -16,7 +16,7 @@ type IdpListRow = {
   developmentObjective: string;
   timelineStart: string;
   timelineEnd: string;
-  talent: { fullName: string; employeeCode: string };
+  talent: { fullName: string; nomorInduk: string | null };
   actions: Array<{ id: string; status: string }>;
 };
 
@@ -41,7 +41,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
         <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-brand hover:text-brand-600 hover:underline">
           {idp.talent.fullName}
         </Link>
-        <span className="ml-2 text-xs text-zinc-400">{idp.talent.employeeCode}</span>
+        <span className="ml-2 text-xs text-zinc-400">{idp.talent.nomorInduk ?? "—"}</span>
       </td>
       <td className="px-4 py-2.5 text-zinc-600">{idp.developmentObjective}</td>
       <td className="px-4 py-2.5 text-zinc-600">

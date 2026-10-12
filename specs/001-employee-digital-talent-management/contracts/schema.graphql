@@ -90,6 +90,18 @@ enum AuditAction {
   DELETE
   LOGIN
   LOGOUT
+  """Perpanjangan kontrak (FR-36/FR-41)."""
+  RENEW
+  """Resign (FR-37/FR-41)."""
+  RESIGN
+  """Mutasi (FR-38/FR-41)."""
+  MUTATE
+  """Pensiun (FR-39/FR-41)."""
+  RETIRE
+  """Pengakhiran kontrak lama pada mutasi (FR-38/FR-41)."""
+  END
+  """Anonimisasi retensi data pribadi (T041)."""
+  ANONYMIZE
 }
 
 enum AssignmentStatus {
@@ -810,6 +822,8 @@ type Query {
   expiringContracts(days: Int = 90, first: Int = 25, after: String): EmploymentContractConnection!
   """Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation (US10 skenario 4)."""
   employeesNeedingFollowUp(first: Int = 25, after: String): EmployeeConnection!
+  """Usia pensiun (tahun) dari setelan aplikasi Admin (FR-40, T042)."""
+  retirementAge: Int!
   """Talent yang belum memiliki akun Entra (FR-44)."""
   employeesWithoutEntra(first: Int = 25, after: String): EmployeeConnection!
 
@@ -892,6 +906,9 @@ type Mutation {
   renewEmploymentContract(input: RenewContractInput!): EmploymentContract!
   """Mutasi: akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38)."""
   recordEmployeeMutation(input: RecordMutationInput!): EmploymentContract!
+
+  """Ubah usia pensiun (tahun); hanya Admin (T042)."""
+  setRetirementAge(years: Int!): Int!
 
   # --- Provisi Entra (Operation, FR-43–FR-46) ---
   """Provisioning manual/ulang akun Entra untuk talent yang belum punya (FR-44)."""

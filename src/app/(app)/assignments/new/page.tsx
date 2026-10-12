@@ -124,7 +124,7 @@ export default function NewAssignmentPage() {
             <option value="">— pilih talent (assignable) —</option>
             {talents.data?.map((emp) => (
               <option key={emp.id} value={emp.id}>
-                {emp.fullName} ({emp.employeeCode})
+                {emp.fullName} ({emp.nomorInduk ?? "—"})
               </option>
             ))}
           </Select>
