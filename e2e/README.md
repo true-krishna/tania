@@ -59,3 +59,18 @@ Varian peran (`audit route is only reachable for ADMIN`): `E2E_ROLE=ADMIN`
    `<nama-grafik>-<mulai>-<akhir>.png`, dimensi PNG ≥ 2× ukuran tampil (SC-03).
 4. Chapter hanya melihat cakupan chapter-nya (SC-05).
 5. Talent ditolak (FR-01).
+
+## Catatan eksekusi: instance 1 GiB / 1 CPU tidak memadai (2026-10-12)
+
+Percobaan menjalankan stack ini di sandbox 1 GiB / 1 CPU gagal pada dua titik:
+
+- build image `api` (Go, di dalam Docker): kompilasi OOM-kill (`signal: killed`
+  pada `github.com/redis/go-redis/v9`) — compiler Go butuh memori di atas
+  plafon instance;
+- `next build` lokal (webpack): compile + TypeScript hijau, tetapi tahap
+  "Collecting page data" default memakai 35 worker → OOM; dengan batas sementara
+  `experimental.cpus: 1` build produksi penuh selesai (30/30 halaman) — batas
+  itu sengaja TIDAK di-commit.
+
+Kesimpulan: jalankan E2E (dan image build `api`) di runner CI atau mesin dengan
+memori ≥4 GiB; harness + runbook di atas adalah kontrak eksekusinya.
