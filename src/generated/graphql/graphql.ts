@@ -321,6 +321,10 @@ export type UpsertPerformanceEvaluationInput = {
   summaryAchievement?: string | null | undefined;
 };
 
+export type WorkLocation =
+  | 'BANDUNG'
+  | 'JAKARTA';
+
 export type CreateUserAccountMutationVariables = Exact<{
   employeeId: string | number;
   email: string;

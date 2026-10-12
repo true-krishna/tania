@@ -67,7 +67,7 @@ const USERS_QUERY_AFTER_ROLE_CHANGE = {
 };
 
 const EMPLOYEES_QUERY = {
-  request: { query: EmployeesDocument, variables: { filter: {}, first: 100 } },
+  request: { query: EmployeesDocument, variables: { filter: {}, first: 100, after: null } },
   result: {
     data: {
       employees: {
@@ -77,7 +77,7 @@ const EMPLOYEES_QUERY = {
             node: {
               id: "emp-1",
               fullName: "Ahmad Fauzi",
-              employeeCode: "EMP-0100",
+              nomorInduk: "EMP-0100",
               email: "ahmad@telkom.co.id",
               status: "ACTIVE",
               assignable: true,
