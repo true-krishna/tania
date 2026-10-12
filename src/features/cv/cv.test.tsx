@@ -189,7 +189,19 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
     const options = Array.from(degreeSelect.querySelectorAll("option")).map(
       (o) => (o as HTMLOptionElement).value,
     );
-    expect(options).toEqual(["", "SMA/SMK Sederajat", "D3", "S1", "S2", "S3"]);
+    // Nilai = enum EducationLevel (kontrak SDL); label tampilan tetap D11.
+    expect(options).toEqual(["", "SMA_SMK_SEDERAJAT", "D3", "S1", "S2", "S3"]);
+    const labels = Array.from(degreeSelect.querySelectorAll("option")).map(
+      (o) => (o as HTMLOptionElement).textContent,
+    );
+    expect(labels).toEqual([
+      "— pilih jenjang (opsional) —",
+      "SMA/SMK Sederajat",
+      "D3",
+      "S1",
+      "S2",
+      "S3",
+    ]);
   });
 });
 

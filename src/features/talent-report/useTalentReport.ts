@@ -1,77 +1,40 @@
 "use client";
 
 import * as React from "react";
-import { gql, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import type { ApolloError } from "@apollo/client";
-import { errorMessage, graphQLErrorCode } from "@/lib/errors";
+import {
+  TalentReportDocument,
+  TalentReportRangeDocument,
+  type TalentReportPeriodInput,
+} from "@/generated/graphql";
 import type {
   TalentReport,
-  TalentReportPeriod,
   TalentReportRange,
-} from "./types";
+} from "@/generated/graphql/types";
+import { errorMessage, graphQLErrorCode } from "@/lib/errors";
 
 /**
- * T022 — hook laporan talent.
+ * T022/T025 — hook laporan talent.
  *
- * ⚠️ Dokumen `gql` di bawah adalah pasangan sementara `talent-report.graphql.pending`
- * (T015) — diganti `TalentReportDocument`/`TalentReportRangeDocument` hasil
- * codegen saat T025 (codegen swap). Tipe hasil memakai `types.ts` (kontrak
- * sementara) sampai saat itu.
+ * Dokumen & tipe berasal dari hasil codegen (client preset) atas SDL yang
+ * dilayani — kontrak sementara T015 sudah dilepas di T025 (codegen swap).
  *
  * Perilaku: satu query agregat `talentReport(period)` memperbarui kelima visual
  * sekaligus (FR-12/SC-04); `fetchPolicy: "cache-and-network"` (FR-15 — cache
  * tampil lebih dulu, jaringan menyusul tanpa sinkronisasi manual); default
  * periode = seluruh `talentReportRange` (FR-11).
  */
-export const TALENT_REPORT_RANGE_QUERY = gql`
-  query TalentReportRange {
-    talentReportRange {
-      startMonth
-      endMonth
-    }
-  }
-`;
-
-export const TALENT_REPORT_QUERY = gql`
-  query TalentReport($period: TalentReportPeriodInput!) {
-    talentReport(period: $period) {
-      snapshotMonth
-      roleDistribution {
-        label
-        count
-        kind
-      }
-      generationDistribution {
-        label
-        count
-        kind
-      }
-      educationDistribution {
-        label
-        count
-        kind
-      }
-      workLocationDistribution {
-        label
-        count
-        kind
-      }
-      movementTrend {
-        month
-        newTalent
-        churn
-      }
-    }
-  }
-`;
+export const TALENT_REPORT_RANGE_QUERY = TalentReportRangeDocument;
+export const TALENT_REPORT_QUERY = TalentReportDocument;
 
 export type TalentReportStatus = "loading" | "ready" | "empty" | "forbidden" | "error";
 
 export interface UseTalentReportResult {
   range: TalentReportRange | null;
   /** Periode terpakai — `null` sampai rentang tersedia (default = seluruh rentang). */
-  period: TalentReportPeriod | null;
-  applyPeriod: (period: TalentReportPeriod) => void;
+  period: TalentReportPeriodInput | null;
+  applyPeriod: (period: TalentReportPeriodInput) => void;
   status: TalentReportStatus;
   report: TalentReport | null;
   message: string | null;
@@ -102,23 +65,21 @@ export function useTalentReport(): UseTalentReportResult {
   const rangeResult = useQuery(TALENT_REPORT_RANGE_QUERY, {
     fetchPolicy: "cache-and-network",
   });
-  const range = (rangeResult.data as { talentReportRange: TalentReportRange } | undefined)
-    ?.talentReportRange ?? null;
+  const range = rangeResult.data?.talentReportRange ?? null;
 
-  const [period, setPeriod] = React.useState<TalentReportPeriod | null>(null);
-  const defaultPeriod = React.useMemo<TalentReportPeriod | null>(
+  const [period, setPeriod] = React.useState<TalentReportPeriodInput | null>(null);
+  const defaultPeriod = React.useMemo<TalentReportPeriodInput | null>(
     () => (range ? { startMonth: range.startMonth, endMonth: range.endMonth } : null),
     [range],
   );
   const effectivePeriod = period ?? defaultPeriod;
 
   const reportResult = useQuery(TALENT_REPORT_QUERY, {
-    variables: { period: effectivePeriod },
+    variables: { period: effectivePeriod as TalentReportPeriodInput },
     skip: !effectivePeriod,
     fetchPolicy: "cache-and-network",
   });
-  const report = (reportResult.data as { talentReport: TalentReport } | undefined)
-    ?.talentReport ?? null;
+  const report = reportResult.data?.talentReport ?? null;
 
   const error = rangeResult.error ?? reportResult.error;
   const status = toStatus(error, report ?? undefined);

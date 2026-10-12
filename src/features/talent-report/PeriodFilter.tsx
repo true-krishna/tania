@@ -3,7 +3,13 @@
 import * as React from "react";
 import { Button } from "@/components/Button";
 import { Select } from "@/components/Select";
-import type { TalentReportPeriod, TalentReportRange, YearMonth } from "./types";
+import type {
+  TalentReportPeriodInput as TalentReportPeriod,
+  TalentReportRange,
+} from "@/generated/graphql/types";
+
+/** Bulan format `YYYY-MM` (scalar `String` di SDL). */
+type YearMonth = string;
 
 const MONTH_NAMES = [
   "Januari",

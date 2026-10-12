@@ -33,9 +33,9 @@ import {
 import type {
   ReportCategoryCount,
   TalentReport,
-  TalentReportPeriod,
   TalentReportRange,
-} from "./types";
+  TalentReportPeriodInput as TalentReportPeriod,
+} from "@/generated/graphql/types";
 
 const echartsMock = vi.hoisted(() => {
   const instance = {

@@ -4,7 +4,7 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import type { EChartsCoreOption } from "echarts/core";
 import { resolveChartTheme, type ChartTheme } from "./chart-theme";
-import type { ReportCategoryCount } from "./types";
+import type { ReportCategoryCount } from "@/generated/graphql/types";
 
 const EChart = dynamic(
   () => import("./EChart").then((m) => ({ default: m.EChart })),

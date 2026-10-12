@@ -1,13 +1,13 @@
 /**
- * T015 — fixture uji laporan talent.
+ * T015/T025 — fixture uji laporan talent.
  *
  * ⚠️ BUKAN MOCK PRODUKSI — modul ini hanya boleh diimpor oleh berkas test.
  * Kode produksi (`useTalentReport`, `TalentReportPageView`, …) mengambil data
- * lewat GraphQL (`talent-report.graphql.pending`); fixture di sini memasok `MockedProvider`
- * dan uji data-prep sampai T025 (codegen swap). Tidak ada jalur yang membaca
- * fixture ini saat runtime aplikasi (aturan merge FE: tanpa mock produksi).
+ * lewat GraphQL (`talent-report.graphql`); fixture di sini memasok `MockedProvider`
+ * dan uji data-prep. Tidak ada jalur yang membaca fixture ini saat runtime
+ * aplikasi (aturan merge FE: tanpa mock produksi).
  *
- * Bentuk data mengikuti fragmen §5 plan-003 (D10): kategori `kind: VALUE` sah,
+ * Bentuk data mengikuti kontrak hasil codegen (D10): kategori `kind: VALUE` sah,
  * `MISSING` = "Belum diisi" (selalu terakhir, abu-abu), `OTHER` = agregat di
  * luar Top-10 lokasi ("Lainnya"). Tren selalu zero-fill penuh (US2 AC-9).
  */
@@ -16,7 +16,7 @@ import type {
   ReportMonthlyMovement,
   TalentReport,
   TalentReportRange,
-} from "./types";
+} from "@/generated/graphql/types";
 
 /** Rentang default fixture — mencerminkan `talentReportRange` (FR-11). */
 export const MOCK_TALENT_REPORT_RANGE: TalentReportRange = {

@@ -11,7 +11,7 @@ import {
 } from "./DistributionChart";
 import { PeriodFilter } from "./PeriodFilter";
 import { useTalentReport } from "./useTalentReport";
-import type { ReportCategoryCount, TalentReport } from "./types";
+import type { ReportCategoryCount, TalentReport } from "@/generated/graphql/types";
 
 function total(data: readonly ReportCategoryCount[]): number {
   return data.reduce((sum, item) => sum + item.count, 0);

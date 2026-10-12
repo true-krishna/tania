@@ -24,14 +24,28 @@ import {
 
   UpsertCvProfileDocument,
   type CvFieldsFragment,
+  type EducationLevel,
 } from "@/generated/graphql";
 
 const BLOCK = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 const LABEL =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm";
 
-/** D11 — dropdown terkontrol lima nilai jenjang (disahkan pemilik produk 2026-10-10). */
-const EDUCATION_LEVELS = ["SMA/SMK Sederajat", "D3", "S1", "S2", "S3"] as const;
+/** D11 — dropdown terkontrol lima nilai jenjang (disahkan pemilik produk 2026-10-10).
+ * Nilai = enum `EducationLevel` (kontrak SDL); label = tampilan D11. */
+const EDUCATION_LEVELS: readonly { value: EducationLevel; label: string }[] = [
+  { value: "SMA_SMK_SEDERAJAT", label: "SMA/SMK Sederajat" },
+  { value: "D3", label: "D3" },
+  { value: "S1", label: "S1" },
+  { value: "S2", label: "S2" },
+  { value: "S3", label: "S3" },
+];
+
+/** Tampilan D11: nilai enum → label; entri legacy free-text tampil apa adanya. */
+function formatDegree(degree: string | null | undefined): string {
+  if (!degree) return "";
+  return EDUCATION_LEVELS.find((level) => level.value === degree)?.label ?? degree;
+}
 
 /**
  * CV profile (FR-12/FR-13) — US4.
@@ -119,7 +133,7 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
     refetchQueries: [{ query: MyCvProfileDocument }],
   });
   const [institution, setInstitution] = React.useState("");
-  const [degree, setDegree] = React.useState("");
+  const [degree, setDegree] = React.useState<EducationLevel | "">("");
   const [fieldOfStudy, setFieldOfStudy] = React.useState("");
   const [startYear, setStartYear] = React.useState("");
   const [endYear, setEndYear] = React.useState("");
@@ -172,7 +186,7 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
               <div>
                 <p className="font-medium text-zinc-900">
                   {edu.institution}
-                  {edu.degree ? ` — ${edu.degree}` : ""}
+                  {edu.degree ? ` — ${formatDegree(edu.degree)}` : ""}
                 </p>
                 <p className="text-xs text-zinc-500">
                   {[edu.fieldOfStudy, [edu.startYear, edu.endYear].filter(Boolean).join("–")]
@@ -196,11 +210,11 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
 
       <form onSubmit={onAdd} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Institusi (wajib)" required />
-        <Select value={degree} onChange={(e) => setDegree(e.target.value)} aria-label="Jenjang pendidikan">
+        <Select value={degree} onChange={(e) => setDegree(e.target.value as EducationLevel | "")} aria-label="Jenjang pendidikan">
           <option value="">— pilih jenjang (opsional) —</option>
           {EDUCATION_LEVELS.map((level) => (
-            <option key={level} value={level}>
-              {level}
+            <option key={level.value} value={level.value}>
+              {level.label}
             </option>
           ))}
         </Select>
@@ -456,7 +470,7 @@ function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
             {cv.educations.map((edu) => (
               <li key={edu.id} className="text-sm text-zinc-800">
                 {edu.institution}
-                {edu.degree ? ` — ${edu.degree}` : ""}
+                {edu.degree ? ` — ${formatDegree(edu.degree)}` : ""}
                 <span className="ml-2 text-xs text-zinc-500">
                   {[edu.fieldOfStudy, [edu.startYear, edu.endYear].filter(Boolean).join("–")]
                     .filter(Boolean)
