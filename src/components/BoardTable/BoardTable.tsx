@@ -16,7 +16,8 @@ interface BoardTableProps {
 export function BoardTable({ caption, columns, children }: BoardTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-board-border bg-board shadow-sm">
-      <table className="w-full border-collapse text-left text-sm">
+      {/* Wide tables scroll horizontally instead of compressing (constitution v4.0.0, VIII). */}
+      <table className="w-full min-w-[560px] border-collapse text-left text-sm">
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         <thead>
           <tr className="border-b border-board-border bg-header-row">
@@ -25,7 +26,7 @@ export function BoardTable({ caption, columns, children }: BoardTableProps) {
                 key={col.key}
                 scope="col"
                 className={cn(
-                  "px-4 py-2.5 text-xs font-semibold text-zinc-700",
+                  "px-4 py-2.5 text-sm font-semibold text-zinc-700",
                   col.className,
                 )}
               >
