@@ -1,52 +1,52 @@
 "use client";
 
-import { BoardTable } from "@/components/BoardTable";
 import { PageHeader } from "@/components/PageHeader";
-import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { roleLabel } from "@/features/accounts/roles";
+import { useToast } from "@/components/Toast";
+import { AccountsSection } from "@/features/accounts/AccountsSection";
 import { useUsers } from "@/features/accounts/useAccounts";
-
-function RoleBadge({ role }: { role: string }) {
-  return (
-    <span className="rounded-md bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">
-      {roleLabel[role as keyof typeof roleLabel] ?? role}
-    </span>
-  );
-}
+import { useAccountMutations } from "@/features/accounts/useAccountMutations";
 
 export default function AccountsPage() {
   const { status, data, error } = useUsers();
+  const accountMutations = useAccountMutations();
+  const { pushToast } = useToast();
 
-  if (status === "loading") return <LoadingState />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
-  if (!data || data.length === 0)
-    return <EmptyState message="Belum ada akun pengguna." />;
+  async function report(fn: () => Promise<unknown>, ok: string) {
+    try {
+      await fn();
+      pushToast("success", ok);
+    } catch (err) {
+      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan data akun.");
+    }
+  }
 
   return (
     <section className="flex flex-col gap-4">
       <PageHeader title="Akun Pengguna" subtitle="Kelola akun dan peran akses di sistem Tania." />
-      <BoardTable
-        caption="Daftar akun pengguna"
-        columns={[
-          { key: "name", label: "Nama" },
-          { key: "email", label: "Email" },
-          { key: "role", label: "Peran" },
-          { key: "status", label: "Status" },
-        ]}
-      >
-        {data.map((user) => (
-          <tr key={user.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-            <td className="px-4 py-2.5 font-medium text-zinc-900">{user.fullName}</td>
-            <td className="px-4 py-2.5 text-zinc-600">{user.email}</td>
-            <td className="px-4 py-2.5">
-              <RoleBadge role={user.accessRole} />
-            </td>
-            <td className="px-4 py-2.5 text-zinc-700">
-              {user.status === "ACTIVE" ? "Aktif" : "Nonaktif"}
-            </td>
-          </tr>
-        ))}
-      </BoardTable>
+      <AccountsSection
+        accounts={data}
+        status={status}
+        error={error}
+        onCreate={async (values) => {
+          await accountMutations.create(values);
+          pushToast("success", `Akun "${values.email}" berhasil dibuat.`);
+        }}
+        onChangeRole={(userId, accessRole) =>
+          report(
+            () => accountMutations.changeRole(userId, accessRole),
+            "Peran akses berhasil diubah.",
+          )
+        }
+        onSetStatus={(userId, next) =>
+          report(
+            () => accountMutations.setStatus(userId, next),
+            next === "ACTIVE" ? "Akun berhasil diaktifkan." : "Akun berhasil dinonaktifkan.",
+          )
+        }
+        onRevokeSessions={(userId) =>
+          report(() => accountMutations.revokeSessions(userId), "Sesi pengguna berhasil dicabut.")
+        }
+      />
     </section>
   );
 }

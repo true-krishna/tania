@@ -1,0 +1,43 @@
+mutation CreateUserAccount(
+  $employeeId: ID!
+  $email: String!
+  $accessRole: AccessRole!
+  $temporaryPassword: String
+) {
+  createUserAccount(
+    employeeId: $employeeId
+    email: $email
+    accessRole: $accessRole
+    temporaryPassword: $temporaryPassword
+  ) {
+    id
+    fullName
+    email
+    accessRole
+    status
+  }
+}
+
+mutation UpdateUserAccessRole($userId: ID!, $accessRole: AccessRole!) {
+  updateUserAccessRole(userId: $userId, accessRole: $accessRole) {
+    id
+    fullName
+    email
+    accessRole
+    status
+  }
+}
+
+mutation SetUserAccountStatus($userId: ID!, $status: AccountStatus!) {
+  setUserAccountStatus(userId: $userId, status: $status) {
+    id
+    fullName
+    email
+    accessRole
+    status
+  }
+}
+
+mutation RevokeUserSessions($userId: ID!) {
+  revokeUserSessions(userId: $userId)
+}
