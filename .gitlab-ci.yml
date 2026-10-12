@@ -1,0 +1,20 @@
+deploy_production:
+  stage: deploy
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
+    - when: never
+
+  before_script:
+    - npm install --global vercel
+    - mkdir -p .vercel
+    - |
+      printf '{"orgId":"%s","projectId":"%s"}' \
+        "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" \
+        > .vercel/project.json
+
+  script:
+    - vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+    - vercel build --prod --token="$VERCEL_TOKEN"
+    - vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
