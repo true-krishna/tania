@@ -2,6 +2,7 @@ export { BarList, type BarItem } from "./BarList";
 export { StatCard } from "./StatCard";
 export { Sidebar } from "./Sidebar";
 export { Avatar } from "./Avatar";
+export { UserMenu, type UserMenuItem } from "./UserMenu";
 export { BoardTable } from "./BoardTable";
 export { Button } from "./Button";
 export { FilterButton } from "./FilterButton";
