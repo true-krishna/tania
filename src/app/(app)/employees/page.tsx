@@ -5,6 +5,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable, type Column } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
@@ -62,6 +63,7 @@ export default function EmployeesPage() {
   const [search, setSearch] = React.useState("");
   const [unitId, setUnitId] = React.useState("");
   const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const units = useUnits();
   const { status: query, employees, totalCount, hasNextPage, loadingMore, error, loadMore } =
     useEmployees({
@@ -69,6 +71,7 @@ export default function EmployeesPage() {
       unitId: unitId || undefined,
       status: status === "ALL" ? undefined : status,
     });
+  const activeFilters = (unitId ? 1 : 0) + (status !== "ALL" ? 1 : 0);
 
   return (
     <section className="flex flex-col gap-4">
@@ -93,39 +96,50 @@ export default function EmployeesPage() {
             className="max-w-xs"
           />
         </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <span>Divisi</span>
-          <Select
-            value={unitId}
-            onChange={(e) => setUnitId(e.target.value)}
-            className="w-auto"
-          >
-            <option value="">Semua</option>
-            {(units.data ?? []).map((unit) => (
-              <option key={unit.id} value={unit.id}>
-                {unit.name}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <span>Status</span>
-          <Select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as EmployeeStatus | "ALL")}
-            className="w-auto"
-          >
-            <option value="ALL">Semua</option>
-            {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
-              (value) => (
-                <option key={value} value={value}>
-                  {EMPLOYEE_STATUS_LABEL[value]}
-                </option>
-              )
-            )}
-          </Select>
-        </label>
+        <FilterButton
+          activeCount={activeFilters}
+          expanded={filtersOpen}
+          onClick={() => setFiltersOpen((open) => !open)}
+          panelId="employee-filter-panel"
+        />
       </div>
+
+      {filtersOpen ? (
+        <div id="employee-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
+          <label className="flex items-center gap-2 text-sm text-zinc-700">
+            <span>Divisi</span>
+            <Select
+              value={unitId}
+              onChange={(e) => setUnitId(e.target.value)}
+              className="w-auto"
+            >
+              <option value="">Semua</option>
+              {(units.data ?? []).map((unit) => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.name}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-zinc-700">
+            <span>Status</span>
+            <Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as EmployeeStatus | "ALL")}
+              className="w-auto"
+            >
+              <option value="ALL">Semua</option>
+              {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
+                (value) => (
+                  <option key={value} value={value}>
+                    {EMPLOYEE_STATUS_LABEL[value]}
+                  </option>
+                )
+              )}
+            </Select>
+          </label>
+        </div>
+      ) : null}
 
       {query === "loading" ? (
         <LoadingState />
