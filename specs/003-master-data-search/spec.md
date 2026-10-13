@@ -4,11 +4,13 @@
 
 **Created**: 2026-10-13
 
+**Revisi**: 2026-10-13 (keputusan pemilik produk, TAN-180) — Pemetaan "Initiative" dikonfirmasi: **Initiative = Master Data Project**. Butir NEEDS CLARIFICATION pada User Story 2 dan Assumptions ditutup; User Story 2 kini merujuk daftar Project secara langsung.
+
 **Status**: Draft
 
 **Input**: User description: "add search for Job Role, Initiative, and Unit — 1. Job Role: search by job role; 2. Initiative: search by initiative name; 3. Unit: search by unit name"
 
-> Permintaan menyebut tiga daftar: **Job Role**, **Initiative**, dan **Unit**. Tania tidak memiliki entitas bernama "Initiative" — daftar master data yang tersedia adalah Job Role (FR-20 induk), Unit (FR-18 induk), Project (FR-19 induk), dan Chapter (FR-24 induk). Permintaan ini dimaknai sebagai pencarian pada tiga daftar master data yang ada: Job Role, **Project** (pemetaan terdekat untuk "Initiative" — daftar project adalah wadah inisiatif kerja yang merujuk Unit), dan Unit. Pemetaan ini ditandai **[NEEDS CLARIFICATION]** dan dipastikan pemilik produk pada fase `/speckit.clarify` (lihat Assumptions). Spesifikasi ini melengkapi spesifikasi induk `specs/001-employee-digital-talent-management/spec.md` (User Story 6); konteks master data, RBAC, dan paginasi didefinisikan pada spesifikasi induk beserta `specs/002-tania-rbac/spec.md` dan tidak diulang di sini.
+> Permintaan menyebut tiga daftar: **Job Role**, **Initiative**, dan **Unit**. Tania tidak memiliki entitas bernama "Initiative" — daftar master data yang tersedia adalah Job Role (FR-20 induk), Unit (FR-18 induk), Project (FR-19 induk), dan Chapter (FR-24 induk). Permintaan ini dimaknai sebagai pencarian pada tiga daftar master data yang ada: Job Role, **Project**, dan Unit — pemetaan **Initiative = Master Data Project** dikonfirmasi pemilik produk (keputusan pada TAN-180; daftar project adalah wadah inisiatif kerja yang merujuk Unit). Spesifikasi ini melengkapi spesifikasi induk `specs/001-employee-digital-talent-management/spec.md` (User Story 6); konteks master data, RBAC, dan paginasi didefinisikan pada spesifikasi induk beserta `specs/002-tania-rbac/spec.md` dan tidak diulang di sini.
 
 ## Ringkasan
 
@@ -33,13 +35,11 @@ Sebagai **Admin**, saya dapat mencari job role dengan mengetik sebagian namanya 
 
 ---
 
-### User Story 2 - Admin mencari project pada daftar "Initiative" (Priority: P2)
+### User Story 2 - Admin mencari project pada daftar Project (Priority: P2)
 
-Sebagai **Admin**, saya dapat mencari project — diminta sebagai "Initiative" — dengan mengetik sebagian namanya pada kolom pencarian di daftar Project, sehingga saya menemukan inisiatif kerja tertentu beserta Unit pemiliknya seketika.
+Sebagai **Admin**, saya dapat mencari project — diminta sebagai "Initiative", dikonfirmasi sama dengan Master Data Project (keputusan pada TAN-180) — dengan mengetik sebagian namanya pada kolom pencarian di daftar Project, sehingga saya menemukan inisiatif kerja tertentu beserta Unit pemiliknya seketika.
 
-> **[NEEDS CLARIFICATION: Tania tidak memiliki daftar bernama "Initiative"; asumsi kerja cerita ini adalah pemetaan Initiative → Master Data Project (FR-19 induk). Keputusan pemilik produk diperlukan pada fase `/speckit.clarify` — bila maksud permintaan adalah daftar lain, cerita ini dirumuskan ulang tanpa mengubah pola pada User Story 1 dan 3.]**
-
-**Why this priority**: Daftar kedua yang diminta; menunggu konfirmasi pemetaan "Initiative" (asumsi kerja: Project) sebelum implementasi.
+**Why this priority**: Daftar kedua yang diminta; mengulang pola yang ditetapkan User Story 1 tanpa perilaku baru.
 
 **Independent Test**: Dapat diuji penuh dengan login sebagai Admin, membuka daftar Project, mengetik potongan nama project, dan memastikan hanya baris yang cocok yang tampil lengkap dengan Unit pemiliknya; tidak bergantung pada daftar lain.
 
@@ -106,10 +106,10 @@ Tidak ada perubahan skema data: pencarian hanya membaca nama yang sudah tersaji 
 
 ## Assumptions
 
-- **[NEEDS CLARIFICATION: "Initiative" belum terdaftar sebagai entitas Tania — daftar master data yang tersedia adalah Unit, Project, Job Role, dan Chapter. Asumsi kerja spesifikasi ini: Initiative = Master Data Project (FR-19 induk). Keputusan pemilik produk diperlukan; bila maksudnya daftar lain, User Story 2 dirumuskan ulang tanpa mengubah pola pada User Story 1 dan 3.]**
 - Pencarian versi ini hanya berdasarkan nama; penyaringan berdasarkan relasi (chapter pemilik Job Role, Unit pemilik Project) atau status aktif/non-aktif berada di luar cakupan.
 - Skala data master data saat ini puluhan–ratusan baris per daftar dan halaman sudah memuat seluruh baris (aktif + non-aktif); pencarian tidak menuntut API baru. Bila sebuah daftar tumbuh jauh lebih besar, mekanisme penyaringan sisi server dievaluasi pada fase `/speckit.plan`.
 - Pola interaksi mengikuti pencarian yang sudah ada di aplikasi (kolom "Cari nama talent…" pada daftar talent workload) demi konsistensi pengalaman.
+- Pemetaan "Initiative" = Master Data Project adalah keputusan pemilik produk (TAN-180, 2026-10-13) — bukan asumsi terbuka; bila suatu saat Tania memiliki daftar bernama Initiative yang berbeda dari Project, User Story 2 dirumuskan ulang tanpa mengubah pola pada User Story 1 dan 3.
 - Akses terhadap daftar master data mengikuti matriks Peran & Modul RBAC (Admin kelola; Operation/Chapter/Talent lihat); pencarian adalah penyaring tampilan dan tidak mengubah matriks tersebut — saat ini halaman Master Data hanya ditampilkan kepada Admin (layout Admin-only), dan begitu pula hasil pencariannya.
 
 ## Out of Scope
@@ -133,7 +133,7 @@ Tidak ada perubahan skema data: pencarian hanya membaca nama yang sudah tersaji 
 | FR-004 | FR-21 induk (master data hanya dinonaktifkan; baris non-aktif tetap tampil) |
 | FR-005, FR-006, FR-007 | Perilaku daftar + paginasi yang ada pada halaman master data |
 | FR-008 | FR-21 induk (tidak ada operasi hapus; operasi master data tidak berubah) |
-| Asumsi "Initiative" → Project | FR-19 induk; keputusan pemilik produk ditutup pada fase `/speckit.clarify` |
+| Asumsi "Initiative" → Project | FR-19 induk; dikonfirmasi pemilik produk (TAN-180, 2026-10-13) — Initiative = Master Data Project |
 
 ## Review & Acceptance Checklist
 
@@ -141,4 +141,4 @@ Tidak ada perubahan skema data: pencarian hanya membaca nama yang sudah tersaji 
 - [ ] Success criteria terukur dan bebas detail teknologi.
 - [ ] Edge case diidentifikasi.
 - [ ] Scope dibatasi jelas (Out of Scope) dan dependensi dirinci.
-- [ ] Pemetaan "Initiative" dikonfirmasi pemilik produk (butir NEEDS CLARIFICATION ditutup pada fase `/speckit.clarify`).
+- [ ] Pemetaan "Initiative" dikonfirmasi pemilik produk — **tertutup**: dikonfirmasi 2026-10-13 pada TAN-180 (Initiative = Master Data Project).
