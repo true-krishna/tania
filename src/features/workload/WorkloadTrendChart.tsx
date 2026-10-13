@@ -55,16 +55,16 @@ export function WorkloadTrendChart({
       <text x={16} y={19} fontSize={10} fill="var(--tp-muted)">
         100%
       </text>
-      <polygon points={area} fill="var(--tp-primary)" fillOpacity={0.08} />
+      <polygon points={area} fill="var(--tp-brand-navy)" fillOpacity={0.08} />
       <polyline
         points={line}
         fill="none"
-        stroke="var(--tp-primary)"
+        stroke="var(--tp-brand-navy)"
         strokeWidth={2.5}
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <g fill="var(--tp-surface)" stroke="var(--tp-primary)" strokeWidth={2}>
+      <g fill="var(--tp-surface)" stroke="var(--tp-brand-navy)" strokeWidth={2}>
         {points.map((p) => (
           <circle key={`${p.label}-${p.loadPercentage}`} cx={p.x} cy={p.y} r={3} />
         ))}

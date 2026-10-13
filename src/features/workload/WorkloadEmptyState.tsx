@@ -29,7 +29,7 @@ function EmptyIllustration() {
         <path d="M20 36a22 22 0 0 1 32 0" stroke="var(--tp-line)" />
         <path d="M29 46a8 8 0 0 1 14 0" stroke="var(--tp-line)" />
       </g>
-      <circle cx="36" cy="50" r="4" fill="var(--tp-lilac)" />
+      <circle cx="36" cy="50" r="4" fill="var(--tp-brand-navy)" />
     </svg>
   );
 }
@@ -49,7 +49,7 @@ export function WorkloadEmptyState({ variant }: { variant: EmptyStateVariant }) 
           <>
             <Link
               href="/activities"
-              className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-primary bg-tp-primary px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-primary-deep"
+              className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-brand-navy bg-tp-brand-navy px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-brand-navy-deep"
             >
               <IconClockHour3 className="h-5 w-5" aria-hidden />
               Catat aktivitas

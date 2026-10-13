@@ -80,7 +80,7 @@ export function WorkloadOwnView({
             </p>
             <Link
               href="/activities"
-              className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-primary bg-tp-primary px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-primary-deep"
+              className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-brand-navy bg-tp-brand-navy px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-brand-navy-deep"
             >
               Buka aktivitas
             </Link>

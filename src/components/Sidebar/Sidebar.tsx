@@ -48,7 +48,7 @@ export function Sidebar({ role, pathname }: SidebarProps) {
 
   const brand = (
     <div className="flex shrink-0 items-center gap-2.5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-tp-primary text-sm font-bold text-white">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-tp-brand-navy text-sm font-bold text-white">
         T
       </span>
       <span className="hidden min-w-0 flex-col leading-tight min-[861px]:flex">
