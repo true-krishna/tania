@@ -56,7 +56,7 @@ async function loginAs(page: Page, email: string): Promise<void> {
   if (await emailInput.isVisible()) {
     await emailInput.fill(email);
     await page.locator("#login-password").fill(SEED_PASSWORD);
-    await page.getByRole("button", { name: "Login" }).click();
+    await page.getByRole("button", { name: /masuk ke workspace/i }).click();
   }
   await page.waitForURL(/\/dashboard/);
 }

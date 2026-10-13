@@ -3,14 +3,29 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client";
+import {
+  IconArrowRight,
+  IconInfoCircle,
+  IconLock,
+  IconMail,
+} from "@tabler/icons-react";
 import { LoginDocument } from "@/generated/graphql";
 import { authConfig } from "@/lib/auth/config";
 import { setSession } from "@/lib/auth/token-store";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
-import { FacebookIcon, GoogleIcon, VictoryHandIcon } from "./icons";
-import { PromoPanel } from "./PromoPanel";
+import { BrandPanel } from "./BrandPanel";
 
+/**
+ * Login form — mockup structure (TAN-160) on canon tokens (constitution-design
+ * v4.0.0). The mockup's navy/red palette and its uppercase eyebrows are
+ * translated (see the issue comment for the recorded deviations): colors come
+ * from `--tp-*`, action copy is sentence case (§III), and every interactive
+ * element keeps the shipped focus ring (§VI).
+ *
+ * The mockup ships no social sign-in, so the vendor-color SSO icons and the
+ * illustrated promo art are gone; SSO remains deferred (plan.md R3).
+ */
 export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
@@ -34,7 +49,7 @@ export default function LoginForm() {
         },
       });
       if (!data?.login) {
-        setError("Authentication failed.");
+        setError("Autentikasi gagal.");
         return;
       }
       const { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user } =
@@ -50,96 +65,104 @@ export default function LoginForm() {
       });
       router.replace("/dashboard");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred.";
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
       setError(message);
     }
   }
 
   if (authConfig.localOnly) return null;
 
+  function contactAdmin() {
+    setNotice("Kanal kontak administrator belum tersedia di aplikasi ini.");
+  }
+
   return (
-    <main className="flex min-h-screen w-full bg-white">
-      <section className="flex w-full flex-col justify-center px-6 py-12 sm:px-12 lg:w-1/2 lg:px-16">
-        <div className="mx-auto flex w-full max-w-[360px] flex-col">
-          <h1 className="flex items-center gap-2 text-3xl font-bold text-zinc-900">
-            Login <VictoryHandIcon className="h-7 w-7" />
-          </h1>
-          <p className="mt-2 text-base text-zinc-600">
-            Sign in with your Tania account to continue.
+    <main lang="id" className="flex min-h-screen w-full">
+      <BrandPanel />
+
+      <section className="flex w-full items-center justify-center bg-tp-bg px-6 py-12 lg:w-1/2 lg:px-10">
+        <div className="flex w-full max-w-[560px] flex-col">
+          <p className="text-[13px] font-semibold text-tp-ink-violet">
+            Selamat datang kembali
           </p>
 
-          <div className="mt-7 flex flex-col gap-3">
-            <SocialButton
-              icon={<GoogleIcon />}
-              label="Sign in with Google"
-              onClick={() => setNotice("Social sign-in is not available yet — use your email and password.")}
+          <h1 className="mt-2 text-[30px] font-bold leading-[1.2] text-tp-text">
+            Masuk ke TANIA
+          </h1>
+
+          <p className="mt-2 text-sm leading-[1.5] text-tp-muted">
+            Akses hanya tersedia untuk anggota yang telah menerima undangan dari
+            administrator DPS.
+          </p>
+
+          <div className="mt-8 flex items-start gap-3 rounded-tp-md border border-tp-line px-4 py-3">
+            <IconInfoCircle
+              aria-hidden="true"
+              className="mt-0.5 h-5 w-5 flex-none text-tp-ink-violet"
             />
-            <SocialButton
-              icon={<FacebookIcon />}
-              label="Sign in with Facebook"
-              onClick={() => setNotice("Social sign-in is not available yet — use your email and password.")}
-            />
+            <p className="text-sm leading-[1.5] text-tp-text">
+              Akun belum terdaftar sebagai invite TANIA.{" "}
+              <button
+                type="button"
+                onClick={contactAdmin}
+                className="font-semibold text-tp-ink-violet underline underline-offset-2"
+              >
+                Hubungi administrator DPS.
+              </button>
+            </p>
           </div>
 
           {notice ? (
-            <p className="mt-3 text-sm text-zinc-600" role="status">
+            <p className="mt-3 text-sm text-tp-muted" role="status">
               {notice}
             </p>
           ) : null}
 
-          <div className="my-5 flex items-center gap-3 text-sm text-zinc-500">
-            <span className="h-px flex-1 bg-zinc-200" />
-            or Sign in with Email
-            <span className="h-px flex-1 bg-zinc-200" />
-          </div>
-
-          <form onSubmit={onSubmit} className="flex flex-col gap-3.5">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="login-email" className="text-sm font-semibold text-zinc-800">
-                Email
+          <form onSubmit={onSubmit} className="mt-7 flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="login-email"
+                className="text-sm font-semibold text-tp-text"
+              >
+                Email kerja
               </label>
-              <Input
-                id="login-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                placeholder="you@example.com"
-                className="h-11 rounded-full border-zinc-300 px-4"
-              />
+              <IconField icon={<IconMail />}>
+                <Input
+                  id="login-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  placeholder="nama@perusahaan.com"
+                  className="h-14 pl-12"
+                />
+              </IconField>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="login-password" className="text-sm font-semibold text-zinc-800">
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="login-password"
+                className="text-sm font-semibold text-tp-text"
+              >
                 Password
               </label>
-              <Input
-                id="login-password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                placeholder="Enter your Password"
-                className="h-11 rounded-full border-zinc-300 px-4"
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() =>
-                  setNotice("Password reset is not available yet — contact your administrator.")
-                }
-                className="text-sm font-medium text-brand hover:text-brand-600"
-              >
-                Forget Password?
-              </button>
+              <IconField icon={<IconLock />}>
+                <Input
+                  id="login-password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  placeholder="Masukkan password"
+                  className="h-14 pl-12"
+                />
+              </IconField>
             </div>
 
             {error ? (
-              <p className="text-sm text-red-600" role="alert">
+              <p className="text-sm text-tp-ink-peach" role="alert">
                 {error}
               </p>
             ) : null}
@@ -147,45 +170,41 @@ export default function LoginForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full justify-center rounded-full bg-linear-to-r from-brand to-brand-600 text-sm font-semibold hover:from-brand-600 hover:to-brand-700"
+              className="mt-1 h-14 w-full justify-center text-[15px]"
             >
-              {loading ? "Signing in…" : "Login"}
+              {loading ? "Memproses…" : "Masuk ke workspace"}
+              <IconArrowRight aria-hidden="true" className="h-5 w-5" />
             </Button>
           </form>
 
-          <p className="mt-7 text-xs text-zinc-500">
-            © 2026 Tania — Telkom Digital. All rights reserved.
+          <p className="mt-9 text-sm leading-[1.5] text-tp-muted">
+            Belum menerima undangan?{" "}
+            <button
+              type="button"
+              onClick={contactAdmin}
+              className="font-semibold text-tp-ink-violet underline underline-offset-2"
+            >
+              Hubungi administrator DPS
+            </button>{" "}
+            untuk mendapatkan akses.
           </p>
         </div>
       </section>
-
-      <PromoPanel />
     </main>
   );
 }
 
-/**
- * Social sign-in is shown for design parity with the reference, but the Tania
- * backend only serves local email/password auth today (SSO is deferred). The
- * button therefore reports its unavailability rather than pretending to work.
- */
-function SocialButton({
-  icon,
-  label,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
+/** Decorative 24px outline glyph inside a canon `.tp-input` field. */
+function IconField({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-full border border-zinc-300 bg-white text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
-    >
-      {icon}
-      {label}
-    </button>
+    <div className="relative">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-tp-muted [&>svg]:h-5 [&>svg]:w-5"
+      >
+        {icon}
+      </span>
+      {children}
+    </div>
   );
 }
