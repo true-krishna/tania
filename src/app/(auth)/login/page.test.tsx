@@ -64,7 +64,7 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "secret" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Login" }));
+    fireEvent.click(screen.getByRole("button", { name: /masuk ke workspace/i }));
 
     await waitFor(() => {
       const session = tokenStore.getSession();
@@ -99,7 +99,7 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "wrong" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Login" }));
+    fireEvent.click(screen.getByRole("button", { name: /masuk ke workspace/i }));
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("FORBIDDEN");
@@ -107,16 +107,22 @@ describe("LoginForm", () => {
     });
   });
 
-  it("renders the redesigned layout and reports unavailable SSO honestly", () => {
+  it("renders the form and the revised brand copy", () => {
     render(
       <MockedProvider mocks={[]}>
         <LoginForm />
       </MockedProvider>
     );
 
-    expect(screen.getByRole("heading", { name: /login/i })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Sign in with Google" }));
-    expect(screen.getByRole("status")).toHaveTextContent(/not available yet/i);
+    expect(
+      screen.getByRole("heading", { name: /masuk ke tania/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /masuk ke workspace/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/talent management platform/i)).toBeInTheDocument();
+    expect(screen.queryByText(/invite tania/i)).not.toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
 import { resolveChartTheme } from "./chart-theme";
@@ -17,6 +17,7 @@ import {
 import {
   buildMovementOption,
   canUseDivergingBars,
+  MovementTrendChart,
 } from "./MovementTrendChart";
 import { chartFileName, downloadChart } from "./downloadChart";
 import {
@@ -667,6 +668,40 @@ describe("MovementTrendChart (T026 / V-5)", () => {
     }));
     expect(canUseDivergingBars(thirteen)).toBe(false);
     expect(canUseDivergingBars([])).toBe(false);
+  });
+
+  it("wears the canon tab recipe, with aria-selected as the state source (V/VI)", () => {
+    render(<MovementTrendChart data={MOCK_MOVEMENT_TREND.slice(0, 12)} ariaLabel="Tren" />);
+
+    const tablist = screen.getByRole("tablist", { name: "Tampilan grafik tren" });
+    expect(tablist).toHaveClass("tp-tabs");
+
+    const line = within(tablist).getByRole("tab", { name: "Line" });
+    const diverging = within(tablist).getByRole("tab", { name: "Bar divergen" });
+    expect(line).toHaveClass("tp-tab");
+    expect(diverging).toHaveClass("tp-tab");
+    expect(line).toHaveAttribute("aria-selected", "true");
+    expect(diverging).toHaveAttribute("aria-selected", "false");
+
+    fireEvent.click(diverging);
+    expect(diverging).toHaveAttribute("aria-selected", "true");
+    expect(line).toHaveAttribute("aria-selected", "false");
+
+    const panel = screen.getByRole("tabpanel");
+    expect(panel).toHaveAttribute("aria-labelledby", diverging.id);
+    expect(diverging).toHaveAttribute("aria-controls", panel.id);
+  });
+
+  it("keeps the diverging tab reachable with its reason when the range is too long (V-5)", () => {
+    render(<MovementTrendChart data={MOCK_MOVEMENT_TREND} ariaLabel="Tren" />);
+
+    const diverging = screen.getByRole("tab", { name: "Bar divergen" });
+    expect(diverging).toHaveAttribute("aria-disabled", "true");
+    expect(diverging).toHaveAttribute("title", "Bar divergen hanya untuk rentang maksimal 12 bulan");
+    expect(diverging).toHaveAttribute("aria-selected", "false");
+
+    fireEvent.click(diverging);
+    expect(diverging).toHaveAttribute("aria-selected", "false");
   });
 });
 

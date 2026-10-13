@@ -72,7 +72,7 @@ const employeesMock = {
 const validInput = {
   employeeId: "emp-1",
   contractNo: "PKWT/2026/001",
-  contractType: "PKWT",
+  contractType: "TKWT_DIGITAL_TALENT",
   nomorInduk: "EMP-100",
   bandPosition: "UNDEFINED",
   jobRoleId: "jr-1",
@@ -116,6 +116,9 @@ function fillValidForm() {
   fireEvent.change(screen.getByLabelText(/no\. kontrak/i), {
     target: { value: validInput.contractNo },
   });
+  fireEvent.change(screen.getByRole("combobox", { name: /jenis kontrak/i }), {
+    target: { value: validInput.contractType },
+  });
   fireEvent.change(screen.getByLabelText(/nomor induk karyawan/i), {
     target: { value: validInput.nomorInduk },
   });
@@ -158,7 +161,7 @@ describe("NewContractPage (form kontrak, T023)", () => {
     expect(screen.getByText(/tanggal mulai wajib diisi/i)).toBeInTheDocument();
   });
 
-  it("requires an end date for PKWT", async () => {
+  it("requires an end date for a time-bound type", async () => {
     await renderNew([unitsMock, jobRolesMock, employeesMock, createMock]);
     await screen.findByRole("heading", { name: /tambah kontrak/i });
 
@@ -185,7 +188,29 @@ describe("NewContractPage (form kontrak, T023)", () => {
     });
     submitForm();
 
-    expect(screen.getByText(/tanggal selesai wajib untuk pkwt/i)).toBeInTheDocument();
+    expect(screen.getByText(/tanggal selesai wajib untuk kontrak berbatas waktu/i)).toBeInTheDocument();
+  });
+
+  it("offers the TMS contract types and treats KARYAWAN TETAP as open-ended", async () => {
+    await renderNew([unitsMock, jobRolesMock, employeesMock]);
+    await screen.findByRole("heading", { name: /tambah kontrak/i });
+
+    for (const label of [
+      "TPPBW PROHIRE",
+      "EMPLOYEE MOBILIT",
+      "PROJECT BASED PROCUREMENT",
+      "OUTSOURCE TKP",
+      "KARYAWAN TETAP",
+      "TKWT DIGITAL TALENT",
+    ]) {
+      expect(screen.getByRole("option", { name: label })).toBeInTheDocument();
+    }
+
+    expect(screen.getByLabelText(/tanggal selesai/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("combobox", { name: /jenis kontrak/i }), {
+      target: { value: "KARYAWAN_TETAP" },
+    });
+    expect(screen.queryByLabelText(/tanggal selesai/i)).not.toBeInTheDocument();
   });
 
   it("creates the contract with the TMS input", async () => {
@@ -253,7 +278,7 @@ const contractListNode = {
   __typename: "EmploymentContract",
   id: "ctr-1",
   contractNo: "PKWT/2025/002",
-  contractType: "PKWT",
+  contractType: "TKWT_DIGITAL_TALENT",
   officeEmail: "andi@corp.id",
   nomorInduk: "EMP-77",
   bandPosition: "II",
@@ -304,7 +329,7 @@ const contractDetailNode = {
   __typename: "EmploymentContract",
   id: "ctr-1",
   contractNo: "PKWT/2025/002",
-  contractType: "PKWT",
+  contractType: "TKWT_DIGITAL_TALENT",
   officeEmail: "andi@corp.id",
   nomorInduk: "EMP-77",
   bandPosition: "II",

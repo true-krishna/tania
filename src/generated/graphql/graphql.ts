@@ -77,8 +77,18 @@ export type ContractEndReason =
   | 'RETIREMENT';
 
 export type ContractType =
-  | 'PKWT'
-  | 'PKWTT';
+  /** EMPLOYEE MOBILIT. */
+  | 'EMPLOYEE_MOBILIT'
+  /** KARYAWAN TETAP — kontrak tanpa batas waktu. */
+  | 'KARYAWAN_TETAP'
+  /** OUTSOURCE TKP. */
+  | 'OUTSOURCE_TKP'
+  /** PROJECT BASED PROCUREMENT. */
+  | 'PROJECT_BASED_PROCUREMENT'
+  /** TKWT DIGITAL TALENT. */
+  | 'TKWT_DIGITAL_TALENT'
+  /** TPPBW PROHIRE. */
+  | 'TPPBW_PROHIRE';
 
 export type CreateAssignmentInput = {
   employeeId: string | number;
@@ -117,7 +127,7 @@ export type CreateEmploymentContractInput = {
   contractNo: string;
   contractType: ContractType;
   employeeId: string | number;
-  /** Wajib untuk PKWT, null untuk PKWTT. */
+  /** Wajib untuk kontrak berbatas waktu; null untuk yang tanpa batas waktu. */
   endDate?: string | null | undefined;
   jobLevel?: string | null | undefined;
   jobRoleId: string | number;
@@ -320,7 +330,7 @@ export type RecordMutationInput = {
   workLocation: WorkLocation;
 };
 
-/** Perpanjangan PKWT — kontrak baru mulai setelah kontrak lama berakhir (FR-36). */
+/** Perpanjangan kontrak berbatas waktu — kontrak baru mulai setelah kontrak lama berakhir (FR-36). */
 export type RenewContractInput = {
   bandPosition?: BandPosition | null | undefined;
   contractNo: string;
