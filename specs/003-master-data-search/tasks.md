@@ -26,7 +26,7 @@
 
 **Purpose**: Satu titik perilaku pencarian di komponen bersama, opt-in pada tiga halaman, dengan test per perilaku FR.
 
-- [ ] T001 Tambahkan perilaku pencarian pada `src/features/master-data/MasterDataSection.tsx`
+- [X] T001 Tambahkan perilaku pencarian pada `src/features/master-data/MasterDataSection.tsx`
       (keputusan D1, D2, D5): prop opt-in; satu input `type="search"` + `IconSearch` di area
       daftar (polanya `TalentList` — D3); state kata kunci lokal; saringan **sebelum**
       `useTablePagination` — substring case-insensitive pada `name` (FR-001, FR-002);
@@ -37,20 +37,20 @@
       terbuka tidak terpengaruh (FR-008); teks bantu/`aria-label` diturunkan dari
       `nameLabel` (D5). **Done**: semua perilaku FR-001–FR-008 tereksekusi di komponen;
       `npm run typecheck` bersih.
-- [ ] T002 Opt-in pencarian pada tiga halaman — `[US1]`
+- [X] T002 Opt-in pencarian pada tiga halaman — `[US1]`
       `src/app/(app)/master-data/job-roles/page.tsx`, `[US2]`
       `src/app/(app)/master-data/projects/page.tsx`, `[US3]`
       `src/app/(app)/master-data/units/page.tsx` (prop dari T001). `chapters/page.tsx`
       **tidak diubah**. **Done**: ketiga halaman menampilkan kolom pencarian; Chapter
       tidak.
-- [ ] T003 [P] Test perilaku FR pada `src/features/master-data/master-data.test.tsx`
+- [X] T003 [P] Test perilaku FR pada `src/features/master-data/master-data.test.tsx`
       (konstitusi §II/§III): filter live case-insensitive & substring; no-match ≠ empty
       state; kosongkan/spasi → daftar pulih; baris non-aktif ikut tersaring dengan badge;
       paginasi menghitung hasil tersaring dan tidak menyisakan halaman kosong saat hasil
       menyusut (FR-005 — clamp `safePage`); form terbuka tak berubah saat mencari;
       assertion `chapters` tidak menampilkan kolom pencarian (R3). **Done**: seluruh kasus
       hijau bersama test CRUD eksisting (T052/T054).
-- [ ] T004 [P] Test per halaman pada berkas test yang sama — `[US1]` filter pada data
+- [X] T004 [P] Test per halaman pada berkas test yang sama — `[US1]` filter pada data
       job role (dengan kolom chapter), `[US2]` filter pada project (kolom Unit), `[US3]`
       filter pada unit (kolom jumlah Proyek) — memakai data mock dan label masing-masing;
       minimal satu skenario end-to-end filter per halaman (ketik → hanya baris cocok;
