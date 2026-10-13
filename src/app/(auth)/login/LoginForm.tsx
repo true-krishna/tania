@@ -135,7 +135,7 @@ export default function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   placeholder="nama@perusahaan.com"
-                  className="h-14 pl-12"
+                  className="h-14 pl-12!"
                 />
               </IconField>
             </div>
@@ -156,7 +156,7 @@ export default function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   placeholder="Masukkan password"
-                  className="h-14 pl-12"
+                  className="h-14 pl-12!"
                 />
               </IconField>
             </div>
@@ -194,7 +194,14 @@ export default function LoginForm() {
   );
 }
 
-/** Decorative 24px outline glyph inside a canon `.tp-input` field. */
+/**
+ * Decorative 24px outline glyph inside a canon `.tp-input` field.
+ *
+ * The field itself must reserve the gutter with `pl-12!`: `.tp-input` sets
+ * `padding: 0 16px` from an unlayered stylesheet, and unlayered declarations
+ * beat layered Tailwind utilities regardless of specificity — without the
+ * important modifier the glyph sits on top of the placeholder text.
+ */
 function IconField({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="relative">
