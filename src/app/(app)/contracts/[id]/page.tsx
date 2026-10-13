@@ -318,6 +318,10 @@ function ContractEditForm({
           value={values.workLocation}
           onChange={(e) => set("workLocation", e.target.value)}
         >
+          {/* UNDEFINED is the state of a contract whose location was never
+              recorded (legacy rows); showing it keeps the select honest
+              instead of falling back to the first option. */}
+          <option value="UNDEFINED">Belum ditetapkan</option>
           <option value="JAKARTA">Jakarta</option>
           <option value="BANDUNG">Bandung</option>
         </Select>

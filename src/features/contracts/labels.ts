@@ -46,7 +46,18 @@ export const CONTRACT_END_REASON_LABEL: Record<ContractEndReason, string> = {
 export const WORK_LOCATION_LABEL: Record<WorkLocation, string> = {
   JAKARTA: "Jakarta",
   BANDUNG: "Bandung",
+  UNDEFINED: "Belum ditetapkan",
 };
+
+/**
+ * Work location as a form value. `UNDEFINED` is the sentinel for a contract
+ * whose location was never recorded (legacy rows, FR-33 phase 1) — it is not a
+ * user choice and `workLocation` is required on a contract (FR-34), so the form
+ * asks for a real location instead of silently carrying the sentinel forward.
+ */
+export function workLocationFormValue(location: WorkLocation): WorkLocation | "" {
+  return location === "UNDEFINED" ? "" : location;
+}
 
 export const BAND_POSITION_LABEL: Record<BandPosition, string> = {
   I: "I",

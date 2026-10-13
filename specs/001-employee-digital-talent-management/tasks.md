@@ -62,11 +62,44 @@ Aturan yang mengikat:
 
 ---
 
+## Status rekonsiliasi kode ↔ daftar (2026-10-13, TAN-175)
+
+Rekonsiliasi `/speckit.implement` membandingkan setiap kotak `[ ]` dengan isi `master`
+(commit terakhir `4d7e664`). Temuan: **daftar tertinggal dari kode** — Phase 11 convergence
+(commit `37c84a1`, 2026-10-05) sudah membangun CV, IDP Talent, dashboard per peran, audit,
+pemetaan error, pensiun klien REST, dan harness E2E, tetapi kotak task-nya belum dicentang.
+Tidak ada task UI di bawah yang kodenya hilang.
+
+| Task | Status kode | Bukti ringkas |
+| --- | --- | --- |
+| T008 | ada | refresh link (`errorLink` + `src/lib/auth/refresh.ts`) |
+| T061–T062 | ada | `src/app/(app)/employees/` + `src/features/employees/` + test |
+| T069–T070 | ada | `src/app/(app)/assignments/` + `src/features/assignments/` + test |
+| T103–T104 | ada | `src/app/(app)/cv/page.tsx` + `src/features/cv/` + `cv.test.tsx` |
+| T109–T110 | ada | `src/app/(app)/idp/my/` + `src/features/idp/talent/` + test |
+| T115–T116 | ada | `src/app/(app)/dashboard/` + `src/features/dashboard/` + test |
+| T127 / T142 | ada | `src/lib/{api,talents}.ts` + rute `/talents` sudah dihapus |
+| T133 | ada | `playwright.config.ts` + `e2e/critical-path.spec.ts` + `npm run test:e2e` |
+| T134–T141 | ada | CV, IDP Talent, dashboard, audit, pemetaan error |
+
+**T129 tetap `[ ]`**: harness-nya ada (T133), tetapi suite-nya belum pernah hijau — eksekusi
+stack `docker-compose` dua repo gagal di sandbox 1 GiB/1 CPU (build image API OOM; lihat
+`e2e/README.md` §Catatan eksekusi). Butuh runner CI atau mesin ≥ 4 GiB.
+
+**Celah yang ditemukan dan ditutup di run ini**: form CV Talent hanya menawarkan
+tambah/hapus untuk pendidikan/sertifikasi/keahlian, padahal kontrak layar F5
+(`contracts/operations.md`) memuat `updateCvEducation`/`updateCvCertification`/`updateCvSkill`
+— sehingga US4 skenario 3 ("mengedit dan menyimpan kembali") tidak terpenuhi untuk entri
+tersebut. Ketiga mutasi update kini dipakai untuk menyunting entri tersimpan di tempat
+(commit pada run TAN-175), dengan test regresi di `src/features/cv/cv.test.tsx`.
+
+---
+
 ## Phase 1: Foundation (F0)
 
 **Purpose**: Lapisan data GraphQL, codegen, tooling test, dan kerangka sesi/guard. **Memblokir semua fase UI berikutnya.**
 
-- [ ] T008 [P] Pasang Apollo Client + `graphql`, buat Apollo Client + auth link + refresh link + cache policy pada `src/lib/apollo/client.ts` (repo saat ini hanya punya next/react/react-dom — lihat `plan.md` §3.2) — **sebagian terpenuhi**: Apollo + auth link + cache policy terpasang (`src/lib/apollo/client.ts`, `provider.tsx`); **refresh link tertunda** (didefer desain ke W8/O1) dan menunggu **T018 di repo backend** — kontrak `AuthPayload` hasil codegen belum memuat `refreshToken`/`refreshSession` (divergensi auth, lihat `plan.md` §4 aturan 3)
+- [x] T008 [P] Pasang Apollo Client + `graphql`, buat Apollo Client + auth link + refresh link + cache policy pada `src/lib/apollo/client.ts` (repo saat ini hanya punya next/react/react-dom — lihat `plan.md` §3.2) — **terpenuhi**: Apollo + auth link + cache policy, dan refresh link terpasang pada `src/lib/apollo/client.ts` (`errorLink` + `src/lib/auth/refresh.ts`; `refreshSessionToken` memperbarui sesi lalu mengulang operasi sekali, `clearSession` hanya bila refresh gagal). **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
 - [x] T009 [P] Pasang `@graphql-codegen/cli` + skrip `npm run generate` menuju `src/generated/graphql/`, **generate dari SDL yang dilayani backend** (`tania-backend/graph/schema.graphqls`); sekaligus pasang React Testing Library dan perluas `vitest.config.ts` (`environment: "jsdom"`, `include` mencakup `.test.tsx`) — **terpenuhi scaffold**: `package.json` (codegen deps + `npm run generate`), `codegen.ts`, RTL + jest-dom + jsdom terpasang, `vitest.config.ts` `include` mencakup `src/**/*.test.tsx`; **terverifikasi** 2026-10-01 (TAN-75): `npm run generate`, `npm run typecheck`, `npm test` hijau (13 test / 3 file, komponen pakai `@vitest-environment jsdom`). Catatan: source generate kini kontrak (`contracts/schema.graphql`); beralih ke SDL yang dilayani menunggu T018 backend
 - [x] T010 [P] Layout dasar App Router dan guard rute per peran pada `src/app/(app)/layout.tsx` dan `src/lib/auth/guard.ts` (route group `(app)`/`(auth)` belum ada; rute legacy `/talents` dimigrasikan, bukan dihapus sebelum port GraphQL selesai) — **terpenuhi scaffold**: `src/app/(app)/layout.tsx` (shell + nav per peran), `src/lib/auth/guard.tsx`/`roles.ts`/`token-store.ts` (guard + RBAC UI), route group `(app)`(`/dashboard`) + `(auth)`(`/login`) ada, rute legacy `/talents` dipertahankan; **terverifikasi** TAN-75: `npm run typecheck` + `npm test` + `next build` hijau (`/dashboard`, `/login`, `/talents`, `/talents/[id]`)
 
@@ -95,8 +128,8 @@ Aturan yang mengikat:
 
 **Independent Test**: Login Operation → daftar tampil dengan pencarian/filter; form menolak field wajib kosong; konfirmasi nonaktifkan muncul saat ada assignment/IDP aktif.
 
-- [ ] T061 [P] [US1] Frontend feature `employees`: daftar + pencarian/filter + form tambah/ubah + konfirmasi nonaktifkan pada `src/app/(app)/employees/` dan `src/features/employees/`
-- [ ] T062 [P] [US1] Test Vitest + RTL daftar karyawan (pencarian, filter, hasil kosong) pada `src/features/employees/employees.test.tsx`
+- [x] T061 [P] [US1] Frontend feature `employees`: daftar + pencarian/filter + form tambah/ubah + konfirmasi nonaktifkan pada `src/app/(app)/employees/` dan `src/features/employees/` — **terpenuhi**: `src/app/(app)/employees/{page,new,[id],[id]/edit}` + hooks/mutasi pada `src/features/employees/` (daftar + pencarian/filter, form tambah/ubah, konfirmasi nonaktifkan). **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T062 [P] [US1] Test Vitest + RTL daftar karyawan (pencarian, filter, hasil kosong) pada `src/features/employees/employees.test.tsx` — **terpenuhi**: `src/features/employees/employees.test.tsx` + `src/app/(app)/employees/page.test.tsx` + `src/app/(app)/employees/new/page.test.tsx`. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
 
 **Checkpoint**: MVP UI (Admin master data + Operation karyawan) berjalan.
 
@@ -108,8 +141,8 @@ Aturan yang mengikat:
 
 **Independent Test**: Login Chapter → form hanya menawarkan talent assignable & project dari master; error cakupan chapter tampil sebagai pesan aksi.
 
-- [ ] T069 [P] [US2] Frontend feature `assignments`: daftar per talent/per project + form assignment pada `src/app/(app)/assignments/` dan `src/features/assignments/`
-- [ ] T070 [P] [US2] Test Vitest + RTL form assignment (validasi + tampilan error cakupan) pada `src/features/assignments/assignments.test.tsx`
+- [x] T069 [P] [US2] Frontend feature `assignments`: daftar per talent/per project + form assignment pada `src/app/(app)/assignments/` dan `src/features/assignments/` — **terpenuhi**: `src/app/(app)/assignments/{page,new,[id]}` + hooks/mutasi pada `src/features/assignments/` (daftar per talent/per project + form). **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T070 [P] [US2] Test Vitest + RTL form assignment (validasi + tampilan error cakupan) pada `src/features/assignments/assignments.test.tsx` — **terpenuhi**: `src/features/assignments/assignments.test.tsx`. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
 
 **Checkpoint**: US2 UI berfungsi.
 
@@ -151,8 +184,8 @@ Aturan yang mengikat:
 
 **Independent Test**: Login Talent → simpan setiap bagian CV; bagian pengalaman kerja menampilkan riwayat assignment tanpa input manual.
 
-- [ ] T103 [P] [US4] Frontend feature `cv`: form terstruktur Talent + tampilan hanya-baca Chapter pada `src/app/(app)/cv/` dan `src/features/cv/`
-- [ ] T104 [P] [US4] Test Vitest + RTL CV (penyimpanan per bagian, tampilan pengalaman kerja turunan) pada `src/features/cv/cv.test.tsx`
+- [x] T103 [P] [US4] Frontend feature `cv`: form terstruktur Talent + tampilan hanya-baca Chapter pada `src/app/(app)/cv/` dan `src/features/cv/` — **terpenuhi**: `src/app/(app)/cv/page.tsx` (`TalentCvEditor` per bagian + `ChapterCvViewer` hanya-baca) + hooks/dokumen pada `src/features/cv/`; seluruh operasi layar F5 `contracts/operations.md` dipakai (`myCvProfile`, `upsertCvProfile`, add/update/delete education, certification, skill; `cvProfile` untuk Chapter). **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T104 [P] [US4] Test Vitest + RTL CV (penyimpanan per bagian, tampilan pengalaman kerja turunan) pada `src/features/cv/cv.test.tsx` — **terpenuhi**: `src/features/cv/cv.test.tsx` (7 test: render bagian terstruktur, tambah pendidikan, sunting di tempat per bagian, dropdown D11, pengalaman kerja turunan termasuk assignment berakhir, hanya-baca Chapter tanpa kontrol input). **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
 
 **Checkpoint**: US4 UI berfungsi.
 
@@ -164,8 +197,8 @@ Aturan yang mengikat:
 
 **Independent Test**: Login Talent dengan IDP → komponen tampil; ubah status aksi tersimpan; tanpa IDP tampil empty state, bukan error.
 
-- [ ] T109 [P] [US5] Frontend feature `idp` (Talent): tampilan IDP miliknya + kontrol status aksi + empty state pada `src/app/(app)/idp/my/` dan `src/features/idp/talent/`
-- [ ] T110 [P] [US5] Test Vitest + RTL empty state IDP (US5 skenario 3, bukan error) pada `src/features/idp/talent/talent-idp.test.tsx`
+- [x] T109 [P] [US5] Frontend feature `idp` (Talent): tampilan IDP miliknya + kontrol status aksi + empty state pada `src/app/(app)/idp/my/` dan `src/features/idp/talent/` — **terpenuhi**: `src/app/(app)/idp/my/page.tsx` + `src/features/idp/talent/` (`useMyIdp`, `myIdp.graphql`) dengan kontrol status aksi + empty state. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T110 [P] [US5] Test Vitest + RTL empty state IDP (US5 skenario 3, bukan error) pada `src/features/idp/talent/talent-idp.test.tsx` — **terpenuhi**: `src/features/idp/talent/talent-idp.test.tsx`. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
 
 **Checkpoint**: US5 UI berfungsi.
 
@@ -177,8 +210,8 @@ Aturan yang mengikat:
 
 **Independent Test**: Login tiap peran → widget termuat dengan angka sesuai cakupannya; state loading/error ditangani.
 
-- [ ] T115 [P] [US8] Frontend feature `dashboard` per peran pada `src/app/(app)/dashboard/` dan `src/features/dashboard/`
-- [ ] T116 [P] [US8] Test Vitest + RTL render widget per peran + state loading/error pada `src/features/dashboard/dashboard.test.tsx`
+- [x] T115 [P] [US8] Frontend feature `dashboard` per peran pada `src/app/(app)/dashboard/` dan `src/features/dashboard/` — **terpenuhi**: `src/app/(app)/dashboard/page.tsx` + `src/features/dashboard/` (widget per peran dari union `Dashboard`). **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T116 [P] [US8] Test Vitest + RTL render widget per peran + state loading/error pada `src/features/dashboard/dashboard.test.tsx` — **terpenuhi**: `src/features/dashboard/dashboard.test.tsx`. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
 
 **Checkpoint**: seluruh user story selesai di sisi UI.
 
@@ -188,8 +221,8 @@ Aturan yang mengikat:
 
 **Purpose**: Pensiunkan jalur legacy dan tegakkan E2E jalur kritis (konstitusi §VII).
 
-- [ ] T127 [P] Pensiunkan klien REST lama `src/lib/api.ts` (beserta `src/lib/talents.ts` dan rute `/talents`) setelah rutenya selesai dimigrasikan ke GraphQL (`plan.md` §12 R2, Open Item O4)
-- [ ] T129 **E2E jalur kritis** (konstitusi §VII — bukan opsional): pasang Playwright + suite pada `e2e/` yang menjalankan stack `docker-compose` dan menempuh alur `login 4 peran → tambah karyawan (Operation) → assignment (Chapter) → periode+evaluasi (Admin+Chapter) → IDP (Chapter) → update status aksi (Talent) → dashboard tiap peran`, memakai fixture seed **T036** (repo backend); jalankan lewat `npm run test:e2e` dan dokumentasikan di `quickstart.md`
+- [x] T127 [P] Pensiunkan klien REST lama `src/lib/api.ts` (beserta `src/lib/talents.ts` dan rute `/talents`) setelah rutenya selesai dimigrasikan ke GraphQL (`plan.md` §12 R2, Open Item O4) — **terpenuhi**: `src/lib/api.ts`, `src/lib/talents.ts`, dan rute `/talents` sudah dihapus (commit `37c84a1`); tidak ada lagi klien REST legacy. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [ ] T129 **E2E jalur kritis** (konstitusi §VII — bukan opsional): pasang Playwright + suite pada `e2e/` yang menjalankan stack `docker-compose` dan menempuh alur `login 4 peran → tambah karyawan (Operation) → assignment (Chapter) → periode+evaluasi (Admin+Chapter) → IDP (Chapter) → update status aksi (Talent) → dashboard tiap peran`, memakai fixture seed **T036** (repo backend); jalankan lewat `npm run test:e2e` dan dokumentasikan di `quickstart.md` — **belum terpenuhi (2026-10-13, TAN-175)**: harness Playwright + suite jalur kritis sudah ada (T133), tetapi suite-nya belum pernah hijau; eksekusi stack `docker-compose` dua repo gagal di sandbox 1 GiB/1 CPU (build image `api` OOM) — lihat `e2e/README.md` §Catatan eksekusi. Butuh runner CI atau mesin ≥ 4 GiB, bukan perubahan kode.
 
 **Checkpoint**: `npm run test:e2e` hijau; tidak ada lagi klien REST legacy.
 
@@ -252,14 +285,48 @@ US2 → US3 → US7 (P1 selesai) → US4 → US5 → US8 → Polish (T127, T129)
 
 **Scope**: `/speckit.converge` dijalankan 2026-10-05 untuk **integrasi lintas repo `tania-backend` ↔ `tania-dashboard`**. Semua temuan bernilai HIGH muncul lebih dulu, lalu MEDIUM/LOW. ID dilanjutkan dari daftar bersama (max T130); task backend padanan ada di `tania-backend/specs/.../tasks.md` Phase 12 (T131–T132).
 
-- [ ] T133 Pasang Playwright + harness E2E jalur kritis pada `e2e/` dan skrip `npm run test:e2e` per T129 + konstitusi §VII (missing) — alasan blokir lama ("repo backend tak terjangkau") sudah tidak berlaku
-- [ ] T134 Bangun fitur CV Talent (form terstruktur: ringkasan, pendidikan, sertifikasi, keahlian) + tampilan hanya-baca Chapter pada `src/app/(app)/cv/` dan `src/features/cv/` per FR-12/FR-13 (T103) (missing) — pengalaman kerja tetap turunan assignment
-- [ ] T135 Tambahkan test Vitest + RTL CV (simpan per bagian, tampilan pengalaman kerja turunan) pada `src/features/cv/cv.test.tsx` per T104 (missing)
-- [ ] T136 Bangun halaman IDP milik Talent (`src/app/(app)/idp/my/` + `src/features/idp/talent/`) dengan kontrol status aksi + empty state bukan error per FR-14 (T109) (missing)
-- [ ] T137 Tambahkan test Vitest + RTL empty state IDP Talent per T110 (missing)
-- [ ] T138 Bangun widget `dashboard` per peran pada `src/app/(app)/dashboard/` + `src/features/dashboard/` (saat ini masih placeholder statis) per FR-29/FR-30 (T115) (missing)
-- [ ] T139 Tambahkan test Vitest + RTL render widget per peran + state loading/error per T116 (missing)
-- [ ] T140 Bangun penampil jejak audit khusus Admin `src/app/(app)/audit/` per FR-17 + `plan.md` Target Structure (missing — belum ada task pemilik)
-- [ ] T141 Buat pemetaan error terpusat `src/lib/errors.ts` (`extensions.code` → perilaku UI: `UNAUTHENTICATED`/`FORBIDDEN`/`NOT_FOUND`/`BAD_USER_INPUT`/`CONFLICT`/`RATE_LIMITED`) per `plan.md` §Data Layer + konstitusi §IX (missing)
-- [ ] T142 Pensiunkan klien REST legacy `src/lib/api.ts`, `src/lib/talents.ts`, dan rute `/talents` setelah port GraphQL selesai per T127 (partial)
+- [x] T133 Pasang Playwright + harness E2E jalur kritis pada `e2e/` dan skrip `npm run test:e2e` per T129 + konstitusi §VII (missing) — alasan blokir lama ("repo backend tak terjangkau") sudah tidak berlaku — **terpenuhi**: `playwright.config.ts` + `e2e/critical-path.spec.ts` (242 baris) + skrip `npm run test:e2e` + runbook `e2e/README.md` (commit `37c84a1`). **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T134 Bangun fitur CV Talent (form terstruktur: ringkasan, pendidikan, sertifikasi, keahlian) + tampilan hanya-baca Chapter pada `src/app/(app)/cv/` dan `src/features/cv/` per FR-12/FR-13 (T103) (missing) — pengalaman kerja tetap turunan assignment — **terpenuhi**: lihat T103 di atas. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T135 Tambahkan test Vitest + RTL CV (simpan per bagian, tampilan pengalaman kerja turunan) pada `src/features/cv/cv.test.tsx` per T104 (missing) — **terpenuhi**: lihat T104 di atas. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T136 Bangun halaman IDP milik Talent (`src/app/(app)/idp/my/` + `src/features/idp/talent/`) dengan kontrol status aksi + empty state bukan error per FR-14 (T109) (missing) — **terpenuhi**: lihat T109 di atas. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T137 Tambahkan test Vitest + RTL empty state IDP Talent per T110 (missing) — **terpenuhi**: lihat T110 di atas. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T138 Bangun widget `dashboard` per peran pada `src/app/(app)/dashboard/` + `src/features/dashboard/` (saat ini masih placeholder statis) per FR-29/FR-30 (T115) (missing) — **terpenuhi**: lihat T115 di atas (placeholder statis sudah digantikan widget per peran). **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T139 Tambahkan test Vitest + RTL render widget per peran + state loading/error per T116 (missing) — **terpenuhi**: lihat T116 di atas. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T140 Bangun penampil jejak audit khusus Admin `src/app/(app)/audit/` per FR-17 + `plan.md` Target Structure (missing — belum ada task pemilik) — **terpenuhi**: `src/app/(app)/audit/page.tsx` (Admin, paginasi cursor `fetchMore`) + `src/features/audit/` + `src/features/audit/audit.test.tsx`. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T141 Buat pemetaan error terpusat `src/lib/errors.ts` (`extensions.code` → perilaku UI: `UNAUTHENTICATED`/`FORBIDDEN`/`NOT_FOUND`/`BAD_USER_INPUT`/`CONFLICT`/`RATE_LIMITED`) per `plan.md` §Data Layer + konstitusi §IX (missing) — **terpenuhi**: `src/lib/errors.ts` (`extensions.code` → perilaku UI: `UNAUTHENTICATED`/`FORBIDDEN`/`NOT_FOUND`/`BAD_USER_INPUT`/`CONFLICT`/`RATE_LIMITED`) + `src/lib/errors.test.ts`. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
+- [x] T142 Pensiunkan klien REST legacy `src/lib/api.ts`, `src/lib/talents.ts`, dan rute `/talents` setelah port GraphQL selesai per T127 (partial) — **terpenuhi**: lihat T127 di atas. **terverifikasi TAN-175 (2026-10-13)**: `pnpm run generate:check` + `pnpm run typecheck` + `pnpm run lint` + `pnpm test` (34 berkas / 257 test) + `pnpm run build` hijau.
 - [x] T143 Lengkapi test master data termasuk tampilan pesan validasi server (baru unit yang tercakup) pada `src/features/master-data/master-data.test.tsx` per T054 (partial)
+
+---
+
+## Phase 12: Convergence (2026-10-13)
+
+**Scope**: `/speckit.converge` dijalankan 2026-10-13 untuk **integrasi lintas repo `tania-backend` ↔ `tania-dashboard`** terhadap `spec.md`/`plan.md`/`contracts/`. Metode: bandingkan **permukaan kontrak** SDL yang dilayani (`tania-backend/graph/schema.graphqls`) dengan mirror yang di-vendor (`graph/schema.graphqls`) dan kontrak desain (`specs/001-.../contracts/schema.graphql`) memakai parser SDL (tipe + anggota + tanda tangan field), bukan diff baris — lalu telusuri tiap selisih ke kode backend dan ke UI. Temuan HIGH muncul lebih dulu. ID dilanjutkan dari daftar bersama (max T144); task backend padanan ada di `tania-backend/specs/.../tasks.md` Phase 13.
+
+- [x] T145 [HIGH] Perbaiki jalur baca `work_location` yang NULL: `contractRow.build` mengembalikan string kosong, bukan sentinel `UNDEFINED` yang dideklarasikan SDL, sehingga API mengirim `workLocation: ""` pada field non-null `WorkLocation!` — nilai yang tidak dideklarasikan SDL dan tidak bisa direpresentasikan klien mana pun. Kontradiksi dengan `domain.ParseWorkLocationDB` ("" → `UNDEFINED`) dan dengan test regresinya sendiri. Terjangkau: seluruh kontrak hasil backfill migrasi 0005 dan setiap kontrak yang dibuat dengan `workLocation: UNDEFINED` (`workLocationValue` menulis NULL) — **selesai 2026-10-13** (`internal/repository/postgres/contractrow.go`): NULL → `domain.WorkLocationUndefined`; test regresi bebas-DB `contractrow_test.go` (3 test: NULL → UNDEFINED, lokasi tercatat tetap utuh, round-trip sentinel → NULL) yang benar-benar berjalan di `go test ./...` — test integrasi eksisting `TestContractReadsNullWorkLocationAsUndefined` di-skip tanpa `TEST_DATABASE_URL`, jadi jalur ini sebelumnya tidak dijaga di CI ringan. Terverifikasi: `go test ./...` hijau.
+- [x] T146 [HIGH] Sinkronkan mirror SDL yang di-vendor ke SDL yang dilayani (selisih tunggal: `WorkLocation.UNDEFINED`), lalu tangani konsekuensinya di UI: label sentinel dan form kontrak — **selesai 2026-10-13**: `graph/schema.graphqls` kini byte-identik dengan SDL yang dilayani (`sha256 = b2542988d7753996dfb25138a930fe25fcb310f7821e593dde0fd6753046fc0e`) dan `src/generated/graphql/` diregenerasi; `WORK_LOCATION_LABEL.UNDEFINED = "Belum ditetapkan"` menutup dua sel yang tadinya kosong (`src/app/(app)/contracts/[id]/page.tsx`, `src/app/(app)/employees/[id]/page.tsx`); `workLocationFormValue` (`src/features/contracts/labels.ts`) membuat perpanjangan kontrak dan form mutasi memperlakukan sentinel sebagai *belum dipilih* (presisi perilaku lama: sebelumnya nilai `""` memaksa pengguna memilih); form ubah kontrak menampilkan opsi sentinel agar yang terlihat sama dengan state. Test: `src/features/contracts/contracts.test.tsx` (+2; terbukti gagal bila entri label dihapus). Terverifikasi: `generate:check` + `typecheck` + `lint` + `test` (34 berkas / 259 test) + `build` hijau.
+- [ ] T147 [HIGH] Konvergensikan kontrak desain `specs/001-employee-digital-talent-management/contracts/schema.graphql` (byte-identik di kedua repo) dengan SDL yang dilayani — **terbuka 2026-10-13**: berkas ini masih snapshot 2026-10-05 (`sha256 = 8983bcae960fcc9768ba0985bf599266857b8e20d4977c65c67f97da5dc5df92`, dari 27.394 byte) dan menyimpang dari SDL yang dilayani pada 3 tipe (`EntraProvision`, `EntraProvisionStatus`, `EntraProvisionAction`), 19 anggota (`Employee.entraProvision`, `UpdateEmployeeInput.nik`, `WorkLocation.UNDEFINED`, …), serta `ContractType` yang sudah digantikan enam skema TMS (TAN-162) berikut default `RenewContractInput.contractType`. Invariant T131 ("tiga berkas byte-identik, `sha256 = b2002db…`") **sudah tidak berlaku**. Butuh keputusan pemilik, bukan `cp` buta: teks FR-34 `spec.md` masih menulis `pkwt/pkwtt` sementara kode mengirim enam skema TMS, jadi menyalin SDL apa adanya akan membuat kontrak desain bertentangan dengan teks spec.
+- [ ] T148 [MEDIUM] Pasang penjaga mesin agar mirror yang di-vendor dan kontrak desain tidak dapat menyimpang diam-diam dari SDL yang dilayani — **terbuka 2026-10-13**: `generate:check` hanya membandingkan hasil generate dengan yang ter-commit, bukan mirror dengan SDL terlayani; penyalinan SDL masih langkah `cp` manual (`codegen.ts`, README), sehingga drift T145/T147 bisa bertahan berhari-hari tanpa ada yang gagal. Usulan: simpan `sha256` SDL terlayani di dekat mirror dan asersikan pada test/gerbang CI (butuh keputusan bentuk — repo frontend tidak melihat sibling `tania-backend` saat CI berjalan sendiri).
+- [ ] T149 [MEDIUM] Putuskan nasib data `work_location` NULL peninggalan pra-0005 — **terbuka 2026-10-13**: setelah T145 baris-baris ini tampil "Belum ditetapkan" dan form perpanjangan/mutasi memaksa pengguna memilih, tetapi tidak ada backfill dan form ubah kontrak masih meneruskan sentinel apa adanya. Pilih: backfill ke lokasi nyata, atau tegaskan sentinel sebagai keadaan yang sah dan berumur panjang.
+
+**Tidak ditemukan gap** (diperiksa, bersih): kode error `extensions.code` yang dipancarkan backend (`NOT_FOUND`/`CONFLICT`/`UNAUTHENTICATED`/`FORBIDDEN`/`RATE_LIMITED`/`BAD_USER_INPUT`/`INTERNAL`) semuanya dipetakan `src/lib/errors.ts`; endpoint aplikasi (`NEXT_PUBLIC_GRAPHQL_URL`, compose E2E) cocok dengan rute `/graphql` backend; enum `AccessRole` identik di kedua SDL dan cocok `ROLE_ORDER`; FR-40 sudah punya UI (`OperationCycleWidgets.tsx` memakai `expiringContracts`); pengalaman kerja CV backend memang memuat assignment yang sudah berakhir (`internal/usecase/cv_test.go`) dan seluruh operasi GraphQL frontend valid terhadap SDL yang dilayani (bukan hanya terhadap mirror).
+
+---
+
+## Phase 14: Analyze — keselarasan lintas modul "Talent Database" (2026-10-13)
+
+**Scope**: `/speckit.analyze` dijalankan 2026-10-13 untuk **keselarasan modul ini (Tania CV Module, US4/FR-12–FR-13) dengan modul basis data talent yang sudah ter-merge** — Tania Mengelola Data Karyawan (US1, FR-01/FR-33–FR-46: data diri `employees`, `employment_contracts`, siklus kerja, provisi Entra). Metode: silang-baca `spec.md`/`plan.md`/`data-model.md`/`tasks.md` kedua modul + SDL yang dilayani + kode (`internal/usecase/cv.go`, `internal/repository/postgres/{cv,retention,employee,employeerow}.go`, `src/app/(app)/cv/page.tsx`, `src/app/(app)/employees/[id]/edit/page.tsx`). Temuan HIGH lebih dulu. ID dilanjutkan dari daftar bersama (max T149); laporan lengkap ada pada TAN-175.
+
+- [ ] T150 [HIGH] **Data pribadi CV tidak ikut jadwal retensi/anonimisasi** — **terbuka 2026-10-13**: `internal/repository/postgres/retention.go` (`AnonymizeEligible`) hanya menyapu `employees` (termasuk `latest_education`/`institution_name`/`major`, telepon, alamat, NIK) dan `employment_contracts`; `cv_profiles`/`cv_educations`/`cv_certifications`/`cv_skills` tidak disentuh dan tidak punya `anonymized_at` (migrasi `0007` hanya menambahnya ke `employees`). Kontradiksi dengan konstitusi-security §V — setiap dataset pemilik data pribadi menyatakan masa retensi …dihapus atau diubah ke bentuk anonim secara nyata, bukan "soft-deleted forever" dan dengan `data-model.md:133` yang mendeklarasikan dataset retensi hanya `employees` + `employment_contracts`. Akibat: setelah anonimisasi, baris berlabel `ANONIM` tetap membawa riwayat pendidikan, sertifikasi (termasuk `credential_url`), keahlian, dan ringkasan bebas — data pribadi yang *lebih kaya* daripada kolom yang justru dihapus. Butuh keputusan pemilik (bentuk scrub CV) sebelum implementasi.
+- [ ] T151 [HIGH] **Pendidikan punya dua rumah tanpa aturan turunan** — **terbuka 2026-10-13**: `employees.latest_education`/`institution_name`/`major` (FR-33; penulis: Operation lewat form `employees/[id]/edit/page.tsx` + endpoint impor massal `POST /employees/import`) berdampingan dengan `cv_educations` (FR-12; penulis: Talent; banyak entri; `degree` enum terkontrol `EducationLevel`). Kardinalitas, kosakata, dan nama berbeda (`institution_name` vs `institution`, `major` vs `fieldOfStudy`), dan tidak ada aturan turunan di spec mana pun — `internal/usecase/cv.go` + `internal/repository/postgres/cv.go` tidak pernah membaca `LatestEducation`. Akar masalah: analisis gap `plan-pengelolaan-talent.md` (G1–G14) tidak pernah menyinggung tabel CV saat tiga kolom ini ditambahkan (2026-10-09). Butuh keputusan pemilik: (a) CV otoritatif lalu tiga kolom `employees` jadi turunan, (b) tiga kolom otoritatif lalu CV menampilkan/mengawali dari situ, atau (c) tiga kolom dihapus.
+- [ ] T152 [MEDIUM] **Picker CV Chapter menyempitkan cakupan FR-13** — **terbuka 2026-10-13**: `ChapterCvViewer` memakai `useEmployees({ assignableOnly: true })` (`src/app/(app)/cv/page.tsx`) → predikat SQL `e.status = 'ACTIVE' AND ec.id IS NOT NULL AND jr.chapter_id IS NOT NULL`; sementara server (`CvService.ProfileFor`) hanya membandingkan `target.Chapter.ID == scope`. `EmployeeService.Deactivate` hanya mengubah `employees.status` + menonaktifkan akun (tidak mengakhiri kontrak), jadi talent dalam chapter dengan status `inactive` **boleh dibaca** tetapi **tidak dapat dipilih** — padahal halaman `/employees` (tanpa `assignableOnly`) tetap menampilkannya untuk Chapter yang sama. Selaraskan: buang `assignableOnly` (cakupan chapter sudah ditegakkan server) atau tegaskan batasan ini pada teks FR-13.
+- [ ] T153 [MEDIUM] **Picker CV Chapter tidak terpaginasi/tercari** — **terbuka 2026-10-13**: `useEmployees` default `first = 25` tanpa pemanggilan `loadMore` pada `<select>` tanpa kotak cari; daftar terurut `lower(full_name)`. Chapter dengan >25 talent tidak dapat menjangkau sisanya lewat UI → akses baca FR-13 tidak terjangkau untuk mereka. Pakai pencarian/paginasi yang sudah ada (`useTablePagination`, TAN-172) atau combobox yang dapat dicari.
+- [ ] T154 [MEDIUM] **Tidak ada jembatan navigasi antar modul** — **terbuka 2026-10-13**: halaman detail karyawan (`src/app/(app)/employees/[id]/page.tsx`, modul basis data talent) menampilkan "Data diri" + "Riwayat kontrak" tetapi tidak punya tautan/bagian CV (verifikasi: tidak ada `href` menuju `/cv` di seluruh `src/`), dan sebaliknya halaman CV tidak menampilkan konteks kepegawaian (nomor induk, unit, posisi, status dari kontrak aktif). Jalur baca Chapter (FR-13) hanya terjangkau bila pengguna tahu rute `/cv`. Butuh keputusan produk (tab/bagian "CV" pada detail karyawan + konteks kepegawaian pada halaman CV).
+- [ ] T155 [LOW] **Kosakata dan nama field berbeda untuk konsep yang sama** — **terbuka 2026-10-13**: `latestEducation` teks bebas vs `degree: EducationLevel` enum lima nilai (keputusan D11 spek 003), `institutionName` vs `institution`, `major` vs `fieldOfStudy`. Rapikan setelah T151 memutuskan otoritasnya.
+
+**Selaras (diperiksa, tidak ditemukan gap)**:
+1. **Cakupan chapter CV sudah berbasis kontrak aktif** — `CvService.ProfileFor` membaca `domain.Employee.Chapter` yang diisi `employeerow.go` (`activeContractJoin`, `jr.chapter_id`), bukan kolom warisan; tidak ada sisa pemakaian `employees.unit_id`/`job_role_id`/`employee_code` di jalur CV (grep bersih). Cocok FR-23/FR-35 amandemen 002.
+2. **Pengalaman kerja tetap dari riwayat assignment** — sudah diputuskan eksplisit pada amandemen FR-36 ("US4/CV *pengalaman kerja* tetap dari riwayat assignment — tidak berubah"); `cvFields.graphql` memilih project/jobRole/periode dan assignment yang sudah berakhir ikut tampil.
+3. **Rantai akun Talent utuh** — `AccountService.Create` memanggil `employees.LinkAccount` (`internal/usecase/account.go:108`), sehingga `myCvProfile` (`FindByUserID`) terselesaikan; provisi Entra (FR-43–FR-46) memang hanya membuat identitas Entra, sedangkan akun + peran Tania tetap milik Admin (modul RBAC). Urutan US1 → RBAC → US4 tidak bocor.
+4. **Tidak ada kebocoran lintas cakupan** — `ProfileFor` mengembalikan `NOT_FOUND` untuk pembacaan di luar cakupan (anti-enumerasi) dan tipe CV tidak mengekspos NIK.
+5. **SDL CV lengkap dan terpakai** — seluruh tipe/operasi CV ada di SDL yang dilayani dan dipakai frontend tanpa drift (audit permukaan SDL pada Phase 12/13).

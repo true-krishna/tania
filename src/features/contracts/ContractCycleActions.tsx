@@ -20,6 +20,7 @@ import {
   type RecordMutationInput,
   type WorkLocation,
 } from "@/generated/graphql";
+import { workLocationFormValue } from "@/features/contracts/labels";
 import { graphQLErrorCode, mapSubmitError } from "@/lib/errors";
 
 type Contract = NonNullable<EmploymentContractQuery["employmentContract"]>;
@@ -189,7 +190,7 @@ function MutationAction({ contract }: { contract: Contract }) {
     jobTitle: contract.jobTitle ?? "",
     jobLevel: contract.jobLevel ?? "",
     bandPosition: contract.bandPosition,
-    workLocation: contract.workLocation,
+    workLocation: workLocationFormValue(contract.workLocation),
     endDate: "",
     notes: "",
   }));

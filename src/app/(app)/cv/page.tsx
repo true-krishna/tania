@@ -21,7 +21,9 @@ import {
   DeleteCvEducationDocument,
   DeleteCvSkillDocument,
   MyCvProfileDocument,
-
+  UpdateCvCertificationDocument,
+  UpdateCvEducationDocument,
+  UpdateCvSkillDocument,
   UpsertCvProfileDocument,
   type CvFieldsFragment,
   type EducationLevel,
@@ -126,19 +128,20 @@ function SummarySection({ cv }: { cv: CvFieldsFragment | undefined }) {
 
 function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
   const { pushToast } = useToast();
-  const [add, { loading: adding }] = useMutation(AddCvEducationDocument, {
-    refetchQueries: [{ query: MyCvProfileDocument }],
-  });
-  const [remove] = useMutation(DeleteCvEducationDocument, {
-    refetchQueries: [{ query: MyCvProfileDocument }],
-  });
+  const refetch = { refetchQueries: [{ query: MyCvProfileDocument }] };
+  const [add, { loading: adding }] = useMutation(AddCvEducationDocument, refetch);
+  const [update, { loading: updating }] = useMutation(UpdateCvEducationDocument, refetch);
+  const [remove] = useMutation(DeleteCvEducationDocument, refetch);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
   const [institution, setInstitution] = React.useState("");
   const [degree, setDegree] = React.useState<EducationLevel | "">("");
   const [fieldOfStudy, setFieldOfStudy] = React.useState("");
   const [startYear, setStartYear] = React.useState("");
   const [endYear, setEndYear] = React.useState("");
+  const saving = adding || updating;
 
   function reset() {
+    setEditingId(null);
     setInstitution("");
     setDegree("");
     setFieldOfStudy("");
@@ -146,24 +149,43 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
     setEndYear("");
   }
 
-  async function onAdd(e: React.FormEvent) {
+  /** Load one stored entry into the form so it can be corrected in place (US4 skenario 3). */
+  function fillFrom(edu: CvFieldsFragment["educations"][number]) {
+    setEditingId(edu.id);
+    setInstitution(edu.institution);
+    setDegree((edu.degree as EducationLevel | null) ?? "");
+    setFieldOfStudy(edu.fieldOfStudy ?? "");
+    setStartYear(edu.startYear ? String(edu.startYear) : "");
+    setEndYear(edu.endYear ? String(edu.endYear) : "");
+  }
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const input = {
+      institution: institution.trim(),
+      degree: degree || null,
+      fieldOfStudy: fieldOfStudy.trim() || null,
+      startYear: startYear ? Number(startYear) : null,
+      endYear: endYear ? Number(endYear) : null,
+    };
     try {
-      await add({
-        variables: {
-          input: {
-            institution: institution.trim(),
-            degree: degree || null,
-            fieldOfStudy: fieldOfStudy.trim() || null,
-            startYear: startYear ? Number(startYear) : null,
-            endYear: endYear ? Number(endYear) : null,
-          },
-        },
-      });
-      pushToast("success", "Riwayat pendidikan ditambahkan.");
+      if (editingId) {
+        await update({ variables: { id: editingId, input } });
+        pushToast("success", "Riwayat pendidikan diperbarui.");
+      } else {
+        await add({ variables: { input } });
+        pushToast("success", "Riwayat pendidikan ditambahkan.");
+      }
       reset();
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menambah pendidikan.");
+      pushToast(
+        "error",
+        err instanceof Error
+          ? err.message
+          : editingId
+            ? "Gagal memperbarui pendidikan."
+            : "Gagal menambah pendidikan.",
+      );
     }
   }
 
@@ -194,13 +216,23 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
                     .join(" · ") || "—"}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => onDelete(edu.id)}
-                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
-              >
-                Hapus
-              </button>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  type="button"
+                  aria-label={`Ubah ${edu.institution}`}
+                  onClick={() => fillFrom(edu)}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+                >
+                  Ubah
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(edu.id)}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
+                >
+                  Hapus
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -208,7 +240,7 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
         <p className="text-sm text-zinc-500">Belum ada riwayat pendidikan.</p>
       )}
 
-      <form onSubmit={onAdd} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Institusi (wajib)" required />
         <Select value={degree} onChange={(e) => setDegree(e.target.value as EducationLevel | "")} aria-label="Jenjang pendidikan">
           <option value="">— pilih jenjang (opsional) —</option>
@@ -223,10 +255,15 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
           <Input value={startYear} onChange={(e) => setStartYear(e.target.value)} placeholder="Tahun mulai" inputMode="numeric" />
           <Input value={endYear} onChange={(e) => setEndYear(e.target.value)} placeholder="Tahun selesai" inputMode="numeric" />
         </div>
-        <div className="sm:col-span-2">
-          <Button type="submit" disabled={adding || !institution.trim()}>
-            + Tambah Pendidikan
+        <div className="flex gap-2 sm:col-span-2">
+          <Button type="submit" disabled={saving || !institution.trim()}>
+            {editingId ? "Simpan Perubahan" : "+ Tambah Pendidikan"}
           </Button>
+          {editingId ? (
+            <Button type="button" variant="secondary" onClick={reset} disabled={saving}>
+              Batal
+            </Button>
+          ) : null}
         </div>
       </form>
     </Card>
@@ -235,28 +272,49 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
 
 function CertificationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
   const { pushToast } = useToast();
-  const [add, { loading: adding }] = useMutation(AddCvCertificationDocument, {
-    refetchQueries: [{ query: MyCvProfileDocument }],
-  });
-  const [remove] = useMutation(DeleteCvCertificationDocument, {
-    refetchQueries: [{ query: MyCvProfileDocument }],
-  });
+  const refetch = { refetchQueries: [{ query: MyCvProfileDocument }] };
+  const [add, { loading: adding }] = useMutation(AddCvCertificationDocument, refetch);
+  const [update, { loading: updating }] = useMutation(UpdateCvCertificationDocument, refetch);
+  const [remove] = useMutation(DeleteCvCertificationDocument, refetch);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
   const [name, setName] = React.useState("");
   const [issuer, setIssuer] = React.useState("");
+  const saving = adding || updating;
 
-  async function onAdd(e: React.FormEvent) {
+  function reset() {
+    setEditingId(null);
+    setName("");
+    setIssuer("");
+  }
+
+  /** Load one stored entry into the form so it can be corrected in place (US4 skenario 3). */
+  function fillFrom(cert: CvFieldsFragment["certifications"][number]) {
+    setEditingId(cert.id);
+    setName(cert.name);
+    setIssuer(cert.issuer ?? "");
+  }
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const input = { name: name.trim(), issuer: issuer.trim() || null };
     try {
-      await add({
-        variables: {
-          input: { name: name.trim(), issuer: issuer.trim() || null },
-        },
-      });
-      pushToast("success", "Sertifikasi ditambahkan.");
-      setName("");
-      setIssuer("");
+      if (editingId) {
+        await update({ variables: { id: editingId, input } });
+        pushToast("success", "Sertifikasi diperbarui.");
+      } else {
+        await add({ variables: { input } });
+        pushToast("success", "Sertifikasi ditambahkan.");
+      }
+      reset();
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menambah sertifikasi.");
+      pushToast(
+        "error",
+        err instanceof Error
+          ? err.message
+          : editingId
+            ? "Gagal memperbarui sertifikasi."
+            : "Gagal menambah sertifikasi.",
+      );
     }
   }
 
@@ -280,13 +338,23 @@ function CertificationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
                 <p className="font-medium text-zinc-900">{cert.name}</p>
                 <p className="text-xs text-zinc-500">{cert.issuer || "—"}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => onDelete(cert.id)}
-                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
-              >
-                Hapus
-              </button>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  type="button"
+                  aria-label={`Ubah ${cert.name}`}
+                  onClick={() => fillFrom(cert)}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+                >
+                  Ubah
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(cert.id)}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
+                >
+                  Hapus
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -294,13 +362,18 @@ function CertificationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
         <p className="text-sm text-zinc-500">Belum ada sertifikasi.</p>
       )}
 
-      <form onSubmit={onAdd} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama sertifikasi (wajib)" required />
         <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} placeholder="Penerbit" />
-        <div className="sm:col-span-2">
-          <Button type="submit" disabled={adding || !name.trim()}>
-            + Tambah Sertifikasi
+        <div className="flex gap-2 sm:col-span-2">
+          <Button type="submit" disabled={saving || !name.trim()}>
+            {editingId ? "Simpan Perubahan" : "+ Tambah Sertifikasi"}
           </Button>
+          {editingId ? (
+            <Button type="button" variant="secondary" onClick={reset} disabled={saving}>
+              Batal
+            </Button>
+          ) : null}
         </div>
       </form>
     </Card>
@@ -309,26 +382,49 @@ function CertificationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
 
 function SkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
   const { pushToast } = useToast();
-  const [add, { loading: adding }] = useMutation(AddCvSkillDocument, {
-    refetchQueries: [{ query: MyCvProfileDocument }],
-  });
-  const [remove] = useMutation(DeleteCvSkillDocument, {
-    refetchQueries: [{ query: MyCvProfileDocument }],
-  });
+  const refetch = { refetchQueries: [{ query: MyCvProfileDocument }] };
+  const [add, { loading: adding }] = useMutation(AddCvSkillDocument, refetch);
+  const [update, { loading: updating }] = useMutation(UpdateCvSkillDocument, refetch);
+  const [remove] = useMutation(DeleteCvSkillDocument, refetch);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
   const [name, setName] = React.useState("");
   const [level, setLevel] = React.useState("");
+  const saving = adding || updating;
 
-  async function onAdd(e: React.FormEvent) {
+  function reset() {
+    setEditingId(null);
+    setName("");
+    setLevel("");
+  }
+
+  /** Load one stored entry into the form so it can be corrected in place (US4 skenario 3). */
+  function fillFrom(skill: CvFieldsFragment["skills"][number]) {
+    setEditingId(skill.id);
+    setName(skill.name);
+    setLevel(skill.level ?? "");
+  }
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const input = { name: name.trim(), level: level.trim() || null };
     try {
-      await add({
-        variables: { input: { name: name.trim(), level: level.trim() || null } },
-      });
-      pushToast("success", "Keahlian ditambahkan.");
-      setName("");
-      setLevel("");
+      if (editingId) {
+        await update({ variables: { id: editingId, input } });
+        pushToast("success", "Keahlian diperbarui.");
+      } else {
+        await add({ variables: { input } });
+        pushToast("success", "Keahlian ditambahkan.");
+      }
+      reset();
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menambah keahlian.");
+      pushToast(
+        "error",
+        err instanceof Error
+          ? err.message
+          : editingId
+            ? "Gagal memperbarui keahlian."
+            : "Gagal menambah keahlian.",
+      );
     }
   }
 
@@ -352,13 +448,23 @@ function SkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
                 <p className="font-medium text-zinc-900">{skill.name}</p>
                 <p className="text-xs text-zinc-500">{skill.level || "—"}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => onDelete(skill.id)}
-                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
-              >
-                Hapus
-              </button>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  type="button"
+                  aria-label={`Ubah ${skill.name}`}
+                  onClick={() => fillFrom(skill)}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+                >
+                  Ubah
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(skill.id)}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
+                >
+                  Hapus
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -366,13 +472,18 @@ function SkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
         <p className="text-sm text-zinc-500">Belum ada keahlian.</p>
       )}
 
-      <form onSubmit={onAdd} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama keahlian (wajib)" required />
         <Input value={level} onChange={(e) => setLevel(e.target.value)} placeholder="Level (cth: Mahir)" />
-        <div className="sm:col-span-2">
-          <Button type="submit" disabled={adding || !name.trim()}>
-            + Tambah Keahlian
+        <div className="flex gap-2 sm:col-span-2">
+          <Button type="submit" disabled={saving || !name.trim()}>
+            {editingId ? "Simpan Perubahan" : "+ Tambah Keahlian"}
           </Button>
+          {editingId ? (
+            <Button type="button" variant="secondary" onClick={reset} disabled={saving}>
+              Batal
+            </Button>
+          ) : null}
         </div>
       </form>
     </Card>

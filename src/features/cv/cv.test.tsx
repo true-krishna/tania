@@ -11,6 +11,9 @@ import {
   CvProfileDocument,
   EmployeesDocument,
   MyCvProfileDocument,
+  UpdateCvCertificationDocument,
+  UpdateCvEducationDocument,
+  UpdateCvSkillDocument,
 } from "@/generated/graphql";
 
 vi.mock("@/lib/auth/guard", () => ({
@@ -202,6 +205,176 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
       "S2",
       "S3",
     ]);
+  });
+
+  it("edits a stored education entry in place instead of re-creating it (US4 skenario 3)", async () => {
+    const updated = {
+      __typename: "CvEducation",
+      id: "edu-1",
+      institution: "Universitas Indonesia (UI)",
+      degree: "S2",
+      fieldOfStudy: "Ilmu Komputer",
+      startYear: 2016,
+      endYear: 2020,
+    };
+
+    render(
+      <ToastProvider>
+        <MockedProvider
+          mocks={[
+            { request: { query: MyCvProfileDocument }, result: myCvResult },
+            {
+              request: {
+                query: UpdateCvEducationDocument,
+                variables: {
+                  id: "edu-1",
+                  input: {
+                    institution: "Universitas Indonesia (UI)",
+                    degree: "S2",
+                    fieldOfStudy: "Ilmu Komputer",
+                    startYear: 2016,
+                    endYear: 2020,
+                  },
+                },
+              },
+              result: { data: { updateCvEducation: updated } },
+            },
+            {
+              request: { query: MyCvProfileDocument },
+              result: { data: { myCvProfile: { ...cv, educations: [updated] } } },
+            },
+          ]}
+        >
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    await screen.findByText(/Universitas Indonesia/);
+
+    fireEvent.click(screen.getByRole("button", { name: "Ubah Universitas Indonesia" }));
+
+    // The stored entry pre-fills the form; submitting updates it instead of adding.
+    const institution = screen.getByPlaceholderText("Institusi (wajib)") as HTMLInputElement;
+    expect(institution.value).toBe("Universitas Indonesia");
+    expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
+
+    fireEvent.change(institution, { target: { value: "Universitas Indonesia (UI)" } });
+    fireEvent.change(screen.getByLabelText("Jenjang pendidikan"), { target: { value: "S2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Simpan Perubahan" }));
+
+    expect(await screen.findByText("Riwayat pendidikan diperbarui.")).toBeInTheDocument();
+  });
+
+  it("edits a stored certification and a stored skill in place (US4 skenario 3)", async () => {
+    const updatedCert = {
+      __typename: "CvCertification",
+      id: "cert-1",
+      name: "AWS Certified Solutions Architect",
+      issuer: "AWS",
+      issuedDate: "2023-01-15",
+      expiryDate: "2026-01-15",
+      credentialUrl: null,
+    };
+    const updatedSkill = {
+      __typename: "CvSkill",
+      id: "skill-1",
+      name: "Go",
+      level: "Ahli",
+    };
+
+    render(
+      <ToastProvider>
+        <MockedProvider
+          mocks={[
+            { request: { query: MyCvProfileDocument }, result: myCvResult },
+            {
+              request: {
+                query: UpdateCvCertificationDocument,
+                variables: {
+                  id: "cert-1",
+                  input: { name: "AWS Certified Solutions Architect", issuer: "AWS" },
+                },
+              },
+              result: { data: { updateCvCertification: updatedCert } },
+            },
+            {
+              request: { query: MyCvProfileDocument },
+              result: { data: { myCvProfile: { ...cv, certifications: [updatedCert] } } },
+            },
+            {
+              request: {
+                query: UpdateCvSkillDocument,
+                variables: { id: "skill-1", input: { name: "Go", level: "Ahli" } },
+              },
+              result: { data: { updateCvSkill: updatedSkill } },
+            },
+            {
+              request: { query: MyCvProfileDocument },
+              result: { data: { myCvProfile: { ...cv, skills: [updatedSkill] } } },
+            },
+          ]}
+        >
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    await screen.findByText("AWS Certified Developer");
+
+    fireEvent.click(screen.getByRole("button", { name: "Ubah AWS Certified Developer" }));
+    fireEvent.change(screen.getByPlaceholderText("Nama sertifikasi (wajib)"), {
+      target: { value: "AWS Certified Solutions Architect" },
+    });
+    // Both sections can be in edit mode at once without colliding.
+    fireEvent.click(screen.getByRole("button", { name: "Ubah Go" }));
+    fireEvent.change(screen.getByPlaceholderText("Level (cth: Mahir)"), {
+      target: { value: "Ahli" },
+    });
+
+    const saveButtons = screen.getAllByRole("button", { name: "Simpan Perubahan" });
+    expect(saveButtons).toHaveLength(2);
+    fireEvent.click(saveButtons[0]);
+    expect(await screen.findByText("Sertifikasi diperbarui.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Simpan Perubahan" })[0]);
+    expect(await screen.findByText("Keahlian diperbarui.")).toBeInTheDocument();
+  });
+
+  it("renders work experience derived from assignment history, including ended assignments (FR-12)", async () => {
+    const active = cv.workExperience[0];
+    const ended = {
+      __typename: "Assignment",
+      id: "asg-0",
+      periodStart: "2020-01-06",
+      periodEnd: "2022-02-28",
+      status: "COMPLETED",
+      project: { __typename: "Project", id: "prj-0", name: "Legacy Platform" },
+      jobRole: { __typename: "JobRole", id: "jr-0", name: "Junior Engineer" },
+    };
+
+    render(
+      <ToastProvider>
+        <MockedProvider
+          mocks={[
+            {
+              request: { query: MyCvProfileDocument },
+              result: { data: { myCvProfile: { ...cv, workExperience: [active, ended] } } },
+            },
+          ]}
+        >
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    expect(await screen.findByText("Legacy Platform")).toBeInTheDocument();
+    expect(screen.getByText(/Junior Engineer · 2020-01-06 — 2022-02-28/)).toBeInTheDocument();
+    expect(screen.getByText(/Engineer · 2022-03-01 — sekarang/)).toBeInTheDocument();
+    expect(screen.getByText("Selesai")).toBeInTheDocument();
+    expect(screen.getByText("Berjalan")).toBeInTheDocument();
+    // Derived section: no manual input controls are offered for work experience.
+    expect(screen.queryByPlaceholderText(/pengalaman kerja/i)).not.toBeInTheDocument();
   });
 });
 

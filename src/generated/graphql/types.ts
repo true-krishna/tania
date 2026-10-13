@@ -1587,4 +1587,6 @@ export type User = {
 
 export type WorkLocation =
   | 'BANDUNG'
-  | 'JAKARTA';
+  | 'JAKARTA'
+  /** Belum ditetapkan (kontrak lama tanpa lokasi kerja). */
+  | 'UNDEFINED';

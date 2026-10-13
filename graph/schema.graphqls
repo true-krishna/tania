@@ -111,6 +111,8 @@ enum Gender {
 enum WorkLocation {
   JAKARTA
   BANDUNG
+  """Belum ditetapkan (kontrak lama tanpa lokasi kerja)."""
+  UNDEFINED
 }
 
 enum BandPosition {
