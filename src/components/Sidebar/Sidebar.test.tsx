@@ -94,13 +94,52 @@ describe("Sidebar", () => {
     expect(compactNav().queryByRole("button")).toBeNull();
   });
 
-  it("renders the 268px sticky shell with labels and no collapse toggle", () => {
+  it("renders the 268px sticky shell expanded by default with a collapse toggle", () => {
     renderSidebar();
     const aside = document.getElementById("app-sidebar") as HTMLElement;
     expect(aside.className).toContain("min-[861px]:w-[268px]");
     expect(aside.className).toContain("min-[861px]:sticky");
     expect(screen.getByRole("img", { name: "TANIA" })).toBeInTheDocument();
     expect(desktopNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Collapse navigation" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Collapse navigation" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("minimizes to an icon-only rail when toggled and restores on expand", () => {
+    renderSidebar();
+    const toggle = screen.getByRole("button", { name: "Collapse navigation" });
+
+    fireEvent.click(toggle);
+    const aside = document.getElementById("app-sidebar") as HTMLElement;
+    expect(aside.className).toContain("min-[861px]:w-[78px]");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: "Expand navigation" })).toBeInTheDocument();
+
+    // Labels are visually hidden but keep their accessible names.
+    expect(desktopNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    // Sections can no longer expand: they link to their first visible child.
+    expect(desktopNav().queryByRole("button", { name: /Master Data/ })).toBeNull();
+    expect(desktopNav().getByRole("link", { name: "Master Data" })).toHaveAttribute(
+      "href",
+      "/master-data/units",
+    );
+
+    // The ≤860px strip keeps its labels regardless of the collapse state.
+    expect(compactNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand navigation" }));
+    expect(aside.className).toContain("min-[861px]:w-[268px]");
+    expect(desktopNav().getByRole("button", { name: /Master Data/ })).toBeInTheDocument();
+  });
+
+  it("marks the owning section active in the collapsed rail", () => {
+    renderSidebar({ pathname: "/evaluations/periods" });
+    fireEvent.click(screen.getByRole("button", { name: "Collapse navigation" }));
+    expect(desktopNav().getByRole("link", { name: "Evaluations" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 });
