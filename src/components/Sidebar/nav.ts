@@ -1,8 +1,6 @@
 import {
-  IconBriefcase,
   IconChartBar,
   IconClipboardCheck,
-  IconClipboardText,
   IconClock,
   IconClockHour3,
   IconDatabase,
@@ -45,19 +43,28 @@ export type NavEntry = NavStandalone | NavSubmenu;
 const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
 
 /**
- * Single source of truth for the sidebar. Multi-page sections (Master Data,
- * Evaluations) are groups rendered as expandable submenus; the rest are direct
- * links. Visibility is role-scoped at the UI layer — the backend still enforces
- * authorization (FR-16).
+ * Single source of truth for the sidebar. Multi-page sections (Employee,
+ * Evaluations, Master Data) are groups rendered as expandable submenus; the
+ * rest are direct links. Visibility is role-scoped at the UI layer — the
+ * backend still enforces authorization (FR-16).
  */
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
   { kind: "link", href: "/activities", label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
   { kind: "link", href: "/workload", label: "Workload", icon: IconChartBar, roles: ALL },
-  { kind: "link", href: "/employees", label: "Employees", icon: IconUsers, roles: ["OPERATION", "ADMIN"] },
+  {
+    kind: "group",
+    id: "employee",
+    label: "Employee",
+    icon: IconUsers,
+    roles: ["CHAPTER", "OPERATION", "ADMIN"],
+    children: [
+      { href: "/employees", label: "Employees", roles: ["OPERATION", "ADMIN"] },
+      { href: "/contracts", label: "Kontrak", roles: ["OPERATION", "ADMIN"] },
+      { href: "/assignments", label: "Assignments", roles: ["CHAPTER", "ADMIN"] },
+    ],
+  },
   { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION"] },
-  { kind: "link", href: "/contracts", label: "Kontrak", icon: IconBriefcase, roles: ["OPERATION", "ADMIN"] },
-  { kind: "link", href: "/assignments", label: "Assignments", icon: IconClipboardText, roles: ["CHAPTER", "ADMIN"] },
   { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: ["CHAPTER", "TALENT", "ADMIN"] },
   { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER"] },
   {
