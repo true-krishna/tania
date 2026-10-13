@@ -7,6 +7,7 @@ export { BoardTable } from "./BoardTable";
 export { Button } from "./Button";
 export { DataTable, type DataTableColumn, type DataTablePagination } from "./DataTable";
 export { FilterButton } from "./FilterButton";
+export { Pagination } from "./Pagination";
 export { Card } from "./Card";
 export { Input } from "./Input";
 export { PageHeader } from "./PageHeader";

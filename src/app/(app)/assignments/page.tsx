@@ -5,6 +5,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 import { useAssignments } from "@/features/assignments/useAssignments";
 import { useEmployees } from "@/features/employees/useEmployees";
@@ -49,6 +50,8 @@ export default function AssignmentsPage() {
   const [talentId, setTalentId] = React.useState("");
   const [projectId, setProjectId] = React.useState("");
   const [status, setStatus] = React.useState<AssignmentStatus | "ALL">("ALL");
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
   const { status: query, data, error } = useAssignments({
     employeeId: talentId || undefined,
     projectId: projectId || undefined,
@@ -56,6 +59,11 @@ export default function AssignmentsPage() {
   });
   const employees = useEmployees();
   const projects = useProjects();
+
+  const totalItems = data?.length ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = data?.slice((safePage - 1) * pageSize, safePage * pageSize) ?? [];
 
   return (
     <section className="flex flex-col gap-4">
@@ -75,7 +83,13 @@ export default function AssignmentsPage() {
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-sm text-zinc-700">
           <span>Talent</span>
-          <Select value={talentId} onChange={(e) => setTalentId(e.target.value)}>
+          <Select
+            value={talentId}
+            onChange={(e) => {
+              setTalentId(e.target.value);
+              setPage(1);
+            }}
+          >
             <option value="">Semua</option>
             {employees.employees?.map((emp) => (
               <option key={emp.id} value={emp.id}>
@@ -86,7 +100,13 @@ export default function AssignmentsPage() {
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-700">
           <span>Project</span>
-          <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+          <Select
+            value={projectId}
+            onChange={(e) => {
+              setProjectId(e.target.value);
+              setPage(1);
+            }}
+          >
             <option value="">Semua</option>
             {projects.data?.map((p) => (
               <option key={p.id} value={p.id}>
@@ -99,7 +119,10 @@ export default function AssignmentsPage() {
           <span>Status</span>
           <Select
             value={status}
-            onChange={(e) => setStatus(e.target.value as AssignmentStatus | "ALL")}
+            onChange={(e) => {
+              setStatus(e.target.value as AssignmentStatus | "ALL");
+              setPage(1);
+            }}
           >
             <option value="ALL">Semua</option>
             <option value="ACTIVE">Aktif</option>
@@ -115,24 +138,33 @@ export default function AssignmentsPage() {
       ) : !data || data.length === 0 ? (
         <EmptyState message="Tidak ada assignment yang cocok dengan filter." />
       ) : (
-        <BoardTable
-          caption="Daftar assignment"
-          columns={[
-            { key: "talent", label: "Talent" },
-            { key: "project", label: "Project" },
-            { key: "jobRole", label: "Job Role" },
-            { key: "periode", label: "Periode" },
-            { key: "status", label: "Status" },
-          ]}
-        >
-          {data.map((assignment) => (
-            <AssignmentRow key={assignment.id} assignment={assignment} />
-          ))}
-        </BoardTable>
+        <>
+          <BoardTable
+            caption="Daftar assignment"
+            columns={[
+              { key: "talent", label: "Talent" },
+              { key: "project", label: "Project" },
+              { key: "jobRole", label: "Job Role" },
+              { key: "periode", label: "Periode" },
+              { key: "status", label: "Status" },
+            ]}
+          >
+            {pageRows.map((assignment) => (
+              <AssignmentRow key={assignment.id} assignment={assignment} />
+            ))}
+          </BoardTable>
+          <Pagination
+            page={safePage}
+            pageSize={pageSize}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
+        </>
       )}
-      <p className="text-xs text-zinc-500">
-        {data ? `${data.length} assignment ditampilkan.` : ""}
-      </p>
     </section>
   );
 }
