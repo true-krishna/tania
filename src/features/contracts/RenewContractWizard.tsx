@@ -21,6 +21,7 @@ import {
   CONTRACT_TYPE_LABEL,
   CONTRACT_TYPE_ORDER,
   isOpenEndedContractType,
+  workLocationFormValue,
 } from "@/features/contracts/labels";
 import { mapSubmitError } from "@/lib/errors";
 
@@ -65,7 +66,7 @@ function initialValues(contract: SourceContract): FormValues {
     jobRoleId: contract.jobRole.id,
     jobTitle: contract.jobTitle ?? "",
     jobLevel: contract.jobLevel ?? "",
-    workLocation: contract.workLocation,
+    workLocation: workLocationFormValue(contract.workLocation),
     unitId: contract.unit.id,
     notes: "",
   };

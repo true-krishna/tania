@@ -17,6 +17,7 @@ import {
   JobRolesDocument,
   UnitsDocument,
 } from "@/generated/graphql";
+import { workLocationFormValue } from "@/features/contracts/labels";
 
 const unitsMock = {
   request: { query: UnitsDocument, variables: { includeInactive: true } },
@@ -426,5 +427,59 @@ describe("ContractDetailPage (detail kontrak + riwayat, T023)", () => {
     expect(await screen.findByText("Perpanjang")).toBeInTheDocument();
     expect(screen.getByText("Sari Operator")).toBeInTheDocument();
     expect(screen.getByText(/sebelum: \{"contractNo":"PKWT\/2024\/001"\}/i)).toBeInTheDocument();
+  });
+});
+
+describe("Lokasi kerja belum tercatat (legacy, FR-33 phase 1)", () => {
+  // A contract whose work_location was never recorded reads back as the
+  // UNDEFINED sentinel. The label map and the vendored SDL enum have to agree,
+  // otherwise the cell renders blank while TypeScript sees nothing wrong.
+  const legacyDetailMock = {
+    request: { query: EmploymentContractDocument, variables: { id: "ctr-legacy" } },
+    result: {
+      data: {
+        employmentContract: { ...contractDetailNode, id: "ctr-legacy", workLocation: "UNDEFINED" },
+      },
+    },
+  };
+  const legacyAuditMock = {
+    request: {
+      query: AuditLogsDocument,
+      variables: {
+        filter: { entityType: "employment_contract", entityId: "ctr-legacy" },
+        first: 25,
+        after: null,
+      },
+    },
+    result: {
+      data: {
+        auditLogs: {
+          __typename: "AuditLogConnection",
+          totalCount: 0,
+          edges: [],
+          pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+        },
+      },
+    },
+  };
+
+  it("menampilkan label sentinel, bukan sel kosong", async () => {
+    await act(async () => {
+      render(
+        <React.Suspense fallback={null}>
+          <MockedProvider mocks={[legacyDetailMock, legacyAuditMock]}>
+            <ContractDetailPage params={Promise.resolve({ id: "ctr-legacy" })} />
+          </MockedProvider>
+        </React.Suspense>
+      );
+    });
+
+    const cell = (await screen.findByText("Work Location")).nextElementSibling;
+    expect(cell).toHaveTextContent("Belum ditetapkan");
+  });
+
+  it("form memperlakukan sentinel sebagai 'belum dipilih', bukan sebagai lokasi", () => {
+    expect(workLocationFormValue("UNDEFINED")).toBe("");
+    expect(workLocationFormValue("BANDUNG")).toBe("BANDUNG");
   });
 });

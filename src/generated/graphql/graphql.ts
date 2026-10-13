@@ -413,7 +413,9 @@ export type UpsertPerformanceEvaluationInput = {
 
 export type WorkLocation =
   | 'BANDUNG'
-  | 'JAKARTA';
+  | 'JAKARTA'
+  /** Belum ditetapkan (kontrak lama tanpa lokasi kerja). */
+  | 'UNDEFINED';
 
 export type CreateUserAccountMutationVariables = Exact<{
   employeeId: string | number;
