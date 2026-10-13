@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { AccessRole } from "@/generated/graphql";
 import { getSession } from "@/lib/auth/token-store";
 import { authConfig } from "@/lib/auth/config";
-import { atLeast, type RoleOrMore } from "@/lib/auth/roles";
+import { canAccess, type Module } from "@/lib/auth/matrix";
 
 export function useSessionRole(): AccessRole | null {
   // Session store is synchronous (cookie-backed, src/lib/auth/token-store) —
@@ -21,26 +21,26 @@ export function useSessionRole(): AccessRole | null {
   return role;
 }
 
-export function AuthGuard({ requiredRole, children }: { requiredRole?: RoleOrMore; children: React.ReactNode }) {
+export function AuthGuard({ module, children }: { module?: Module; children: React.ReactNode }) {
   const router = useRouter();
   const role = useSessionRole();
 
   // Guard access for `(app)/*` routes: without a session (normal mode)
-  // redirect to /login; insufficient role hides the view (UI layer). Final
-  // authorization is enforced server-side (FR-16).
+  // redirect to /login; a role outside the module's matrix row hides the view
+  // (UI layer). Final authorization is enforced server-side (FR-15/16).
   React.useEffect(() => {
     if (!authConfig.localOnly && role === null) {
       router.replace("/login");
     }
   }, [role, router]);
 
-  if (requiredRole && !authConfig.localOnly && role !== null && !atLeast(role, requiredRole)) {
+  if (module && !authConfig.localOnly && role !== null && !canAccess(role, module)) {
     return null;
   }
 
   if (authConfig.localOnly) {
     const localRole = authConfig.defaultAccessRole as AccessRole | undefined;
-    if (requiredRole && !atLeast(localRole, requiredRole)) return null;
+    if (module && !canAccess(localRole, module)) return null;
   }
 
   return <>{children}</>;

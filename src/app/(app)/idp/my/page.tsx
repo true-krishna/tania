@@ -69,7 +69,7 @@ export default function MyIdpPage() {
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat IDP."} />;
   if (!data)
     return (
-      <AuthGuard requiredRole="TALENT">
+      <AuthGuard module="idp">
         <section className="flex flex-col gap-4">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">IDP Saya</h1>
           <EmptyState message="Chapter belum membuat IDP untuk Anda. IDP akan muncul di sini setelah dibuat." />
@@ -90,7 +90,7 @@ export default function MyIdpPage() {
   }
 
   return (
-    <AuthGuard requiredRole="TALENT">
+    <AuthGuard module="idp">
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
