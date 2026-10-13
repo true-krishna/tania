@@ -59,7 +59,7 @@ export const NAV: readonly NavEntry[] = [
     icon: IconUsers,
     roles: ["CHAPTER", "OPERATION", "ADMIN"],
     children: [
-      { href: "/employees", label: "Employees", roles: ["OPERATION", "ADMIN"] },
+      { href: "/employees", label: "Data Karyawan", roles: ["OPERATION", "ADMIN"] },
       { href: "/contracts", label: "Kontrak", roles: ["OPERATION", "ADMIN"] },
       { href: "/assignments", label: "Assignments", roles: ["CHAPTER", "ADMIN"] },
     ],
