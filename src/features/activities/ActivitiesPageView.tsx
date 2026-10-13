@@ -221,10 +221,6 @@ export function ActivitiesPageView() {
         onDelete={handleDelete}
         onRetry={reload}
       />
-
-      <p className="text-xs text-zinc-500">
-        {status === "ready" && data ? `${data.length} aktivitas ditampilkan.` : ""}
-      </p>
     </section>
   );
 }
