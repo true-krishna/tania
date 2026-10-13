@@ -23,8 +23,8 @@ export function ChartCard({ title, subtitle, onDownload, children }: ChartCardPr
     <Card className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
-          <p className="text-xs text-zinc-500">{subtitle}</p>
+          <h2 className="tp-h3">{title}</h2>
+          <p className="tp-label">{subtitle}</p>
         </div>
         <Button
           type="button"

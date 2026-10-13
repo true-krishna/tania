@@ -17,6 +17,12 @@ export type MovementView = "line" | "diverging";
 
 export const MAX_DIVERGING_MONTHS = 12;
 
+/** Opsi toggle tampilan (V-5) — urutan tampil di tablist. */
+const VIEWS: readonly { id: MovementView; label: string }[] = [
+  { id: "line", label: "Line" },
+  { id: "diverging", label: "Bar divergen" },
+];
+
 export function canUseDivergingBars(data: readonly ReportMonthlyMovement[]): boolean {
   return data.length > 0 && data.length <= MAX_DIVERGING_MONTHS;
 }
@@ -140,46 +146,60 @@ export function MovementTrendChart({
   const [view, setView] = React.useState<MovementView>("line");
   const divergingAvailable = canUseDivergingBars(data);
   const effectiveView = divergingAvailable ? view : "line";
+  const panelId = React.useId();
+  const tabId = (candidate: MovementView) => `${panelId}-${candidate}`;
   const option = React.useMemo(
     () => buildMovementOption(data, effectiveView, theme, title, periodLabel),
     [data, effectiveView, theme, title, periodLabel],
   );
+
+  /** V-5: pilihan bar divergen hanya sah bila rentangnya ≤12 bulan. */
+  const selectView = (next: MovementView) => {
+    if (next === "diverging" && !divergingAvailable) return;
+    setView(next);
+  };
+
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2" role="group" aria-label="Tampilan grafik tren">
-        <button
-          type="button"
-          aria-pressed={effectiveView === "line"}
-          onClick={() => setView("line")}
-          className={
-            effectiveView === "line"
-              ? "rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
-              : "rounded-md border border-surface-border px-2.5 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
-          }
-        >
-          Line
-        </button>
-        <button
-          type="button"
-          aria-pressed={effectiveView === "diverging"}
-          onClick={() => setView("diverging")}
-          disabled={!divergingAvailable}
-          title={divergingAvailable ? undefined : "Bar divergen hanya untuk rentang maksimal 12 bulan"}
-          className={
-            effectiveView === "diverging"
-              ? "rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
-              : "rounded-md border border-surface-border px-2.5 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
-          }
-        >
-          Bar divergen
-        </button>
+      {/* Toggle tampilan memakai resep tab kanon (.tp-tabs/.tp-tab) dengan
+          aria-selected sebagai sumber status (VI), bukan warna saja. */}
+      <div className="tp-tabs" role="tablist" aria-label="Tampilan grafik tren">
+        {VIEWS.map((item) => {
+          const selected = effectiveView === item.id;
+          const disabled = item.id === "diverging" && !divergingAvailable;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              id={tabId(item.id)}
+              className={`tp-tab${disabled ? " cursor-not-allowed opacity-50" : ""}`}
+              aria-selected={selected}
+              aria-controls={panelId}
+              aria-disabled={disabled || undefined}
+              title={
+                disabled ? "Bar divergen hanya untuk rentang maksimal 12 bulan" : undefined
+              }
+              onClick={() => selectView(item.id)}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                event.preventDefault();
+                selectView(effectiveView === "line" ? "diverging" : "line");
+              }}
+            >
+              {item.label}
+            </button>
+          );
+        })}
       </div>
-      <EChart
-        ref={chartRef}
-        option={option}
-        ariaLabel={ariaLabel}
-        className={className ?? "h-64 w-full"}
-      />
+      <div role="tabpanel" id={panelId} aria-labelledby={tabId(effectiveView)}>
+        <EChart
+          ref={chartRef}
+          option={option}
+          ariaLabel={ariaLabel}
+          className={className ?? "h-64 w-full"}
+        />
+      </div>
     </div>
   );
 }

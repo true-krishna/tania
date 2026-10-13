@@ -86,7 +86,7 @@ export function PeriodFilter({ range, value, onApply }: PeriodFilterProps) {
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+      <label className="flex flex-col gap-1 text-sm font-semibold text-tp-text">
         Mulai
         <Select
           value={draft.startMonth}
@@ -101,7 +101,7 @@ export function PeriodFilter({ range, value, onApply }: PeriodFilterProps) {
           ))}
         </Select>
       </label>
-      <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+      <label className="flex flex-col gap-1 text-sm font-semibold text-tp-text">
         Sampai
         <Select
           value={draft.endMonth}
