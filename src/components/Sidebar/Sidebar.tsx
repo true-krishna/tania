@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
 import {
@@ -8,6 +7,7 @@ import {
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
 } from "@tabler/icons-react";
+import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/cn";
 import type { AccessRole } from "@/generated/graphql";
 import { NAV, type NavSubmenu } from "./nav";
@@ -74,14 +74,7 @@ export function Sidebar({ role, pathname }: SidebarProps) {
 
   const brand = (
     <div className={cn("flex shrink-0 flex-col gap-1", collapsed && "min-[861px]:hidden")}>
-      <Image
-        src="/brand/tania-wordmark@4x.png"
-        alt="TANIA"
-        width={141}
-        height={49}
-        priority
-        className="h-auto w-[103px]"
-      />
+      <Brand variant="large" className="text-[36px]" />
       <span className="hidden truncate text-[11px] text-tp-muted min-[861px]:block">
         Talent Management
       </span>
