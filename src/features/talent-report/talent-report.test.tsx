@@ -129,7 +129,7 @@ describe("chart-theme (T017 / D1)", () => {
       "--tp-text",
       "--tp-muted",
       "--tp-line",
-      "--tp-primary",
+      "--tp-brand-navy",
       "--tp-neutral",
       "--tp-mint-ink",
       "--tp-ink-peach",
@@ -139,7 +139,7 @@ describe("chart-theme (T017 / D1)", () => {
   });
 
   it("resolves --tp-* tokens via getComputedStyle (canvas cannot read CSS variables)", () => {
-    document.documentElement.style.setProperty("--tp-primary", "#123456");
+    document.documentElement.style.setProperty("--tp-brand-navy", "#123456");
     document.documentElement.style.setProperty("--tp-mint-ink", "#0a6b5b");
     document.documentElement.style.setProperty("--tp-ink-peach", "#b32318");
 
@@ -151,9 +151,9 @@ describe("chart-theme (T017 / D1)", () => {
 
   it("falls back to the globals.css palette when tokens are not resolvable", () => {
     const theme = resolveChartTheme(document.documentElement);
-    expect(theme.distributionColor).toBe("#875bf7");
+    expect(theme.distributionColor).toBe("#172b4d");
     expect(theme.missingColor).toBe("#667085");
-    expect(theme.newTalentColor).toBe("#027a48");
+    expect(theme.newTalentColor).toBe("#0f6e48");
     expect(theme.churnColor).toBe("#b32318");
     expect(theme.textColor).toBe("#212121");
     expect(theme.lineColor).toBe("#d0d5dd");
@@ -162,7 +162,7 @@ describe("chart-theme (T017 / D1)", () => {
   it("colors churn with the red ink token (O-R4) and new talent with mint ink", () => {
     const theme = resolveChartTheme();
     expect(theme.churnColor).toMatch(/^#b32318$/i);
-    expect(theme.newTalentColor).toMatch(/^#027a48$/i);
+    expect(theme.newTalentColor).toMatch(/^#0f6e48$/i);
     expect(theme.churnColor).not.toBe(theme.newTalentColor);
     expect(theme.missingColor).not.toBe(theme.distributionColor);
   });

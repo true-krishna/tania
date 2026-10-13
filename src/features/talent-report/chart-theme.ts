@@ -6,7 +6,7 @@
  * modul ini — jangan hardcode warna di komponen chart.
  *
  * Pemetaan semantik warna (spek — Bentuk Visual):
- * - distribusi (V-1…V-4) → `--tp-primary` (netral laporan; hijau/merah hanya untuk gerakan)
+ * - distribusi (V-1…V-4) → `--tp-brand-navy` (netral laporan; hijau/merah hanya untuk gerakan)
  * - "Belum diisi" (MISSING) → `--tp-neutral` (abu-abu, selalu terakhir & berbeda visual)
  * - new talent (V-5) → `--tp-mint-ink` (hijau; fallback `--tp-mint` bila perlu lebih terang)
  * - churn (V-5) → **`--tp-ink-peach` (merah)** — keputusan O-R4 dicatat di sini:
@@ -15,9 +15,9 @@
  *   memadai untuk garis/bar dan sejajar pasangan `--tp-mint-ink` new talent).
  *   Dipilih `--tp-ink-peach`; keputusan visual, mudah ditukar di satu tempat ini.
  *
- * Fallback mengikuti nilai `--tp-*` v4.0.0 di `src/app/globals.css` (TANIA Pulse
- * selaras Legion) agar hasil tetap deterministik di SSR/jsdom (token tak
- * ter-resolve) — uji di `talent-report.test.tsx`.
+ * Fallback mengikuti nilai `--tp-*` v4.2.0 di `src/app/globals.css` (TANIA Pulse)
+ * agar hasil tetap deterministik di SSR/jsdom (token tak ter-resolve) — uji di
+ * `talent-report.test.tsx`.
  */
 
 export interface ChartTheme {
@@ -28,7 +28,7 @@ export interface ChartTheme {
   mutedColor: string;
   /** Garis sumbu/pembagi — `--tp-line`. */
   lineColor: string;
-  /** Bar/kolom kategori sah (VALUE) — `--tp-primary`. */
+  /** Bar/kolom kategori sah (VALUE) — `--tp-brand-navy`. */
   distributionColor: string;
   /** Kategori "Belum diisi" (MISSING) — `--tp-neutral`. */
   missingColor: string;
@@ -38,15 +38,15 @@ export interface ChartTheme {
   churnColor: string;
 }
 
-/** Nilai fallback = literal token `--tp-*` v4.0.0 di `src/app/globals.css`. */
+/** Nilai fallback = literal token `--tp-*` v4.2.0 di `src/app/globals.css`. */
 const FALLBACK: ChartTheme = {
   fontFamily: 'Nunito Sans, system-ui, sans-serif',
   textColor: "#212121",
   mutedColor: "#667085",
   lineColor: "#d0d5dd",
-  distributionColor: "#875bf7",
+  distributionColor: "#172b4d",
   missingColor: "#667085",
-  newTalentColor: "#027a48",
+  newTalentColor: "#0f6e48",
   churnColor: "#b32318",
 };
 
@@ -70,7 +70,7 @@ export function resolveChartTheme(root?: Element): ChartTheme {
     textColor: readToken(root, "--tp-text", FALLBACK.textColor),
     mutedColor: readToken(root, "--tp-muted", FALLBACK.mutedColor),
     lineColor: readToken(root, "--tp-line", FALLBACK.lineColor),
-    distributionColor: readToken(root, "--tp-primary", FALLBACK.distributionColor),
+    distributionColor: readToken(root, "--tp-brand-navy", FALLBACK.distributionColor),
     missingColor: readToken(root, "--tp-neutral", FALLBACK.missingColor),
     newTalentColor: readToken(root, "--tp-mint-ink", FALLBACK.newTalentColor),
     churnColor: readToken(root, "--tp-ink-peach", FALLBACK.churnColor),

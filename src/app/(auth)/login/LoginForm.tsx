@@ -13,7 +13,7 @@ import { BrandPanel } from "./BrandPanel";
 
 /**
  * Login form — mockup structure (TAN-160) on canon tokens (constitution-design
- * v4.0.0). The mockup's navy/red palette and its uppercase eyebrows are
+ * v4.2.0). The mockup's navy/red palette and its uppercase eyebrows are
  * translated (see the issue comment for the recorded deviations): colors come
  * from `--tp-*`, action copy is sentence case (§III), and every interactive
  * element keeps the shipped focus ring (§VI).
@@ -73,7 +73,7 @@ export default function LoginForm() {
 
       <section className="flex w-full items-center justify-center bg-tp-bg px-6 py-12 lg:w-1/2 lg:px-10">
         <div className="flex w-full max-w-[560px] flex-col">
-          <p className="text-[13px] font-semibold text-tp-ink-violet">
+          <p className="text-[13px] font-semibold text-tp-brand-red-deep">
             Selamat datang kembali
           </p>
 

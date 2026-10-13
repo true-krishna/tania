@@ -65,7 +65,7 @@ export default function AssignmentsPage() {
         actions={
           <Link
             href="/assignments/new"
-            className="inline-flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-600 active:bg-brand-700"
+            className="inline-flex items-center rounded-md bg-tp-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-tp-brand-navy-deep active:bg-tp-brand-navy-deep"
           >
             + Buat Assignment
           </Link>

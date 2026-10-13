@@ -9,8 +9,8 @@ export const ENTRA_PROVISION_STATUS_LABEL: Record<EntraProvisionStatus, string> 
 
 /** Badge tone per provisioning outcome so failure is visible at a glance (FR-44). */
 export const ENTRA_PROVISION_STATUS_TONE: Record<EntraProvisionStatus, string> = {
-  INVITED: "bg-brand-100 text-brand-700",
-  CREATED: "bg-brand-100 text-brand-700",
+  INVITED: "bg-tp-tint-violet text-tp-ink-violet",
+  CREATED: "bg-tp-tint-violet text-tp-ink-violet",
   FAILED: "bg-red-100 text-red-700",
   DISABLED: "bg-zinc-100 text-zinc-600",
 };

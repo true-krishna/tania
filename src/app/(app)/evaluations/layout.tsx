@@ -40,7 +40,7 @@ export default function EvaluationsLayout({ children }: { children: React.ReactN
                     href={href}
                     aria-current={active ? "page" : undefined}
                     className={`block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active ? "bg-brand-100 text-brand-700" : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                      active ? "bg-tp-brand-navy text-tp-on-nav" : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                     }`}
                   >
                     {label}

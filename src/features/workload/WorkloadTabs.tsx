@@ -36,7 +36,7 @@ export function WorkloadTabs({
             onClick={() => onChange(tab.id)}
             className={
               selected
-                ? "flex-none rounded-[10px] bg-tp-primary px-4 py-2 text-sm font-semibold text-white"
+                ? "flex-none rounded-[10px] bg-tp-brand-navy px-4 py-2 text-sm font-semibold text-white"
                 : "flex-none rounded-[10px] px-4 py-2 text-sm font-medium text-tp-muted transition-colors hover:text-tp-text"
             }
           >

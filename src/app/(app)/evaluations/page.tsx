@@ -35,7 +35,7 @@ export default function EvaluationsPage() {
         <p className="text-sm text-zinc-600">Gunakan menu Evaluations untuk membuka daftar evaluasi Anda.</p>
         <Link
           href="/evaluations/my"
-          className="inline-flex w-fit items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-600 active:bg-brand-700"
+          className="inline-flex w-fit items-center rounded-md bg-tp-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-tp-brand-navy-deep active:bg-tp-brand-navy-deep"
         >
           Lihat evaluasi saya
         </Link>
@@ -57,7 +57,7 @@ export default function EvaluationsPage() {
         {role === "ADMIN" ? (
           <p className="text-sm text-zinc-600">
             Buat periode di tab{" "}
-            <Link href="/evaluations/periods" className="font-medium text-brand hover:text-brand-600 hover:underline">
+            <Link href="/evaluations/periods" className="font-medium text-tp-brand-navy hover:text-tp-brand-navy-deep hover:underline">
               Periode
             </Link>
             .
@@ -116,7 +116,7 @@ export default function EvaluationsPage() {
                 <td className="px-4 py-2.5 text-right">
                   <Link
                     href={`/evaluations/${period.id}/${entry.talent.id}`}
-                    className="inline-flex items-center rounded-md border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 shadow-sm hover:bg-brand-100"
+                    className="inline-flex items-center rounded-md border border-tp-brand-navy/20 bg-tp-brand-navy/5 px-3 py-1 text-xs font-medium text-tp-brand-navy shadow-sm hover:bg-tp-brand-navy/10"
                   >
                     {readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai"}
                   </Link>

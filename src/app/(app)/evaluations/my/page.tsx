@@ -32,7 +32,7 @@ export default function MyEvaluationsPage() {
                 {evaluation.period.startDate} — {evaluation.period.endDate}
               </p>
             </div>
-            <span className="rounded-md bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">
+            <span className="rounded-md bg-tp-tint-violet px-2 py-0.5 text-xs font-semibold text-tp-ink-violet">
               {evaluation.status === "SUBMITTED" ? "Diserahkan" : "Draf"}
             </span>
           </header>
