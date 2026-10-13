@@ -47,7 +47,7 @@ docs/agents-branch-naming
 chore/bump-next-version
 ```
 
-# JSDoc Comments
+# Code Comments
 
 Do not add JSDoc/@param/@returns blocks by default. They are unnecessary noise on components, hooks, and obvious functions.
 
@@ -56,3 +56,9 @@ Only keep JSDoc on custom utility functions where the input/output is not self-e
 - Remove JSDoc from React components, props, and inline handlers.
 - Remove JSDoc that just restates the function name or its types.
 - Keep or add JSDoc only for non-obvious utilities (edge-case handling, unit/format assumptions, side effects).
+
+Regular comments follow the same policy — `.jsx` / `.tsx` files carry minimal comments, ideally zero:
+
+- Do not narrate what the code does, restate names, or leave section banners, TODO breadcrumbs, or commented-out code.
+- Allow a plain comment only for a non-obvious constraint the code cannot express (e.g. an `!important` needed because a token class is unlayered) — and keep it to the point.
+- The rationale belongs in the commit message or the issue, not the component file.
