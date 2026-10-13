@@ -17,6 +17,11 @@ import {
   type RenewContractInput,
   type WorkLocation,
 } from "@/generated/graphql";
+import {
+  CONTRACT_TYPE_LABEL,
+  CONTRACT_TYPE_ORDER,
+  isOpenEndedContractType,
+} from "@/features/contracts/labels";
 import { mapSubmitError } from "@/lib/errors";
 
 type SourceContract = NonNullable<EmploymentContractQuery["employmentContract"]>;
@@ -104,12 +109,12 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
     if (!toCheck.startDate) next.startDate = "Tanggal mulai wajib diisi.";
     else if (contract.endDate && toCheck.startDate <= contract.endDate)
       next.startDate = `Tanggal mulai harus setelah kontrak lama berakhir (${contract.endDate}).`;
-    if (toCheck.contractType === "PKWT") {
-      if (!toCheck.endDate) next.endDate = "Tanggal selesai wajib untuk PKWT.";
+    if (!isOpenEndedContractType(toCheck.contractType)) {
+      if (!toCheck.endDate) next.endDate = "Tanggal selesai wajib untuk kontrak berbatas waktu.";
       else if (toCheck.startDate && toCheck.endDate < toCheck.startDate)
         next.endDate = "Tanggal selesai tidak boleh sebelum tanggal mulai.";
     } else if (toCheck.endDate) {
-      next.endDate = "Tanggal selesai harus kosong untuk PKWTT.";
+      next.endDate = "Tanggal selesai harus kosong untuk kontrak tanpa batas waktu.";
     }
     return next;
   }
@@ -226,8 +231,11 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
                 setErrors((er) => ({ ...er, endDate: undefined }));
               }}
             >
-              <option value="PKWT">PKWT</option>
-              <option value="PKWTT">PKWTT</option>
+              {CONTRACT_TYPE_ORDER.map((type) => (
+                <option key={type} value={type}>
+                  {CONTRACT_TYPE_LABEL[type]}
+                </option>
+              ))}
             </Select>
           </Label>
           <Label error={errors.contractNo}>
@@ -248,7 +256,7 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
               onChange={(e) => set("startDate", e.target.value)}
             />
           </Label>
-          {values.contractType === "PKWT" ? (
+          {!isOpenEndedContractType(values.contractType) ? (
             <Label error={errors.endDate}>
               Tanggal selesai
               <Input

@@ -185,7 +185,29 @@ describe("NewContractPage (form kontrak, T023)", () => {
     });
     submitForm();
 
-    expect(screen.getByText(/tanggal selesai wajib untuk pkwt/i)).toBeInTheDocument();
+    expect(screen.getByText(/tanggal selesai wajib untuk kontrak berbatas waktu/i)).toBeInTheDocument();
+  });
+
+  it("offers the TMS contract types and treats KARYAWAN TETAP as open-ended", async () => {
+    await renderNew([unitsMock, jobRolesMock, employeesMock]);
+    await screen.findByRole("heading", { name: /tambah kontrak/i });
+
+    for (const label of [
+      "TPPBW PROHIRE",
+      "EMPLOYEE MOBILIT",
+      "PROJECT BASED PROCUREMENT",
+      "OUTSOURCE TKP",
+      "KARYAWAN TETAP",
+      "TKWT DIGITAL TALENT",
+    ]) {
+      expect(screen.getByRole("option", { name: label })).toBeInTheDocument();
+    }
+
+    expect(screen.getByLabelText(/tanggal selesai/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("combobox", { name: /jenis kontrak/i }), {
+      target: { value: "KARYAWAN_TETAP" },
+    });
+    expect(screen.queryByLabelText(/tanggal selesai/i)).not.toBeInTheDocument();
   });
 
   it("creates the contract with the TMS input", async () => {

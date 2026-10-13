@@ -12,6 +12,7 @@ import { useEmploymentContracts } from "@/features/contracts/useContracts";
 import {
   CONTRACT_STATUS_LABEL,
   CONTRACT_TYPE_LABEL,
+  CONTRACT_TYPE_ORDER,
 } from "@/features/contracts/labels";
 import type {
   ContractType,
@@ -128,8 +129,11 @@ export default function ContractsPage() {
             className="w-auto"
           >
             <option value="ALL">Semua</option>
-            <option value="PKWT">PKWT</option>
-            <option value="PKWTT">PKWTT</option>
+            {CONTRACT_TYPE_ORDER.map((type) => (
+              <option key={type} value={type}>
+                {CONTRACT_TYPE_LABEL[type]}
+              </option>
+            ))}
           </Select>
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-700">
