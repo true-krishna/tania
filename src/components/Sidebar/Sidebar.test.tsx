@@ -40,33 +40,33 @@ describe("Sidebar", () => {
   it("keeps the Employee section scoped to Operation and Admin", () => {
     const talent = renderSidebar({ role: "TALENT" });
     expect(desktopNav().queryByRole("button", { name: "Employee" })).toBeNull();
-    expect(compactNav().queryByRole("link", { name: "Employees" })).toBeNull();
+    expect(compactNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
     talent.unmount();
 
     const chapter = renderSidebar({ role: "CHAPTER" });
     fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
     expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
-    expect(desktopNav().queryByRole("link", { name: "Employees" })).toBeNull();
+    expect(desktopNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
     expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
     chapter.unmount();
 
     const admin = renderSidebar({ role: "ADMIN" });
     fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
-    expect(desktopNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
-    expect(compactNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
     admin.unmount();
 
     renderSidebar({ role: "OPERATION" });
     fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
-    expect(desktopNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
-    expect(compactNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
   });
 
   it("merges Employees, Kontrak, and Assignments under one Employee section (TAN-173)", () => {
     renderSidebar({ role: "ADMIN", pathname: "/employees" });
     const group = desktopNav().getByRole("button", { name: "Employee" });
     expect(group).toHaveAttribute("aria-expanded", "true");
-    expect(desktopNav().getByRole("link", { name: "Employees" })).toHaveAttribute("href", "/employees");
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("href", "/employees");
     expect(desktopNav().getByRole("link", { name: "Kontrak" })).toHaveAttribute("href", "/contracts");
     expect(desktopNav().getByRole("link", { name: "Assignments" })).toHaveAttribute("href", "/assignments");
   });
