@@ -10,14 +10,13 @@
  *   Constraints: no gradients, no faces);
  * - secondary copy on the dark surface is white at reduced opacity (white on
  *   navy = 14.1:1; white at 80% ≈ 9.6:1), which stays well above §VI;
- * - the logo slot now ships the brand owner's official artwork (§I): the white
- *   TANIA wordmark from `TANIA_Brand_Color_Kit.zip`, on the navy surface where
- *   the guideline requires the white variant.
+ * - the logo slot uses the shared `Brand` wordmark in its `light` variant on the
+ *   navy surface, where the guideline requires the white logo.
  *
  * Copy is the owner's revision from the TAN-160 review (platform, not DPS
  * cockpit; no invite-only/contact-admin wording).
  */
-import Image from "next/image";
+import { Brand } from "@/components/Brand";
 
 export function BrandPanel() {
   return (
@@ -30,7 +29,9 @@ export function BrandPanel() {
       </div>
 
       <div className="relative flex w-full flex-col p-12 xl:p-14">
-        <BrandMark />
+        <div>
+          <Brand variant="large" light className="text-[49px]" />
+        </div>
 
         <div className="my-auto flex flex-col gap-6">
           {/* Mockup: diamond tile, mid-panel. Flat geometry only — no recreated
@@ -55,24 +56,5 @@ export function BrandPanel() {
         </div>
       </div>
     </aside>
-  );
-}
-
-/**
- * Official TANIA wordmark (brand kit, white variant) — the brand owner supplied
- * the artwork in TAN-99, so the labeled placeholder is retired (§I). The `@4x`
- * file is the density source; the rendered box stays at the logo guideline's
- * native 141x49 (never enlarged above native size without production vector).
- */
-function BrandMark() {
-  return (
-    <Image
-      src="/brand/tania-wordmark-white@4x.png"
-      alt="TANIA"
-      width={141}
-      height={49}
-      priority
-      className="h-auto w-[141px]"
-    />
   );
 }

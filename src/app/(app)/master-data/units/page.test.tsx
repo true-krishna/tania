@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { ToastProvider } from "@/components/Toast";
 import UnitsPage from "@/app/(app)/master-data/units/page";
@@ -59,6 +59,7 @@ describe("UnitsPage (Apollo)", () => {
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
-    expect(screen.getByText("1")).toBeInTheDocument();
+    const table = screen.getByRole("table", { name: "Daftar unit" });
+    expect(within(table).getByText("1")).toBeInTheDocument();
   });
 });

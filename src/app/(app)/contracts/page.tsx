@@ -7,6 +7,7 @@ import { BoardTable, type Column } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
 import {
@@ -98,6 +99,13 @@ export default function ContractsPage() {
     loadMore,
   } = useEmploymentContracts(filter);
 
+  const { pageRows, pagination, resetPage } = useTablePagination(contracts, {
+    totalItems: totalCount,
+    hasMore: hasNextPage,
+    loadingMore,
+    loadMore,
+  });
+
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
@@ -116,7 +124,10 @@ export default function ContractsPage() {
           <Input
             type="search"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              resetPage();
+            }}
             placeholder="Cari nama karyawan, no kontrak, atau nomor induk…"
             className="max-w-xs"
           />
@@ -125,7 +136,10 @@ export default function ContractsPage() {
           <span>Jenis</span>
           <Select
             value={contractType}
-            onChange={(e) => setContractType(e.target.value as ContractType | "ALL")}
+            onChange={(e) => {
+              setContractType(e.target.value as ContractType | "ALL");
+              resetPage();
+            }}
             className="w-auto"
           >
             <option value="ALL">Semua</option>
@@ -140,7 +154,10 @@ export default function ContractsPage() {
           <span>Status</span>
           <Select
             value={status}
-            onChange={(e) => setStatus(e.target.value as EmploymentContractStatus | "ALL")}
+            onChange={(e) => {
+              setStatus(e.target.value as EmploymentContractStatus | "ALL");
+              resetPage();
+            }}
             className="w-auto"
           >
             <option value="ALL">Semua</option>
@@ -164,20 +181,13 @@ export default function ContractsPage() {
       ) : (
         <>
           <BoardTable caption="Daftar kontrak kerja" columns={COLUMNS}>
-            {contracts.map((contract) => (
+            {pageRows.map((contract) => (
               <ContractRow key={contract.id} contract={contract} />
             ))}
           </BoardTable>
-          {hasNextPage ? (
-            <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
-              {loadingMore ? "Memuat…" : "Muat lebih banyak"}
-            </Button>
-          ) : null}
+          <Pagination {...pagination} />
         </>
       )}
-      <p className="text-xs text-zinc-500">
-        {contracts ? `${contracts.length} dari ${totalCount} kontrak ditampilkan.` : ""}
-      </p>
     </section>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BoardTable } from "@/components/BoardTable";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { useEvaluationPeriods } from "@/features/evaluations/useEvaluationPeriods";
 import { PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
 
@@ -14,6 +15,7 @@ import { PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
  */
 export default function EvaluationPeriodsPage() {
   const { status, data, error } = useEvaluationPeriods();
+  const { pageRows, pagination } = useTablePagination(data);
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat periode."} />;
@@ -60,7 +62,7 @@ export default function EvaluationPeriodsPage() {
           { key: "status", label: "Status" },
         ]}
       >
-        {data.map((period) => (
+        {pageRows.map((period) => (
           <tr key={period.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
             <td className="px-4 py-2.5 text-zinc-900">{period.name}</td>
             <td className="px-4 py-2.5 text-zinc-600">
@@ -76,7 +78,7 @@ export default function EvaluationPeriodsPage() {
           </tr>
         ))}
       </BoardTable>
-      <p className="text-xs text-zinc-500">{data.length} periode ditampilkan.</p>
+      <Pagination {...pagination} />
     </section>
   );
 }

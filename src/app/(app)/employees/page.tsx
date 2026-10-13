@@ -9,6 +9,7 @@ import { Button } from "@/components/Button";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
@@ -136,6 +137,12 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       status: status === "ALL" ? undefined : status,
     });
   const activeFilters = (unitId ? 1 : 0) + (status !== "ALL" ? 1 : 0);
+  const { pageRows, pagination, resetPage } = useTablePagination(employees, {
+    totalItems: totalCount,
+    hasMore: hasNextPage,
+    loadingMore,
+    loadMore,
+  });
 
   return (
     <section className="flex flex-col gap-4">
@@ -161,7 +168,10 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
           <Input
             type="search"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              resetPage();
+            }}
             placeholder="Cari nama, email, atau nomor induk…"
             className="max-w-xs"
           />
@@ -180,7 +190,10 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             <span>Divisi</span>
             <Select
               value={unitId}
-              onChange={(e) => setUnitId(e.target.value)}
+              onChange={(e) => {
+                setUnitId(e.target.value);
+                resetPage();
+              }}
               className="w-auto"
             >
               <option value="">Semua</option>
@@ -195,7 +208,10 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             <span>Status</span>
             <Select
               value={status}
-              onChange={(e) => setStatus(e.target.value as EmployeeStatus | "ALL")}
+              onChange={(e) => {
+                setStatus(e.target.value as EmployeeStatus | "ALL");
+                resetPage();
+              }}
               className="w-auto"
             >
               <option value="ALL">Semua</option>
@@ -220,20 +236,13 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       ) : (
         <>
           <BoardTable caption="Daftar karyawan" columns={COLUMNS}>
-            {employees.map((employee) => (
+            {pageRows.map((employee) => (
               <EmployeeRow key={employee.id} employee={employee} />
             ))}
           </BoardTable>
-          {hasNextPage ? (
-            <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
-              {loadingMore ? "Memuat…" : "Muat lebih banyak"}
-            </Button>
-          ) : null}
+          <Pagination {...pagination} />
         </>
       )}
-      <p className="text-xs text-zinc-500">
-        {employees ? `${employees.length} dari ${totalCount} karyawan ditampilkan.` : ""}
-      </p>
     </section>
   );
 }

@@ -96,10 +96,15 @@ const firstPageMock = {
   result: pageOne,
 };
 
+const nextPageMock = {
+  request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: "c-2" } },
+  result: pageTwo,
+};
+
 describe("EmployeesPage (daftar + filter, T021)", () => {
   it("renders NIK masked (4 digit akhir) and nomor induk per row", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock]}>
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -115,6 +120,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     const mocks = [
       unitsMock,
       firstPageMock,
+      nextPageMock,
       {
         request: {
           query: EmployeesDocument,
@@ -153,6 +159,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     const mocks = [
       unitsMock,
       firstPageMock,
+      nextPageMock,
       {
         request: {
           query: EmployeesDocument,
@@ -192,14 +199,11 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
   });
 
-  it("loads the next cursor page with Muat lebih banyak", async () => {
+  it("auto-fetches the next cursor page to fill the shown page", async () => {
     const mocks = [
       unitsMock,
       firstPageMock,
-      {
-        request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: "c-2" } },
-        result: pageTwo,
-      },
+      nextPageMock,
     ];
     render(
       <MockedProvider mocks={mocks}>
@@ -207,8 +211,6 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       </MockedProvider>
     );
     await screen.findByText("Andi Pratama");
-
-    fireEvent.click(screen.getByRole("button", { name: /muat lebih banyak/i }));
 
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.getByText("Andi Pratama")).toBeInTheDocument();

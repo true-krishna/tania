@@ -7,6 +7,7 @@ import { BoardTable, type Column } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import {
   EmployeesWithoutEntraDocument,
   ProvisionEntraAccountDocument,
@@ -29,7 +30,8 @@ const COLUMNS: Column[] = [
 ];
 
 export default function EntraProvisioningPage() {
-  const { status, employees, error } = useEmployeesWithoutEntra();
+  const { status, employees, totalCount, error } = useEmployeesWithoutEntra();
+  const { pageRows, pagination } = useTablePagination(employees, { totalItems: totalCount });
   const [provisionEntra] = useMutation(ProvisionEntraAccountDocument, {
     refetchQueries: [
       { query: EmployeesWithoutEntraDocument, variables: { ...ENTRA_LIST_VARIABLES } },
@@ -100,59 +102,62 @@ export default function EntraProvisioningPage() {
       ) : null}
 
       {status === "ready" && employees && employees.length > 0 ? (
-        <BoardTable caption="Talent tanpa akun Entra" columns={COLUMNS}>
-          {employees.map((employee) => {
-            const outcome = employee.entraProvision;
-            const failed = outcome?.status === "FAILED";
-            return (
-              <tr
-                key={employee.id}
-                className="border-b border-board-border transition-colors hover:bg-zinc-50"
-              >
-                <td className="px-4 py-2.5">
-                  <Link
-                    href={`/employees/${employee.id}`}
-                    className="font-medium text-zinc-900 hover:underline"
-                  >
-                    {employee.fullName}
-                  </Link>
-                </td>
-                <td className="px-4 py-2.5 text-zinc-600">{employee.email}</td>
-                <td className="px-4 py-2.5">
-                  {outcome ? (
-                    <>
-                      <span
-                        className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ENTRA_PROVISION_STATUS_TONE[outcome.status]}`}
-                      >
-                        {ENTRA_PROVISION_STATUS_LABEL[outcome.status]}
-                      </span>
-                      <span className="mt-1 block text-xs text-zinc-500">
-                        {failed
-                          ? outcome.lastError
-                          : outcome.upn ?? outcome.action}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-xs text-zinc-500">Belum dibuat</span>
-                  )}
-                </td>
-                <td className="px-4 py-2.5">
-                  <Button
-                    variant="secondary"
-                    disabled={busyId !== null}
-                    onClick={() => void provision(employee.id, employee.fullName)}
-                  >
-                    {busyId === employee.id
-                      ? "Memproses…"
-                      : failed
-                        ? "Coba lagi"
-                        : "Provisioning"}
-                  </Button>
-                </td>
-              </tr>
-            );
-          })}
-        </BoardTable>
+        <>
+          <BoardTable caption="Talent tanpa akun Entra" columns={COLUMNS}>
+            {pageRows.map((employee) => {
+              const outcome = employee.entraProvision;
+              const failed = outcome?.status === "FAILED";
+              return (
+                <tr
+                  key={employee.id}
+                  className="border-b border-board-border transition-colors hover:bg-zinc-50"
+                >
+                  <td className="px-4 py-2.5">
+                    <Link
+                      href={`/employees/${employee.id}`}
+                      className="font-medium text-zinc-900 hover:underline"
+                    >
+                      {employee.fullName}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2.5 text-zinc-600">{employee.email}</td>
+                  <td className="px-4 py-2.5">
+                    {outcome ? (
+                      <>
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ENTRA_PROVISION_STATUS_TONE[outcome.status]}`}
+                        >
+                          {ENTRA_PROVISION_STATUS_LABEL[outcome.status]}
+                        </span>
+                        <span className="mt-1 block text-xs text-zinc-500">
+                          {failed
+                            ? outcome.lastError
+                            : outcome.upn ?? outcome.action}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-zinc-500">Belum dibuat</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Button
+                      variant="secondary"
+                      disabled={busyId !== null}
+                      onClick={() => void provision(employee.id, employee.fullName)}
+                    >
+                      {busyId === employee.id
+                        ? "Memproses…"
+                        : failed
+                          ? "Coba lagi"
+                          : "Provisioning"}
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
+          </BoardTable>
+          <Pagination {...pagination} />
+        </>
       ) : null}
     </section>
   );

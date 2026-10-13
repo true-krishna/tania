@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BoardTable } from "@/components/BoardTable";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
 
 /**
@@ -13,6 +14,7 @@ import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemp
  */
 export default function EvaluationTemplatesPage() {
   const { status, data, error } = useEvaluationTemplates();
+  const { pageRows, pagination } = useTablePagination(data);
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat template."} />;
@@ -57,7 +59,7 @@ export default function EvaluationTemplatesPage() {
           { key: "status", label: "Status" },
         ]}
       >
-        {data.map((template) => (
+        {pageRows.map((template) => (
           <tr key={template.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
             <td className="px-4 py-2.5 text-zinc-900">{template.name}</td>
             <td className="px-4 py-2.5">
@@ -76,7 +78,7 @@ export default function EvaluationTemplatesPage() {
           </tr>
         ))}
       </BoardTable>
-      <p className="text-xs text-zinc-500">{data.length} template ditampilkan.</p>
+      <Pagination {...pagination} />
     </section>
   );
 }

@@ -5,6 +5,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 import { useAssignments } from "@/features/assignments/useAssignments";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
@@ -109,6 +110,7 @@ export default function AssignmentsPage() {
     status: status === "ALL" ? undefined : status,
   });
   const projects = useProjects();
+  const { pageRows, pagination, resetPage } = useTablePagination(data);
 
   return (
     <section className="flex flex-col gap-4">
@@ -128,10 +130,24 @@ export default function AssignmentsPage() {
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        {ownOnly ? null : <TalentFilter value={talentId} onChange={setTalentId} />}
+        {ownOnly ? null : (
+          <TalentFilter
+            value={talentId}
+            onChange={(value) => {
+              setTalentId(value);
+              resetPage();
+            }}
+          />
+        )}
         <label className="flex items-center gap-2 text-sm text-zinc-700">
           <span>Project</span>
-          <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+          <Select
+            value={projectId}
+            onChange={(e) => {
+              setProjectId(e.target.value);
+              resetPage();
+            }}
+          >
             <option value="">Semua</option>
             {projects.data?.map((p) => (
               <option key={p.id} value={p.id}>
@@ -144,7 +160,10 @@ export default function AssignmentsPage() {
           <span>Status</span>
           <Select
             value={status}
-            onChange={(e) => setStatus(e.target.value as AssignmentStatus | "ALL")}
+            onChange={(e) => {
+              setStatus(e.target.value as AssignmentStatus | "ALL");
+              resetPage();
+            }}
           >
             <option value="ALL">Semua</option>
             <option value="ACTIVE">Aktif</option>
@@ -160,24 +179,24 @@ export default function AssignmentsPage() {
       ) : !data || data.length === 0 ? (
         <EmptyState message="Tidak ada assignment yang cocok dengan filter." />
       ) : (
-        <BoardTable
-          caption="Daftar assignment"
-          columns={[
-            { key: "talent", label: "Talent" },
-            { key: "project", label: "Project" },
-            { key: "jobRole", label: "Job Role" },
-            { key: "periode", label: "Periode" },
-            { key: "status", label: "Status" },
-          ]}
-        >
-          {data.map((assignment) => (
-            <AssignmentRow key={assignment.id} assignment={assignment} />
-          ))}
-        </BoardTable>
+        <>
+          <BoardTable
+            caption="Daftar assignment"
+            columns={[
+              { key: "talent", label: "Talent" },
+              { key: "project", label: "Project" },
+              { key: "jobRole", label: "Job Role" },
+              { key: "periode", label: "Periode" },
+              { key: "status", label: "Status" },
+            ]}
+          >
+            {pageRows.map((assignment) => (
+              <AssignmentRow key={assignment.id} assignment={assignment} />
+            ))}
+          </BoardTable>
+          <Pagination {...pagination} />
+        </>
       )}
-      <p className="text-xs text-zinc-500">
-        {data ? `${data.length} assignment ditampilkan.` : ""}
-      </p>
     </section>
   );
 }
