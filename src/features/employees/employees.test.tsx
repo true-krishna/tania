@@ -317,3 +317,44 @@ describe("EmployeeDetailPage (riwayat kontrak + riwayat perubahan, T022)", () =>
     expect(screen.getByText(/sesudah: \{"phone":"0822222222"\}/i)).toBeInTheDocument();
   });
 });
+
+describe("EmployeeDetailPage per role (T034)", () => {
+  it("lets Operation manage the record", async () => {
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ubah data/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /tambah kontrak/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ya, nonaktifkan/i })).toBeInTheDocument();
+  });
+
+  it("is read-only for Admin, without assignment history", async () => {
+    auth.role = "ADMIN";
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /tambah kontrak/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
+    expect(screen.queryByText(/riwayat assignment/i)).toBeNull();
+  });
+
+  for (const role of ["CHAPTER", "TALENT"] as const) {
+    it(`is read-only for ${role} without the change history`, async () => {
+      auth.role = role;
+      await act(async () => {
+        renderDetail([employeeMock]);
+      });
+
+      expect(await screen.findByText("************1234")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
+      expect(screen.queryByText(/riwayat perubahan/i)).toBeNull();
+      expect(screen.queryByRole("link", { name: "PKWT/2025/002" })).toBeNull();
+    });
+  }
+});
