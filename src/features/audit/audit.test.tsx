@@ -64,7 +64,7 @@ describe("AuditPage — Admin (FR-17)", () => {
     expect(screen.getByText("127.0.0.1")).toBeInTheDocument();
     expect(screen.getByText("req-1")).toBeInTheDocument();
     expect(screen.getByText(/Sesudah: \{"status":"ACTIVE"\}/)).toBeInTheDocument();
-    expect(screen.getByText("Menampilkan 1–1 dari 1")).toBeInTheDocument();
+    expect(screen.getByText("1–1")).toBeInTheDocument();
   });
 
   it("moves between table pages with the pagination controls", async () => {
@@ -90,11 +90,12 @@ describe("AuditPage — Admin (FR-17)", () => {
     expect(await screen.findByText("Aktor 1")).toBeInTheDocument();
     expect(screen.queryByText("Aktor 11")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Halaman 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Halaman berikutnya" }));
 
     expect(await screen.findByText("Aktor 11")).toBeInTheDocument();
     expect(screen.queryByText("Aktor 1")).not.toBeInTheDocument();
-    expect(screen.getByText("Menampilkan 11–12 dari 12")).toBeInTheDocument();
+    expect(screen.getByText("11–12")).toBeInTheDocument();
+    expect(screen.getByText("12")).toBeInTheDocument();
   });
 
   it("shows an access note for a non-Admin role", async () => {

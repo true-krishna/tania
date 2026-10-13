@@ -2,9 +2,9 @@ import type { AccessRole } from "@/generated/graphql";
 
 /**
  * UI mirror of the role & module matrix (specs/002-tania-rbac/spec.md). A
- * module opens only for the roles it lists (deny-by-default, FR-03); deferred
- * modules (IDP, Evaluation incl. periods & templates) list no role. The
- * backend remains the enforcement point (FR-15/16).
+ * module opens only for the roles it lists (deny-by-default, FR-03). TAN-178
+ * re-opens IDP & Evaluation on this line to follow the feature/design baseline;
+ * the backend remains the enforcement point (FR-15/16).
  */
 export type Module =
   | "dashboard"
@@ -31,8 +31,8 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   entra: ["OPERATION"],
   contracts: ["OPERATION", "ADMIN"],
   assignments: ["CHAPTER", "OPERATION", "TALENT"],
-  idp: [],
-  evaluations: [],
+  idp: ["CHAPTER", "TALENT", "ADMIN"],
+  evaluations: ["CHAPTER", "TALENT", "ADMIN"],
   cv: ["TALENT", "CHAPTER"],
   masterData: ["ADMIN"],
   accounts: ["ADMIN"],

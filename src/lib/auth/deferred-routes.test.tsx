@@ -1,21 +1,20 @@
-import { describe, expect, it, vi } from "vitest";
+import * as React from "react";
+import { describe, expect, it } from "vitest";
 import EvaluationsLayout from "@/app/(app)/evaluations/layout";
 import IdpLayout from "@/app/(app)/idp/layout";
 
-const notFound = vi.hoisted(() =>
-  vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
-);
-
-vi.mock("next/navigation", () => ({ notFound }));
-
-describe("deferred module routes (T032)", () => {
-  it("renders 404 for /idp/*", () => {
-    expect(() => IdpLayout({ children: null })).toThrow("NEXT_NOT_FOUND");
+// TAN-178: IDP & Evaluation dibuka kembali mengikuti baseline feature/design,
+// sehingga layout modul menyajikan konten, bukan 404.
+describe("re-opened module routes (TAN-178)", () => {
+  it("renders the IDP layout instead of a 404", () => {
+    const children = <main>konten</main>;
+    const rendered = IdpLayout({ children });
+    expect(rendered.props.children).toBe(children);
   });
 
-  it("renders 404 for /evaluations/*", () => {
-    expect(() => EvaluationsLayout({ children: null })).toThrow("NEXT_NOT_FOUND");
+  it("renders the Evaluations layout instead of a 404", () => {
+    const children = <main>konten</main>;
+    const rendered = EvaluationsLayout({ children });
+    expect(rendered.props.children).toBe(children);
   });
 });

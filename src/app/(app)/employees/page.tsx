@@ -235,12 +235,11 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         <EmptyState message="Tidak ada karyawan yang cocok dengan pencarian/filter." />
       ) : (
         <>
-          <BoardTable caption="Daftar karyawan" columns={COLUMNS}>
+          <BoardTable caption="Daftar karyawan" columns={COLUMNS} footer={<Pagination {...pagination} />}>
             {pageRows.map((employee) => (
               <EmployeeRow key={employee.id} employee={employee} />
             ))}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       )}
     </section>

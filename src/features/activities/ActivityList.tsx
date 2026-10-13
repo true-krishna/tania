@@ -70,6 +70,7 @@ export function ActivityList({
           { key: "status", label: "Status" },
           { key: "actions", label: "Aksi", className: "text-right" },
         ]}
+        footer={<Pagination {...pagination} />}
       >
         {pageRows.map((activity) => {
           const owned = activity.talentId === currentTalentId;
@@ -120,7 +121,6 @@ export function ActivityList({
           );
         })}
       </BoardTable>
-      <Pagination {...pagination} />
     </>
   );
 }

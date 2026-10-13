@@ -166,6 +166,7 @@ export function MasterDataSection<T extends MasterDataItem>({
               { key: "status", label: "Status" },
               { key: "actions", label: "Aksi" },
             ]}
+            footer={<Pagination {...pagination} />}
           >
             {pageRows.map((item) => (
               <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
@@ -195,7 +196,6 @@ export function MasterDataSection<T extends MasterDataItem>({
               </tr>
             ))}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       )}
     </div>

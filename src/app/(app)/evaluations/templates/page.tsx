@@ -58,6 +58,7 @@ export default function EvaluationTemplatesPage() {
           { key: "criteria", label: "Kriteria" },
           { key: "status", label: "Status" },
         ]}
+        footer={<Pagination {...pagination} />}
       >
         {pageRows.map((template) => (
           <tr key={template.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
@@ -78,7 +79,6 @@ export default function EvaluationTemplatesPage() {
           </tr>
         ))}
       </BoardTable>
-      <Pagination {...pagination} />
     </section>
   );
 }

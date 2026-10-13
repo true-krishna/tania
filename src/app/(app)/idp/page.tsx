@@ -139,12 +139,12 @@ export default function IdpPage() {
               { key: "progress", label: "Progres Aksi" },
               { key: "status", label: "Status" },
             ]}
+            footer={<Pagination {...pagination} />}
           >
             {pageRows.map((idp, index) => (
               <IdpRow key={idp.id} idp={idp} index={index} />
             ))}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       )}
     </section>

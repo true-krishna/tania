@@ -180,12 +180,11 @@ export default function ContractsPage() {
         <EmptyState message="Tidak ada kontrak yang cocok dengan pencarian/filter." />
       ) : (
         <>
-          <BoardTable caption="Daftar kontrak kerja" columns={COLUMNS}>
+          <BoardTable caption="Daftar kontrak kerja" columns={COLUMNS} footer={<Pagination {...pagination} />}>
             {pageRows.map((contract) => (
               <ContractRow key={contract.id} contract={contract} />
             ))}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       )}
     </section>

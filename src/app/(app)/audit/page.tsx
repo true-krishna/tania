@@ -114,12 +114,11 @@ function AuditViewer() {
 
       {logs && logs.length ? (
         <>
-          <BoardTable caption="Jejak audit" columns={COLUMNS}>
+          <BoardTable caption="Jejak audit" columns={COLUMNS} footer={<Pagination {...pagination} />}>
             {pageRows.map((log) => (
               <AuditRow key={log.id} log={log} />
             ))}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       ) : (
         <EmptyState message="Belum ada catatan audit." />

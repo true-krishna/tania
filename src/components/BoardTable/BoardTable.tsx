@@ -1,4 +1,3 @@
-import { cn } from "@/lib/cn";
 import * as React from "react";
 
 export interface Column {
@@ -11,32 +10,34 @@ interface BoardTableProps {
   caption?: string;
   columns: Column[];
   children: React.ReactNode;
+  /** Konten footer di dalam panel — biasanya komponen Pagination. */
+  footer?: React.ReactNode;
 }
 
-export function BoardTable({ caption, columns, children }: BoardTableProps) {
+/**
+ * Tabel konten utama dengan desain panel referensi TAN-178 (kelas dan metrik
+ * ada di `src/components/table.css`, di-scope ke `.table-panel`).
+ */
+export function BoardTable({ caption, columns, children, footer }: BoardTableProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-board-border bg-board shadow-sm">
-      {/* Wide tables scroll horizontally instead of compressing (constitution v4.0.0, VIII). */}
-      <table className="w-full min-w-[560px] border-collapse text-left text-sm">
-        {caption ? <caption className="sr-only">{caption}</caption> : null}
-        <thead>
-          <tr className="border-b border-board-border bg-header-row">
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                scope="col"
-                className={cn(
-                  "px-4 py-2.5 text-sm font-semibold text-zinc-700",
-                  col.className,
-                )}
-              >
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{children}</tbody>
-      </table>
+    <div className="table-panel">
+      <div className="table-scroll">
+        {/* Tabel lebar menggulung horizontal, tidak memampat (kanon §VIII). */}
+        <table className="w-full min-w-[560px]">
+          {caption ? <caption className="sr-only">{caption}</caption> : null}
+          <thead>
+            <tr>
+              {columns.map((col) => (
+                <th key={col.key} scope="col" className={col.className}>
+                  {col.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>{children}</tbody>
+        </table>
+      </div>
+      {footer ? <footer className="table-footer">{footer}</footer> : null}
     </div>
   );
 }
