@@ -37,26 +37,10 @@ query Dashboard {
       }
     }
     ... on ChapterDashboard {
-      idpStatusDistribution {
-        status
-        count
-      }
-      actionProgress {
-        status
-        count
-      }
       unassignedTalents {
         id
         fullName
         nomorInduk
-      }
-      idpsNeedingReview
-      currentEvaluationPeriod {
-        id
-        name
-        startDate
-        endDate
-        state
       }
     }
     ... on TalentDashboard {
@@ -73,24 +57,6 @@ query Dashboard {
           id
           name
         }
-      }
-      idpProgress {
-        status
-        count
-      }
-      latestEvaluation {
-        id
-        status
-        period {
-          name
-        }
-      }
-      upcomingActionDeadlines {
-        id
-        description
-        method
-        status
-        dueDate
       }
     }
   }

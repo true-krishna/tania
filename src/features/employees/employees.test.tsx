@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
@@ -12,6 +12,17 @@ import {
   EmployeeDocument,
   UpdateEmployeeDocument,
 } from "@/generated/graphql";
+
+const auth = vi.hoisted(() => ({ role: "OPERATION" as string | null }));
+
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+beforeEach(() => {
+  auth.role = "OPERATION";
+});
 
 const employeeNode = {
   __typename: "Employee",
@@ -305,4 +316,45 @@ describe("EmployeeDetailPage (riwayat kontrak + riwayat perubahan, T022)", () =>
     expect(screen.getByText(/sebelum: \{"phone":"0811111111"\}/i)).toBeInTheDocument();
     expect(screen.getByText(/sesudah: \{"phone":"0822222222"\}/i)).toBeInTheDocument();
   });
+});
+
+describe("EmployeeDetailPage per role (T034)", () => {
+  it("lets Operation manage the record", async () => {
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ubah data/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /tambah kontrak/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ya, nonaktifkan/i })).toBeInTheDocument();
+  });
+
+  it("is read-only for Admin, without assignment history", async () => {
+    auth.role = "ADMIN";
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /tambah kontrak/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
+    expect(screen.queryByText(/riwayat assignment/i)).toBeNull();
+  });
+
+  for (const role of ["CHAPTER", "TALENT"] as const) {
+    it(`is read-only for ${role} without the change history`, async () => {
+      auth.role = role;
+      await act(async () => {
+        renderDetail([employeeMock]);
+      });
+
+      expect(await screen.findByText("************1234")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
+      expect(screen.queryByText(/riwayat perubahan/i)).toBeNull();
+      expect(screen.queryByRole("link", { name: "PKWT/2025/002" })).toBeNull();
+    });
+  }
 });

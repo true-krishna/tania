@@ -1,14 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { BarList } from "@/components/BarList";
 import { Card } from "@/components/Card";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import {
-  IconClipboardCheck,
   IconClipboardText,
   IconTarget,
   IconUserShield,
@@ -17,35 +15,11 @@ import {
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
 import { TalentReportContent } from "@/features/talent-report/TalentReportPageView";
-import type {
-  AssignmentStatus,
-  DevelopmentActionStatus,
-  DevelopmentMethod,
-  PerformanceEvaluationStatus,
-} from "@/generated/graphql/types";
-
-const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
-  TODO: "To do",
-  IN_PROGRESS: "In progress",
-  COMPLETED: "Completed",
-};
-
-const METHOD_LABEL: Record<DevelopmentMethod, string> = {
-  PROJECT_ASSIGNMENT: "Penugasan project",
-  MENTORING: "Mentoring",
-  TRAINING: "Training",
-  CROSS_FUNCTIONAL_EXPOSURE: "Exposure lintas fungsi",
-  SELF_STUDY: "Belajar mandiri",
-};
+import type { AssignmentStatus } from "@/generated/graphql/types";
 
 const ASSIGNMENT_STATUS_LABEL: Record<AssignmentStatus, string> = {
   ACTIVE: "Aktif",
   COMPLETED: "Selesai",
-};
-
-const EVAL_STATUS_LABEL: Record<PerformanceEvaluationStatus, string> = {
-  DRAFT: "Draft",
-  SUBMITTED: "Dikirim",
 };
 
 function Panel({
@@ -154,12 +128,6 @@ export default function DashboardPage() {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <StatCard label="Penugasan aktif" value={dash.activeAssignments.length} icon={IconClipboardText} />
-            <StatCard
-              label="Evaluasi terakhir"
-              value={dash.latestEvaluation ? EVAL_STATUS_LABEL[dash.latestEvaluation.status] : "—"}
-              icon={IconClipboardCheck}
-            />
-            <StatCard label="Aksi segera" value={dash.upcomingActionDeadlines.length} icon={IconTarget} />
           </div>
 
           <Panel title="Penugasan Aktif">
@@ -186,45 +154,6 @@ export default function DashboardPage() {
               <EmptyNote>Belum ada penugasan aktif.</EmptyNote>
             )}
           </Panel>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <Panel title="Progres Aksi IDP">
-              {dash.idpProgress.length ? (
-                <BarList items={dash.idpProgress.map((c) => ({ label: ACTION_STATUS_LABEL[c.status], value: c.count }))} />
-              ) : (
-                <EmptyNote>Belum ada aksi IDP.</EmptyNote>
-              )}
-            </Panel>
-
-            <Panel title="Tenggat Aksi Terdekat">
-              {dash.upcomingActionDeadlines.length ? (
-                <ul className="flex flex-col gap-2">
-                  {dash.upcomingActionDeadlines.map((a) => (
-                    <li
-                      key={a.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-surface-border px-3 py-2.5"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-zinc-900">{a.description}</p>
-                        <p className="text-xs text-zinc-500">{METHOD_LABEL[a.method]}</p>
-                      </div>
-                      <span className="text-xs text-zinc-500">
-                        {[a.dueDate, a.status === "COMPLETED" ? "Selesai" : ""].filter(Boolean).join(" · ")}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <EmptyNote>Tidak ada tenggat aksi segera.</EmptyNote>
-              )}
-            </Panel>
-          </div>
-
-          <p className="text-sm">
-            <Link href="/idp/my" className="font-medium text-tp-brand-red-deep hover:underline">
-              Lihat IDP saya →
-            </Link>
-          </p>
         </>
       ) : null}
     </section>

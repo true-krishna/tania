@@ -11,6 +11,7 @@ import { Select } from "@/components/Select";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
 import { CreateAssignmentDocument } from "@/generated/graphql";
+import { AuthGuard } from "@/lib/auth/guard";
 
 type FormValues = {
   employeeId: string;
@@ -29,6 +30,14 @@ const EMPTY: FormValues = {
 };
 
 export default function NewAssignmentPage() {
+  return (
+    <AuthGuard module="assignments" manage>
+      <NewAssignmentForm />
+    </AuthGuard>
+  );
+}
+
+function NewAssignmentForm() {
   const projects = useProjects();
   const jobRoles = useJobRoles();
   const talents = useAssignableTalents();

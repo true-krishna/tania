@@ -74,3 +74,23 @@ Percobaan menjalankan stack ini di sandbox 1 GiB / 1 CPU gagal pada dua titik:
 
 Kesimpulan: jalankan E2E (dan image build `api`) di runner CI atau mesin dengan
 memori ≥4 GiB; harness + runbook di atas adalah kontrak eksekusinya.
+
+## Skenario RBAC (T041)
+
+Spec kedua: `e2e/rbac.spec.ts` — nav per peran sesuai matriks, entri IDP/Evaluasi
+hilang, route `/idp` & `/evaluations/*` balas 404 untuk semua peran, dan
+penolakan server tampil sebagai pesan jelas (bukan crash). Stack-nya sama dengan
+di atas, kecuali fixture laporan talent tidak diperlukan:
+
+```sh
+docker compose -f ../tania-backend/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --build
+E2E_BASE_URL=http://localhost:3000 npx playwright test e2e/rbac.spec.ts
+```
+
+⚠ Spec ini melakukan **satu login per test (8 login)**. `AuthService.Login`
+menaikkan penghitung rate limit pada setiap percobaan — termasuk yang berhasil —
+dengan default `LOGIN_RATE_MAX=10` / `LOGIN_RATE_WINDOW=15m` per alamat klien.
+Suite E2E/UAT yang butuh lebih banyak login (mis. matriks 12×4) harus menaikkan
+`LOGIN_RATE_MAX` pada proses API (suite integrasi backend memakai 50) atau
+menggunakan ulang `storageState` per peran; kalau tidak, suite akan berhenti
+dengan `RATE_LIMITED`.

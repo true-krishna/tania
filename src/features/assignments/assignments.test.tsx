@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
+import { GraphQLError } from "graphql";
 import AssignmentsPage from "@/app/(app)/assignments/page";
 import NewAssignmentPage from "@/app/(app)/assignments/new/page";
 import AssignmentDetailPage from "@/app/(app)/assignments/[id]/page";
@@ -16,6 +17,17 @@ import {
   JobRolesDocument,
   ProjectsDocument,
 } from "@/generated/graphql";
+
+const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
+
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+beforeEach(() => {
+  auth.role = "CHAPTER";
+});
 
 const unit = { __typename: "Unit", id: "u-1", name: "Digital" };
 
@@ -84,6 +96,25 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     render(
       <MockedProvider
         mocks={[
+          { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
+          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+          { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+        ]}
+      >
+        <AssignmentsPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
+    expect(screen.getAllByText("Network Modernization").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("link", { name: /buat assignment/i })).toBeInTheDocument();
+  });
+
+  it("is read-only for Operation (T033)", async () => {
+    auth.role = "OPERATION";
+    render(
+      <MockedProvider
+        mocks={[
           { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
           { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
           { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
@@ -93,11 +124,59 @@ describe("AssignmentsPage (Apollo, US2)", () => {
       </MockedProvider>
     );
 
-    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
-    expect(screen.getAllByText("Network Modernization").length).toBeGreaterThanOrEqual(1);
+    expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
+    expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /buat assignment/i })).toBeNull();
+    expect(screen.getByLabelText("Talent")).toBeInTheDocument();
+  });
+
+  it("shows only the talent's own history without a talent filter (T033)", async () => {
+    auth.role = "TALENT";
+    render(
+      <MockedProvider
+        mocks={[
+          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+          { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+        ]}
+      >
+        <AssignmentsPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
+    expect(screen.getByText(/riwayat penugasan anda/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Talent")).toBeNull();
+    expect(screen.queryByRole("link", { name: /buat assignment/i })).toBeNull();
+  });
+
+  it("shows a FORBIDDEN message from the server as-is (T033)", async () => {
+    auth.role = "OPERATION";
+    render(
+      <MockedProvider
+        mocks={[
+          { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
+          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+          {
+            request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+            result: {
+              errors: [
+                new GraphQLError("cakupan chapter tidak terdefinisi", {
+                  extensions: { code: "FORBIDDEN", reason: "SCOPE_UNDEFINED" },
+                }),
+              ],
+            },
+          },
+        ]}
+      >
+        <AssignmentsPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("cakupan chapter tidak terdefinisi")).toBeInTheDocument();
   });
 
   it("shows an empty state when the list has no assignments", async () => {
+    auth.role = "OPERATION";
     render(
       <MockedProvider
         mocks={[
@@ -235,4 +314,22 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       screen.queryByRole("button", { name: /ya, akhiri assignment/i })
     ).not.toBeInTheDocument();
   });
+
+  for (const role of ["OPERATION", "TALENT"] as const) {
+    it(`hides the end action for ${role} (T033)`, async () => {
+      auth.role = role;
+      await act(async () => {
+        render(
+          <React.Suspense fallback={null}>
+            <MockedProvider mocks={[{ request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult }]}>
+              <AssignmentDetailPage params={Promise.resolve({ id: "asg-1" })} />
+            </MockedProvider>
+          </React.Suspense>
+        );
+      });
+
+      expect(await screen.findByText("Talent")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /ya, akhiri assignment/i })).toBeNull();
+    });
+  }
 });

@@ -1,11 +1,23 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from "vitest";
+import * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
 import NewEmployeePage from "./page";
 import { CreateEmployeeDocument } from "@/generated/graphql";
+
+const auth = vi.hoisted(() => ({ role: "OPERATION" as string | null }));
+
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+beforeEach(() => {
+  auth.role = "OPERATION";
+});
 
 const validInput = {
   nik: "3273012345678901",

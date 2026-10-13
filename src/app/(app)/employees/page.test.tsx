@@ -1,10 +1,31 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import EmployeesPage from "@/app/(app)/employees/page";
-import { EmployeesDocument, UnitsDocument } from "@/generated/graphql";
+import {
+  AssignableTalentsDocument,
+  EmployeesDocument,
+  MyEmployeeDocument,
+  UnitsDocument,
+} from "@/generated/graphql";
+
+const nav = vi.hoisted(() => ({ replace: vi.fn() }));
+
+vi.mock("next/navigation", () => ({ useRouter: () => nav }));
+
+const auth = vi.hoisted(() => ({ role: "OPERATION" as string | null }));
+
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+beforeEach(() => {
+  auth.role = "OPERATION";
+});
 
 function node(
   id: string,
@@ -220,5 +241,94 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     );
 
     expect(await screen.findByText(/tidak ada karyawan yang cocok/i)).toBeInTheDocument();
+  });
+});
+
+describe("EmployeesPage per role (T034)", () => {
+  it("shows the add action to Operation only", async () => {
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
+  });
+
+  it("is a read-only directory for Admin", async () => {
+    auth.role = "ADMIN";
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+    expect(screen.getByText(/konteks penautan akun/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /tambah karyawan/i })).toBeNull();
+  });
+
+  it("lists scoped talents for Chapter via assignableTalents", async () => {
+    auth.role = "CHAPTER";
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+            result: {
+              data: {
+                assignableTalents: {
+                  __typename: "EmployeeConnection",
+                  edges: [
+                    {
+                      __typename: "EmployeeEdge",
+                      node: { __typename: "Employee", id: "emp-9", fullName: "Sari Dewi", nomorInduk: "EMP-9" },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ]}
+      >
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByRole("link", { name: "Sari Dewi" })).toHaveAttribute("href", "/employees/emp-9");
+    expect(screen.queryByRole("button", { name: /tambah karyawan/i })).toBeNull();
+    expect(screen.queryByText("NIK")).toBeNull();
+  });
+
+  it("redirects Talent to its own record", async () => {
+    auth.role = "TALENT";
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: MyEmployeeDocument },
+            result: { data: { me: { __typename: "User", id: "u-9", employee: { __typename: "Employee", id: "emp-9" } } } },
+          },
+        ]}
+      >
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/employees/emp-9"));
+  });
+
+  it("tells a Talent without a linked employee record", async () => {
+    auth.role = "TALENT";
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: MyEmployeeDocument },
+            result: { data: { me: { __typename: "User", id: "u-9", employee: null } } },
+          },
+        ]}
+      >
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText(/belum tertaut/i)).toBeInTheDocument();
   });
 });
