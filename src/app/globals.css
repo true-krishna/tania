@@ -1,37 +1,31 @@
 @import "tailwindcss";
 /* TAN-161 Fase 0: wire the shipped .tp-* component classes (constitution
- * design v4.0.0, Principle V) into the bundle — this also brings the
+ * design v4.2.0, Principle V) into the bundle — this also brings the
  * prefers-reduced-motion kill and the canon body rule (Nunito Sans on Mist). */
 @import "../../design/tokens/components.css";
 
 /*
- * Legion design tokens (constitution-design.md v4.0.0 — every value a
- * DESIGN-legion.md ramp step). The legacy brand ramp stays until components
- * adopt the `.tp-*` canon (design/tokens/components.css).
+ * TANIA Pulse tokens (constitution-design.md v4.2.0) — re-based verbatim onto
+ * the shipped `design/tokens/tokens.css`: owner-approved TAN-99 navy+red brand
+ * roles replace the retired Violet voltage. The legacy `--brand-*` Violet ramp
+ * was retired with the TAN-165 re-branding; every consumer migrated to the
+ * `.tp-*` canon tokens (see the issue comment for the full list).
+ *
+ * Brand roles: `--tp-brand-navy` = primary action/active nav, deep = pressed;
+ * `--tp-brand-red` = brand accent (not a general error token). Dark values for
+ * navy/red are not shipped — TAN-99 is light-only and the constitution forbids
+ * inferring them (it is not permission to fall back to Violet).
  */
 :root {
   --background: #f4f4f8;
   --foreground: #212121;
 
-  --brand-25: #faf8ff;
-  --brand-50: #f5f3ff;
-  --brand-100: #ede9fe;
-  --brand-200: #ddd6fe;
-  --brand-300: #c4b5fd;
-  --brand-400: #a78bfa;
-  --brand-500: #875bf7;
-  --brand-600: #7c3aed;
-  --brand-700: #6d28d9;
-  --brand-800: #5b21b6;
-  --brand-900: #4c1d95;
-  --brand: var(--brand-500);
-
   --sidebar: #ffffff;
   --sidebar-fg: #212121;
   --sidebar-muted: #667085;
-  --sidebar-hover: #f5f3ff;
-  --sidebar-active: #f5f3ff;
-  --sidebar-active-fg: #6d28d9;
+  --sidebar-hover: #f2f4f7;
+  --sidebar-active: #f2f4f7;
+  --sidebar-active-fg: #172b4d;
   --sidebar-border: #eaecf0;
   --board: #ffffff;
   --board-border: #eaecf0;
@@ -39,37 +33,31 @@
   --surface: #ffffff;
   --surface-border: #d0d5dd;
 
-  /*
-   * TANIA Pulse tokens (constitution-design.md v4.0.0) — re-based verbatim
-   * onto Legion ramps from the shipped `design/tokens/tokens.css`; the v3
-   * Pulse Indigo values (#6246ea, Sora, #101a47) are retired. Still additive:
-   * no legacy Legion token is changed, so existing screens keep rendering.
-   * Dark values ship with the canon (Additional Constraints) but activate
-   * only via `data-theme="dark"` for now — auto `prefers-color-scheme` dark
-   * lands when components adopt the `.tp-*` classes (several screens still
-   * hardcode light Tailwind colors).
-   */
   --tp-midnight: #212121;
-  --tp-primary: #875bf7;
-  --tp-primary-deep: #7839ee;
-  --tp-lilac: #c3b5fd;
-  --tp-mint: #12b76a;
-  --tp-mint-ink: #027a48;
-  --tp-sun: #fec84b;
+  --tp-brand-navy: #172b4d;
+  --tp-brand-navy-deep: #0b1f4d;
+  --tp-brand-red: #e1231a;
+  --tp-brand-red-deep: #b71c14;
+  --tp-nav: var(--tp-brand-navy);
+  --tp-on-nav: #ffffff;
+  --tp-mint: #168a5b;
+  --tp-mint-ink: #0f6e48;
+  --tp-sun: #d9822b;
   --tp-peach: #f97066;
   --tp-bg: #f2f4f7;
   --tp-surface: #ffffff;
   --tp-line: #d0d5dd;
   --tp-text: #212121;
   --tp-muted: #667085;
-  --tp-nav: #491c96;
-  --tp-on-nav: #ffffff;
+  /* Semantic tint+ink pairs. Peach = dedicated error/danger (never an alias of
+   * brand red). Violet = legacy semantic in-progress/info category pending
+   * migration (constitution §IX) — non-interactive only, never a brand action. */
   --tp-tint-peach: #fee4e2;
   --tp-tint-mint: #d1fadf;
   --tp-tint-sun: #feefc6;
   --tp-tint-violet: #ece9fe;
   --tp-ink-peach: #b32318;
-  --tp-ink-mint: #027a48;
+  --tp-ink-mint: #0f6e48;
   --tp-ink-sun: #b54708;
   --tp-ink-violet: #6927da;
   --tp-neutral: #667085;
@@ -88,8 +76,9 @@
   --tp-dur: 200ms;
 }
 
-/* Dark theme (constitution-design.md v4.0.0, Additional Constraints) — values
- * verbatim from design/tokens/tokens.css. Explicit opt-in only until
+/* Dark theme (constitution-design.md v4.0.0 non-brand values, unchanged).
+ * Brand navy/red are deliberately not overridden: TAN-99 defines no dark brand
+ * values, so they inherit the light tokens. Explicit opt-in only until
  * components stop hardcoding light colors. */
 :root[data-theme="dark"] {
   --tp-mint-ink: #6ce9a6;
@@ -98,7 +87,6 @@
   --tp-line: #344054;
   --tp-text: #fcfcfd;
   --tp-muted: #98a2b3;
-  --tp-nav: #5720b7;
   --tp-tint-peach: #7a271a;
   --tp-tint-mint: #054f31;
   --tp-tint-sun: #792e0d;
@@ -114,18 +102,6 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand: var(--brand);
-  --color-brand-25: var(--brand-25);
-  --color-brand-50: var(--brand-50);
-  --color-brand-100: var(--brand-100);
-  --color-brand-200: var(--brand-200);
-  --color-brand-300: var(--brand-300);
-  --color-brand-400: var(--brand-400);
-  --color-brand-500: var(--brand-500);
-  --color-brand-600: var(--brand-600);
-  --color-brand-700: var(--brand-700);
-  --color-brand-800: var(--brand-800);
-  --color-brand-900: var(--brand-900);
   --color-sidebar: var(--sidebar);
   --color-sidebar-fg: var(--sidebar-fg);
   --color-sidebar-muted: var(--sidebar-muted);
@@ -139,9 +115,10 @@
   --color-surface: var(--surface);
   --color-surface-border: var(--surface-border);
   --color-tp-midnight: var(--tp-midnight);
-  --color-tp-primary: var(--tp-primary);
-  --color-tp-primary-deep: var(--tp-primary-deep);
-  --color-tp-lilac: var(--tp-lilac);
+  --color-tp-brand-navy: var(--tp-brand-navy);
+  --color-tp-brand-navy-deep: var(--tp-brand-navy-deep);
+  --color-tp-brand-red: var(--tp-brand-red);
+  --color-tp-brand-red-deep: var(--tp-brand-red-deep);
   --color-tp-mint: var(--tp-mint);
   --color-tp-mint-ink: var(--tp-mint-ink);
   --color-tp-sun: var(--tp-sun);
@@ -166,7 +143,7 @@
   --font-mono: var(--font-geist-mono);
   --font-tp-display: var(--tp-font-display);
   --font-tp-body: var(--tp-font-body);
-  /* Radius & shadow mirror (constitution v4.0.0, I/IV): rounded-tp-sm/md/lg/xl
+  /* Radius & shadow mirror (constitution v4.2.0, I/IV): rounded-tp-sm/md/lg/xl
    * and shadow-card resolve straight to the shipped --tp-* tokens (`inline`),
    * so migration targets (replacing off-canon rounded-md/lg and shadow-sm)
    * always track tokens.css. */
@@ -181,15 +158,15 @@
  * now governs — margin 0, bg var(--tp-bg) (Mist), color var(--tp-text),
  * font 400 16px/1.6 var(--tp-font-body) (Nunito Sans). */
 
-/* Focus indication per constitution-design.md v4.0.0 §VI — applied globally
- * so every interactive component shares one focus color (mint-ink; light
- * mint in dark theme via the --tp-* overrides). */
+/* Focus indication per constitution-design.md v4.2.0 §VI — one focus color
+ * globally. Mint-ink (5.70:1 on Mist) is retained as the contrast-validated
+ * focus token; §VI explicitly does not auto-replace it with brand red. */
 :focus-visible {
   outline: 2px solid var(--tp-mint-ink);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: var(--brand-200);
-  color: var(--brand-900);
+  background: var(--tp-brand-navy);
+  color: var(--tp-on-nav);
 }

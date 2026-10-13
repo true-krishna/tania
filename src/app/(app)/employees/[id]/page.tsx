@@ -80,7 +80,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               onClick={() => setTab(item.id)}
               className={
                 selected
-                  ? "-mb-px border-b-2 border-brand-500 px-1 py-2 text-sm font-semibold text-zinc-900"
+                  ? "-mb-px border-b-2 border-tp-brand-navy px-1 py-2 text-sm font-semibold text-zinc-900"
                   : "-mb-px border-b-2 border-transparent px-1 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900"
               }
             >

@@ -75,3 +75,30 @@ Perubahan terkait: `.tp-h1` 800→700, `.tp-tab`/`.tp-nav-item` 500→600, semua
 5. **Bobot 800** — dihapus sesuai biner bobot Legion (400/600/700).
 
 Rekomendasi: amendemen konstitusi menjadi v1.1.0 yang melegitimasi lapisan "Tania Pulse (Legion-aligned)" dengan cakupan di atas, supaya reviewer punya dasar saat memeriksa implementasi FE.
+
+
+## Amendemen v4.2.0 (2026-10-14) — brand navy+red (TAN-99)
+
+Konstitusi desain v4.2.0 mengganti voltage interaktif Violet dengan navy dan
+menetapkan merah sebagai aksen brand terpisah. Nilai kanon yang menggantikan
+alias Violet v4.0.0:
+
+| Token lama (retired) | Nilai lama | Token baru | Nilai baru |
+|---|---|---|---|
+| `--tp-primary` | `#875bf7` | `--tp-brand-navy` | `#172B4D` |
+| `--tp-primary-deep` | `#7839ee` | `--tp-brand-navy-deep` | `#0B1F4D` |
+| `--tp-lilac` (aksi) | `#c3b5fd` | `--tp-brand-red` | `#E1231A` |
+| — | — | `--tp-brand-red-deep` | `#B71C14` |
+| `--tp-nav` | `#491c96` | `--tp-nav` = `--tp-brand-navy` | `#172B4D` |
+| `--tp-mint` / `--tp-mint-ink` | `#12b76a` / `#027a48` | sama | `#168A5B` / `#0F6E48` |
+| `--tp-sun` | `#fec84b` | sama | `#D9822B` |
+
+Catatan:
+- `--tp-peach`/`--tp-ink-peach` tetap token error/danger khusus; **tidak**
+  meng-alias brand red.
+- `--tp-tint-violet`/`--tp-ink-violet` dipertahankan hanya sebagai kategori
+  semantik legacy (in-progress/grouping) non-interaktif (konstitusi §IX).
+- Nilai dark navy/red tidak di-ship (TAN-99 light-only); token dark non-brand
+  tetap seperti v4.0.0.
+- Alias Violet di atas sudah dihapus dari `tokens.css`, `tailwind.preset.js`,
+  ikon, dan halaman acuan. Tindak lanjut: migrasi kategori semantik violet.

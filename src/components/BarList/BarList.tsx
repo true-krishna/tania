@@ -24,7 +24,7 @@ export function BarList({ items, total }: BarListProps) {
               <span className="shrink-0 font-semibold text-zinc-900">{item.value}</span>
             </div>
             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-zinc-100">
-              <div className="h-full rounded-full bg-brand-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-tp-brand-navy" style={{ width: `${pct}%` }} />
             </div>
           </li>
         );

@@ -195,7 +195,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
               "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
               idp.status === "COMPLETED" && "bg-green-100 text-green-700",
               idp.status === "NEEDS_REVIEW" && "bg-amber-100 text-amber-700",
-              idp.status === "IN_PROGRESS" && "bg-brand-100 text-brand-700",
+              idp.status === "IN_PROGRESS" && "bg-tp-tint-violet text-tp-ink-violet",
             )}
           >
             {STATUS_LABEL[idp.status]}

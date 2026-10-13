@@ -51,7 +51,7 @@ const METHOD_LABEL: Record<DevelopmentMethod, string> = {
 };
 
 const BLOCK =
-  "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand-100";
+  "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm outline-none transition-colors focus:border-tp-brand-navy focus:ring-2 focus:ring-tp-brand-navy/20";
 
 function Label({ error, children }: { error?: string; children: React.ReactNode }) {
   return (

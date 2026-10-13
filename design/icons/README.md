@@ -1,6 +1,6 @@
 # TANIA Pulse icons
 
-16 ikon outline 2 px, ujung membulat, grid 24 px. Satu detail violet atau mint per ikon.
+16 ikon outline 2 px, ujung membulat, grid 24 px. Satu detail navy (`--tania-primary`) atau mint (`--tania-mint`) per ikon.
 
 ## Pilihan 1: SVG sprite (HTML biasa)
 Sisipkan isi `tania-icons.svg` di awal <body>, lalu:
@@ -12,7 +12,7 @@ Sisipkan isi `tania-icons.svg` di awal <body>, lalu:
     <TaniaIcon name="idp" size={20} />
 
 ## Warna (CSS)
-    :root { --tania-primary:#875bf7; --tania-mint:#027a48; }
+    :root { --tania-primary:#172B4D; --tania-mint:#0F6E48; }
     @media (prefers-color-scheme: dark) { :root { --tania-mint:#6ce9a6; } }
     .icon { color: #212121; } /* garis utama */
 
