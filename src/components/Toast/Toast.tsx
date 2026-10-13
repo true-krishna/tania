@@ -19,8 +19,9 @@ const ToastContext = React.createContext<ToastContextValue | null>(null);
 
 /**
  * Lightweight toast provider — bottom-center snackbar for mutation feedback.
- * Error variant is red, success green; auto-dismiss after 4s with a close
- * button, and `role="alert"` / `aria-live` for screen readers.
+ * Canon (constitution design v4.0.0 §IV/§IX): tint+ink pairs (peach = needs
+ * attention, mint = done) on the one ratified card shadow; auto-dismiss after
+ * 4s with a close button, and `role="alert"` / `aria-live` for screen readers.
  */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<ToastItem[]>([]);
@@ -72,10 +73,10 @@ export function ToastStack({
           key={t.id}
           role="alert"
           className={cn(
-            "pointer-events-auto flex items-start gap-2 rounded-md border px-3 py-2 text-sm shadow-lg",
+            "pointer-events-auto flex items-start gap-2 rounded-tp-md border border-tp-line px-3 py-2 text-sm shadow-card",
             t.variant === "error"
-              ? "border-red-200 bg-red-50 text-red-800"
-              : "border-green-200 bg-green-50 text-green-800",
+              ? "bg-tp-tint-peach text-tp-ink-peach"
+              : "bg-tp-tint-mint text-tp-ink-mint",
           )}
         >
           <span className="flex-1">{t.message}</span>
@@ -83,7 +84,7 @@ export function ToastStack({
             type="button"
             aria-label="Tutup notifikasi"
             onClick={() => onDismiss(t.id)}
-            className="text-xs text-zinc-500 hover:text-zinc-800"
+            className="text-xs opacity-70 transition-opacity hover:opacity-100"
           >
             ✕
           </button>

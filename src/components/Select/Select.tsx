@@ -1,11 +1,9 @@
 import { cn } from "@/lib/cn";
 import * as React from "react";
 
-const CONTROL =
-  "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm transition-colors hover:border-brand focus:border-brand";
-
 type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement>;
 
+/** Canon select (constitution design v4.0.0 §V): same recipe as `.tp-input`. */
 export function Select({ className = "", ...rest }: SelectProps) {
-  return <select className={cn(CONTROL, className)} {...rest} />;
+  return <select className={cn("tp-input", className)} {...rest} />;
 }
