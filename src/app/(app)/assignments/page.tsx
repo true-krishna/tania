@@ -5,7 +5,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination } from "@/components/Pagination";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 import { useAssignments } from "@/features/assignments/useAssignments";
 import { useEmployees } from "@/features/employees/useEmployees";
@@ -50,8 +50,6 @@ export default function AssignmentsPage() {
   const [talentId, setTalentId] = React.useState("");
   const [projectId, setProjectId] = React.useState("");
   const [status, setStatus] = React.useState<AssignmentStatus | "ALL">("ALL");
-  const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
   const { status: query, data, error } = useAssignments({
     employeeId: talentId || undefined,
     projectId: projectId || undefined,
@@ -59,11 +57,7 @@ export default function AssignmentsPage() {
   });
   const employees = useEmployees();
   const projects = useProjects();
-
-  const totalItems = data?.length ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const pageRows = data?.slice((safePage - 1) * pageSize, safePage * pageSize) ?? [];
+  const { pageRows, pagination, resetPage } = useTablePagination(data);
 
   return (
     <section className="flex flex-col gap-4">
@@ -87,7 +81,7 @@ export default function AssignmentsPage() {
             value={talentId}
             onChange={(e) => {
               setTalentId(e.target.value);
-              setPage(1);
+              resetPage();
             }}
           >
             <option value="">Semua</option>
@@ -104,7 +98,7 @@ export default function AssignmentsPage() {
             value={projectId}
             onChange={(e) => {
               setProjectId(e.target.value);
-              setPage(1);
+              resetPage();
             }}
           >
             <option value="">Semua</option>
@@ -121,7 +115,7 @@ export default function AssignmentsPage() {
             value={status}
             onChange={(e) => {
               setStatus(e.target.value as AssignmentStatus | "ALL");
-              setPage(1);
+              resetPage();
             }}
           >
             <option value="ALL">Semua</option>
@@ -153,16 +147,7 @@ export default function AssignmentsPage() {
               <AssignmentRow key={assignment.id} assignment={assignment} />
             ))}
           </BoardTable>
-          <Pagination
-            page={safePage}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-          />
+          <Pagination {...pagination} />
         </>
       )}
     </section>
