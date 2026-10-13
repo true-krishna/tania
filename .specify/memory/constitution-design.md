@@ -1,6 +1,6 @@
 # Tania Design Constitution
 
-**Version**: 4.2.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-14
+**Version**: 4.3.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-13
 **Source of record (two layers, one canon)**:
 1. **Owner-approved TANIA navy+red brand direction** — brand-role mapping and values are defined in Principle I from the approved TAN-99 exploration. It supersedes the prior Legion Violet brand mapping only; it does not make reconstructed logo artwork an official asset.
 2. **The `tania-design-system` package (TANIA Pulse)** — executable structural adaptation: Pulse components, radius scale, shadow, themes, icon set, app shell, and reference pages. Existing non-brand Pulse rules remain in force unless amended below.
@@ -92,9 +92,9 @@ Accessibility floor (VI) applies to all of the above. For **new interactive comp
 
 Derived from the shipped reference pages (contoh-profil-talent, contoh-idp-evaluasi) — re-verified unchanged in the Legion-aligned package:
 
-- **App shell**: sticky sidebar **268px** (surface bg, 1px right border, padding 22px 16px, vertical gap 22px, nav gap 4px) + fluid main. Topbar: padding 16px 28px, 1px bottom border, surface bg.
+- **App shell**: sticky sidebar **268px** (surface bg, 1px right border, padding 22px 16px, vertical gap 22px, nav gap 4px) + fluid main. Topbar: padding 16px 24px, 1px bottom border, surface bg.
 - **Collapse breakpoint: ≤860px** — sidebar becomes a static horizontal strip (padding 14px 16px, bottom border, nav row horizontally scrollable); topbar tightens to 12px 16px; main padding 16px. This is the shipped ladder; other breakpoints follow general reference.
-- **Content widths**: main max-width 1160px (padding 24px 28px); standard content 860–900px; narrow/forms/search 560px.
+- **Content widths**: main is fluid — it fills the viewport minus the 268px sidebar with 24px side gutters and no max-width cap, so content adapts to large viewports (owner decision TAN-170: no centered 1160px container). Pages self-constrain when the design calls for it: standard content 860–900px; narrow/forms/search 560px.
 - **Grids**: card grids use `auto-fit` + `minmax(150–300px, 1fr)`; wide tables scroll horizontally (min-width ≈560–620px) inside an overflow wrapper instead of compressing.
 - Density evidence (bindings, not a scale): card padding 20px, topbar 16/28, AI block 16/18. No formal spacing scale is defined — do not invent one; reuse shipped paddings, and any new spacing value sits on Legion's 4px grid.
 
@@ -147,6 +147,7 @@ Navy+red brand roles are owner-approved. Dark-theme values, final semantic palet
 
 | Version | Date | Change |
 |---|---|---|
+| 4.3.0 | 2026-10-13 | Owner decision (TAN-170): §VIII content widths — the 1160px centered content container is retired; main is fluid with 24px side gutters and fills the viewport minus the 268px sidebar so content adapts to large viewports. Topbar horizontal padding 28px → 24px to stay aligned with the content gutter. Pages keep self-constrained widths (standard 860–900px, narrow/forms 560px). |
 | 4.2.0 | 2026-10-14 | Owner-approved TAN-99 direction: replace Violet brand/interactive voltage with navy `#172B4D` / deep navy `#0B1F4D`; establish red `#E1231A` / deep red `#B71C14` as separate brand accents, not implicit error tokens. Update primary/nav/button, icons and color semantics; retain non-brand Pulse rules. Require contrast validation and explicit focus-token selection. TAN-99 wordmark remains exploratory; official artwork must be supplied and approved. Dark-theme navy/red values remain unspecified pending validated mapping. Constitution amendment only; package/token propagation remains follow-up work. |
 | 4.1.0 | 2026-10-09 | Reconciled with TAN-99 hi-fi profile prototype and owner's product-wide contrast decision: primary button fill = primary-600, hover/press = primary-700; primary-500 retired from small-text fills; icon accent bridge and derived profile patterns codified. Superseded for brand colors by 4.2.0. |
 | 4.0.0 | 2026-10-07 | Owner instruction: re-ground the canon on **`DESIGN-legion.md` (values) + the re-based package "TANIA Pulse, Legion-aligned" (structure)**. Every `--tp-*` color re-based onto Legion ramps: Legion Purple `#875bf7`/primary-600 `#7839ee`/primary-900 `#491c96`, ink `#212121`, success/error/warning ramps (I, II, IX); Nunito Sans binary weights (700/400/600) replace Sora + Inter; weight 800 and negative tracking retired (III); Legion-flat depth restored with the card soft shadow and pill radius ratified as Pulse character exceptions (IV); component state model re-valued, Legion state-matrix discipline retained as the derivation rule for new components (V); contrast shortfall on primary-500 documented with the primary-600 mitigation (VI); icon accents re-based on Legion tokens (VII); layout shell re-verified unchanged (VIII); dark theme values re-based on Legion ramps and ratified (Additional Constraints). Pulse Indigo values (#6246EA, Sora/Inter, #101A47) retired with their source. |
@@ -155,4 +156,4 @@ Navy+red brand roles are owner-approved. Dark-theme values, final semantic palet
 | 2.0.0 | 2026-09-30 | Owner decisions: visual values over tokens; 24px gutter + general-reference grid/breakpoints; light mode only; general references for non-Legion gaps. |
 | 1.0.0 | 2026-09-25 | Initial ratification from `DESIGN-legion.md`. |
 
-**Version**: 4.2.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-14
+**Version**: 4.3.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-13
