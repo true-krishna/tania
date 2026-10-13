@@ -4,6 +4,7 @@ import * as React from "react";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { ACTIVITY_TYPE_LABEL } from "./mocks";
 import { ActivityStatusBadge } from "./ActivityStatusBadge";
 import type { PersonalWorkActivity } from "./types";
@@ -35,6 +36,8 @@ export function ActivityList({
   onDelete,
   onRetry,
 }: ActivityListProps) {
+  const { pageRows, pagination } = useTablePagination(activities);
+
   if (status === "loading") return <LoadingState label="Memuat aktivitas…" />;
 
   if (status === "error") {
@@ -55,66 +58,69 @@ export function ActivityList({
   }
 
   return (
-    <BoardTable
-      caption="Daftar aktivitas saya"
-      columns={[
-        { key: "title", label: "Aktivitas" },
-        { key: "type", label: "Jenis" },
-        { key: "period", label: "Periode" },
-        { key: "project", label: "Project" },
-        { key: "priority", label: "Prioritas" },
-        { key: "status", label: "Status" },
-        { key: "actions", label: "Aksi", className: "text-right" },
-      ]}
-    >
-      {activities.map((activity) => {
-        const owned = activity.talentId === currentTalentId;
-        return (
-          <tr
-            key={activity.id}
-            className="border-b border-board-border transition-colors hover:bg-zinc-50"
-          >
-            <td className="px-4 py-2.5 font-medium text-zinc-900">{activity.title}</td>
-            <td className="px-4 py-2.5 text-zinc-600">
-              {ACTIVITY_TYPE_LABEL[activity.activityType]}
-            </td>
-            <td className="px-4 py-2.5 text-zinc-600">
-              {activity.startDate} — {activity.endDate ?? "sekarang"}
-            </td>
-            <td className="px-4 py-2.5 text-zinc-600">{activity.project?.name ?? "—"}</td>
-            <td className="px-4 py-2.5 text-zinc-600">{activity.priority.name}</td>
-            <td className="px-4 py-2.5">
-              <ActivityStatusBadge status={activity.status} />
-            </td>
-            <td className="px-4 py-2.5">
-              {owned ? (
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => onEdit(activity)}
-                    disabled={busy}
-                    aria-label={`Ubah ${activity.title}`}
-                  >
-                    Ubah
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => onDelete(activity)}
-                    disabled={busy}
-                    aria-label={`Hapus ${activity.title}`}
-                  >
-                    Hapus
-                  </Button>
-                </div>
-              ) : (
-                <span className="block text-right text-xs text-zinc-400">Bukan milik Anda</span>
-              )}
-            </td>
-          </tr>
-        );
-      })}
-    </BoardTable>
+    <>
+      <BoardTable
+        caption="Daftar aktivitas saya"
+        columns={[
+          { key: "title", label: "Aktivitas" },
+          { key: "type", label: "Jenis" },
+          { key: "period", label: "Periode" },
+          { key: "project", label: "Project" },
+          { key: "priority", label: "Prioritas" },
+          { key: "status", label: "Status" },
+          { key: "actions", label: "Aksi", className: "text-right" },
+        ]}
+      >
+        {pageRows.map((activity) => {
+          const owned = activity.talentId === currentTalentId;
+          return (
+            <tr
+              key={activity.id}
+              className="border-b border-board-border transition-colors hover:bg-zinc-50"
+            >
+              <td className="px-4 py-2.5 font-medium text-zinc-900">{activity.title}</td>
+              <td className="px-4 py-2.5 text-zinc-600">
+                {ACTIVITY_TYPE_LABEL[activity.activityType]}
+              </td>
+              <td className="px-4 py-2.5 text-zinc-600">
+                {activity.startDate} — {activity.endDate ?? "sekarang"}
+              </td>
+              <td className="px-4 py-2.5 text-zinc-600">{activity.project?.name ?? "—"}</td>
+              <td className="px-4 py-2.5 text-zinc-600">{activity.priority.name}</td>
+              <td className="px-4 py-2.5">
+                <ActivityStatusBadge status={activity.status} />
+              </td>
+              <td className="px-4 py-2.5">
+                {owned ? (
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => onEdit(activity)}
+                      disabled={busy}
+                      aria-label={`Ubah ${activity.title}`}
+                    >
+                      Ubah
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => onDelete(activity)}
+                      disabled={busy}
+                      aria-label={`Hapus ${activity.title}`}
+                    >
+                      Hapus
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="block text-right text-xs text-zinc-400">Bukan milik Anda</span>
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </BoardTable>
+      <Pagination {...pagination} />
+    </>
   );
 }

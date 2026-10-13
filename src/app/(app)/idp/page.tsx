@@ -5,6 +5,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 import { useIdps } from "@/features/idp/useIdps";
 import { cn } from "@/lib/cn";
@@ -86,6 +87,7 @@ export default function IdpPage() {
   const { status: query, data, error } = useIdps({
     status: status === "ALL" ? undefined : status,
   });
+  const { pageRows, pagination, resetPage } = useTablePagination(data);
 
   return (
     <section className="flex flex-col gap-4">
@@ -107,7 +109,10 @@ export default function IdpPage() {
           <span>Status</span>
           <Select
             value={status}
-            onChange={(e) => setStatus(e.target.value as IdpStatus | "ALL")}
+            onChange={(e) => {
+              setStatus(e.target.value as IdpStatus | "ALL");
+              resetPage();
+            }}
           >
             <option value="ALL">Semua</option>
             <option value="IN_PROGRESS">Berjalan</option>
@@ -124,22 +129,24 @@ export default function IdpPage() {
       ) : !data || data.length === 0 ? (
         <EmptyState message="Tidak ada IDP yang cocok dengan filter." />
       ) : (
-        <BoardTable
-          caption="Daftar IDP"
-          columns={[
-            { key: "talent", label: "Talent" },
-            { key: "objective", label: "Development Objective" },
-            { key: "timeline", label: "Timeline" },
-            { key: "progress", label: "Progres Aksi" },
-            { key: "status", label: "Status" },
-          ]}
-        >
-          {data.map((idp, index) => (
-            <IdpRow key={idp.id} idp={idp} index={index} />
-          ))}
-        </BoardTable>
+        <>
+          <BoardTable
+            caption="Daftar IDP"
+            columns={[
+              { key: "talent", label: "Talent" },
+              { key: "objective", label: "Development Objective" },
+              { key: "timeline", label: "Timeline" },
+              { key: "progress", label: "Progres Aksi" },
+              { key: "status", label: "Status" },
+            ]}
+          >
+            {pageRows.map((idp, index) => (
+              <IdpRow key={idp.id} idp={idp} index={index} />
+            ))}
+          </BoardTable>
+          <Pagination {...pagination} />
+        </>
       )}
-      <p className="text-xs text-zinc-500">{data ? `${data.length} IDP ditampilkan.` : ""}</p>
     </section>
   );
 }

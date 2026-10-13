@@ -5,6 +5,7 @@ import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 import { roleLabel } from "@/features/accounts/roles";
 import { useEmployees } from "@/features/employees/useEmployees";
@@ -66,6 +67,7 @@ export function AccountsSection({
   const [confirmRevokeId, setConfirmRevokeId] = React.useState<string | null>(null);
 
   const employees = useEmployees({ search: employeeSearch || undefined }, 100);
+  const { pageRows, pagination } = useTablePagination(accounts);
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -205,85 +207,88 @@ export function AccountsSection({
       {!accounts || accounts.length === 0 ? (
         <EmptyState message="Belum ada akun pengguna." />
       ) : (
-        <BoardTable
-          caption="Daftar akun pengguna"
-          columns={[
-            { key: "name", label: "Nama" },
-            { key: "email", label: "Email" },
-            { key: "role", label: "Peran" },
-            { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi" },
-          ]}
-        >
-          {accounts.map((account) => (
-            <tr
-              key={account.id}
-              className="border-b border-board-border transition-colors hover:bg-zinc-50"
-            >
-              <td className="px-4 py-2.5 font-medium text-zinc-900">{account.fullName}</td>
-              <td className="px-4 py-2.5 text-zinc-600">{account.email}</td>
-              <td className="px-4 py-2.5">
-                <RoleBadge role={account.accessRole} />
-              </td>
-              <td className="px-4 py-2.5">
-                <StatusBadge active={account.status === "ACTIVE"} />
-              </td>
-              <td className="px-4 py-2.5">
-                {confirmRevokeId === account.id ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => {
-                        void onRevokeSessions(account.id).finally(() => setConfirmRevokeId(null));
-                      }}
-                    >
-                      Ya, cabut
-                    </Button>
-                    <Button type="button" variant="ghost" onClick={() => setConfirmRevokeId(null)}>
-                      Batal
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Select
-                      aria-label={`Ubah peran ${account.fullName}`}
-                      className="w-auto"
-                      value={account.accessRole}
-                      onChange={(e) => void onChangeRole(account.id, e.target.value as AccessRole)}
-                    >
-                      {ROLE_OPTIONS.map((role) => (
-                        <option key={role} value={role}>
-                          {roleLabel[role]}
-                        </option>
-                      ))}
-                    </Select>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() =>
-                        void onSetStatus(
-                          account.id,
-                          account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                        )
-                      }
-                    >
-                      {account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setConfirmRevokeId(account.id)}
-                    >
-                      Cabut Sesi
-                    </Button>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-        </BoardTable>
+        <>
+          <BoardTable
+            caption="Daftar akun pengguna"
+            columns={[
+              { key: "name", label: "Nama" },
+              { key: "email", label: "Email" },
+              { key: "role", label: "Peran" },
+              { key: "status", label: "Status" },
+              { key: "actions", label: "Aksi" },
+            ]}
+          >
+            {pageRows.map((account) => (
+              <tr
+                key={account.id}
+                className="border-b border-board-border transition-colors hover:bg-zinc-50"
+              >
+                <td className="px-4 py-2.5 font-medium text-zinc-900">{account.fullName}</td>
+                <td className="px-4 py-2.5 text-zinc-600">{account.email}</td>
+                <td className="px-4 py-2.5">
+                  <RoleBadge role={account.accessRole} />
+                </td>
+                <td className="px-4 py-2.5">
+                  <StatusBadge active={account.status === "ACTIVE"} />
+                </td>
+                <td className="px-4 py-2.5">
+                  {confirmRevokeId === account.id ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          void onRevokeSessions(account.id).finally(() => setConfirmRevokeId(null));
+                        }}
+                      >
+                        Ya, cabut
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => setConfirmRevokeId(null)}>
+                        Batal
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Select
+                        aria-label={`Ubah peran ${account.fullName}`}
+                        className="w-auto"
+                        value={account.accessRole}
+                        onChange={(e) => void onChangeRole(account.id, e.target.value as AccessRole)}
+                      >
+                        {ROLE_OPTIONS.map((role) => (
+                          <option key={role} value={role}>
+                            {roleLabel[role]}
+                          </option>
+                        ))}
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() =>
+                          void onSetStatus(
+                            account.id,
+                            account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                          )
+                        }
+                      >
+                        {account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setConfirmRevokeId(account.id)}
+                      >
+                        Cabut Sesi
+                      </Button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </BoardTable>
+          <Pagination {...pagination} />
+        </>
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 
 export type MasterDataItem = { id: string; name: string; isActive: boolean };
@@ -55,6 +56,7 @@ export function MasterDataSection<T extends MasterDataItem>({
   const [nameError, setNameError] = React.useState<string | undefined>();
   const [selectError, setSelectError] = React.useState<string | undefined>();
   const [busy, setBusy] = React.useState(false);
+  const { pageRows, pagination } = useTablePagination(items);
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -155,43 +157,46 @@ export function MasterDataSection<T extends MasterDataItem>({
       {!items || items.length === 0 ? (
         <EmptyState message={emptyMessage} />
       ) : (
-        <BoardTable
-          caption={caption}
-          columns={[
-            { key: "name", label: nameLabel },
-            ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
-            { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi" },
-          ]}
-        >
-          {items.map((item) => (
-            <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-              <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
-              {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
-              <td className="px-4 py-2.5">
-                <StatusBadge active={item.isActive} />
-              </td>
-              <td className="px-4 py-2.5">
-                {editingId === item.id ? (
-                  <span className="text-xs text-zinc-400">Mengedit…</span>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="ghost" onClick={() => startEdit(item)}>
-                      Ubah
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => void onToggleActive(item.id, !item.isActive)}
-                    >
-                      {item.isActive ? "Nonaktifkan" : "Aktifkan"}
-                    </Button>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-        </BoardTable>
+        <>
+          <BoardTable
+            caption={caption}
+            columns={[
+              { key: "name", label: nameLabel },
+              ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
+              { key: "status", label: "Status" },
+              { key: "actions", label: "Aksi" },
+            ]}
+          >
+            {pageRows.map((item) => (
+              <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
+                <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
+                {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
+                <td className="px-4 py-2.5">
+                  <StatusBadge active={item.isActive} />
+                </td>
+                <td className="px-4 py-2.5">
+                  {editingId === item.id ? (
+                    <span className="text-xs text-zinc-400">Mengedit…</span>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="ghost" onClick={() => startEdit(item)}>
+                        Ubah
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => void onToggleActive(item.id, !item.isActive)}
+                      >
+                        {item.isActive ? "Nonaktifkan" : "Aktifkan"}
+                      </Button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </BoardTable>
+          <Pagination {...pagination} />
+        </>
       )}
     </div>
   );
