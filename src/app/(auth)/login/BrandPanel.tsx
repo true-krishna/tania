@@ -10,6 +10,9 @@
  *   Constraints: no gradients, no faces);
  * - secondary copy on the dark surface is white at reduced opacity, because
  *   `--tp-lilac` and raw mint are not legal text colors (§IX).
+ *
+ * Copy is the owner's revision from the TAN-160 review (platform, not DPS
+ * cockpit; no invite-only/contact-admin wording).
  */
 export function BrandPanel() {
   return (
@@ -35,25 +38,23 @@ export function BrandPanel() {
 
           <div>
             <p className="text-[13px] font-semibold text-white/80">
-              Portal Management Cockpit
+              Talent Management Platform
             </p>
             <p className="mt-3 max-w-[26rem] text-[40px] font-bold leading-[1.2] text-tp-on-nav">
-              Satu ruang kerja untuk operasional DPS yang lebih terarah.
+              Satu ruang kerja untuk manajemen talenta yang lebih transparan
             </p>
             <p className="mt-5 max-w-[27rem] text-base leading-[1.6] text-white/75">
-              Pantau talent, timesheet, workload, feasibility, dan budget dalam
-              satu cockpit operasional yang terintegrasi.
+              Pantau talent, timesheet, workload, kompetensi, dan evaluasi
+              performa dalam satu platform yang terintegrasi.
             </p>
           </div>
         </div>
-
-        <p className="text-sm text-white/70">© Invite-only workspace</p>
       </div>
     </aside>
   );
 }
 
-/** Mockup: disc mark + TANIA wordmark with a "DPS Cockpit" caption. */
+/** Mockup: disc mark + TANIA wordmark. */
 function BrandMark() {
   return (
     <div className="flex items-center gap-3">
@@ -63,13 +64,8 @@ function BrandMark() {
       >
         T
       </span>
-      <span className="flex flex-col">
-        <span className="text-lg font-bold leading-none text-tp-on-nav">
-          TANIA
-        </span>
-        <span className="mt-1 text-[11px] font-semibold leading-none text-white/70">
-          DPS Cockpit
-        </span>
+      <span className="text-lg font-bold leading-none text-tp-on-nav">
+        TANIA
       </span>
     </div>
   );

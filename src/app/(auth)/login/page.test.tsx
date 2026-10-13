@@ -107,7 +107,7 @@ describe("LoginForm", () => {
     });
   });
 
-  it("renders the mockup structure and reports the missing admin channel honestly", () => {
+  it("renders the form and the revised brand copy", () => {
     render(
       <MockedProvider mocks={[]}>
         <LoginForm />
@@ -119,10 +119,10 @@ describe("LoginForm", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-
-    fireEvent.click(
-      screen.getAllByRole("button", { name: /hubungi administrator dps/i })[0]
-    );
-    expect(screen.getByRole("status")).toHaveTextContent(/belum tersedia/i);
+    expect(
+      screen.getByRole("button", { name: /masuk ke workspace/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/talent management platform/i)).toBeInTheDocument();
+    expect(screen.queryByText(/invite tania/i)).not.toBeInTheDocument();
   });
 });

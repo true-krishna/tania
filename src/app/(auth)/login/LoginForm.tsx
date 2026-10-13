@@ -3,12 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client";
-import {
-  IconArrowRight,
-  IconInfoCircle,
-  IconLock,
-  IconMail,
-} from "@tabler/icons-react";
+import { IconArrowRight, IconLock, IconMail } from "@tabler/icons-react";
 import { LoginDocument } from "@/generated/graphql";
 import { authConfig } from "@/lib/auth/config";
 import { setSession } from "@/lib/auth/token-store";
@@ -24,14 +19,15 @@ import { BrandPanel } from "./BrandPanel";
  * element keeps the shipped focus ring (§VI).
  *
  * The mockup ships no social sign-in, so the vendor-color SSO icons and the
- * illustrated promo art are gone; SSO remains deferred (plan.md R3).
+ * illustrated promo art are gone; SSO remains deferred (plan.md R3). Copy is
+ * the owner's revision from the TAN-160 review: no invite-only caveat, no
+ * pending-invite notice and no admin-contact affordance.
  */
 export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
-  const [notice, setNotice] = React.useState<string | null>(null);
   const [login, { loading }] = useMutation(LoginDocument);
 
   React.useEffect(() => {
@@ -41,7 +37,6 @@ export default function LoginForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setNotice(null);
     try {
       const { data } = await login({
         variables: {
@@ -72,10 +67,6 @@ export default function LoginForm() {
 
   if (authConfig.localOnly) return null;
 
-  function contactAdmin() {
-    setNotice("Kanal kontak administrator belum tersedia di aplikasi ini.");
-  }
-
   return (
     <main lang="id" className="flex min-h-screen w-full">
       <BrandPanel />
@@ -89,34 +80,6 @@ export default function LoginForm() {
           <h1 className="mt-2 text-[30px] font-bold leading-[1.2] text-tp-text">
             Masuk ke TANIA
           </h1>
-
-          <p className="mt-2 text-sm leading-[1.5] text-tp-muted">
-            Akses hanya tersedia untuk anggota yang telah menerima undangan dari
-            administrator DPS.
-          </p>
-
-          <div className="mt-8 flex items-start gap-3 rounded-tp-md border border-tp-line px-4 py-3">
-            <IconInfoCircle
-              aria-hidden="true"
-              className="mt-0.5 h-5 w-5 flex-none text-tp-ink-violet"
-            />
-            <p className="text-sm leading-[1.5] text-tp-text">
-              Akun belum terdaftar sebagai invite TANIA.{" "}
-              <button
-                type="button"
-                onClick={contactAdmin}
-                className="font-semibold text-tp-ink-violet underline underline-offset-2"
-              >
-                Hubungi administrator DPS.
-              </button>
-            </p>
-          </div>
-
-          {notice ? (
-            <p className="mt-3 text-sm text-tp-muted" role="status">
-              {notice}
-            </p>
-          ) : null}
 
           <form onSubmit={onSubmit} className="mt-7 flex flex-col gap-4">
             <div className="flex flex-col gap-2">
@@ -176,18 +139,6 @@ export default function LoginForm() {
               <IconArrowRight aria-hidden="true" className="h-5 w-5" />
             </Button>
           </form>
-
-          <p className="mt-9 text-sm leading-[1.5] text-tp-muted">
-            Belum menerima undangan?{" "}
-            <button
-              type="button"
-              onClick={contactAdmin}
-              className="font-semibold text-tp-ink-violet underline underline-offset-2"
-            >
-              Hubungi administrator DPS
-            </button>{" "}
-            untuk mendapatkan akses.
-          </p>
         </div>
       </section>
     </main>
