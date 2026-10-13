@@ -4,6 +4,7 @@ export { Sidebar } from "./Sidebar";
 export { Avatar } from "./Avatar";
 export { BoardTable } from "./BoardTable";
 export { Button } from "./Button";
+export { FilterButton } from "./FilterButton";
 export { Card } from "./Card";
 export { Input } from "./Input";
 export { PageHeader } from "./PageHeader";

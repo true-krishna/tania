@@ -170,3 +170,22 @@
   background: var(--tp-brand-navy);
   color: var(--tp-on-nav);
 }
+
+/* FilterButton (TAN-168): state `.tp-btn` yang tidak tercakup kelas canon —
+ * filter aktif / panel terbuka memakai matriks state §V (soft navy, hover dan
+ * press menguat via color-mix pada token brand, tanpa hex baru). Aturan ini
+ * unlayered agar mengalahkan latar `.tp-btn:hover`. */
+.tp-filter-btn[data-active],
+.tp-filter-btn[aria-expanded="true"] {
+  border-color: var(--tp-brand-navy);
+  color: var(--tp-brand-navy);
+  background: color-mix(in srgb, var(--tp-brand-navy) 10%, transparent);
+}
+.tp-filter-btn[data-active]:hover,
+.tp-filter-btn[aria-expanded="true"]:hover {
+  background: color-mix(in srgb, var(--tp-brand-navy) 16%, transparent);
+}
+.tp-filter-btn[data-active]:active,
+.tp-filter-btn[aria-expanded="true"]:active {
+  background: color-mix(in srgb, var(--tp-brand-navy) 24%, transparent);
+}
