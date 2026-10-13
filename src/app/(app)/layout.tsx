@@ -10,29 +10,12 @@ import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { roleLabel } from "@/features/accounts/roles";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
 import { clearSession, getSession } from "@/lib/auth/token-store";
-import {
-  SIDEBAR_WIDTH_COLLAPSED,
-  SIDEBAR_WIDTH_EXPANDED,
-  getSidebarCollapsedServerSnapshot,
-  getSidebarCollapsedSnapshot,
-  setSidebarCollapsed,
-  subscribeSidebarCollapsed,
-} from "@/lib/sidebar-state";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const role = useSessionRole();
   const pathname = usePathname();
   const [logout] = useMutation(LogoutDocument);
-
-  // Persisted preference, read through an external store so the server render
-  // uses the default and the client upgrades after hydration.
-  const collapsed = React.useSyncExternalStore(
-    subscribeSidebarCollapsed,
-    getSidebarCollapsedSnapshot,
-    getSidebarCollapsedServerSnapshot,
-  );
-  const sidebarWidth = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 
   // Profile shown in the top-bar avatar; read once at mount, like `useSessionRole`.
   const [session] = React.useState(() => getSession());
@@ -53,18 +36,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen">
-        <Sidebar
-          role={role}
-          pathname={pathname}
-          collapsed={collapsed}
-          onToggle={() => setSidebarCollapsed(!collapsed)}
-        />
-        <div
-          className="flex min-h-screen flex-col transition-[margin] duration-200"
-          style={{ marginLeft: sidebarWidth }}
-        >
-          <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b border-board-border bg-white/80 px-6 backdrop-blur">
+      {/* Shell per constitution-design v4.0.0 §VIII: 268px sticky sidebar,
+       * topbar 16px 28px, main 24px 28px with a 1160px content container;
+       * ≤860px the sidebar strip is static and paddings tighten. */}
+      <div className="flex min-h-screen flex-col min-[861px]:flex-row">
+        <Sidebar role={role} pathname={pathname} />
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-tp-line bg-tp-surface px-4 py-3 min-[861px]:px-7 min-[861px]:py-4">
             <p className="truncate text-sm font-semibold text-zinc-700">{sectionForPath(pathname)}</p>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2.5">
@@ -86,7 +64,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </header>
-          <main className="flex-1 px-6 py-6">{children}</main>
+          <main className="flex-1 px-4 py-4 min-[861px]:px-7 min-[861px]:py-6">
+            <div className="mx-auto w-full max-w-[1160px]">{children}</div>
+          </main>
         </div>
       </div>
     </AuthGuard>

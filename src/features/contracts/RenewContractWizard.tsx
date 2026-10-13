@@ -210,7 +210,7 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
   return (
     <form onSubmit={step === 1 ? goToAttributes : onSubmit} className="flex max-w-xl flex-col gap-4">
       {formError ? <ErrorState message={formError} /> : null}
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+      <p className="text-xs font-medium text-zinc-500">
         Langkah {step} dari 2 — {step === 1 ? "Periode kontrak baru" : "Atribut & penempatan"}
       </p>
 

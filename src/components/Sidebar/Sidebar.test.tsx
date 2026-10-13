@@ -1,106 +1,89 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Sidebar } from "@/components/Sidebar";
 
 function renderSidebar(props: Partial<React.ComponentProps<typeof Sidebar>> = {}) {
-  const onToggle = vi.fn();
-  const view = render(
-    <Sidebar role="ADMIN" pathname="/dashboard" collapsed={false} onToggle={onToggle} {...props} />,
-  );
-  return { onToggle, view };
+  return render(<Sidebar role="ADMIN" pathname="/dashboard" {...props} />);
 }
 
-function railWidth() {
-  return (document.getElementById("app-sidebar") as HTMLElement).style.width;
+function desktopNav() {
+  return within(screen.getByRole("navigation", { name: /^Main navigation$/ }));
+}
+
+function compactNav() {
+  return within(screen.getByRole("navigation", { name: /^Main navigation \(compact\)$/ }));
 }
 
 describe("Sidebar", () => {
   it("hides sections the current role cannot access", () => {
     renderSidebar({ role: "TALENT" });
-    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
     expect(screen.queryByText("Master Data")).toBeNull();
     expect(screen.queryByText("Accounts")).toBeNull();
   });
 
-  it("no longer lists Laporan Talent in the nav (placement amendment, TAN-154)", () => {
-    const { view } = renderSidebar({ role: "TALENT" });
-    expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
-    view.unmount();
+  it("keeps the Laporan Talent nav scoped to Operation and Chapter", () => {
+    const talent = renderSidebar({ role: "TALENT" });
+    expect(desktopNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    expect(compactNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    talent.unmount();
 
-    renderSidebar({ role: "ADMIN" });
-    expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    const admin = renderSidebar({ role: "ADMIN" });
+    expect(desktopNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    expect(compactNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    admin.unmount();
 
     renderSidebar({ role: "OPERATION" });
-    expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
-
-    renderSidebar({ role: "CHAPTER" });
-    expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    expect(desktopNav().getByRole("link", { name: "Laporan Talent" })).toBeInTheDocument();
+    expect(compactNav().getByRole("link", { name: "Laporan Talent" })).toBeInTheDocument();
   });
 
   it("expands a multi-page section on click", () => {
     renderSidebar();
-    const group = screen.getByRole("button", { name: /Master Data/ });
+    const group = desktopNav().getByRole("button", { name: /Master Data/ });
     expect(group).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("link", { name: "Unit" })).toBeNull();
+    expect(desktopNav().queryByRole("link", { name: "Unit" })).toBeNull();
 
     fireEvent.click(group);
     expect(group).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("link", { name: "Unit" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Unit" })).toBeInTheDocument();
   });
 
   it("opens the section that owns the current route and marks the child active", () => {
     renderSidebar({ pathname: "/master-data/units" });
-    expect(screen.getByRole("button", { name: /Master Data/ })).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("link", { name: "Unit" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("button", { name: /Master Data/ })).toHaveAttribute("aria-expanded", "true");
+    expect(desktopNav().getByRole("link", { name: "Unit" })).toHaveAttribute("aria-current", "page");
   });
 
   it("marks the most specific route active", () => {
     renderSidebar({ pathname: "/evaluations/periods/new" });
-    expect(screen.getByRole("link", { name: "Periode" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "Roster" })).not.toHaveAttribute("aria-current");
+    expect(desktopNav().getByRole("link", { name: "Periode" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("link", { name: "Roster" })).not.toHaveAttribute("aria-current");
   });
 
   it("shows only the role-scoped child of a section", () => {
     renderSidebar({ role: "TALENT", pathname: "/evaluations/my" });
-    expect(screen.getByRole("link", { name: "Evaluasi Saya" })).toHaveAttribute("aria-current", "page");
-    expect(screen.queryByRole("link", { name: "Roster" })).toBeNull();
+    expect(desktopNav().getByRole("link", { name: "Evaluasi Saya" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().queryByRole("link", { name: "Roster" })).toBeNull();
   });
 
-  it("renders the full sidebar with labels when expanded", () => {
+  it("marks the active link in the compact strip without expanding anything", () => {
+    renderSidebar({ role: "TALENT", pathname: "/evaluations/my" });
+    expect(compactNav().getByRole("link", { name: "Evaluasi Saya" })).toHaveAttribute("aria-current", "page");
+    // The strip is flat: no expandable group buttons.
+    expect(compactNav().queryByRole("button")).toBeNull();
+  });
+
+  it("renders the 268px sticky shell with labels and no collapse toggle", () => {
     renderSidebar();
-    expect(railWidth()).toBe("240px");
+    const aside = document.getElementById("app-sidebar") as HTMLElement;
+    expect(aside.className).toContain("min-[861px]:w-[268px]");
+    expect(aside.className).toContain("min-[861px]:sticky");
     expect(screen.getByText("Tania")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Collapse navigation" })).toBeInTheDocument();
-  });
-
-  it("renders an icon-only rail when collapsed", () => {
-    renderSidebar({ collapsed: true });
-    expect(railWidth()).toBe("72px");
-    expect(screen.queryByText("Tania")).toBeNull();
-    expect(screen.queryByText("Dashboard")).toBeNull();
-    // Icon-only items keep an accessible name.
-    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Unit" })).toBeNull();
-  });
-
-  it("toggles collapse from the footer button", () => {
-    const { onToggle } = renderSidebar();
-    fireEvent.click(screen.getByRole("button", { name: "Collapse navigation" }));
-    expect(onToggle).toHaveBeenCalledTimes(1);
-  });
-
-  it("expands, rather than opening a submenu, when a collapsed group is clicked", () => {
-    const { onToggle } = renderSidebar({ collapsed: true });
-    const group = screen.getByRole("button", { name: "Master Data" });
-    expect(group).toHaveAttribute("aria-expanded", "false");
-
-    fireEvent.click(group);
-    expect(onToggle).toHaveBeenCalledTimes(1);
-    // Still controlled as collapsed: the submenu stays hidden until expanded.
-    expect(screen.queryByRole("link", { name: "Unit" })).toBeNull();
+    expect(desktopNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Collapse navigation" })).toBeNull();
   });
 });
