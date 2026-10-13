@@ -247,7 +247,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 describe("EmployeesPage per role (T034)", () => {
   it("shows the add action to Operation only", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock]}>
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -258,7 +258,7 @@ describe("EmployeesPage per role (T034)", () => {
   it("is a read-only directory for Admin", async () => {
     auth.role = "ADMIN";
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock]}>
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
