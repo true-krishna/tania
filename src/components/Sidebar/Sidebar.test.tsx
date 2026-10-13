@@ -25,7 +25,7 @@ describe("Sidebar", () => {
     expect(screen.queryByText("Accounts")).toBeNull();
   });
 
-  it("keeps the Laporan Talent nav scoped to Operation and Chapter", () => {
+  it("no longer lists Laporan Talent in the nav (placement amendment, TAN-154)", () => {
     const { view } = renderSidebar({ role: "TALENT" });
     expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
     view.unmount();
@@ -34,7 +34,10 @@ describe("Sidebar", () => {
     expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
 
     renderSidebar({ role: "OPERATION" });
-    expect(screen.getByRole("link", { name: "Laporan Talent" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+
+    renderSidebar({ role: "CHAPTER" });
+    expect(screen.queryByRole("link", { name: "Laporan Talent" })).toBeNull();
   });
 
   it("expands a multi-page section on click", () => {

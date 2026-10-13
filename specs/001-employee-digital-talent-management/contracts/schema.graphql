@@ -83,6 +83,16 @@ enum BandPosition {
   UNDEFINED
 }
 
+"""Jenjang pendidikan terkontrol (D11 spek 003) — lima nilai; label tampilan
+"SMA/SMK Sederajat", "D3", "S1", "S2", "S3"."""
+enum EducationLevel {
+  SMA_SMK_SEDERAJAT
+  D3
+  S1
+  S2
+  S3
+}
+
 enum AuditAction {
   CREATE
   UPDATE
@@ -733,7 +743,8 @@ input UpsertCvProfileInput { summary: String }
 
 input CvEducationInput {
   institution: String!
-  degree: String
+  """Jenjang terbatas lima nilai (D11, spek 003); null = tidak diisi (data lama)."""
+  degree: EducationLevel
   fieldOfStudy: String
   startYear: Int
   endYear: Int
@@ -793,6 +804,53 @@ type MasterDataCount { kind: String!, active: Int!, inactive: Int! }
 type IdpStatusCount { status: IdpStatus!, count: Int! }
 type ActionStatusCount { status: DevelopmentActionStatus!, count: Int! }
 
+# --- Laporan Talent (spek 003 — hanya Operation & Chapter) -----------------
+
+input TalentReportPeriodInput {
+  """Bulan awal rentang inklusif, format YYYY-MM."""
+  startMonth: String!
+  """Bulan akhir rentang inklusif, format YYYY-MM, harus >= startMonth."""
+  endMonth: String!
+}
+
+"""Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest s.d. Desember tahun berjalan."""
+type TalentReportRange {
+  startMonth: String!
+  endMonth: String!
+}
+
+enum ReportCategoryKind {
+  """Kategori data sah."""
+  VALUE
+  """Kategori "Belum diisi" — selalu ditempatkan paling akhir, abu-abu."""
+  MISSING
+  """Kategori "Lainnya" — agregat di luar Top 10 lokasi kerja."""
+  OTHER
+}
+
+type ReportCategoryCount {
+  label: String!
+  count: Int!
+  kind: ReportCategoryKind!
+}
+
+type ReportMonthlyMovement {
+  """Bulan (YYYY-MM); setiap bulan rentang selalu hadir, tanpa kejadian bernilai 0."""
+  month: String!
+  newTalent: Int!
+  churn: Int!
+}
+
+type TalentReport {
+  """Bulan snapshot distribusi = bulan akhir rentang terpilih (FR-04)."""
+  snapshotMonth: String!
+  roleDistribution: [ReportCategoryCount!]!
+  generationDistribution: [ReportCategoryCount!]!
+  educationDistribution: [ReportCategoryCount!]!
+  workLocationDistribution: [ReportCategoryCount!]!
+  movementTrend: [ReportMonthlyMovement!]!
+}
+
 # -------------------------------- Queries -----------------------------------
 
 type Query {
@@ -843,6 +901,10 @@ type Query {
 
   # --- Dashboard per peran (FR-29/FR-30) ---
   dashboard: Dashboard!
+
+  # --- Laporan Talent (spek 003; Operation & Chapter, lainnya FORBIDDEN) ---
+  talentReportRange: TalentReportRange!
+  talentReport(period: TalentReportPeriodInput!): TalentReport!
 
   # --- Evaluasi ---
   evaluationTemplates(includeInactive: Boolean = false): [EvaluationTemplate!]!

@@ -2,7 +2,7 @@
  * T015/T025 — fixture uji laporan talent.
  *
  * ⚠️ BUKAN MOCK PRODUKSI — modul ini hanya boleh diimpor oleh berkas test.
- * Kode produksi (`useTalentReport`, `TalentReportPageView`, …) mengambil data
+ * Kode produksi (`useTalentReport`, `TalentReportContent`, …) mengambil data
  * lewat GraphQL (`talent-report.graphql`); fixture di sini memasok `MockedProvider`
  * dan uji data-prep. Tidak ada jalur yang membaca fixture ini saat runtime
  * aplikasi (aturan merge FE: tanpa mock produksi).
