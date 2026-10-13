@@ -99,7 +99,7 @@ describe("Sidebar", () => {
     const aside = document.getElementById("app-sidebar") as HTMLElement;
     expect(aside.className).toContain("min-[861px]:w-[268px]");
     expect(aside.className).toContain("min-[861px]:sticky");
-    expect(screen.getByText("Tania")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "TANIA" })).toBeInTheDocument();
     expect(desktopNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Collapse navigation" })).toBeNull();
   });

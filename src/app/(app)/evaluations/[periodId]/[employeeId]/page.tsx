@@ -94,7 +94,7 @@ export default function EvaluationFormPage() {
     return (
       <section className="flex flex-col gap-4">
         <ErrorState message="Periode evaluasi tidak ditemukan atau akses ditolak." />
-        <Link href="/evaluations" className="text-sm font-medium text-tp-brand-navy hover:text-tp-brand-navy-deep hover:underline">
+        <Link href="/evaluations" className="text-sm font-medium text-tp-brand-red-deep hover:underline">
           ← Kembali ke roster
         </Link>
       </section>
@@ -247,7 +247,7 @@ function EvaluationForm({
                 setSummary(e.target.value);
                 setTouched(true);
               }}
-              className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-navy focus:outline-none focus:ring-1 focus:ring-tp-brand-navy disabled:bg-zinc-50 disabled:text-zinc-400"
+              className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
@@ -260,7 +260,7 @@ function EvaluationForm({
                 setNotes(e.target.value);
                 setTouched(true);
               }}
-              className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-navy focus:outline-none focus:ring-1 focus:ring-tp-brand-navy disabled:bg-zinc-50 disabled:text-zinc-400"
+              className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
             />
           </label>
         </div>
@@ -301,7 +301,7 @@ function CriterionInput({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-navy focus:outline-none focus:ring-1 focus:ring-tp-brand-navy disabled:bg-zinc-50 disabled:text-zinc-400"
+        className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
       >
         <option value="">— pilih —</option>
         <option value="yes">Ya</option>
@@ -316,7 +316,7 @@ function CriterionInput({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-navy focus:outline-none focus:ring-1 focus:ring-tp-brand-navy disabled:bg-zinc-50 disabled:text-zinc-400"
+        className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
       >
         <option value="">— pilih —</option>
         {Array.from({ length: max }, (_, i) => i + 1).map((n) => (

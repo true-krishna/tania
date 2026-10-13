@@ -57,7 +57,7 @@ export default function EvaluationsPage() {
         {role === "ADMIN" ? (
           <p className="text-sm text-zinc-600">
             Buat periode di tab{" "}
-            <Link href="/evaluations/periods" className="font-medium text-tp-brand-navy hover:text-tp-brand-navy-deep hover:underline">
+            <Link href="/evaluations/periods" className="font-medium text-tp-brand-red-deep hover:underline">
               Periode
             </Link>
             .
@@ -116,7 +116,7 @@ export default function EvaluationsPage() {
                 <td className="px-4 py-2.5 text-right">
                   <Link
                     href={`/evaluations/${period.id}/${entry.talent.id}`}
-                    className="inline-flex items-center rounded-md border border-tp-brand-navy/20 bg-tp-brand-navy/5 px-3 py-1 text-xs font-medium text-tp-brand-navy shadow-sm hover:bg-tp-brand-navy/10"
+                    className="inline-flex items-center rounded-md border border-tp-brand-red/20 bg-tp-brand-red/5 px-3 py-1 text-xs font-medium text-tp-brand-red-deep shadow-sm hover:bg-tp-brand-red/10"
                   >
                     {readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai"}
                   </Link>

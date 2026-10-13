@@ -5,62 +5,82 @@
 @import "../../design/tokens/components.css";
 
 /*
- * TANIA Pulse tokens (constitution-design.md v4.2.0) — re-based verbatim onto
+ * TANIA Pulse tokens (constitution-design.md v4.3.0) — re-based verbatim onto
  * the shipped `design/tokens/tokens.css`: owner-approved TAN-99 navy+red brand
- * roles replace the retired Violet voltage. The legacy `--brand-*` Violet ramp
- * was retired with the TAN-165 re-branding; every consumer migrated to the
- * `.tp-*` canon tokens (see the issue comment for the full list).
+ * roles replace the retired Violet voltage, dan keputusan owner TAN-165
+ * (13 Okt) menutup lima butir audit: kategori violet -> info biru, aksen merah
+ * diaktifkan (nav aktif, link, ring fokus, aksi AI), danger tetap token
+ * terpisah yang wajib dibedakan, logo resmi dari brand kit, dan permukaan
+ * netral ikut `#F5F7FA / #DFE1E6 / #6B778C` seperti mockup A/B. The legacy
+ * `--brand-*` Violet ramp was retired with the TAN-165 re-branding; every
+ * consumer migrated to the `.tp-*` canon tokens (see the issue comment for the
+ * full list).
  *
- * Brand roles: `--tp-brand-navy` = primary action/active nav, deep = pressed;
- * `--tp-brand-red` = brand accent (not a general error token). Dark values for
- * navy/red are not shipped — TAN-99 is light-only and the constitution forbids
- * inferring them (it is not permission to fall back to Violet).
+ * Brand roles: `--tp-brand-navy` = primary action; `--tp-brand-red` = brand
+ * accent (nav aktif, link, ring fokus, aksi AI); `--tp-info*` = kategori status
+ * informasional (menggantikan Violet); danger (`--tp-peach*`) tetap token
+ * sendiri dan wajib dibedakan dari brand red. Dark values for navy/red are not
+ * shipped — TAN-99 is light-only and the constitution forbids inferring them
+ * (it is not permission to fall back to Violet).
  */
 :root {
-  --background: #f4f4f8;
+  --background: #f5f7fa;
   --foreground: #212121;
 
   --sidebar: #ffffff;
   --sidebar-fg: #212121;
-  --sidebar-muted: #667085;
-  --sidebar-hover: #f2f4f7;
-  --sidebar-active: #f2f4f7;
-  --sidebar-active-fg: #172b4d;
-  --sidebar-border: #eaecf0;
+  --sidebar-muted: #5e6c84;
+  --sidebar-hover: #f5f7fa;
+  --sidebar-active: #fce9e8;
+  --sidebar-active-fg: #b71c14;
+  --sidebar-border: #dfe1e6;
   --board: #ffffff;
-  --board-border: #eaecf0;
-  --header-row: #f9fafb;
+  --board-border: #dfe1e6;
+  --header-row: #f5f7fa;
   --surface: #ffffff;
-  --surface-border: #d0d5dd;
+  --surface-border: #dfe1e6;
 
   --tp-midnight: #212121;
   --tp-brand-navy: #172b4d;
   --tp-brand-navy-deep: #0b1f4d;
   --tp-brand-red: #e1231a;
   --tp-brand-red-deep: #b71c14;
+  --tp-brand-red-tint: #fce9e8;
+  --tp-brand-red-tint-line: #f5b8b5;
+  --tp-brand-on-red: #ffffff;
   --tp-nav: var(--tp-brand-navy);
   --tp-on-nav: #ffffff;
   --tp-mint: #168a5b;
   --tp-mint-ink: #0f6e48;
   --tp-sun: #d9822b;
   --tp-peach: #f97066;
-  --tp-bg: #f2f4f7;
+  --tp-info: #2684ff;
+  --tp-bg: #f5f7fa;
   --tp-surface: #ffffff;
-  --tp-line: #d0d5dd;
+  --tp-line: #dfe1e6;
   --tp-text: #212121;
-  --tp-muted: #667085;
-  /* Semantic tint+ink pairs. Peach = dedicated error/danger (never an alias of
-   * brand red). Violet = legacy semantic in-progress/info category pending
-   * migration (constitution §IX) — non-interactive only, never a brand action. */
+  /* `--tp-muted` memakai nilai text-safe dari kit (mute-strong `#5E6C84`):
+   * `#6B778C` hanya 4.2:1 di atas canvas baru `#F5F7FA`, sedangkan teks
+   * sekunder di app ini juga muncul di atas canvas. `--tp-neutral` = mute. */
+  --tp-muted: #5e6c84;
+  /* Semantic tint+ink pairs. Peach = dedicated error/danger — its own token
+   * family, never an alias of brand red (owner decision: danger wajib
+   * dibedakan). Info = informational/in-progress category, replacing the
+   * retired legacy Violet pair. */
   --tp-tint-peach: #fee4e2;
   --tp-tint-mint: #d1fadf;
   --tp-tint-sun: #feefc6;
-  --tp-tint-violet: #ece9fe;
+  --tp-tint-info: #e9f2ff;
   --tp-ink-peach: #b32318;
   --tp-ink-mint: #0f6e48;
   --tp-ink-sun: #b54708;
-  --tp-ink-violet: #6927da;
-  --tp-neutral: #667085;
+  --tp-ink-info: #0b5fd6;
+  --tp-neutral: #6b778c;
+  /* Icon accent bridge (Principle VII): action-marker details read brand navy;
+   * the kit makes icons red only inside the active menu item, which is done by
+   * a scoped override in `design/tokens/components.css`. */
+  --tania-primary: var(--tp-brand-navy);
+  --tania-mint: var(--tp-mint-ink);
   /* Wiring: next/font loads Nunito Sans and exposes it as --font-nunito-sans;
    * the shipped token stacks (design/tokens/tokens.css) remain canonical as
    * the fallback chain. */
@@ -90,11 +110,11 @@
   --tp-tint-peach: #7a271a;
   --tp-tint-mint: #054f31;
   --tp-tint-sun: #792e0d;
-  --tp-tint-violet: #491c96;
+  --tp-tint-info: #14305a;
   --tp-ink-peach: #fda19b;
   --tp-ink-mint: #6ce9a6;
   --tp-ink-sun: #fec84b;
-  --tp-ink-violet: #c3b5fd;
+  --tp-ink-info: #6aa6ff;
   --tp-neutral: #98a2b3;
   --tp-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
@@ -119,6 +139,10 @@
   --color-tp-brand-navy-deep: var(--tp-brand-navy-deep);
   --color-tp-brand-red: var(--tp-brand-red);
   --color-tp-brand-red-deep: var(--tp-brand-red-deep);
+  --color-tp-brand-red-tint: var(--tp-brand-red-tint);
+  --color-tp-brand-red-tint-line: var(--tp-brand-red-tint-line);
+  --color-tp-brand-on-red: var(--tp-brand-on-red);
+  --color-tp-info: var(--tp-info);
   --color-tp-mint: var(--tp-mint);
   --color-tp-mint-ink: var(--tp-mint-ink);
   --color-tp-sun: var(--tp-sun);
@@ -133,11 +157,11 @@
   --color-tp-tint-peach: var(--tp-tint-peach);
   --color-tp-tint-mint: var(--tp-tint-mint);
   --color-tp-tint-sun: var(--tp-tint-sun);
-  --color-tp-tint-violet: var(--tp-tint-violet);
+  --color-tp-tint-info: var(--tp-tint-info);
   --color-tp-ink-peach: var(--tp-ink-peach);
   --color-tp-ink-mint: var(--tp-ink-mint);
   --color-tp-ink-sun: var(--tp-ink-sun);
-  --color-tp-ink-violet: var(--tp-ink-violet);
+  --color-tp-ink-info: var(--tp-ink-info);
   --color-tp-neutral: var(--tp-neutral);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -158,11 +182,11 @@
  * now governs — margin 0, bg var(--tp-bg) (Mist), color var(--tp-text),
  * font 400 16px/1.6 var(--tp-font-body) (Nunito Sans). */
 
-/* Focus indication per constitution-design.md v4.2.0 §VI — one focus color
- * globally. Mint-ink (5.70:1 on Mist) is retained as the contrast-validated
- * focus token; §VI explicitly does not auto-replace it with brand red. */
+/* Focus indication per constitution-design.md v4.3.0 §VI — one focus color
+ * globally: brand red, 4.28:1 di atas canvas #F5F7FA (ambang elemen UI 3:1).
+ * Item nav aktif memakai red-deep agar tetap >=4.5:1 di atas brand-red-tint. */
 :focus-visible {
-  outline: 2px solid var(--tp-mint-ink);
+  outline: 2px solid var(--tp-brand-red);
   outline-offset: 2px;
 }
 

@@ -9,10 +9,10 @@ interface AvatarProps {
   className?: string;
 }
 
-// Canon tint+ink pairs (§IX): lilac/raw mint are never text colors, so the
-// avatar cycles the shipped tints with their text-safe ink variants.
+// Canon tint+ink pairs (§IX): the raw accent fills are never text colours, so
+// the avatar cycles the shipped tints with their text-safe ink variants.
 const TINTS = [
-  "bg-tp-tint-violet text-tp-ink-violet",
+  "bg-tp-tint-info text-tp-ink-info",
   "bg-tp-tint-mint text-tp-ink-mint",
   "bg-tp-tint-sun text-tp-ink-sun",
   "bg-tp-tint-peach text-tp-ink-peach",

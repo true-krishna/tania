@@ -152,11 +152,11 @@ describe("chart-theme (T017 / D1)", () => {
   it("falls back to the globals.css palette when tokens are not resolvable", () => {
     const theme = resolveChartTheme(document.documentElement);
     expect(theme.distributionColor).toBe("#172b4d");
-    expect(theme.missingColor).toBe("#667085");
+    expect(theme.missingColor).toBe("#6b778c");
     expect(theme.newTalentColor).toBe("#0f6e48");
     expect(theme.churnColor).toBe("#b32318");
     expect(theme.textColor).toBe("#212121");
-    expect(theme.lineColor).toBe("#d0d5dd");
+    expect(theme.lineColor).toBe("#dfe1e6");
   });
 
   it("colors churn with the red ink token (O-R4) and new talent with mint ink", () => {

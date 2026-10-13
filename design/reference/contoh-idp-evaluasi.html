@@ -1,24 +1,35 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TANIA Pulse · IDP dan Evaluasi performa</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap">
-<style id="tp-tokens">/* TANIA Pulse: tokens (terang + gelap).
- * Brand roles mengikuti design constitution v4.2.0 (arah TAN-99 navy+red,
- * disetujui owner): navy = primary action & active navigation, red = brand
- * accent terpisah. Struktur, tipografi, radius, shadow tetap karakter Pulse.
+<style id="tp-tokens">
+/* TANIA Pulse: tokens (terang + gelap).
+ * Brand roles mengikuti design constitution v4.3.0 (arah TAN-99 navy+red,
+ * disetujui owner + kit TANIA Color Guideline v1.2) dan keputusan owner di
+ * TAN-165: navy = primary action; red = brand accent (nav aktif, link, ring
+ * fokus, aksi AI); info = kategori status informasional (menggantikan Violet);
+ * danger = token semantik sendiri, wajib dibedakan dari brand red.
+ * Struktur, tipografi, radius, shadow tetap karakter Pulse.
  * Alias Violet interaktif v4.0.0 (`--tp-primary`, `--tp-primary-deep`,
- * `--tp-lilac`) di-retire; tidak ada varian dark navy/red karena TAN-99
- * light-only (lihat Additional Constraints konstitusi). */
+ * `--tp-lilac`) di-retire; pasangan `--tp-tint-violet`/`--tp-ink-violet` juga
+ * di-retire total (digantikan `--tp-*info`). Tidak ada varian dark navy/red
+ * karena TAN-99 light-only (lihat Additional Constraints konstitusi). */
 :root{--tp-midnight:#212121;
 --tp-brand-navy:#172B4D;--tp-brand-navy-deep:#0B1F4D;--tp-brand-red:#E1231A;--tp-brand-red-deep:#B71C14;
+--tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;
 --tp-nav:var(--tp-brand-navy);--tp-on-nav:#FFFFFF;
---tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;
---tp-bg:#f2f4f7;--tp-surface:#FFFFFF;--tp-line:#d0d5dd;--tp-text:#212121;--tp-muted:#667085;
-/* `--tp-tint-*`/`--tp-ink-*`: pasangan semantik. Peach = error/danger khusus
- * (bukan alias brand red). Violet = kategori semantik legacy (in-progress/
- * info) yang belum dimigrasi — dipakai non-interaktif saja, bukan brand action. */
---tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-violet:#ece9fe;
---tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-violet:#6927da;
---tp-neutral:#667085;
+--tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;--tp-info:#2684FF;
+--tp-bg:#F5F7FA;--tp-surface:#FFFFFF;--tp-line:#DFE1E6;--tp-text:#212121;--tp-muted:#5E6C84;
+/* `--tp-tint-*`/`--tp-ink-*`: pasangan semantik. Peach = error/danger khusus —
+ * token sendiri, TIDAK meng-alias brand red (keputusan owner: danger wajib
+ * dibedakan; brand red hanya aksen/nav/link/fokus). Info = kategori
+ * informasional (in-progress dsb.) menggantikan Violet legacy. */
+--tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-info:#E9F2FF;
+--tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-info:#0B5FD6;
+--tp-neutral:#6B778C;
+/* Bridge aksen ikon (Principle VII): detail "action marker" tetap navy — kit
+ * v1.2 hanya menetapkan ikon merah untuk menu aktif (di-override di
+ * components.css `.tp-nav-item[aria-current]`), bukan untuk semua ikon. */
+--tania-primary:var(--tp-brand-navy);--tania-mint:var(--tp-mint-ink);
 --tp-font-display:Nunito Sans,system-ui,sans-serif;--tp-font-body:Nunito Sans,system-ui,-apple-system,"Segoe UI",sans-serif;
 --tp-r-sm:10px;--tp-r-md:14px;--tp-r-lg:20px;--tp-r-xl:28px;--tp-r-pill:999px;
 --tp-shadow:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.06);
@@ -28,12 +39,14 @@
  * nilai dark dan konstitusi melarang menginferensinya (bukan alasan kembali
  * ke Violet). Token dark non-brand tetap seperti v4.0.0. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
---tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
---tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
 
 :root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
---tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
---tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}</style><style id="tp-components">/* TANIA Pulse (selaras Legion): kelas komponen (.tp-*) */
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}
+</style><style id="tp-components">
+/* TANIA Pulse (selaras Legion): kelas komponen (.tp-*) */
 *{box-sizing:border-box}
 body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var(--tp-font-body)}
 .tp-h1{font:700 clamp(30px,5vw,40px)/1.1 var(--tp-font-display);margin:0}
@@ -45,24 +58,28 @@ body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var
 .tp-btn:hover{background:var(--tp-bg)}
 .tp-btn--primary{background:var(--tp-brand-navy);border-color:var(--tp-brand-navy);color:#fff}
 .tp-btn--primary:hover,.tp-btn--primary:active{background:var(--tp-brand-navy-deep);border-color:var(--tp-brand-navy-deep)}
-.tp-btn:focus-visible,.tp-input:focus-visible,.tp-tab:focus-visible,.tp-nav-item:focus-visible{outline:2px solid var(--tp-mint-ink);outline-offset:2px}
+.tp-btn:focus-visible,.tp-input:focus-visible,.tp-tab:focus-visible,.tp-nav-item:focus-visible{outline:2px solid var(--tp-brand-red);outline-offset:2px}
 .tp-input{width:100%;min-height:44px;padding:0 16px;border:1px solid var(--tp-line);border-radius:var(--tp-r-pill);background:var(--tp-surface);color:var(--tp-text);font:400 14px var(--tp-font-body)}
 .tp-chip{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:var(--tp-r-pill)}
 .tp-chip--peach{background:var(--tp-tint-peach);color:var(--tp-ink-peach)}
 .tp-chip--mint{background:var(--tp-tint-mint);color:var(--tp-ink-mint)}
 .tp-chip--sun{background:var(--tp-tint-sun);color:var(--tp-ink-sun)}
-.tp-chip--violet{background:var(--tp-tint-violet);color:var(--tp-ink-violet)}
+.tp-chip--info{background:var(--tp-tint-info);color:var(--tp-ink-info)}
 .tp-tabs{display:flex;gap:4px;overflow-x:auto;padding:4px;background:var(--tp-bg);border:1px solid var(--tp-line);border-radius:var(--tp-r-md)}
 .tp-tab{flex:none;font:600 14px var(--tp-font-body);padding:8px 14px;border:0;border-radius:var(--tp-r-sm);background:transparent;color:var(--tp-muted);cursor:pointer}
 .tp-tab[aria-selected="true"]{background:var(--tp-surface);color:var(--tp-text);box-shadow:0 0 0 1px var(--tp-line)}
 .tp-nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;color:var(--tp-text);text-decoration:none;font-weight:600}
 .tp-nav-item:hover{background:var(--tp-bg)}
-.tp-nav-item[aria-current="page"]{background:var(--tp-nav);color:var(--tp-on-nav);font-weight:600;--tania-primary:var(--tp-on-nav);--tp-mint-ink:#6ce9a6;--tania-mint:#6ce9a6}
-.tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-tint-violet)}
+/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks red-deep
+ * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Kartu gelap tetap
+ * navy (`--tp-nav`); hanya item menu aktif yang merah. */
+.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-deep);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-deep)}
+.tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-brand-red-tint)}
 .tp-empty{color:var(--tp-muted);font-size:14px;margin:0}
 .tp-empty strong{display:block;color:var(--tp-text);font-weight:600}
 .tp-icon{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}</style><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 .app{display:grid;grid-template-columns:268px 1fr;min-height:100vh}
 .side{position:sticky;top:0;height:100vh;padding:22px 16px;background:var(--tp-surface);border-right:1px solid var(--tp-line);display:flex;flex-direction:column;gap:22px}
 .logo{font:700 30px/1 var(--tp-font-display)}.logo i{color:var(--tp-brand-navy);font-style:normal;font-size:20px;vertical-align:super}
@@ -133,7 +150,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <p style="margin:0 0 6px"><span class="tp-chip tp-chip--mint">Template Talent Digital v2 · terpinned</span></p><p class="tp-label" style="margin:0 0 4px">Skala 1 (perlu pengembangan) sampai 5 (luar biasa).</p><div id="crit"></div>
 <div class="fld" style="margin-top:14px"><label for="nt">Catatan Chapter</label><textarea class="tp-input" id="nt" placeholder="Tulis konteks penilaian atau contoh kerja."></textarea></div>
 <button class="tp-btn tp-btn--primary" id="save">Simpan penilaian</button></div>
-<aside class="tp-card sum" aria-live="polite"><span class="tp-label">Skor rata-rata</span><div class="big2" id="avg">—</div><span class="tp-chip tp-chip--violet" id="lvl">Belum dinilai</span><div class="pb" style="margin-top:14px"><u id="bar" style="width:0"></u></div><p class="tp-label" id="cnt" style="margin:8px 0 16px">0 dari 5 kriteria terisi</p><button class="tp-btn" id="fu" disabled><svg class="tp-icon" aria-hidden="true"><use href="#i-idp"/></svg>Tindak lanjuti dengan IDP</button><p class="tp-empty" style="margin-top:10px">Aktif setelah penilaian disimpan.</p></aside></div></section>
+<aside class="tp-card sum" aria-live="polite"><span class="tp-label">Skor rata-rata</span><div class="big2" id="avg">—</div><span class="tp-chip tp-chip--info" id="lvl">Belum dinilai</span><div class="pb" style="margin-top:14px"><u id="bar" style="width:0"></u></div><p class="tp-label" id="cnt" style="margin:8px 0 16px">0 dari 5 kriteria terisi</p><button class="tp-btn" id="fu" disabled><svg class="tp-icon" aria-hidden="true"><use href="#i-idp"/></svg>Tindak lanjuti dengan IDP</button><p class="tp-empty" style="margin-top:10px">Aktif setelah penilaian disimpan.</p></aside></div></section>
 </main></div></div><div class="toast" id="toast" role="status"></div><script>
 var T=[["Ayu Pratiwi","Network Engineer"],["Bima Santoso","Data Analyst"],["Citra Lestari","Product Owner"],["Dewa Nugraha","QA Engineer"]];
 var R=[{n:0,f:"Cloud networking",d:4,t:6,r:"12 Sep",s:"Berjalan"},{n:1,f:"Data storytelling",d:2,t:5,r:"28 Agu",s:"Perlu review"},{n:2,f:"Kepemimpinan produk",d:6,t:6,r:"30 Sep",s:"Siap ditutup"},{n:3,f:"Test automation",d:1,t:4,r:"2 Sep",s:"Berjalan"}];
@@ -155,7 +172,7 @@ $("crit").innerHTML=C.map(function(c,i){return '<div class="cr" role="radiogroup
 function vals(){return C.map(function(c,i){var x=document.querySelector('input[name="k'+i+'"]:checked');return x?+x.value:0})}
 function calc(){saved=false;$("fu").disabled=true;var v=vals().filter(Boolean),a=v.length?v.reduce(function(x,y){return x+y},0)/v.length:0;
  $("avg").textContent=v.length?a.toFixed(1):"—";$("cnt").textContent=v.length+" dari 5 kriteria terisi";$("bar").style.width=(a/5*100)+"%";
- var l=$("lvl");if(!v.length){l.className="tp-chip tp-chip--violet";l.textContent="Belum dinilai"}else if(a<3){l.className="tp-chip tp-chip--peach";l.textContent="Perlu pengembangan"}else if(a<4.5){l.className="tp-chip tp-chip--mint";l.textContent="Sesuai harapan"}else{l.className="tp-chip tp-chip--sun";l.textContent="Melampaui harapan"}}
+ var l=$("lvl");if(!v.length){l.className="tp-chip tp-chip--info";l.textContent="Belum dinilai"}else if(a<3){l.className="tp-chip tp-chip--peach";l.textContent="Perlu pengembangan"}else if(a<4.5){l.className="tp-chip tp-chip--mint";l.textContent="Sesuai harapan"}else{l.className="tp-chip tp-chip--sun";l.textContent="Melampaui harapan"}}
 $("crit").addEventListener("change",calc);$("tl").addEventListener("change",calc);$("pr").addEventListener("change",calc);
 $("save").addEventListener("click",function(){var k=vals().filter(function(x){return !x}).length;if(k){toast("Isi semua kriteria dulu. Kurang "+k+".");return}calc();saved=true;$("fu").disabled=false;toast("Penilaian disimpan")});
 $("fu").addEventListener("click",function(){var v=vals(),m=v.indexOf(Math.min.apply(null,v));R.unshift({n:+$("tl").value,f:C[m],d:0,t:3,r:"Belum ada",s:"Berjalan"});fresh=0;filter="Semua";
