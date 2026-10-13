@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { AccessRole } from "@/generated/graphql";
 import { getSession } from "@/lib/auth/token-store";
 import { authConfig } from "@/lib/auth/config";
-import { canAccess, type Module } from "@/lib/auth/matrix";
+import { canAccess, canManage, type Module } from "@/lib/auth/matrix";
 
 export function useSessionRole(): AccessRole | null {
   // Session store is synchronous (cookie-backed, src/lib/auth/token-store) —
@@ -21,7 +21,15 @@ export function useSessionRole(): AccessRole | null {
   return role;
 }
 
-export function AuthGuard({ module, children }: { module?: Module; children: React.ReactNode }) {
+export function AuthGuard({
+  module,
+  manage = false,
+  children,
+}: {
+  module?: Module;
+  manage?: boolean;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const role = useSessionRole();
 
@@ -34,13 +42,15 @@ export function AuthGuard({ module, children }: { module?: Module; children: Rea
     }
   }, [role, router]);
 
-  if (module && !authConfig.localOnly && role !== null && !canAccess(role, module)) {
+  const allowed = (r: AccessRole | null | undefined) =>
+    !module || (manage ? canManage(r, module) : canAccess(r, module));
+
+  if (!authConfig.localOnly && role !== null && !allowed(role)) {
     return null;
   }
 
-  if (authConfig.localOnly) {
-    const localRole = authConfig.defaultAccessRole as AccessRole | undefined;
-    if (module && !canAccess(localRole, module)) return null;
+  if (authConfig.localOnly && !allowed(authConfig.defaultAccessRole as AccessRole | undefined)) {
+    return null;
   }
 
   return <>{children}</>;

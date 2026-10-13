@@ -39,6 +39,16 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   audit: ["ADMIN"],
 };
 
+const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
+  employees: ["OPERATION"],
+  assignments: ["CHAPTER"],
+};
+
+export function canManage(role: AccessRole | null | undefined, module: Module): boolean {
+  if (!role) return false;
+  return (MANAGE_ROLES[module] ?? []).includes(role);
+}
+
 export function canAccess(role: AccessRole | null | undefined, module: Module): boolean {
   if (!role) return false;
   return MODULE_ROLES[module].includes(role);

@@ -10,11 +10,14 @@ import { Card } from "@/components/Card";
 import { PageHeader } from "@/components/PageHeader";
 import { useAssignment } from "@/features/assignments/useAssignment";
 import { EndAssignmentDocument } from "@/generated/graphql";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 
 export default function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data, error } = useAssignment(id);
-  const [endAssignment, { loading }] = useMutation(EndAssignmentDocument);
+  const [endAssignment, { loading, error: endError }] = useMutation(EndAssignmentDocument);
+  const manage = canManage(useSessionRole(), "assignments");
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -64,7 +67,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
         </dl>
       </Card>
 
-      {isActive ? (
+      {isActive && manage ? (
         <Card className="flex max-w-2xl flex-col gap-3 border-amber-200 bg-amber-50">
           <p className="text-sm text-amber-800">
             Mengakhiri assignment ini akan menandainya <strong>selesai</strong> dan mengosongkan
@@ -76,6 +79,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
               disabled={loading}
               onClick={() =>
                 endAssignment({
+                  onError: () => undefined,
                   variables: {
                     id,
                     periodEnd: assignment.periodEnd ?? new Date().toISOString().slice(0, 10),
@@ -86,8 +90,13 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
               Ya, akhiri assignment
             </Button>
           </div>
+          {endError ? (
+            <p role="alert" className="text-sm text-red-700">
+              {endError.message}
+            </p>
+          ) : null}
         </Card>
-      ) : (
+      ) : isActive ? null : (
         <p className="w-fit rounded-full bg-tp-tint-info px-4 py-1.5 text-sm text-tp-ink-info">
           Assignment selesai.
         </p>
