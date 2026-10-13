@@ -37,25 +37,38 @@ describe("Sidebar", () => {
     }
   });
 
-  it("keeps the Employees nav scoped to Operation and Admin", () => {
+  it("keeps the Employee section scoped to Operation and Admin", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().queryByRole("link", { name: "Employees" })).toBeNull();
+    expect(desktopNav().queryByRole("button", { name: "Employee" })).toBeNull();
     expect(compactNav().queryByRole("link", { name: "Employees" })).toBeNull();
     talent.unmount();
 
     const chapter = renderSidebar({ role: "CHAPTER" });
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
     expect(desktopNav().queryByRole("link", { name: "Employees" })).toBeNull();
-    expect(compactNav().queryByRole("link", { name: "Employees" })).toBeNull();
+    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
     chapter.unmount();
 
     const admin = renderSidebar({ role: "ADMIN" });
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
     expect(desktopNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
     expect(compactNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
     admin.unmount();
 
     renderSidebar({ role: "OPERATION" });
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
     expect(desktopNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
     expect(compactNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
+  });
+
+  it("merges Employees, Kontrak, and Assignments under one Employee section (TAN-173)", () => {
+    renderSidebar({ role: "ADMIN", pathname: "/employees" });
+    const group = desktopNav().getByRole("button", { name: "Employee" });
+    expect(group).toHaveAttribute("aria-expanded", "true");
+    expect(desktopNav().getByRole("link", { name: "Employees" })).toHaveAttribute("href", "/employees");
+    expect(desktopNav().getByRole("link", { name: "Kontrak" })).toHaveAttribute("href", "/contracts");
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toHaveAttribute("href", "/assignments");
   });
 
   it("expands a multi-page section on click", () => {
