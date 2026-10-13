@@ -34,6 +34,7 @@ export default function ProjectsPage() {
       items={data}
       status={status}
       error={error}
+      searchable
       select={{
         label: "Unit",
         placeholder: "pilih unit pemilik —",

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { IconSearch } from "@tabler/icons-react";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
@@ -24,6 +25,9 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   selectIdOf?: (item: T) => string | undefined;
 
   extraColumn?: { label: string; render: (item: T) => React.ReactNode };
+  // Opt-in search over the already-served rows (FR-001). Chapter deliberately
+  // does not pass this — see spec Out of Scope.
+  searchable?: boolean;
   onCreate: (values: { name: string; selectValue?: string }) => Promise<void>;
   onUpdate: (id: string, values: { name: string; selectValue?: string }) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
@@ -45,6 +49,7 @@ export function MasterDataSection<T extends MasterDataItem>({
   select,
   selectIdOf,
   extraColumn,
+  searchable = false,
   onCreate,
   onUpdate,
   onToggleActive,
@@ -56,7 +61,23 @@ export function MasterDataSection<T extends MasterDataItem>({
   const [nameError, setNameError] = React.useState<string | undefined>();
   const [selectError, setSelectError] = React.useState<string | undefined>();
   const [busy, setBusy] = React.useState(false);
-  const { pageRows, pagination } = useTablePagination(items);
+  // Search keyword lives in local component state — never in the URL (D6).
+  const [query, setQuery] = React.useState("");
+
+  const needle = query.trim().toLowerCase();
+  // Filter BEFORE pagination so the existing `safePage` clamp covers FR-005
+  // (D2): a shrinking result set never strands the Admin on an empty page.
+  const visibleItems = React.useMemo(
+    () =>
+      searchable && needle
+        ? (items ?? []).filter((item) => item.name.toLowerCase().includes(needle))
+        : items,
+    [items, needle, searchable],
+  );
+  const { pageRows, pagination } = useTablePagination(visibleItems);
+
+  // Search wording derives from the page's own label (D5).
+  const searchLabel = `Cari ${nameLabel.toLowerCase()}`;
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -158,44 +179,69 @@ export function MasterDataSection<T extends MasterDataItem>({
         <EmptyState message={emptyMessage} />
       ) : (
         <>
-          <BoardTable
-            caption={caption}
-            columns={[
-              { key: "name", label: nameLabel },
-              ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
-              { key: "status", label: "Status" },
-              { key: "actions", label: "Aksi" },
-            ]}
-          >
-            {pageRows.map((item) => (
-              <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-                <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
-                {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
-                <td className="px-4 py-2.5">
-                  <StatusBadge active={item.isActive} />
-                </td>
-                <td className="px-4 py-2.5">
-                  {editingId === item.id ? (
-                    <span className="text-xs text-zinc-400">Mengedit…</span>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Button type="button" variant="ghost" onClick={() => startEdit(item)}>
-                        Ubah
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => void onToggleActive(item.id, !item.isActive)}
-                      >
-                        {item.isActive ? "Nonaktifkan" : "Aktifkan"}
-                      </Button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </BoardTable>
-          <Pagination {...pagination} />
+          {searchable ? (
+            <div className="relative max-w-sm">
+              <IconSearch
+                className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
+                aria-hidden
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={`${searchLabel}…`}
+                aria-label={searchLabel}
+                className="h-11 w-full rounded-full border border-tp-line bg-tp-surface pl-11 pr-4 text-sm text-tp-text placeholder:text-tp-muted"
+              />
+            </div>
+          ) : null}
+
+          {visibleItems && visibleItems.length === 0 ? (
+            // No match is its own message, distinct from the "no data yet"
+            // empty state (FR-006).
+            <p className="text-sm text-tp-muted">Tidak ada hasil yang cocok dengan pencarian.</p>
+          ) : (
+            <>
+              <BoardTable
+                caption={caption}
+                columns={[
+                  { key: "name", label: nameLabel },
+                  ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
+                  { key: "status", label: "Status" },
+                  { key: "actions", label: "Aksi" },
+                ]}
+              >
+                {pageRows.map((item) => (
+                  <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
+                    <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
+                    {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
+                    <td className="px-4 py-2.5">
+                      <StatusBadge active={item.isActive} />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {editingId === item.id ? (
+                        <span className="text-xs text-zinc-400">Mengedit…</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Button type="button" variant="ghost" onClick={() => startEdit(item)}>
+                            Ubah
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => void onToggleActive(item.id, !item.isActive)}
+                          >
+                            {item.isActive ? "Nonaktifkan" : "Aktifkan"}
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </BoardTable>
+              <Pagination {...pagination} />
+            </>
+          )}
         </>
       )}
     </div>
