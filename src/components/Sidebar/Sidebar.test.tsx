@@ -25,8 +25,18 @@ describe("Sidebar", () => {
     expect(screen.queryByText("Accounts")).toBeNull();
   });
 
-  // Master's TAN-154 amendment dropped the standalone `/reports/talent` entry,
-  // so the Operation/Admin-only nav item exercised here is now Employees.
+  // Placement amendment (TAN-154, commit c5d8443): the Talent Report content
+  // replaced the Dashboard content for Operation & Chapter, the nav entry was
+  // removed for every role, and /reports/talent now only redirects there.
+  it("no longer lists Laporan Talent in the nav for any role", () => {
+    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
+      const view = renderSidebar({ role });
+      expect(desktopNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+      expect(compactNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+      view.unmount();
+    }
+  });
+
   it("keeps the Employees nav scoped to Operation and Admin", () => {
     const talent = renderSidebar({ role: "TALENT" });
     expect(desktopNav().queryByRole("link", { name: "Employees" })).toBeNull();
