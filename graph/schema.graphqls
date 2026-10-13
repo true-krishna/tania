@@ -74,8 +74,18 @@ type EntraProvision {
 }
 
 enum ContractType {
-  PKWT
-  PKWTT
+  """TPPBW PROHIRE."""
+  TPPBW_PROHIRE
+  """EMPLOYEE MOBILIT."""
+  EMPLOYEE_MOBILIT
+  """PROJECT BASED PROCUREMENT."""
+  PROJECT_BASED_PROCUREMENT
+  """OUTSOURCE TKP."""
+  OUTSOURCE_TKP
+  """KARYAWAN TETAP — kontrak tanpa batas waktu."""
+  KARYAWAN_TETAP
+  """TKWT DIGITAL TALENT."""
+  TKWT_DIGITAL_TALENT
 }
 
 enum EmploymentContractStatus {
@@ -339,7 +349,7 @@ type EmploymentContract {
   workLocation: WorkLocation!
   unit: Unit!
   startDate: Date!
-  """null untuk PKWTT."""
+  """null untuk kontrak tanpa batas waktu (KARYAWAN TETAP)."""
   endDate: Date
   """Turunan tanggal + terminatedAt, tanpa cron (FR-34)."""
   status: EmploymentContractStatus!
@@ -414,7 +424,7 @@ input CreateEmploymentContractInput {
   workLocation: WorkLocation!
   unitId: ID!
   startDate: Date!
-  """Wajib untuk PKWT, null untuk PKWTT."""
+  """Wajib untuk kontrak berbatas waktu; null untuk yang tanpa batas waktu."""
   endDate: Date
   notes: String
 }
@@ -429,11 +439,11 @@ input UpdateEmploymentContractInput {
   notes: String
 }
 
-"""Perpanjangan PKWT — kontrak baru mulai setelah kontrak lama berakhir (FR-36)."""
+"""Perpanjangan kontrak berbatas waktu — kontrak baru mulai setelah kontrak lama berakhir (FR-36)."""
 input RenewContractInput {
   predecessorContractId: ID!
   contractNo: String!
-  contractType: ContractType! = PKWT
+  contractType: ContractType! = TKWT_DIGITAL_TALENT
   officeEmail: String
   nomorInduk: String!
   bandPosition: BandPosition = UNDEFINED
@@ -995,7 +1005,7 @@ type Mutation {
   # --- Kontrak kerja (Operation) ---
   createEmploymentContract(input: CreateEmploymentContractInput!): EmploymentContract!
   updateEmploymentContract(id: ID!, input: UpdateEmploymentContractInput!): EmploymentContract!
-  """Perpanjangan PKWT — kontrak baru terkait predecessor (FR-36)."""
+  """Perpanjangan kontrak berbatas waktu — kontrak baru terkait predecessor (FR-36)."""
   renewEmploymentContract(input: RenewContractInput!): EmploymentContract!
   """Mutasi: akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38)."""
   recordEmployeeMutation(input: RecordMutationInput!): EmploymentContract!

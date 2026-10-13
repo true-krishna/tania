@@ -194,8 +194,18 @@ export type ContractEndReason =
   | 'RETIREMENT';
 
 export type ContractType =
-  | 'PKWT'
-  | 'PKWTT';
+  /** EMPLOYEE MOBILIT. */
+  | 'EMPLOYEE_MOBILIT'
+  /** KARYAWAN TETAP — kontrak tanpa batas waktu. */
+  | 'KARYAWAN_TETAP'
+  /** OUTSOURCE TKP. */
+  | 'OUTSOURCE_TKP'
+  /** PROJECT BASED PROCUREMENT. */
+  | 'PROJECT_BASED_PROCUREMENT'
+  /** TKWT DIGITAL TALENT. */
+  | 'TKWT_DIGITAL_TALENT'
+  /** TPPBW PROHIRE. */
+  | 'TPPBW_PROHIRE';
 
 export type CreateAssignmentInput = {
   employeeId: Scalars['ID']['input'];
@@ -234,7 +244,7 @@ export type CreateEmploymentContractInput = {
   contractNo: Scalars['String']['input'];
   contractType: ContractType;
   employeeId: Scalars['ID']['input'];
-  /** Wajib untuk PKWT, null untuk PKWTT. */
+  /** Wajib untuk kontrak berbatas waktu; null untuk yang tanpa batas waktu. */
   endDate?: InputMaybe<Scalars['Date']['input']>;
   jobLevel?: InputMaybe<Scalars['String']['input']>;
   jobRoleId: Scalars['ID']['input'];
@@ -462,7 +472,7 @@ export type EmploymentContract = {
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   employee: Employee;
-  /** null untuk PKWTT. */
+  /** null untuk kontrak tanpa batas waktu (KARYAWAN TETAP). */
   endDate?: Maybe<Scalars['Date']['output']>;
   endReason?: Maybe<ContractEndReason>;
   id: Scalars['ID']['output'];
@@ -754,7 +764,7 @@ export type Mutation = {
   recordEmployeeMutation: EmploymentContract;
   /** Exchange a refresh token for a new token pair (rotating). */
   refreshSession: AuthPayload;
-  /** Perpanjangan PKWT — kontrak baru terkait predecessor (FR-36). */
+  /** Perpanjangan kontrak berbatas waktu — kontrak baru terkait predecessor (FR-36). */
   renewEmploymentContract: EmploymentContract;
   /** Resign: akhiri kontrak aktif (end_reason=resign), status → RESIGNED, nonaktifkan akun (FR-37, FR-46). */
   resignEmployee: Employee;
@@ -1398,7 +1408,7 @@ export type RecordMutationInput = {
   workLocation: WorkLocation;
 };
 
-/** Perpanjangan PKWT — kontrak baru mulai setelah kontrak lama berakhir (FR-36). */
+/** Perpanjangan kontrak berbatas waktu — kontrak baru mulai setelah kontrak lama berakhir (FR-36). */
 export type RenewContractInput = {
   bandPosition?: InputMaybe<BandPosition>;
   contractNo: Scalars['String']['input'];

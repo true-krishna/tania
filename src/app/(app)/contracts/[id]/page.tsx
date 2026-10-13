@@ -16,6 +16,7 @@ import {
   CONTRACT_STATUS_LABEL,
   CONTRACT_TYPE_LABEL,
   WORK_LOCATION_LABEL,
+  isOpenEndedContractType,
 } from "@/features/contracts/labels";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { ContractCycleActions } from "@/features/contracts/ContractCycleActions";
@@ -58,7 +59,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         title={contract.contractNo}
         subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
         actions={
-          contract.contractType === "PKWT" ? (
+          !isOpenEndedContractType(contract.contractType) ? (
             <Link href={`/contracts/${id}/renew`} className="no-underline">
               <Button variant="primary">Perpanjang kontrak</Button>
             </Link>
