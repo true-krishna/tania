@@ -5,23 +5,27 @@
 @import "../../design/tokens/components.css";
 
 /*
- * TANIA Pulse tokens (constitution-design.md v4.3.0) — re-based verbatim onto
+ * TANIA Pulse tokens (constitution-design.md v4.3.1) — re-based verbatim onto
  * the shipped `design/tokens/tokens.css`: owner-approved TAN-99 navy+red brand
  * roles replace the retired Violet voltage, dan keputusan owner TAN-165
  * (13 Okt) menutup lima butir audit: kategori violet -> info biru, aksen merah
  * diaktifkan (nav aktif, link, ring fokus, aksi AI), danger tetap token
  * terpisah yang wajib dibedakan, logo resmi dari brand kit, dan permukaan
- * netral ikut `#F5F7FA / #DFE1E6 / #6B778C` seperti mockup A/B. The legacy
- * `--brand-*` Violet ramp was retired with the TAN-165 re-branding; every
- * consumer migrated to the `.tp-*` canon tokens (see the issue comment for the
- * full list).
+ * netral ikut `#F5F7FA / #DFE1E6 / #6B778C` seperti mockup A/B. Putaran kedua
+ * jawaban owner (13 Okt) menambahkan seri data visualisasi `--tp-chart-1..4`
+ * (kit v1.2) dan pasangan nav aktif mode gelap dari varian dark mockup TAN-99.
+ * The legacy `--brand-*` Violet ramp was retired with the TAN-165 re-branding;
+ * every consumer migrated to the `.tp-*` canon tokens (see the issue comment
+ * for the full list).
  *
  * Brand roles: `--tp-brand-navy` = primary action; `--tp-brand-red` = brand
  * accent (nav aktif, link, ring fokus, aksi AI); `--tp-info*` = kategori status
  * informasional (menggantikan Violet); danger (`--tp-peach*`) tetap token
- * sendiri dan wajib dibedakan dari brand red. Dark values for navy/red are not
- * shipped — TAN-99 is light-only and the constitution forbids inferring them
- * (it is not permission to fall back to Violet).
+ * sendiri dan wajib dibedakan dari brand red. Dark values for the navy/red
+ * solids are still not shipped — TAN-99 defines no dark brand solids and the
+ * constitution forbids inferring them (it is not permission to fall back to
+ * Violet); the active-nav pair is the one exception, taken verbatim from the
+ * TAN-99 dark mockup.
  */
 :root {
   --background: #f5f7fa;
@@ -48,6 +52,10 @@
   --tp-brand-red-tint: #fce9e8;
   --tp-brand-red-tint-line: #f5b8b5;
   --tp-brand-on-red: #ffffff;
+  /* Teks di atas `--tp-brand-red-tint` (nav aktif, chip merah). Light = red-deep
+   * `#B71C14` (5.63:1); dark memakai nilai varian dark mockup TAN-99
+   * (`tania-profil-navy.html`) `#FF8A82` di atas tint `#3A1715` (7.05:1). */
+  --tp-brand-red-ink: #b71c14;
   --tp-nav: var(--tp-brand-navy);
   --tp-on-nav: #ffffff;
   --tp-mint: #168a5b;
@@ -76,6 +84,14 @@
   --tp-ink-sun: #b54708;
   --tp-ink-info: #0b5fd6;
   --tp-neutral: #6b778c;
+  /* Data visualisasi (kit v1.2 §Data visualisasi): urutan seri chart-1..4; track
+   * bar memakai canvas `--tp-bg`. Pemetaan seri di app ini menjaga makna:
+   * chart-1 = churn/penurunan, chart-2 = distribusi, chart-3 = new talent,
+   * chart-4 = disiapkan untuk seri peringatan (warn). */
+  --tp-chart-1: #e1231a;
+  --tp-chart-2: #2684ff;
+  --tp-chart-3: #168a5b;
+  --tp-chart-4: #d9822b;
   /* Icon accent bridge (Principle VII): action-marker details read brand navy;
    * the kit makes icons red only inside the active menu item, which is done by
    * a scoped override in `design/tokens/components.css`. */
@@ -96,12 +112,15 @@
   --tp-dur: 200ms;
 }
 
-/* Dark theme (constitution-design.md v4.0.0 non-brand values, unchanged).
- * Brand navy/red are deliberately not overridden: TAN-99 defines no dark brand
- * values, so they inherit the light tokens. Explicit opt-in only until
- * components stop hardcoding light colors. */
+/* Dark theme (constitution-design.md v4.3.1). Non-brand values keep the v4.0.0
+ * set; the active-nav pair takes the values from the TAN-99 dark mockup
+ * (`tania-profil-navy.html`): tint `#3A1715` + ink `#FF8A82`, so the active menu
+ * item and the `.tp-ai` block stay legible when the surface is dark. Solid
+ * brand navy/red are still not overridden (TAN-99 defines no dark brand solids). */
 :root[data-theme="dark"] {
   --tp-mint-ink: #6ce9a6;
+  --tp-brand-red-tint: #3a1715;
+  --tp-brand-red-ink: #ff8a82;
   --tp-bg: #101828;
   --tp-surface: #1d2939;
   --tp-line: #344054;
@@ -142,6 +161,11 @@
   --color-tp-brand-red-tint: var(--tp-brand-red-tint);
   --color-tp-brand-red-tint-line: var(--tp-brand-red-tint-line);
   --color-tp-brand-on-red: var(--tp-brand-on-red);
+  --color-tp-brand-red-ink: var(--tp-brand-red-ink);
+  --color-tp-chart-1: var(--tp-chart-1);
+  --color-tp-chart-2: var(--tp-chart-2);
+  --color-tp-chart-3: var(--tp-chart-3);
+  --color-tp-chart-4: var(--tp-chart-4);
   --color-tp-info: var(--tp-info);
   --color-tp-mint: var(--tp-mint);
   --color-tp-mint-ink: var(--tp-mint-ink);
@@ -182,9 +206,10 @@
  * now governs — margin 0, bg var(--tp-bg) (Mist), color var(--tp-text),
  * font 400 16px/1.6 var(--tp-font-body) (Nunito Sans). */
 
-/* Focus indication per constitution-design.md v4.3.0 §VI — one focus color
- * globally: brand red, 4.28:1 di atas canvas #F5F7FA (ambang elemen UI 3:1).
- * Item nav aktif memakai red-deep agar tetap >=4.5:1 di atas brand-red-tint. */
+/* Focus indication per constitution-design.md v4.3.1 §VI — one focus color
+ * globally: brand red, 4.39:1 di atas canvas #F5F7FA (ambang elemen UI 3:1).
+ * Item nav aktif memakai brand-red-ink agar tetap >=4.5:1 di atas
+ * brand-red-tint (light 5.63:1, dark 7.05:1). */
 :focus-visible {
   outline: 2px solid var(--tp-brand-red);
   outline-offset: 2px;

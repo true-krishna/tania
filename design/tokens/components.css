@@ -22,10 +22,11 @@ body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var
 .tp-tab[aria-selected="true"]{background:var(--tp-surface);color:var(--tp-text);box-shadow:0 0 0 1px var(--tp-line)}
 .tp-nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;color:var(--tp-text);text-decoration:none;font-weight:600}
 .tp-nav-item:hover{background:var(--tp-bg)}
-/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks red-deep
- * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Kartu gelap tetap
- * navy (`--tp-nav`); hanya item menu aktif yang merah. */
-.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-deep);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-deep)}
+/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks brand-red-ink
+ * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Pasangan tint/ink
+ * mengikuti varian dark mockup TAN-99 sehingga menu aktif tetap terbaca saat
+ * sidebar gelap (#3A1715/#FF8A82). Kartu gelap tetap navy (`--tp-nav`). */
+.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-ink);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-ink)}
 .tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-brand-red-tint)}
 .tp-empty{color:var(--tp-muted);font-size:14px;margin:0}
 .tp-empty strong{display:block;color:var(--tp-text);font-weight:600}

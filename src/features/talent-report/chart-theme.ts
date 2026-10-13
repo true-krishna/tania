@@ -5,17 +5,19 @@
  * sekali via `getComputedStyle` ke warna hex. Semua warna laporan berasal dari
  * modul ini — jangan hardcode warna di komponen chart.
  *
- * Pemetaan semantik warna (spek — Bentuk Visual):
- * - distribusi (V-1…V-4) → `--tp-brand-navy` (netral laporan; hijau/merah hanya untuk gerakan)
- * - "Belum diisi" (MISSING) → `--tp-neutral` (abu-abu, selalu terakhir & berbeda visual)
- * - new talent (V-5) → `--tp-mint-ink` (hijau; fallback `--tp-mint` bila perlu lebih terang)
- * - churn (V-5) → **`--tp-ink-peach` (merah)** — keputusan O-R4 dicatat di sini:
- *   kandidat `--tp-peach` (#f97066, terlalu terang untuk seri di atas kanvas putih)
- *   vs `--tp-ink-peach` (#b32318, satu-satunya token merah-ink di palet, kontras
- *   memadai untuk garis/bar dan sejajar pasangan `--tp-mint-ink` new talent).
- *   Dipilih `--tp-ink-peach`; keputusan visual, mudah ditukar di satu tempat ini.
+ * Pemetaan semantik warna — seri data visualisasi kit v1.2 (`--tp-chart-1..4`,
+ * urutan kit: merah/biru/hijau/oranye) dengan makna seri kami dipertahankan:
+ * - churn (V-5, penurunan) → `--tp-chart-1` `#E1231A` (kit: seri 1 = merah)
+ * - distribusi (V-1…V-4, satu seri) → `--tp-chart-2` `#2684FF` (hue laporan,
+ *   menggantikan navy yang kini khusus aksi primer)
+ * - new talent (V-5, pertumbuhan) → `--tp-chart-3` `#168A5B`
+ * - "Belum diisi" (MISSING) → `--tp-neutral` (abu-abu, selalu terakhir &
+ *   berbeda visual — bukan bagian urutan seri)
+ * - `--tp-chart-4` `#D9822B` disiapkan untuk seri peringatan (warn) berikutnya;
+ *   belum ada seri yang memakainya.
+ * Keputusan owner TAN-165 (13 Okt): "remap seri chart ke chart-1..4 kit".
  *
- * Fallback mengikuti nilai `--tp-*` v4.3.0 di `src/app/globals.css` (TANIA Pulse)
+ * Fallback mengikuti nilai `--tp-*` v4.3.1 di `src/app/globals.css` (TANIA Pulse)
  * agar hasil tetap deterministik di SSR/jsdom (token tak ter-resolve) — uji di
  * `talent-report.test.tsx`.
  */
@@ -28,26 +30,26 @@ export interface ChartTheme {
   mutedColor: string;
   /** Garis sumbu/pembagi — `--tp-line`. */
   lineColor: string;
-  /** Bar/kolom kategori sah (VALUE) — `--tp-brand-navy`. */
+  /** Bar/kolom kategori sah (VALUE) — `--tp-chart-2`. */
   distributionColor: string;
   /** Kategori "Belum diisi" (MISSING) — `--tp-neutral`. */
   missingColor: string;
-  /** Seri new talent (V-5) — `--tp-mint-ink`. */
+  /** Seri new talent (V-5) — `--tp-chart-3`. */
   newTalentColor: string;
-  /** Seri churn (V-5) — `--tp-ink-peach` (keputusan O-R4). */
+  /** Seri churn (V-5) — `--tp-chart-1`. */
   churnColor: string;
 }
 
-/** Nilai fallback = literal token `--tp-*` v4.3.0 di `src/app/globals.css`. */
+/** Nilai fallback = literal token `--tp-*` v4.3.1 di `src/app/globals.css`. */
 const FALLBACK: ChartTheme = {
   fontFamily: 'Nunito Sans, system-ui, sans-serif',
   textColor: "#212121",
   mutedColor: "#5e6c84",
   lineColor: "#dfe1e6",
-  distributionColor: "#172b4d",
+  distributionColor: "#2684ff",
   missingColor: "#6b778c",
-  newTalentColor: "#0f6e48",
-  churnColor: "#b32318",
+  newTalentColor: "#168a5b",
+  churnColor: "#e1231a",
 };
 
 function readToken(root: Element | undefined, name: string, fallback: string): string {
@@ -70,9 +72,9 @@ export function resolveChartTheme(root?: Element): ChartTheme {
     textColor: readToken(root, "--tp-text", FALLBACK.textColor),
     mutedColor: readToken(root, "--tp-muted", FALLBACK.mutedColor),
     lineColor: readToken(root, "--tp-line", FALLBACK.lineColor),
-    distributionColor: readToken(root, "--tp-brand-navy", FALLBACK.distributionColor),
+    distributionColor: readToken(root, "--tp-chart-2", FALLBACK.distributionColor),
     missingColor: readToken(root, "--tp-neutral", FALLBACK.missingColor),
-    newTalentColor: readToken(root, "--tp-mint-ink", FALLBACK.newTalentColor),
-    churnColor: readToken(root, "--tp-ink-peach", FALLBACK.churnColor),
+    newTalentColor: readToken(root, "--tp-chart-3", FALLBACK.newTalentColor),
+    churnColor: readToken(root, "--tp-chart-1", FALLBACK.churnColor),
   };
 }
