@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
 import { IconChevronDown } from "@tabler/icons-react";
@@ -47,13 +48,17 @@ export function Sidebar({ role, pathname }: SidebarProps) {
   )?.id;
 
   const brand = (
-    <div className="flex shrink-0 items-center gap-2.5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-tp-brand-navy text-sm font-bold text-white">
-        T
-      </span>
-      <span className="hidden min-w-0 flex-col leading-tight min-[861px]:flex">
-        <span className="truncate text-sm font-semibold text-tp-text">Tania</span>
-        <span className="truncate text-[11px] text-tp-muted">Talent Management</span>
+    <div className="flex shrink-0 flex-col gap-1">
+      <Image
+        src="/brand/tania-wordmark@4x.png"
+        alt="TANIA"
+        width={141}
+        height={49}
+        priority
+        className="h-auto w-[103px]"
+      />
+      <span className="hidden truncate text-[11px] text-tp-muted min-[861px]:block">
+        Talent Management
       </span>
     </div>
   );

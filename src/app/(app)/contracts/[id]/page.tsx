@@ -75,7 +75,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dd className="text-zinc-900">
               <Link
                 href={`/employees/${contract.employee.id}`}
-                className="text-tp-brand-navy hover:underline"
+                className="text-tp-brand-red-deep hover:underline"
               >
                 {contract.employee.fullName}
               </Link>
@@ -144,7 +144,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Kontrak Pendahulu</dt>
             <dd className="text-zinc-900">
               {contract.predecessor ? (
-                <Link href={`/contracts/${contract.predecessor.id}`} className="text-tp-brand-navy hover:underline">
+                <Link href={`/contracts/${contract.predecessor.id}`} className="text-tp-brand-red-deep hover:underline">
                   {contract.predecessor.contractNo}
                 </Link>
               ) : (

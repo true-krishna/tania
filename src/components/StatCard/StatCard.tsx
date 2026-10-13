@@ -23,7 +23,7 @@ export function StatCard({ label, value, icon: Icon, hint }: StatCardProps) {
         {hint ? <p className="tp-label mt-1.5">{hint}</p> : null}
       </div>
       {Icon ? (
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-tp-sm bg-tp-tint-violet text-tp-ink-violet">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-tp-sm bg-tp-tint-info text-tp-ink-info">
           <Icon className="h-[18px] w-[18px]" aria-hidden />
         </span>
       ) : null}

@@ -15,7 +15,7 @@
  *   memadai untuk garis/bar dan sejajar pasangan `--tp-mint-ink` new talent).
  *   Dipilih `--tp-ink-peach`; keputusan visual, mudah ditukar di satu tempat ini.
  *
- * Fallback mengikuti nilai `--tp-*` v4.2.0 di `src/app/globals.css` (TANIA Pulse)
+ * Fallback mengikuti nilai `--tp-*` v4.3.0 di `src/app/globals.css` (TANIA Pulse)
  * agar hasil tetap deterministik di SSR/jsdom (token tak ter-resolve) — uji di
  * `talent-report.test.tsx`.
  */
@@ -38,14 +38,14 @@ export interface ChartTheme {
   churnColor: string;
 }
 
-/** Nilai fallback = literal token `--tp-*` v4.2.0 di `src/app/globals.css`. */
+/** Nilai fallback = literal token `--tp-*` v4.3.0 di `src/app/globals.css`. */
 const FALLBACK: ChartTheme = {
   fontFamily: 'Nunito Sans, system-ui, sans-serif',
   textColor: "#212121",
-  mutedColor: "#667085",
-  lineColor: "#d0d5dd",
+  mutedColor: "#5e6c84",
+  lineColor: "#dfe1e6",
   distributionColor: "#172b4d",
-  missingColor: "#667085",
+  missingColor: "#6b778c",
   newTalentColor: "#0f6e48",
   churnColor: "#b32318",
 };

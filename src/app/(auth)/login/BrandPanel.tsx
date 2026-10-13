@@ -1,8 +1,8 @@
 /**
  * Login brand panel — mockup structure (TAN-160) translated to the ratified
- * canon (constitution-design v4.2.0):
+ * canon (constitution-design v4.3.0):
  * - the mockup's navy brand panel maps to the single permitted dark surface
- *   `--tp-nav` (now navy `#172B4D`) — one dark card per screen (§II);
+ *   `--tp-nav` (navy `#172B4D`) — one dark card per screen (§II);
  * - its red accent maps to `--tp-brand-red`, the separate brand accent
  *   voltage (§II, §IX);
  * - decoration is flat geometry in one hue at stepped opacity — the mockup's
@@ -10,13 +10,15 @@
  *   Constraints: no gradients, no faces);
  * - secondary copy on the dark surface is white at reduced opacity (white on
  *   navy = 14.1:1; white at 80% ≈ 9.6:1), which stays well above §VI;
- * - the logo slot is a **labeled placeholder** (§I): the TAN-99 embedded
- *   wordmark is exploratory and official artwork is not supplied yet, so no
- *   recreated mark/wordmark ships here.
+ * - the logo slot now ships the brand owner's official artwork (§I): the white
+ *   TANIA wordmark from `TANIA_Brand_Color_Kit.zip`, on the navy surface where
+ *   the guideline requires the white variant.
  *
  * Copy is the owner's revision from the TAN-160 review (platform, not DPS
  * cockpit; no invite-only/contact-admin wording).
  */
+import Image from "next/image";
+
 export function BrandPanel() {
   return (
     <aside className="relative hidden overflow-hidden bg-tp-nav lg:flex lg:w-1/2">
@@ -57,20 +59,20 @@ export function BrandPanel() {
 }
 
 /**
- * Labeled logo placeholder (constitution §I). Official TANIA artwork and its
- * light/dark variants are still pending from the brand owner, so the login
- * panel deliberately ships a labeled slot instead of a recreated wordmark.
+ * Official TANIA wordmark (brand kit, white variant) — the brand owner supplied
+ * the artwork in TAN-99, so the labeled placeholder is retired (§I). The `@4x`
+ * file is the density source; the rendered box stays at the logo guideline's
+ * native 141x49 (never enlarged above native size without production vector).
  */
 function BrandMark() {
   return (
-    <div
-      className="inline-flex w-fit items-center rounded-tp-sm border border-dashed border-white/40 px-3 py-2"
-      role="img"
-      aria-label="Logo TANIA — placeholder, artwork resmi menyusul"
-    >
-      <span className="text-[13px] font-semibold text-white/80">
-        Logo TANIA — placeholder (artwork resmi menyusul)
-      </span>
-    </div>
+    <Image
+      src="/brand/tania-wordmark-white@4x.png"
+      alt="TANIA"
+      width={141}
+      height={49}
+      priority
+      className="h-auto w-[141px]"
+    />
   );
 }

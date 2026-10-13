@@ -97,8 +97,41 @@ Catatan:
 - `--tp-peach`/`--tp-ink-peach` tetap token error/danger khusus; **tidak**
   meng-alias brand red.
 - `--tp-tint-violet`/`--tp-ink-violet` dipertahankan hanya sebagai kategori
-  semantik legacy (in-progress/grouping) non-interaktif (konstitusi §IX).
+  semantik legacy (in-progress/grouping) non-interaktif (konstitusi §IX) —
+  **digantikan di amendemen v4.3.0 di bawah** (jadi Info biru, pasangan violet
+  di-retire).
 - Nilai dark navy/red tidak di-ship (TAN-99 light-only); token dark non-brand
   tetap seperti v4.0.0.
 - Alias Violet di atas sudah dihapus dari `tokens.css`, `tailwind.preset.js`,
   ikon, dan halaman acuan. Tindak lanjut: migrasi kategori semantik violet.
+
+
+## Amendemen v4.3.0 (2026-10-13) — keputusan owner atas audit gap TAN-165
+
+Owner menutup lima butir audit; nilai berikut sudah dipropagasi ke
+`tokens/tokens.css`, `tailwind.preset.js`, `components.css`, ikon, dan halaman
+acuan.
+
+| Keputusan | Nilai | Mengganti |
+|---|---|---|
+| Kategori violet → status informasional | `--tp-info` `#2684FF` / `--tp-tint-info` `#E9F2FF` / `--tp-ink-info` `#0B5FD6` | `--tp-tint-violet` `#ece9fe` / `--tp-ink-violet` `#6927da` (**di-retire**) |
+| Aksen merah diaktifkan | nav aktif (`--tp-brand-red-tint` `#FCE9E8` + teks/ikon merah), link, ring fokus `2px #E1231A`, aksi AI `.tp-ai` | nav aktif navy + teks putih; link navy; ring fokus `--tp-mint-ink` |
+| Danger wajib dibedakan | tetap `--tp-peach` `#f97066` / `--tp-tint-peach` `#fee4e2` / `--tp-ink-peach` `#b32318` + **ikon & teks wajib** | usulan kit `danger = brand red` **ditolak** |
+| Logo resmi | `public/brand/` (wordmark navy/putih + ikon "T" dari brand kit) | placeholder berlabel + teks "T" di sidebar |
+| Permukaan netral ikut kit | kanvas `#F5F7FA`, garis `#DFE1E6`, `--tp-neutral` `#6B778C`, `--tp-muted` `#5E6C84` | `#f2f4f7` / `#d0d5dd` / `#667085` |
+
+Catatan:
+- `--tp-brand-red-tint-line` `#F5B8B5` dan `--tp-brand-on-red` `#FFFFFF`
+  ditambahkan sebagai pendukung peran aksen merah.
+- `--tp-muted` memakai `#5E6C84` (kit "mute-strong"), bukan `#6B778C`: warna
+  mute hanya 4.2:1 di atas kanvas baru sementara teks sekunder juga muncul di
+  atas kanvas.
+- Detail ikon di item menu aktif ikut merah (resep "Cockpit" kit); di luar itu
+  bridge `--tania-primary` tetap navy (Prinsip VII).
+- Nilai dark navy/red tetap **tidak** di-ship (kit light-only) — dependency
+  yang sama seperti v4.2.0.
+- Tema gelap: `--tp-tint-info` gelap `#14305A` / ink `#6AA6FF` mengikuti blok
+  dark kit untuk token non-brand.
+- Preseden konstitusi naik ke **v4.3.0** (`docs/constitution/` +
+  `.specify/memory/`): §I/§II/§V/§VI/§VII/§IX dan Additional Constraints
+  diamendemen, catatan amendemen ditambahkan.
