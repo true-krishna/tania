@@ -1,7 +1,5 @@
 import {
-  IconBriefcase,
   IconChartBar,
-  IconClipboardText,
   IconClock,
   IconClockHour3,
   IconDatabase,
@@ -42,20 +40,31 @@ export interface NavSubmenu {
 export type NavEntry = NavStandalone | NavSubmenu;
 
 /**
- * Single source of truth for the sidebar. Multi-page sections (Master Data)
- * are groups rendered as expandable submenus; the rest are direct links.
- * Visibility follows the role & module matrix (`@/lib/auth/matrix`); deferred
- * modules (IDP, Evaluation) have no entry. The backend still enforces
+ * Single source of truth for the sidebar. Multi-page sections (Employee,
+ * Master Data) are groups rendered as expandable submenus; the rest are direct
+ * links. Visibility follows the role & module matrix (`@/lib/auth/matrix`);
+ * deferred modules (IDP, Evaluation) have no entry. The backend still enforces
  * authorization (FR-15/16).
  */
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: MODULE_ROLES.dashboard },
   { kind: "link", href: "/activities", label: "Aktivitas saya", icon: IconClockHour3, roles: MODULE_ROLES.activities },
   { kind: "link", href: "/workload", label: "Workload", icon: IconChartBar, roles: MODULE_ROLES.workload },
-  { kind: "link", href: "/employees", label: "Employees", icon: IconUsers, roles: MODULE_ROLES.employees },
+  {
+    kind: "group",
+    id: "employee",
+    label: "Employee",
+    icon: IconUsers,
+    // The group shows whenever the role can reach at least one child, i.e. the
+    // union of the children's matrix roles.
+    roles: [...new Set([...MODULE_ROLES.employees, ...MODULE_ROLES.contracts, ...MODULE_ROLES.assignments])],
+    children: [
+      { href: "/employees", label: "Data Karyawan", roles: MODULE_ROLES.employees },
+      { href: "/contracts", label: "Kontrak", roles: MODULE_ROLES.contracts },
+      { href: "/assignments", label: "Assignments", roles: MODULE_ROLES.assignments },
+    ],
+  },
   { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: MODULE_ROLES.entra },
-  { kind: "link", href: "/contracts", label: "Kontrak", icon: IconBriefcase, roles: MODULE_ROLES.contracts },
-  { kind: "link", href: "/assignments", label: "Assignments", icon: IconClipboardText, roles: MODULE_ROLES.assignments },
   { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: MODULE_ROLES.cv },
   { kind: "link", href: "/accounts", label: "Accounts", icon: IconUserShield, roles: MODULE_ROLES.accounts },
   {

@@ -37,24 +37,40 @@ describe("Sidebar", () => {
     }
   });
 
-  it("shows Employees to every role (002-tania-rbac matrix)", () => {
+it("shows the Employee section to any role with an accessible child (002-tania-rbac matrix)", () => {
     for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
       const view = renderSidebar({ role });
-      expect(desktopNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
-      expect(compactNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
+      expect(desktopNav().getByRole("button", { name: "Employee" })).toBeInTheDocument();
       view.unmount();
     }
   });
 
-  it("shows Assignments to Chapter, Operation and Talent but not Admin", () => {
-    for (const role of ["TALENT", "CHAPTER", "OPERATION"] as const) {
+  it("scopes the Employee section children per the role matrix", () => {
+    const visibleByRole: Record<"TALENT" | "CHAPTER" | "OPERATION" | "ADMIN", readonly string[]> = {
+      TALENT: ["Data Karyawan", "Assignments"],
+      CHAPTER: ["Data Karyawan", "Assignments"],
+      OPERATION: ["Data Karyawan", "Kontrak", "Assignments"],
+      ADMIN: ["Data Karyawan", "Kontrak", "Assignments"],
+    };
+    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
       const view = renderSidebar({ role });
-      expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
+      fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
+      for (const label of ["Data Karyawan", "Kontrak", "Assignments"]) {
+        const link = desktopNav().queryByRole("link", { name: label });
+        if (visibleByRole[role].includes(label)) expect(link).toBeInTheDocument();
+        else expect(link).toBeNull();
+      }
       view.unmount();
     }
-    renderSidebar({ role: "ADMIN" });
-    expect(desktopNav().queryByRole("link", { name: "Assignments" })).toBeNull();
-    expect(compactNav().queryByRole("link", { name: "Assignments" })).toBeNull();
+  });
+
+  it("merges Employees, Kontrak, and Assignments under one Employee section (TAN-173)", () => {
+    renderSidebar({ role: "ADMIN", pathname: "/employees" });
+    const group = desktopNav().getByRole("button", { name: "Employee" });
+    expect(group).toHaveAttribute("aria-expanded", "true");
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("href", "/employees");
+    expect(desktopNav().getByRole("link", { name: "Kontrak" })).toHaveAttribute("href", "/contracts");
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toHaveAttribute("href", "/assignments");
   });
 
   it("lists no deferred IDP or Evaluation entry for any role", () => {
