@@ -7,11 +7,13 @@
  * Struktur, tipografi, radius, shadow tetap karakter Pulse.
  * Alias Violet interaktif v4.0.0 (`--tp-primary`, `--tp-primary-deep`,
  * `--tp-lilac`) di-retire; pasangan `--tp-tint-violet`/`--tp-ink-violet` juga
- * di-retire total (digantikan `--tp-*info`). Tidak ada varian dark navy/red
- * karena TAN-99 light-only (lihat Additional Constraints konstitusi). */
+ * di-retire total (digantikan `--tp-*info`). Varian dark untuk pasangan nav
+ * aktif (`--tp-brand-red-tint`/`--tp-brand-red-ink`) diambil apa adanya dari
+ * varian dark mockup TAN-99 (`tania-profil-navy.html`), bukan inferensi;
+ * solid navy/red tetap tanpa varian dark. */
 :root{--tp-midnight:#212121;
 --tp-brand-navy:#172B4D;--tp-brand-navy-deep:#0B1F4D;--tp-brand-red:#E1231A;--tp-brand-red-deep:#B71C14;
---tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;
+--tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;--tp-brand-red-ink:#B71C14;
 --tp-nav:var(--tp-brand-navy);--tp-on-nav:#FFFFFF;
 --tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;--tp-info:#2684FF;
 --tp-bg:#F5F7FA;--tp-surface:#FFFFFF;--tp-line:#DFE1E6;--tp-text:#212121;--tp-muted:#5E6C84;
@@ -22,6 +24,11 @@
 --tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-info:#E9F2FF;
 --tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-info:#0B5FD6;
 --tp-neutral:#6B778C;
+/* Seri data visualisasi (kit v1.2 §Data visualisasi): urutan seri chart-1..4;
+ * track bar memakai `--tp-bg` (canvas). Seri kita memakai urutan makna:
+ * chart-1 = churn/penurunan, chart-2 = distribusi (hue laporan), chart-3 = new
+ * talent, chart-4 = disiapkan untuk seri peringatan (warn). */
+--tp-chart-1:#E1231A;--tp-chart-2:#2684FF;--tp-chart-3:#168A5B;--tp-chart-4:#D9822B;
 /* Bridge aksen ikon (Principle VII): detail "action marker" tetap navy — kit
  * v1.2 hanya menetapkan ikon merah untuk menu aktif (di-override di
  * components.css `.tp-nav-item[aria-current]`), bukan untuk semua ikon. */
@@ -31,13 +38,14 @@
 --tp-shadow:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.06);
 --tp-ease:cubic-bezier(.2,.8,.2,1);--tp-dur:200ms;}
 
-/* Dark theme: brand navy/red TIDAK di-override — TAN-99 tidak mendefinisikan
- * nilai dark dan konstitusi melarang menginferensinya (bukan alasan kembali
- * ke Violet). Token dark non-brand tetap seperti v4.0.0. */
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
+/* Dark theme: pasangan nav aktif memakai nilai varian dark mockup TAN-99
+ * (`--tp-tint-peach`/`--tp-ink-peach` di mockup) — #3A1715 tint + #FF8A82 ink —
+ * sehingga menu aktif tetap >=4.5:1 saat sidebar gelap. Solid navy/red tetap
+ * tanpa varian dark; token dark non-brand tetap seperti v4.0.0. */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-brand-red-tint:#3A1715;--tp-brand-red-ink:#FF8A82;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
 --tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
 --tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
 
-:root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
+:root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-brand-red-tint:#3A1715;--tp-brand-red-ink:#FF8A82;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
 --tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
 --tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}

@@ -131,17 +131,18 @@ describe("chart-theme (T017 / D1)", () => {
       "--tp-line",
       "--tp-brand-navy",
       "--tp-neutral",
-      "--tp-mint-ink",
-      "--tp-ink-peach",
+      "--tp-chart-1",
+      "--tp-chart-2",
+      "--tp-chart-3",
     ]) {
       document.documentElement.style.removeProperty(name);
     }
   });
 
   it("resolves --tp-* tokens via getComputedStyle (canvas cannot read CSS variables)", () => {
-    document.documentElement.style.setProperty("--tp-brand-navy", "#123456");
-    document.documentElement.style.setProperty("--tp-mint-ink", "#0a6b5b");
-    document.documentElement.style.setProperty("--tp-ink-peach", "#b32318");
+    document.documentElement.style.setProperty("--tp-chart-2", "#123456");
+    document.documentElement.style.setProperty("--tp-chart-3", "#0a6b5b");
+    document.documentElement.style.setProperty("--tp-chart-1", "#b32318");
 
     const theme = resolveChartTheme(document.documentElement);
     expect(theme.distributionColor).toBe("#123456");
@@ -151,18 +152,19 @@ describe("chart-theme (T017 / D1)", () => {
 
   it("falls back to the globals.css palette when tokens are not resolvable", () => {
     const theme = resolveChartTheme(document.documentElement);
-    expect(theme.distributionColor).toBe("#172b4d");
+    expect(theme.distributionColor).toBe("#2684ff");
     expect(theme.missingColor).toBe("#6b778c");
-    expect(theme.newTalentColor).toBe("#0f6e48");
-    expect(theme.churnColor).toBe("#b32318");
+    expect(theme.newTalentColor).toBe("#168a5b");
+    expect(theme.churnColor).toBe("#e1231a");
     expect(theme.textColor).toBe("#212121");
     expect(theme.lineColor).toBe("#dfe1e6");
   });
 
-  it("colors churn with the red ink token (O-R4) and new talent with mint ink", () => {
+  it("maps the series onto the kit chart palette (chart-1..3) with meaning preserved", () => {
     const theme = resolveChartTheme();
-    expect(theme.churnColor).toMatch(/^#b32318$/i);
-    expect(theme.newTalentColor).toMatch(/^#0f6e48$/i);
+    expect(theme.churnColor).toMatch(/^#e1231a$/i);
+    expect(theme.distributionColor).toMatch(/^#2684ff$/i);
+    expect(theme.newTalentColor).toMatch(/^#168a5b$/i);
     expect(theme.churnColor).not.toBe(theme.newTalentColor);
     expect(theme.missingColor).not.toBe(theme.distributionColor);
   });

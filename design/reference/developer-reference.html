@@ -11,11 +11,13 @@
  * Struktur, tipografi, radius, shadow tetap karakter Pulse.
  * Alias Violet interaktif v4.0.0 (`--tp-primary`, `--tp-primary-deep`,
  * `--tp-lilac`) di-retire; pasangan `--tp-tint-violet`/`--tp-ink-violet` juga
- * di-retire total (digantikan `--tp-*info`). Tidak ada varian dark navy/red
- * karena TAN-99 light-only (lihat Additional Constraints konstitusi). */
+ * di-retire total (digantikan `--tp-*info`). Varian dark untuk pasangan nav
+ * aktif (`--tp-brand-red-tint`/`--tp-brand-red-ink`) diambil apa adanya dari
+ * varian dark mockup TAN-99 (`tania-profil-navy.html`), bukan inferensi;
+ * solid navy/red tetap tanpa varian dark. */
 :root{--tp-midnight:#212121;
 --tp-brand-navy:#172B4D;--tp-brand-navy-deep:#0B1F4D;--tp-brand-red:#E1231A;--tp-brand-red-deep:#B71C14;
---tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;
+--tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;--tp-brand-red-ink:#B71C14;
 --tp-nav:var(--tp-brand-navy);--tp-on-nav:#FFFFFF;
 --tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;--tp-info:#2684FF;
 --tp-bg:#F5F7FA;--tp-surface:#FFFFFF;--tp-line:#DFE1E6;--tp-text:#212121;--tp-muted:#5E6C84;
@@ -26,6 +28,11 @@
 --tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-info:#E9F2FF;
 --tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-info:#0B5FD6;
 --tp-neutral:#6B778C;
+/* Seri data visualisasi (kit v1.2 §Data visualisasi): urutan seri chart-1..4;
+ * track bar memakai `--tp-bg` (canvas). Seri kita memakai urutan makna:
+ * chart-1 = churn/penurunan, chart-2 = distribusi (hue laporan), chart-3 = new
+ * talent, chart-4 = disiapkan untuk seri peringatan (warn). */
+--tp-chart-1:#E1231A;--tp-chart-2:#2684FF;--tp-chart-3:#168A5B;--tp-chart-4:#D9822B;
 /* Bridge aksen ikon (Principle VII): detail "action marker" tetap navy — kit
  * v1.2 hanya menetapkan ikon merah untuk menu aktif (di-override di
  * components.css `.tp-nav-item[aria-current]`), bukan untuk semua ikon. */
@@ -35,14 +42,15 @@
 --tp-shadow:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.06);
 --tp-ease:cubic-bezier(.2,.8,.2,1);--tp-dur:200ms;}
 
-/* Dark theme: brand navy/red TIDAK di-override — TAN-99 tidak mendefinisikan
- * nilai dark dan konstitusi melarang menginferensinya (bukan alasan kembali
- * ke Violet). Token dark non-brand tetap seperti v4.0.0. */
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
+/* Dark theme: pasangan nav aktif memakai nilai varian dark mockup TAN-99
+ * (`--tp-tint-peach`/`--tp-ink-peach` di mockup) — #3A1715 tint + #FF8A82 ink —
+ * sehingga menu aktif tetap >=4.5:1 saat sidebar gelap. Solid navy/red tetap
+ * tanpa varian dark; token dark non-brand tetap seperti v4.0.0. */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-brand-red-tint:#3A1715;--tp-brand-red-ink:#FF8A82;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
 --tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
 --tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
 
-:root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
+:root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-brand-red-tint:#3A1715;--tp-brand-red-ink:#FF8A82;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
 --tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
 --tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}
 </style><style id="tp-components">
@@ -70,10 +78,11 @@ body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var
 .tp-tab[aria-selected="true"]{background:var(--tp-surface);color:var(--tp-text);box-shadow:0 0 0 1px var(--tp-line)}
 .tp-nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;color:var(--tp-text);text-decoration:none;font-weight:600}
 .tp-nav-item:hover{background:var(--tp-bg)}
-/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks red-deep
- * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Kartu gelap tetap
- * navy (`--tp-nav`); hanya item menu aktif yang merah. */
-.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-deep);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-deep)}
+/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks brand-red-ink
+ * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Pasangan tint/ink
+ * mengikuti varian dark mockup TAN-99 sehingga menu aktif tetap terbaca saat
+ * sidebar gelap (#3A1715/#FF8A82). Kartu gelap tetap navy (`--tp-nav`). */
+.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-ink);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-ink)}
 .tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-brand-red-tint)}
 .tp-empty{color:var(--tp-muted);font-size:14px;margin:0}
 .tp-empty strong{display:block;color:var(--tp-text);font-weight:600}
@@ -95,7 +104,7 @@ ul{color:var(--tp-muted);padding-left:20px;max-width:70ch}li{margin:4px 0}</styl
 <div class="cb"><button class="cp" data-for="c-font">Salin</button><pre id="c-font"><code>&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&amp;display=swap"&gt;</code></pre></div>
 <p class="tp-label">tokens.css</p><div class="cb"><button class="cp" data-for="c-tok">Salin</button><pre id="c-tok"><code></code></pre></div><p class="tp-label">components.css</p><div class="cb"><button class="cp" data-for="c-comp">Salin</button><pre id="c-comp"><code></code></pre></div>
 <h2 class="tp-h2">2. Warna</h2>
-<div class="tp-card sc" style="padding:6px 8px"><table><tr><th>Token</th><th>Nilai</th><th>Pemakaian</th><th>Kontras</th></tr><tr><td><code>--tp-midnight / --tp-text</code></td><td>#212121</td><td>Teks utama, judul</td><td>≈15:1 di atas latar halaman</td></tr><tr><td><code>--tp-brand-navy</code></td><td>#172B4D</td><td>Tombol utama, aksen ikon</td><td>14.1:1 dengan teks putih</td></tr><tr><td><code>--tp-brand-navy-deep</code></td><td>#0B1F4D</td><td>Hover dan tekan tombol utama</td><td>15.9:1 dengan teks putih</td></tr><tr><td><code>--tp-nav</code></td><td>var(--tp-brand-navy) · #172B4D</td><td>Kartu gelap (teks putih)</td><td>14.1:1</td></tr><tr><td><code>--tp-brand-red / --tp-brand-red-deep</code></td><td>#E1231A / #B71C14</td><td>Aksen brand: menu aktif, link, ring fokus, aksi AI. Bukan token error/danger</td><td>Teks link pakai red-deep (6.0:1 di atas kanvas); ring fokus red 4.3:1</td></tr><tr><td><code>--tp-brand-red-tint</code></td><td>#FCE9E8</td><td>Latar menu aktif dan blok AI (teks #B71C14)</td><td>5.6:1</td></tr><tr><td><code>--tp-info / --tp-tint-info / --tp-ink-info</code></td><td>#2684FF / #E9F2FF / #0B5FD6</td><td>Status informasional, in-progress, berjalan</td><td>Teks info 5.1:1 di atas tint</td></tr><tr><td><code>--tp-mint / --tp-mint-ink</code></td><td>#168A5B / #0F6E48</td><td>Selesai, aksen ikon. Ink untuk ikon di atas putih</td><td>Ink 6.3:1 di atas putih</td></tr><tr><td><code>--tp-peach / --tp-tint-peach / --tp-ink-peach</code></td><td>#f97066 / #fee4e2 / #b32318</td><td>Danger/error — token sendiri, wajib dibedakan dengan ikon + teks</td><td>Ink 5.5:1 di atas tint</td></tr><tr><td><code>--tp-sun</code></td><td>#D9822B</td><td>Pencapaian; teks di atasnya ink #212121</td><td>—</td></tr><tr><td><code>--tp-bg / --tp-surface / --tp-line</code></td><td>#F5F7FA / #FFFFFF / #DFE1E6</td><td>Latar halaman dan header profil (latar netral, tanpa gradasi) / kartu / garis</td><td>—</td></tr><tr><td><code>--tp-neutral / --tp-muted</code></td><td>#6B778C / #5E6C84 (gelap: #98a2b3)</td><td>Progres, border blok AI, label, nilai kosong. Muted dipakai untuk teks karena #6B778C hanya 4.2:1 di atas kanvas</td><td>Muted 4.9:1 di atas kanvas</td></tr></table></div>
+<div class="tp-card sc" style="padding:6px 8px"><table><tr><th>Token</th><th>Nilai</th><th>Pemakaian</th><th>Kontras</th></tr><tr><td><code>--tp-midnight / --tp-text</code></td><td>#212121</td><td>Teks utama, judul</td><td>≈15:1 di atas latar halaman</td></tr><tr><td><code>--tp-brand-navy</code></td><td>#172B4D</td><td>Tombol utama, aksen ikon</td><td>14.1:1 dengan teks putih</td></tr><tr><td><code>--tp-brand-navy-deep</code></td><td>#0B1F4D</td><td>Hover dan tekan tombol utama</td><td>15.9:1 dengan teks putih</td></tr><tr><td><code>--tp-nav</code></td><td>var(--tp-brand-navy) · #172B4D</td><td>Kartu gelap (teks putih)</td><td>14.1:1</td></tr><tr><td><code>--tp-brand-red / --tp-brand-red-deep</code></td><td>#E1231A / #B71C14</td><td>Aksen brand: menu aktif, link, ring fokus, aksi AI. Bukan token error/danger</td><td>Teks link pakai red-deep (6.0:1 di atas kanvas); ring fokus red 4.3:1</td></tr><tr><td><code>--tp-brand-red-tint</code></td><td>#FCE9E8 (gelap: #3A1715)</td><td>Latar menu aktif dan blok AI</td><td>5.6:1 dengan teks brand-red-ink</td></tr><tr><td><code>--tp-brand-red-ink</code></td><td>#B71C14 (gelap: #FF8A82)</td><td>Teks di atas brand-red-tint: menu aktif. Nilai gelap diambil dari varian dark mockup TAN-99</td><td>5.6:1 terang · 7.1:1 gelap</td></tr><tr><td><code>--tp-chart-1..4</code></td><td>#E1231A / #2684FF / #168A5B / #D9822B</td><td>Urutan seri data visualisasi (kit v1.2): churn, distribusi, new talent, cadangan warn. Track bar memakai <code>--tp-bg</code> (canvas)</td><td>Seri hanya untuk garis/bar, bukan teks</td></tr><tr><td><code>--tp-info / --tp-tint-info / --tp-ink-info</code></td><td>#2684FF / #E9F2FF / #0B5FD6</td><td>Status informasional, in-progress, berjalan</td><td>Teks info 5.1:1 di atas tint</td></tr><tr><td><code>--tp-mint / --tp-mint-ink</code></td><td>#168A5B / #0F6E48</td><td>Selesai, aksen ikon. Ink untuk ikon di atas putih</td><td>Ink 6.3:1 di atas putih</td></tr><tr><td><code>--tp-peach / --tp-tint-peach / --tp-ink-peach</code></td><td>#f97066 / #fee4e2 / #b32318</td><td>Danger/error — token sendiri, wajib dibedakan dengan ikon + teks</td><td>Ink 5.5:1 di atas tint</td></tr><tr><td><code>--tp-sun</code></td><td>#D9822B</td><td>Pencapaian; teks di atasnya ink #212121</td><td>—</td></tr><tr><td><code>--tp-bg / --tp-surface / --tp-line</code></td><td>#F5F7FA / #FFFFFF / #DFE1E6</td><td>Latar halaman dan header profil (latar netral, tanpa gradasi) / kartu / garis</td><td>—</td></tr><tr><td><code>--tp-neutral / --tp-muted</code></td><td>#6B778C / #5E6C84 (gelap: #98a2b3)</td><td>Progres, border blok AI, label, nilai kosong. Muted dipakai untuk teks karena #6B778C hanya 4.2:1 di atas kanvas</td><td>Muted 4.9:1 di atas kanvas</td></tr></table></div>
 <p class="lead" style="margin-top:12px">Palet mengikuti arah brand navy+red TAN-99 (konstitusi desain v4.3.0 + kit Color Guideline v1.2): navy sebagai warna aksi utama, merah sebagai aksen brand (menu aktif, link, ring fokus, aksi AI), biru untuk status informasional, netral sebagai kanvas, success/warning/danger sebagai aksen semantik. Danger adalah token terpisah dari merah brand dan wajib dibedakan dengan ikon + teks; hijau hanya untuk data/ikon, bukan teks. Antarmuka tidak memakai gradien. Tema gelap tersedia lewat <code>prefers-color-scheme</code> atau <code>data-theme="dark"</code>.</p>
 <h2 class="tp-h2">3. Tipografi dan bentuk</h2>
 <div class="tp-card sc" style="padding:6px 8px"><table><tr><th>Peran</th><th>Font</th><th>Ukuran</th><th>Line-height</th><th>Tracking</th></tr><tr><td>Judul halaman</td><td>Nunito Sans 700</td><td>clamp(30px,5vw,40px)</td><td>1.1</td><td>0</td></tr><tr><td>Judul seksi</td><td>Nunito Sans 700</td><td>22px</td><td>1.25</td><td>0</td></tr><tr><td>Judul kartu</td><td>Nunito Sans 700</td><td>17px</td><td>1.3</td><td>0</td></tr><tr><td>Isi</td><td>Nunito Sans 400</td><td>16px</td><td>1.6</td><td>0</td></tr><tr><td>Label & metadata</td><td>Nunito Sans 400</td><td>13–14px</td><td>1.5</td><td>0</td></tr><tr><td>Tombol & tab</td><td>Nunito Sans 600</td><td>14px</td><td>1</td><td>0</td></tr></table></div>
@@ -113,8 +122,9 @@ ul{color:var(--tp-muted);padding-left:20px;max-width:70ch}li{margin:4px 0}</styl
   theme: { extend: {
     colors: {
       midnight:'#212121', mist:'#F5F7FA', line:'#DFE1E6', muted:'#5E6C84', neutral:'#6B778C', nav:'#172B4D',
-      brand:{ navy:'#172B4D', 'navy-deep':'#0B1F4D', red:'#E1231A', 'red-deep':'#B71C14', 'red-tint':'#FCE9E8', 'red-tint-line':'#F5B8B5', 'on-red':'#FFFFFF' },
+      brand:{ navy:'#172B4D', 'navy-deep':'#0B1F4D', red:'#E1231A', 'red-deep':'#B71C14', 'red-ink':'#B71C14', 'red-tint':'#FCE9E8', 'red-tint-line':'#F5B8B5', 'on-red':'#FFFFFF' },
       info:{ DEFAULT:'#2684FF', tint:'#E9F2FF', ink:'#0B5FD6' },
+      chart:{ 1:'#E1231A', 2:'#2684FF', 3:'#168A5B', 4:'#D9822B' },
       mint:{ DEFAULT:'#168A5B', ink:'#0F6E48' }, peach:'#f97066', sun:'#D9822B'
     },
     fontFamily:{ display:['Nunito Sans','system-ui','sans-serif'], sans:['Nunito Sans','system-ui','sans-serif'] },
@@ -124,7 +134,7 @@ ul{color:var(--tp-muted);padding-left:20px;max-width:70ch}li{margin:4px 0}</styl
   } }
 }</code></pre></div>
 <h2 class="tp-h2">6. Aturan wajib</h2>
-<ul><li>Ikon: outline 2 px, ujung membulat, 24 px (20 px untuk menu padat), satu detail navy atau hijau (success) per ikon.</li><li>Fokus keyboard selalu terlihat (outline mint-ink 2 px). Jangan menghapus outline.</li><li>Hormati <code>prefers-reduced-motion</code>. Satu-satunya animasi otomatis adalah riak sinyal di header profil.</li><li>Teks isi minimal 4.5:1, ikon dan elemen UI minimal 3:1.</li><li>Sentence case di semua teks. Nama aksi sama di seluruh alur (“Simpan perubahan” lalu “Perubahan disimpan”).</li><li>Mode hanya baca ditandai teks “Hanya baca” dan tanpa tombol ubah.</li><li>Logo Telkom Indonesia dan wordmark TANIA resmi dipakai dari aset asli, bukan dari teks di halaman contoh.</li></ul></div><script>
+<ul><li>Ikon: outline 2 px, ujung membulat, 24 px (20 px untuk menu padat), satu detail navy atau hijau (success) per ikon.</li><li>Fokus keyboard selalu terlihat (outline brand red 2 px). Jangan menghapus outline.</li><li>Hormati <code>prefers-reduced-motion</code>. Satu-satunya animasi otomatis adalah riak sinyal di header profil.</li><li>Teks isi minimal 4.5:1, ikon dan elemen UI minimal 3:1.</li><li>Sentence case di semua teks. Nama aksi sama di seluruh alur (“Simpan perubahan” lalu “Perubahan disimpan”).</li><li>Mode hanya baca ditandai teks “Hanya baca” dan tanpa tombol ubah.</li><li>Logo Telkom Indonesia dan wordmark TANIA resmi dipakai dari aset asli, bukan dari teks di halaman contoh.</li></ul></div><script>
 function fill(id,src){var e=document.getElementById(id),s=document.getElementById(src);if(e&&s)e.firstChild.textContent=s.textContent.trim().replace(/\}\s*(?=[.@:\*a-z])/g,"}\n")}
 fill("c-tok","tp-tokens");fill("c-comp","tp-components");
 document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=document.getElementById(b.dataset.for).textContent;
