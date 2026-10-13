@@ -37,31 +37,29 @@ describe("Sidebar", () => {
     }
   });
 
-it("shows the Employee section to any role with an accessible child (002-tania-rbac matrix)", () => {
-    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
-      const view = renderSidebar({ role });
-      expect(desktopNav().getByRole("button", { name: "Employee" })).toBeInTheDocument();
-      view.unmount();
-    }
-  });
+  it("keeps the Employee section scoped to Operation and Admin", () => {
+    const talent = renderSidebar({ role: "TALENT" });
+    expect(desktopNav().queryByRole("button", { name: "Employee" })).toBeNull();
+    expect(compactNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
+    talent.unmount();
 
-  it("scopes the Employee section children per the role matrix", () => {
-    const visibleByRole: Record<"TALENT" | "CHAPTER" | "OPERATION" | "ADMIN", readonly string[]> = {
-      TALENT: ["Data Karyawan", "Assignments"],
-      CHAPTER: ["Data Karyawan", "Assignments"],
-      OPERATION: ["Data Karyawan", "Kontrak", "Assignments"],
-      ADMIN: ["Data Karyawan", "Kontrak", "Assignments"],
-    };
-    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
-      const view = renderSidebar({ role });
-      fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
-      for (const label of ["Data Karyawan", "Kontrak", "Assignments"]) {
-        const link = desktopNav().queryByRole("link", { name: label });
-        if (visibleByRole[role].includes(label)) expect(link).toBeInTheDocument();
-        else expect(link).toBeNull();
-      }
-      view.unmount();
-    }
+    const chapter = renderSidebar({ role: "CHAPTER" });
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
+    expect(desktopNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
+    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
+    chapter.unmount();
+
+    const admin = renderSidebar({ role: "ADMIN" });
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    admin.unmount();
+
+    renderSidebar({ role: "OPERATION" });
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
   });
 
   it("merges Employees, Kontrak, and Assignments under one Employee section (TAN-173)", () => {
@@ -71,17 +69,6 @@ it("shows the Employee section to any role with an accessible child (002-tania-r
     expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("href", "/employees");
     expect(desktopNav().getByRole("link", { name: "Kontrak" })).toHaveAttribute("href", "/contracts");
     expect(desktopNav().getByRole("link", { name: "Assignments" })).toHaveAttribute("href", "/assignments");
-  });
-
-  it("lists no deferred IDP or Evaluation entry for any role", () => {
-    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
-      const view = renderSidebar({ role, pathname: "/evaluations/my" });
-      for (const name of ["IDP", "Evaluations", "Roster", "Periode", "Template", "Evaluasi Saya"]) {
-        expect(screen.queryByRole("link", { name })).toBeNull();
-        expect(screen.queryByRole("button", { name: new RegExp(name) })).toBeNull();
-      }
-      view.unmount();
-    }
   });
 
   it("expands a multi-page section on click", () => {
@@ -102,14 +89,21 @@ it("shows the Employee section to any role with an accessible child (002-tania-r
   });
 
   it("marks the most specific route active", () => {
-    renderSidebar({ pathname: "/master-data/projects/new" });
-    expect(desktopNav().getByRole("link", { name: "Project" })).toHaveAttribute("aria-current", "page");
-    expect(desktopNav().getByRole("link", { name: "Unit" })).not.toHaveAttribute("aria-current");
+    renderSidebar({ pathname: "/evaluations/periods/new" });
+    expect(desktopNav().getByRole("link", { name: "Periode" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("link", { name: "Roster" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("shows only the role-scoped child of a section", () => {
+    renderSidebar({ role: "TALENT", pathname: "/evaluations/my" });
+    expect(desktopNav().getByRole("link", { name: "Evaluasi Saya" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().queryByRole("link", { name: "Roster" })).toBeNull();
   });
 
   it("marks the active link in the compact strip without expanding anything", () => {
-    renderSidebar({ role: "TALENT", pathname: "/cv" });
-    expect(compactNav().getByRole("link", { name: "CV" })).toHaveAttribute("aria-current", "page");
+    renderSidebar({ role: "TALENT", pathname: "/evaluations/my" });
+    expect(compactNav().getByRole("link", { name: "Evaluasi Saya" })).toHaveAttribute("aria-current", "page");
+    // The strip is flat: no expandable group buttons.
     expect(compactNav().queryByRole("button")).toBeNull();
   });
 
@@ -154,9 +148,9 @@ it("shows the Employee section to any role with an accessible child (002-tania-r
   });
 
   it("marks the owning section active in the collapsed rail", () => {
-    renderSidebar({ pathname: "/master-data/chapters" });
+    renderSidebar({ pathname: "/evaluations/periods" });
     fireEvent.click(screen.getByRole("button", { name: "Collapse navigation" }));
-    expect(desktopNav().getByRole("link", { name: "Master Data" })).toHaveAttribute(
+    expect(desktopNav().getByRole("link", { name: "Evaluations" })).toHaveAttribute(
       "aria-current",
       "page",
     );
