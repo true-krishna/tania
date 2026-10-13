@@ -2,16 +2,76 @@
 
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
+import { BoardTable, type Column } from "@/components/BoardTable";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { useSessionRole } from "@/lib/auth/guard";
 import { roleLabel } from "@/features/accounts/roles";
 import { useAuditLogs } from "@/features/audit/useAuditLogs";
 import { ACTION_LABEL, ACTION_PILL } from "@/features/audit/actionLabels";
+import type { AuditLogsQuery } from "@/generated/graphql";
 import type { AccessRole } from "@/generated/graphql/types";
 
 const ROLE_LABEL: Record<AccessRole, string> = roleLabel;
+
+type AuditLogNode = AuditLogsQuery["auditLogs"]["edges"][number]["node"];
+
+const COLUMNS: Column[] = [
+  { key: "waktu", label: "Waktu" },
+  { key: "aksi", label: "Aksi" },
+  { key: "entitas", label: "Entitas" },
+  { key: "aktor", label: "Aktor" },
+  { key: "konteks", label: "IP / Request" },
+  { key: "perubahan", label: "Perubahan" },
+];
+
+function AuditRow({ log }: { log: AuditLogNode }) {
+  return (
+    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
+      <td className="px-4 py-2.5 text-xs whitespace-nowrap text-zinc-500">
+        {formatTime(log.occurredAt)}
+      </td>
+      <td className="px-4 py-2.5">
+        <span
+          className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ACTION_PILL[log.action]}`}
+        >
+          {ACTION_LABEL[log.action]}
+        </span>
+      </td>
+      <td className="px-4 py-2.5 font-medium text-zinc-900">
+        {log.entityType}
+        {log.entityId ? ` · ${log.entityId}` : ""}
+      </td>
+      <td className="px-4 py-2.5 text-zinc-600">
+        {log.actor?.fullName ?? "—"}
+        <span className="block text-xs text-zinc-500">
+          {log.actorRole ? ROLE_LABEL[log.actorRole] : "—"}
+        </span>
+      </td>
+      <td className="px-4 py-2.5 text-xs text-zinc-500">
+        {log.ip ?? "—"}
+        {log.requestId ? (
+          <code className="block max-w-[160px] truncate" title={log.requestId}>
+            {log.requestId}
+          </code>
+        ) : null}
+      </td>
+      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">
+        {log.before ? (
+          <span className="block max-w-[220px] truncate" title={log.before}>
+            Sebelum: {log.before}
+          </span>
+        ) : null}
+        {log.after ? (
+          <span className="block max-w-[220px] truncate" title={log.after}>
+            Sesudah: {log.after}
+          </span>
+        ) : null}
+        {!log.before && !log.after ? "—" : null}
+      </td>
+    </tr>
+  );
+}
 
 /**
  * Admin audit trail viewer (FR-17) — US5.
@@ -35,6 +95,12 @@ export default function AuditPage() {
 
 function AuditViewer() {
   const { status, logs, totalCount, hasNextPage, loadingMore, error, loadMore } = useAuditLogs();
+  const { pageRows, pagination } = useTablePagination(logs, {
+    totalItems: totalCount,
+    hasMore: hasNextPage,
+    loadingMore,
+    loadMore,
+  });
 
   if (status === "loading") return <LoadingState label="Memuat jejak audit…" />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat jejak audit."} />;
@@ -47,50 +113,14 @@ function AuditViewer() {
       />
 
       {logs && logs.length ? (
-        <Card className="flex flex-col gap-3">
-          <ul className="flex flex-col gap-2">
-            {logs.map((log) => (
-              <li key={log.id} className="rounded-md border border-surface-border px-3 py-2 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ACTION_PILL[log.action]}`}
-                    >
-                      {ACTION_LABEL[log.action]}
-                    </span>
-                    <span className="font-medium text-zinc-900">
-                      {log.entityType}
-                      {log.entityId ? ` · ${log.entityId}` : ""}
-                    </span>
-                  </div>
-                  <span className="text-xs text-zinc-500">{formatTime(log.occurredAt)}</span>
-                </div>
-                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
-                  <span>
-                    {log.actor?.fullName ?? "—"} ·{" "}
-                    {log.actorRole ? ROLE_LABEL[log.actorRole] : "—"}
-                  </span>
-                  {log.ip ? <span>IP {log.ip}</span> : null}
-                  {log.requestId ? <code>{log.requestId}</code> : null}
-                </div>
-                {log.before || log.after ? (
-                  <div className="mt-1 flex flex-col gap-1 font-mono text-xs text-zinc-600">
-                    {log.before ? <span>Sebelum: {log.before}</span> : null}
-                    {log.after ? <span>Sesudah: {log.after}</span> : null}
-                  </div>
-                ) : null}
-              </li>
+        <>
+          <BoardTable caption="Jejak audit" columns={COLUMNS}>
+            {pageRows.map((log) => (
+              <AuditRow key={log.id} log={log} />
             ))}
-          </ul>
-
-          {hasNextPage ? (
-            <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
-              {loadingMore ? "Memuat…" : "Muat lebih banyak"}
-            </Button>
-          ) : (
-            <p className="text-xs text-zinc-400">Tidak ada lagi catatan.</p>
-          )}
-        </Card>
+          </BoardTable>
+          <Pagination {...pagination} />
+        </>
       ) : (
         <EmptyState message="Belum ada catatan audit." />
       )}
