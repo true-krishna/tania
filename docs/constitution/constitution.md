@@ -1,10 +1,10 @@
 # Tania Constitution
 
-**Version**: 1.1.1 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-01
+**Version**: 1.2.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-10
 
 ## Preamble
 
-This constitution establishes the governance framework for all Tania engineering work (specification, planning, implementation, review). It consists of three pillars, each detailed in its own document under `.specify/memory/` (mirrored here for convenient reading):
+This constitution establishes the governance framework for all Tania engineering work (specification, planning, implementation, review). It consists of three pillars, each detailed in its own document under `.specify/memory/` (mirrored to `docs/constitution/`):
 
 | Pillar | Document | Grounded in |
 |---|---|---|
@@ -30,6 +30,7 @@ Collect only what the declared purpose requires. Every field is classified at de
 ### III. Security and confidentiality by design (Security, Pasal 35)
 
 TLS in transit; encryption at rest for stores of personal data. Role-based access control with least privilege, enforced server-side. Secrets come from the platform secret store — never committed, never logged. Dependency vulnerability scanning runs in CI; critical findings block release. Audit trails cover every core-data change and are readable only by Admin.
+The Admin-only surface is the audit trail store (`audit_logs`) and its full query surface — unfiltered search, export, cross-entity inspection. A record-scoped change history (before/after values for a single entity, specific data masked, limited to records within the viewer's authorized scope) is a derived projection of those events, not the audit trail surface; it MAY be readable by other roles where a ratified user story requires it.
 
 ### IV. Data subject rights, retention, breach readiness (Security, Pasal 5–13, 36–37, 46)
 
@@ -63,14 +64,6 @@ Errors are handled explicitly — no swallowed errors. Logs are structured, corr
 - **API contract**: the GraphQL schema is the single source of truth for the API; generated clients (`src/generated/graphql/`) are never hand-edited. **Source-of-truth split (clarified in 1.1.1)**: the served schema is `graph/schema.graphqls` in `tania-backend` — frontend codegen targets that schema, because it is what the running API actually exposes; `specs/001-employee-digital-talent-management/contracts/schema.graphql` is the design contract, mirrored byte-for-byte into both repositories, which the served schema converges to. When the contract changes, re-copy the mirror into both repos and regenerate; never let the two drift.
 - **Reproducibility**: a fresh clone builds and tests with documented commands only (`npm install && npm run typecheck && npm test`); local-only steps are defects.
 
-## Precedence
-
-1. **Security Constitution** — statutory obligations (UU PDP) override every other consideration, including design consistency and delivery speed.
-2. **Design Constitution** — shipped Legion tokens and documented invariants override aesthetic preference and convenience.
-3. **Technical Constitution** — quality/testing gates override individual judgment on schedule pressure.
-
-Where pillars conflict with each other, the higher-precedence pillar wins and the conflict is recorded as an amendment proposal.
-
 ## Governance
 
 - All specifications, plans, and implementations MUST be checked against the three pillars; review comments cite the principle.
@@ -84,5 +77,6 @@ Where pillars conflict with each other, the higher-precedence pillar wins and th
 | 1.0.0 | 2026-09-25 | Initial ratification: design, security, and technical pillars. |
 | 1.1.0 | 2026-10-01 | Pinned the frontend stack during project initiation (Technical, Additional Constraints): Next.js App Router + React + TypeScript + TailwindCSS + Apollo Client, Vitest/RTL, eslint + `tsc --noEmit`; GraphQL schema as the single source of truth. |
 | 1.1.1 | 2026-10-01 | Clarification (Technical, Additional Constraints): corrected the declared backend stack (Kafka is not part of the pinned backend stack — that repository's amendment 1.1.0 has no message broker), recorded which parts of the pinned frontend stack are actually installed, and split the API schema source of truth (served schema `graph/schema.graphqls` in `tania-backend` is what codegen targets; the mirrored design contract converges to it). |
+| 1.2.0 | 2026-10-10 | Pinned principle III: the `audit_logs` store and full audit surface remain Admin-only; a record-scoped change history (masked, scope-limited) is a derived projection other roles MAY read where a ratified user story requires it (Operation on employee/contract detail — FR-41). |
 
-**Version**: 1.1.1 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-01
+**Version**: 1.2.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-10

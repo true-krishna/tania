@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Avatar } from "@/components/Avatar";
 import { BarList } from "@/components/BarList";
 import { Card } from "@/components/Card";
 import { ErrorState, LoadingState } from "@/components/DataState";
@@ -11,28 +10,19 @@ import { StatCard } from "@/components/StatCard";
 import {
   IconClipboardCheck,
   IconClipboardText,
-  IconDatabase,
   IconTarget,
   IconUserShield,
   IconUsers,
 } from "@tabler/icons-react";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
-import { OperationCycleWidgets } from "@/features/contracts/OperationCycleWidgets";
+import { TalentReportContent } from "@/features/talent-report/TalentReportPageView";
 import type {
   AssignmentStatus,
   DevelopmentActionStatus,
   DevelopmentMethod,
-  EvaluationPeriodState,
-  IdpStatus,
   PerformanceEvaluationStatus,
 } from "@/generated/graphql/types";
-
-const IDP_STATUS_LABEL: Record<IdpStatus, string> = {
-  IN_PROGRESS: "Berjalan",
-  NEEDS_REVIEW: "Perlu review",
-  COMPLETED: "Selesai",
-};
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -58,12 +48,6 @@ const EVAL_STATUS_LABEL: Record<PerformanceEvaluationStatus, string> = {
   SUBMITTED: "Dikirim",
 };
 
-const PERIOD_STATE_LABEL: Record<EvaluationPeriodState, string> = {
-  SCHEDULED: "Terjadwal",
-  RUNNING: "Berjalan",
-  CLOSED: "Ditutup",
-};
-
 function Panel({
   title,
   children,
@@ -85,22 +69,15 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-zinc-500">{children}</p>;
 }
 
-function PersonRow({ name, code }: { name: string; code: string | null }) {
-  return (
-    <li className="flex items-center gap-3 rounded-lg border border-surface-border px-3 py-2">
-      <Avatar name={name} />
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
-        <p className="truncate text-xs text-zinc-500">{code ?? "—"}</p>
-      </div>
-    </li>
-  );
-}
-
 /**
  * Role-scoped dashboard (US4 / FR-30). The served SDL returns a `Dashboard`
  * union; the concrete member is narrowed from `__typename`, then the matching
  * widget groups render. Data is kept fresh via `cache-and-network` (FR-30).
+ *
+ * Amandemen penempatan (2026-10-12, keputusan pemilik produk, TAN-154):
+ * untuk OperationDashboard & ChapterDashboard konten widget digantikan oleh
+ * konten Laporan Talent (TalentReportContent); Admin & Talent tetap
+ * melihat widget eksisting — laporan talent adalah konten Operation/Chapter.
  */
 export default function DashboardPage() {
   const { status, data, error } = useDashboard();
@@ -169,87 +146,9 @@ export default function DashboardPage() {
         </>
       ) : null}
 
-      {dash.__typename === "OperationDashboard" ? (
-        <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="Karyawan aktif" value={dash.totalActiveEmployees} icon={IconUsers} />
-            <StatCard label="Tidak assignable" value={dash.nonAssignableEmployees} icon={IconClipboardText} />
-            <StatCard label="Unit" value={dash.employeesPerUnit.length} icon={IconDatabase} />
-          </div>
+      {dash.__typename === "OperationDashboard" ? <TalentReportContent /> : null}
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <Panel title="Karyawan per Unit">
-              {dash.employeesPerUnit.length ? (
-                <BarList items={dash.employeesPerUnit.map((u) => ({ label: u.unit.name, value: u.count }))} />
-              ) : (
-                <EmptyNote>Belum ada karyawan per unit.</EmptyNote>
-              )}
-            </Panel>
-
-            <Panel title="Perubahan Karyawan Terbaru">
-              {dash.recentEmployeeChanges.length ? (
-                <ul className="flex flex-col gap-2">
-                  {dash.recentEmployeeChanges.map((e) => (
-                    <PersonRow key={e.id} name={e.fullName} code={e.nomorInduk} />
-                  ))}
-                </ul>
-              ) : (
-                <EmptyNote>Belum ada perubahan terbaru.</EmptyNote>
-              )}
-            </Panel>
-          </div>
-
-          <OperationCycleWidgets />
-        </>
-      ) : null}
-
-      {dash.__typename === "ChapterDashboard" ? (
-        <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="IDP perlu review" value={dash.idpsNeedingReview} icon={IconTarget} />
-            <StatCard
-              label="Talent tanpa penugasan"
-              value={dash.unassignedTalents.length}
-              icon={IconClipboardText}
-            />
-            <StatCard
-              label="Periode evaluasi"
-              value={dash.currentEvaluationPeriod ? PERIOD_STATE_LABEL[dash.currentEvaluationPeriod.state] : "—"}
-              icon={IconClipboardCheck}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <Panel title="Distribusi Status IDP">
-              {dash.idpStatusDistribution.length ? (
-                <BarList items={dash.idpStatusDistribution.map((c) => ({ label: IDP_STATUS_LABEL[c.status], value: c.count }))} />
-              ) : (
-                <EmptyNote>Belum ada IDP.</EmptyNote>
-              )}
-            </Panel>
-
-            <Panel title="Progres Aksi">
-              {dash.actionProgress.length ? (
-                <BarList items={dash.actionProgress.map((c) => ({ label: ACTION_STATUS_LABEL[c.status], value: c.count }))} />
-              ) : (
-                <EmptyNote>Belum ada aksi pengembangan.</EmptyNote>
-              )}
-            </Panel>
-          </div>
-
-          <Panel title="Talent Tanpa Penugasan">
-            {dash.unassignedTalents.length ? (
-              <ul className="flex flex-col gap-2">
-                {dash.unassignedTalents.map((e) => (
-                  <PersonRow key={e.id} name={e.fullName} code={e.nomorInduk} />
-                ))}
-              </ul>
-            ) : (
-              <EmptyNote>Semua talent sudah memiliki penugasan.</EmptyNote>
-            )}
-          </Panel>
-        </>
-      ) : null}
+      {dash.__typename === "ChapterDashboard" ? <TalentReportContent /> : null}
 
       {dash.__typename === "TalentDashboard" ? (
         <>

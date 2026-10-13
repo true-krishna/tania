@@ -132,9 +132,10 @@ test("audit route is only reachable for ADMIN", async ({ page }) => {
   }
 });
 
-test("T028 — Operation melihat 5 grafik laporan talent", async ({ page }) => {
+test("T028 — Operation melihat 5 grafik laporan talent di Dashboard", async ({ page }) => {
   await loginAs(page, SEED_USERS.OPERATION);
-  await page.goto("/reports/talent");
+  // Amandemen penempatan (TAN-154): konten laporan menggantikan konten Dashboard.
+  await page.goto("/dashboard");
 
   for (const label of CHART_LABELS) {
     await expect(chartOf(page, label)).toBeVisible();
@@ -153,7 +154,7 @@ test("T028 — Operation melihat 5 grafik laporan talent", async ({ page }) => {
 
 test("T028 — satu aksi filter memperbarui kelima grafik (SC-04)", async ({ page }) => {
   await loginAs(page, SEED_USERS.OPERATION);
-  await page.goto("/reports/talent");
+  await page.goto("/dashboard");
   await expect(chartOf(page, "Talent per role").locator("canvas")).toBeVisible();
 
   const before = await readAllTotals(page);
@@ -184,7 +185,7 @@ test("T028 — satu aksi filter memperbarui kelima grafik (SC-04)", async ({ pag
 
 test("T028 — Unduh PNG per grafik: event, pola nama, dimensi ≥ 2× (SC-03)", async ({ page }) => {
   await loginAs(page, SEED_USERS.OPERATION);
-  await page.goto("/reports/talent");
+  await page.goto("/dashboard");
   await expect(chartOf(page, "Talent per role").locator("canvas")).toBeVisible();
 
   const startMonth = await page.getByLabel("Bulan mulai").inputValue();
@@ -212,7 +213,7 @@ test("T028 — Unduh PNG per grafik: event, pola nama, dimensi ≥ 2× (SC-03)",
 
 test("T028 — Chapter hanya melihat cakupan chapter-nya (SC-05)", async ({ page }) => {
   await loginAs(page, SEED_USERS.CHAPTER);
-  await page.goto("/reports/talent");
+  await page.goto("/dashboard");
   await expect(chartOf(page, "Talent per role").locator("canvas")).toBeVisible();
 
   const totals = await readAllTotals(page);
@@ -229,10 +230,13 @@ test("T028 — Chapter hanya melihat cakupan chapter-nya (SC-05)", async ({ page
   expect(totals.movement).toBeLessThan(OPERATION_FULL_RANGE.movement);
 });
 
-test("T028 — Talent ditolak membuka laporan (FR-01)", async ({ page }) => {
+test("T028 — Talent tidak melihat laporan; rute lama redirect ke Dashboard (FR-01)", async ({ page }) => {
   await loginAs(page, SEED_USERS.TALENT);
-  await page.goto("/reports/talent");
 
-  await expect(page.getByText(/Akses ditolak/i)).toBeVisible();
+  // Amandemen penempatan: rute /reports/talent hanya redirect — konten laporan
+  // bukan bagian dashboard Talent, dan penegakan authz tetap di server (FR-01).
+  await page.goto("/reports/talent");
+  await page.waitForURL(/\/dashboard/);
   await expect(chartOf(page, "Talent per role")).toHaveCount(0);
+  await expect(page.getByText(/Penugasan aktif|Aktivitas/).first()).toBeVisible();
 });

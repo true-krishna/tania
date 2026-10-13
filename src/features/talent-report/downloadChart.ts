@@ -11,7 +11,12 @@ export function chartFileName(chartName: string, startMonth: string, endMonth: s
 /**
  * T027 — unduh PNG satu grafik (FR-13): `getDataURL` dengan `pixelRatio: 2`
  * (resolusi ≥2× kanvas) dan `backgroundColor: "#ffffff"` (identik di semua
- * tampilan). Tanpa handle/data URL, tidak ada yang diunduh (gagal aman).
+ * tampilan). Keputusan (TAN-159): latar export **tetap putih**, bukan mengikuti
+ * `--tp-surface` — PNG adalah artefak yang dibagikan (lampiran, deck, cetak)
+ * dan harus deterministik di luar konteks tema viewer; `--tp-surface` di mode
+ * gelap bernilai #1d2939 sehingga ikut tema akan menghasilkan PNG gelap yang
+ * pecah di dokumen terang. Tanpa handle/data URL, tidak ada yang diunduh
+ * (gagal aman).
  */
 export function downloadChart(chart: EChartHandle | null, fileName: string): void {
   const dataUrl = chart?.getDataURL({ pixelRatio: 2, backgroundColor: "#ffffff" });
