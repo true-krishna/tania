@@ -1,0 +1,8 @@
+query MyEmployee {
+  me {
+    id
+    employee {
+      id
+    }
+  }
+}

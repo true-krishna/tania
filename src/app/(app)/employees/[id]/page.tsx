@@ -24,6 +24,8 @@ import {
   EmployeesDocument,
   type EmployeeQuery,
 } from "@/generated/graphql";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canAccess, canManage } from "@/lib/auth/matrix";
 
 type DetailTab = "overview" | "workload";
 
@@ -36,6 +38,10 @@ type ContractRow = NonNullable<EmployeeQuery["employee"]>["contracts"]["edges"][
 
 export default function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
+  const role = useSessionRole();
+  const manage = canManage(role, "employees");
+  const showHistory = role === "OPERATION" || role === "ADMIN";
+  const linkContracts = canAccess(role, "contracts");
   const { status, data, error } = useEmployee(id);
   const [tab, setTab] = React.useState<DetailTab>("overview");
   const [deactivate, { loading: deactivating }] = useMutation(DeactivateEmployeeDocument, {
@@ -47,16 +53,18 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href="/employees" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
-        ← Kembali ke daftar
-      </Link>
+      {role === "TALENT" ? null : (
+        <Link href="/employees" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+          ← Kembali ke daftar
+        </Link>
+      )}
       <PageHeader
         title={employee?.fullName ?? "Detail karyawan"}
         subtitle={
           employee ? `${employee.nomorInduk ?? "Tanpa kontrak aktif"} · ${employee.email}` : undefined
         }
         actions={
-          employee ? (
+          employee && manage ? (
             <Link href={`/employees/${id}/edit`} className="no-underline">
               <Button variant="secondary">Ubah data</Button>
             </Link>
@@ -173,27 +181,31 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               <h2 className="text-sm font-semibold text-zinc-900">
                 Riwayat kontrak ({employee.contracts.totalCount})
               </h2>
-              <Link href={`/contracts/new?employeeId=${id}`} className="no-underline">
-                <Button variant="secondary">+ Tambah kontrak</Button>
-              </Link>
+              {manage ? (
+                <Link href={`/contracts/new?employeeId=${id}`} className="no-underline">
+                  <Button variant="secondary">+ Tambah kontrak</Button>
+                </Link>
+              ) : null}
             </div>
             {employee.contracts.edges.length === 0 ? (
               <p className="text-sm text-zinc-500">Belum ada kontrak tercatat.</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {employee.contracts.edges.map((edge) => (
-                  <ContractHistoryCard key={edge.node.id} contract={edge.node} />
+                  <ContractHistoryCard key={edge.node.id} contract={edge.node} linked={linkContracts} />
                 ))}
               </div>
             )}
           </Card>
 
-          <Card className="max-w-3xl">
-            <h2 className="mb-3 text-sm font-semibold text-zinc-900">Riwayat perubahan</h2>
-            <RecordChangeHistory entityType="employee" entityId={id} />
-          </Card>
+          {showHistory ? (
+            <Card className="max-w-3xl">
+              <h2 className="mb-3 text-sm font-semibold text-zinc-900">Riwayat perubahan</h2>
+              <RecordChangeHistory entityType="employee" entityId={id} />
+            </Card>
+          ) : null}
 
-          {isInactive ? (
+          {!manage ? null : isInactive ? (
             <Card
               padded={false}
               className="w-fit border-red-200 bg-red-50 px-4 py-2 text-sm text-zinc-500"
@@ -226,16 +238,20 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   );
 }
 
-function ContractHistoryCard({ contract }: { contract: ContractRow }) {
+function ContractHistoryCard({ contract, linked }: { contract: ContractRow; linked: boolean }) {
   return (
     <div className="rounded-md border border-board-border bg-white px-4 py-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href={`/contracts/${contract.id}`}
-          className="text-sm font-semibold text-zinc-900 hover:underline"
-        >
-          {contract.contractNo}
-        </Link>
+        {linked ? (
+          <Link
+            href={`/contracts/${contract.id}`}
+            className="text-sm font-semibold text-zinc-900 hover:underline"
+          >
+            {contract.contractNo}
+          </Link>
+        ) : (
+          <span className="text-sm font-semibold text-zinc-900">{contract.contractNo}</span>
+        )}
         <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
           {CONTRACT_STATUS_LABEL[contract.status]}
         </span>

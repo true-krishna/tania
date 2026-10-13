@@ -1,10 +1,22 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from "vitest";
+import * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import EmployeesPage from "@/app/(app)/employees/page";
 import { EmployeesDocument, UnitsDocument } from "@/generated/graphql";
+
+const auth = vi.hoisted(() => ({ role: "OPERATION" as string | null }));
+
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+beforeEach(() => {
+  auth.role = "OPERATION";
+});
 
 function node(
   id: string,

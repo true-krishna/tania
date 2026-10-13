@@ -10,6 +10,7 @@ import { Select } from "@/components/Select";
 import { ErrorState } from "@/components/DataState";
 import { CreateEmployeeDocument, type CreateEmployeeInput } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
+import { AuthGuard } from "@/lib/auth/guard";
 
 type FormValues = {
   nik: string;
@@ -45,6 +46,14 @@ const CONFLICT_MESSAGE =
   "Email atau NIK sudah terdaftar. Periksa kembali isian tersebut.";
 
 export default function NewEmployeePage() {
+  return (
+    <AuthGuard module="employees" manage>
+      <NewEmployeeForm />
+    </AuthGuard>
+  );
+}
+
+function NewEmployeeForm() {
   const [createEmployee, { data, error, loading }] = useMutation(CreateEmployeeDocument);
   const [values, setValues] = React.useState<FormValues>(EMPTY);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});

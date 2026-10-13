@@ -19,6 +19,7 @@ import {
   type UpdateEmployeeInput,
 } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
+import { AuthGuard } from "@/lib/auth/guard";
 
 type EmployeeData = NonNullable<EmployeeQuery["employee"]>;
 
@@ -41,6 +42,14 @@ const CONFLICT_MESSAGE =
   "Email atau NIK sudah terdaftar. Periksa kembali isian tersebut.";
 
 export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <AuthGuard module="employees" manage>
+      <EditEmployeeLoader params={params} />
+    </AuthGuard>
+  );
+}
+
+function EditEmployeeLoader({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data: employee, error } = useEmployee(id);
 

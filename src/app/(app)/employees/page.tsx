@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable, type Column } from "@/components/BoardTable";
@@ -9,10 +10,13 @@ import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
-import { useEmployees } from "@/features/employees/useEmployees";
+import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
+import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
 import { EMPLOYEE_STATUS_LABEL } from "@/features/employees/labels";
 import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 
 type EmployeeRowData = {
   id: string;
@@ -60,6 +64,66 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
 }
 
 export default function EmployeesPage() {
+  const role = useSessionRole();
+  if (role === "TALENT") return <OwnEmployeeRedirect />;
+  if (role === "CHAPTER") return <ChapterTalentList />;
+  return <EmployeeDirectory manage={canManage(role, "employees")} />;
+}
+
+function OwnEmployeeRedirect() {
+  const router = useRouter();
+  const { status, data, error } = useMyEmployeeId();
+
+  React.useEffect(() => {
+    if (data) router.replace(`/employees/${data}`);
+  }, [data, router]);
+
+  if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
+  if (status === "ready" && data === null)
+    return <EmptyState message="Akun Anda belum tertaut ke data karyawan." />;
+  return <LoadingState />;
+}
+
+function ChapterTalentList() {
+  const { status, data, error } = useAssignableTalents();
+
+  return (
+    <section className="flex flex-col gap-4">
+      <PageHeader
+        title="Data Karyawan"
+        subtitle="Talent dalam cakupan chapter Anda yang siap ditugaskan (hanya baca)."
+      />
+      {status === "loading" ? (
+        <LoadingState />
+      ) : status === "error" ? (
+        <ErrorState message={error ?? "Gagal memuat data."} />
+      ) : !data || data.length === 0 ? (
+        <EmptyState message="Belum ada talent dalam cakupan chapter Anda." />
+      ) : (
+        <BoardTable
+          caption="Talent dalam cakupan chapter"
+          columns={[
+            { key: "name", label: "Nama" },
+            { key: "nomorInduk", label: "Nomor Induk" },
+          ]}
+        >
+          {data.map((talent) => (
+            <tr key={talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
+              <td className="px-4 py-2.5">
+                <Link href={`/employees/${talent.id}`} className="font-medium text-zinc-900 hover:underline">
+                  {talent.fullName}
+                </Link>
+              </td>
+              <td className="px-4 py-2.5 text-zinc-600">{talent.nomorInduk ?? "—"}</td>
+            </tr>
+          ))}
+        </BoardTable>
+      )}
+    </section>
+  );
+}
+
+function EmployeeDirectory({ manage }: { manage: boolean }) {
   const [search, setSearch] = React.useState("");
   const [unitId, setUnitId] = React.useState("");
   const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
@@ -77,11 +141,17 @@ export default function EmployeesPage() {
     <section className="flex flex-col gap-4">
       <PageHeader
         title="Data Karyawan"
-        subtitle="Kelola data karyawan, pencarian, dan filter (Operation)."
+        subtitle={
+          manage
+            ? "Kelola data karyawan, pencarian, dan filter (Operation)."
+            : "Data karyawan untuk konteks penautan akun (hanya baca)."
+        }
         actions={
-          <Link href="/employees/new" className="no-underline">
-            <Button variant="primary">+ Tambah Karyawan</Button>
-          </Link>
+          manage ? (
+            <Link href="/employees/new" className="no-underline">
+              <Button variant="primary">+ Tambah Karyawan</Button>
+            </Link>
+          ) : undefined
         }
       />
 
