@@ -21,10 +21,10 @@ const EXPECTED: Record<Module, Record<AccessRole, boolean>> = {
 };
 
 describe("role & module matrix (002-tania-rbac)", () => {
-  for (const module of Object.keys(EXPECTED) as Module[]) {
+  for (const mod of Object.keys(EXPECTED) as Module[]) {
     for (const role of ROLES) {
-      it(`${module} × ${role} → ${EXPECTED[module][role] ? "allowed" : "denied"}`, () => {
-        expect(canAccess(role, module)).toBe(EXPECTED[module][role]);
+      it(`${mod} × ${role} → ${EXPECTED[mod][role] ? "allowed" : "denied"}`, () => {
+        expect(canAccess(role, mod)).toBe(EXPECTED[mod][role]);
       });
     }
   }
