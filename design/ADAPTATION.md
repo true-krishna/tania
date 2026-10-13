@@ -135,3 +135,34 @@ Catatan:
 - Preseden konstitusi naik ke **v4.3.0** (`docs/constitution/` +
   `.specify/memory/`): §I/§II/§V/§VI/§VII/§IX dan Additional Constraints
   diamendemen, catatan amendemen ditambahkan.
+
+## Amendemen v4.3.1 (2026-10-13) — putaran kedua jawaban owner (TAN-165)
+
+Owner menutup lima deviasi yang dilaporkan pada pengiriman v4.3.0.
+
+| Keputusan owner | Nilai / tindakan |
+|---|---|
+| Link = `--tp-brand-red-deep` `#B71C14` (ikuti rekomendasi) | **tidak berubah** — sudah begitu sejak v4.3.0; `#E1231A` tetap untuk non-teks |
+| `--tp-text` tetap `#212121` | **tidak berubah** |
+| “Remap seri chart ke `chart-1..4` kit” | token baru `--tp-chart-1..4` (`#E1231A` / `#2684FF` / `#168A5B` / `#D9822B`); seri laporan dipetakan menurut makna: churn → `chart-1`, distribusi → `chart-2`, new talent → `chart-3`, `chart-4` disiapkan untuk seri warn; “Belum diisi” tetap `--tp-neutral` |
+| Nav aktif mode gelap dari varian dark mockup TAN-99 | token baru `--tp-brand-red-ink` (light `#B71C14`, dark `#FF8A82`); `--tp-brand-red-tint` dark `#3A1715`; resep nav aktif memakai pasangan ini |
+| Aset logo memakai file yang dilampirkan | **tidak berubah** — `public/brand/` sudah memakai aset zip resmi |
+
+Catatan:
+- Pasangan nav aktif kini **punya** nilai gelap (sebelumnya satu-satunya
+  dependency dark-mode yang belum tertutup): tint `#3A1715` + ink `#FF8A82`,
+  kontras 7.0:1. Ini juga memperbaiki blok `.tp-ai` yang sebelum ini memakai
+  tint terang bersama teks tema gelap (`#FCFCFD` di atas `#FCE9E8` = 1.03:1,
+  tidak terbaca); sekarang 15.6:1.
+- Nilai dark diambil apa adanya dari `tania-profil-navy.html` varian dark,
+  bukan inferensi. Solid navy/red tetap tanpa varian dark.
+- Pemetaan seri menjaga makna (§IX): hijau tetap pertumbuhan, merah tetap
+  penurunan; urutan seri kit tidak dipakai untuk membalik makna seri yang sudah
+  ada. Seri tunggal lain (BarList, grafik beban kerja) belum ikut dipetakan —
+  menunggu keputusan owner.
+- Track bar `#F5F7FA` (kanvas) belum diterapkan di semua komponen; `BarList`
+  masih memakai `zinc-100` (di luar kanon) — item lanjutan.
+- `chart-4` `#D9822B` hanya 2.9:1 di atas putih (2.7:1 di kanvas). Karena itu
+  belum dipakai seri mana pun; kalau nanti dipakai sebagai fill, wajib disertai
+  label/outline atau varian yang lebih gelap.
+- Preseden konstitusi naik ke **v4.3.1**.

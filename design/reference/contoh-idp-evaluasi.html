@@ -11,11 +11,13 @@
  * Struktur, tipografi, radius, shadow tetap karakter Pulse.
  * Alias Violet interaktif v4.0.0 (`--tp-primary`, `--tp-primary-deep`,
  * `--tp-lilac`) di-retire; pasangan `--tp-tint-violet`/`--tp-ink-violet` juga
- * di-retire total (digantikan `--tp-*info`). Tidak ada varian dark navy/red
- * karena TAN-99 light-only (lihat Additional Constraints konstitusi). */
+ * di-retire total (digantikan `--tp-*info`). Varian dark untuk pasangan nav
+ * aktif (`--tp-brand-red-tint`/`--tp-brand-red-ink`) diambil apa adanya dari
+ * varian dark mockup TAN-99 (`tania-profil-navy.html`), bukan inferensi;
+ * solid navy/red tetap tanpa varian dark. */
 :root{--tp-midnight:#212121;
 --tp-brand-navy:#172B4D;--tp-brand-navy-deep:#0B1F4D;--tp-brand-red:#E1231A;--tp-brand-red-deep:#B71C14;
---tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;
+--tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;--tp-brand-red-ink:#B71C14;
 --tp-nav:var(--tp-brand-navy);--tp-on-nav:#FFFFFF;
 --tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;--tp-info:#2684FF;
 --tp-bg:#F5F7FA;--tp-surface:#FFFFFF;--tp-line:#DFE1E6;--tp-text:#212121;--tp-muted:#5E6C84;
@@ -26,6 +28,11 @@
 --tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-info:#E9F2FF;
 --tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-info:#0B5FD6;
 --tp-neutral:#6B778C;
+/* Seri data visualisasi (kit v1.2 §Data visualisasi): urutan seri chart-1..4;
+ * track bar memakai `--tp-bg` (canvas). Seri kita memakai urutan makna:
+ * chart-1 = churn/penurunan, chart-2 = distribusi (hue laporan), chart-3 = new
+ * talent, chart-4 = disiapkan untuk seri peringatan (warn). */
+--tp-chart-1:#E1231A;--tp-chart-2:#2684FF;--tp-chart-3:#168A5B;--tp-chart-4:#D9822B;
 /* Bridge aksen ikon (Principle VII): detail "action marker" tetap navy — kit
  * v1.2 hanya menetapkan ikon merah untuk menu aktif (di-override di
  * components.css `.tp-nav-item[aria-current]`), bukan untuk semua ikon. */
@@ -35,14 +42,15 @@
 --tp-shadow:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.06);
 --tp-ease:cubic-bezier(.2,.8,.2,1);--tp-dur:200ms;}
 
-/* Dark theme: brand navy/red TIDAK di-override — TAN-99 tidak mendefinisikan
- * nilai dark dan konstitusi melarang menginferensinya (bukan alasan kembali
- * ke Violet). Token dark non-brand tetap seperti v4.0.0. */
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
+/* Dark theme: pasangan nav aktif memakai nilai varian dark mockup TAN-99
+ * (`--tp-tint-peach`/`--tp-ink-peach` di mockup) — #3A1715 tint + #FF8A82 ink —
+ * sehingga menu aktif tetap >=4.5:1 saat sidebar gelap. Solid navy/red tetap
+ * tanpa varian dark; token dark non-brand tetap seperti v4.0.0. */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-brand-red-tint:#3A1715;--tp-brand-red-ink:#FF8A82;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
 --tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
 --tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
 
-:root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
+:root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-brand-red-tint:#3A1715;--tp-brand-red-ink:#FF8A82;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
 --tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
 --tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}
 </style><style id="tp-components">
@@ -70,10 +78,11 @@ body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var
 .tp-tab[aria-selected="true"]{background:var(--tp-surface);color:var(--tp-text);box-shadow:0 0 0 1px var(--tp-line)}
 .tp-nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;color:var(--tp-text);text-decoration:none;font-weight:600}
 .tp-nav-item:hover{background:var(--tp-bg)}
-/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks red-deep
- * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Kartu gelap tetap
- * navy (`--tp-nav`); hanya item menu aktif yang merah. */
-.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-deep);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-deep)}
+/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks brand-red-ink
+ * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Pasangan tint/ink
+ * mengikuti varian dark mockup TAN-99 sehingga menu aktif tetap terbaca saat
+ * sidebar gelap (#3A1715/#FF8A82). Kartu gelap tetap navy (`--tp-nav`). */
+.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-ink);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-ink)}
 .tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-brand-red-tint)}
 .tp-empty{color:var(--tp-muted);font-size:14px;margin:0}
 .tp-empty strong{display:block;color:var(--tp-text);font-weight:600}
@@ -111,7 +120,7 @@ dd{margin:2px 0 0;font-weight:600;font-size:15px}dd.dim{color:var(--tp-muted);fo
 .es{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
 .e{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
 .fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:50%;border:0;background:var(--tp-brand-navy);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 24px rgba(135,91,247,.35)}
-.fab:focus-visible{outline:2px solid var(--tp-mint-ink);outline-offset:3px}
+.fab:focus-visible{outline:2px solid var(--tp-brand-red);outline-offset:3px}
 @media (max-width:860px){.app{grid-template-columns:1fr}.side{position:static;height:auto;padding:14px 16px;border-right:0;border-bottom:1px solid var(--tp-line)}.side nav{flex-direction:row;overflow-x:auto}.tp-nav-item{white-space:nowrap}.top{padding:12px 16px}.usr div{display:none}main{padding:16px 16px 90px}.edit{position:static;margin-top:12px}}
 
 .hd2{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 20px}.hd2 p{margin:6px 0 0;color:var(--tp-muted)}.hd2 h1:focus{outline:none}
@@ -130,7 +139,7 @@ dd{margin:2px 0 0;font-weight:600;font-size:15px}dd.dim{color:var(--tp-muted);fo
 .rt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;width:100%;height:100%}
 .rt span{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--tp-line);font-weight:600;background:var(--tp-surface)}
 .rt input:checked+span{background:var(--tp-brand-navy);border-color:var(--tp-brand-navy);color:#fff}
-.rt input:focus-visible+span{outline:2px solid var(--tp-mint-ink);outline-offset:2px}
+.rt input:focus-visible+span{outline:2px solid var(--tp-brand-red);outline-offset:2px}
 textarea.tp-input{border-radius:var(--tp-r-md);padding:12px 16px;min-height:96px;resize:vertical;font-family:inherit}
 .sum .big2{font:700 44px/1 var(--tp-font-display);margin:8px 0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:#172B4D;color:#fff;border:1px solid rgba(255,255,255,.25);padding:12px 18px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}.toast.on{opacity:1}
