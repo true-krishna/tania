@@ -158,24 +158,9 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
     renderDashboard(
       {
         __typename: "ChapterDashboard",
-        idpStatusDistribution: [
-          { __typename: "IdpStatusCount", status: "IN_PROGRESS", count: 2 },
-        ],
-        actionProgress: [
-          { __typename: "ActionStatusCount", status: "COMPLETED", count: 4 },
-        ],
         unassignedTalents: [
           { __typename: "Employee", id: "emp-2", fullName: "Sari Dewi", nomorInduk: "EMP-002" },
         ],
-        idpsNeedingReview: 1,
-        currentEvaluationPeriod: {
-          __typename: "EvaluationPeriod",
-          id: "ep-1",
-          name: "Q3 2025",
-          startDate: "2025-07-01",
-          endDate: "2025-09-30",
-          state: "RUNNING",
-        },
       },
       talentReportMocks(),
     );
@@ -186,7 +171,7 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
     expect(screen.queryByText("Talent Tanpa Penugasan")).toBeNull();
   });
 
-  it("renders Talent widgets on TalentDashboard", async () => {
+  it("renders Talent widgets without deferred IDP/Evaluation content (T035)", async () => {
     renderDashboard({
       __typename: "TalentDashboard",
       activeAssignments: [
@@ -200,23 +185,13 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
           jobRole: { __typename: "JobRole", id: "j-1", name: "Backend Engineer" },
         },
       ],
-      idpProgress: [
-        { __typename: "ActionStatusCount", status: "IN_PROGRESS", count: 1 },
-      ],
-      latestEvaluation: {
-        __typename: "PerformanceEvaluation",
-        id: "ev-1",
-        status: "SUBMITTED",
-        period: { name: "Q3 2025" },
-      },
-      upcomingActionDeadlines: [
-        { __typename: "DevelopmentAction", id: "da-1", description: "Ikut training GraphQL", method: "TRAINING", status: "TODO", dueDate: "2025-08-01" },
-      ],
     });
 
     expect(await screen.findByText("Penugasan Aktif")).toBeInTheDocument();
     expect(screen.getByText("Riset API")).toBeInTheDocument();
-    expect(screen.getByText("Progres Aksi IDP")).toBeInTheDocument();
-    expect(screen.getByText("Ikut training GraphQL")).toBeInTheDocument();
+    expect(screen.queryByText("Progres Aksi IDP")).toBeNull();
+    expect(screen.queryByText("Tenggat Aksi Terdekat")).toBeNull();
+    expect(screen.queryByText("Evaluasi terakhir")).toBeNull();
+    expect(screen.queryByRole("link", { name: /IDP saya/ })).toBeNull();
   });
 });
