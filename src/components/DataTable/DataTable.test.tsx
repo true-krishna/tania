@@ -63,13 +63,16 @@ describe("DataTable", () => {
   it("omits the pagination footer when pagination is not given", () => {
     renderTable();
     expect(screen.queryByText(/Menampilkan/)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Sebelumnya" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Halaman sebelumnya" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the visible range and current page", () => {
     renderTable({ pagination: { page: 2, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange: vi.fn() } });
-    expect(screen.getByText("Menampilkan 11–20 dari 57")).toBeInTheDocument();
-    expect(screen.getByText("Halaman 2 dari 6")).toBeInTheDocument();
+    expect(screen.getByText("11–20")).toBeInTheDocument();
+    expect(screen.getByText("57")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
   });
 
   it("navigates pages through the prev and next buttons", () => {
@@ -77,9 +80,9 @@ describe("DataTable", () => {
     renderTable({
       pagination: { page: 2, pageSize: 10, totalItems: 57, onPageChange, onPageSizeChange: vi.fn() },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Sebelumnya" }));
+    fireEvent.click(screen.getByRole("button", { name: "Halaman sebelumnya" }));
     expect(onPageChange).toHaveBeenCalledWith(1);
-    fireEvent.click(screen.getByRole("button", { name: "Berikutnya" }));
+    fireEvent.click(screen.getByRole("button", { name: "Halaman berikutnya" }));
     expect(onPageChange).toHaveBeenCalledWith(3);
   });
 
@@ -92,8 +95,8 @@ describe("DataTable", () => {
         pagination={{ page: 1, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange: vi.fn() }}
       />,
     );
-    expect(screen.getByRole("button", { name: "Sebelumnya" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Berikutnya" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeEnabled();
 
     rerender(
       <DataTable
@@ -103,8 +106,8 @@ describe("DataTable", () => {
         pagination={{ page: 6, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange: vi.fn() }}
       />,
     );
-    expect(screen.getByRole("button", { name: "Sebelumnya" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Berikutnya" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled();
   });
 
   it("lets the user choose how many rows per page", () => {
@@ -121,7 +124,7 @@ describe("DataTable", () => {
       pagination: { page: 2, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange: vi.fn() },
       loading: true,
     });
-    expect(screen.getByRole("button", { name: "Sebelumnya" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Berikutnya" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled();
   });
 });

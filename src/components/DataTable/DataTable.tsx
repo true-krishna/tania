@@ -1,7 +1,6 @@
 "use client";
 
-import { Button } from "@/components/Button";
-import { Select } from "@/components/Select";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { cn } from "@/lib/cn";
 import * as React from "react";
 
@@ -39,13 +38,9 @@ function formatCell(value: unknown): string {
   return String(value);
 }
 
-/**
- * Tabel standar halaman daftar (TAN-167) di atas kanon TANIA Pulse: kartu
- * `--tp-surface` ber-border `--tp-line` dengan satu soft shadow (§IV), header
- * semibold 14px (§III), dan tabel lebar menggulung horizontal (§VIII).
- * Paginasi (Known Gaps §2) diturunkan dari kelas shipped: tombol `.tp-btn`
- * dan select `.tp-input` — non-kanonik (referensi umum).
- */
+const PAGE_ICON_BUTTON =
+  "inline-flex h-8 w-8 items-center justify-center rounded-md text-tp-muted transition-colors hover:bg-tp-bg disabled:pointer-events-none disabled:opacity-40";
+
 export function DataTable<T>({
   columns,
   rows,
@@ -73,17 +68,20 @@ export function DataTable<T>({
     : 0;
 
   return (
-    <div className="rounded-tp-lg border border-tp-line bg-tp-surface shadow-card">
+    <section className="overflow-hidden rounded-lg border border-tp-line bg-tp-surface shadow-[0_2px_4px_rgba(16,24,40,0.025)]">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] border-collapse text-left text-sm">
+        <table className="w-full min-w-[560px] table-fixed border-collapse text-left">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
-          <thead>
-            <tr className="border-b border-tp-line bg-tp-bg">
+          <thead className="border-b border-tp-line bg-tp-bg">
+            <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   scope="col"
-                  className={cn("px-4 py-2.5 font-semibold text-tp-muted", col.className)}
+                  className={cn(
+                    "h-[42px] px-5 align-middle text-[11px] font-medium text-tp-muted",
+                    col.className,
+                  )}
                 >
                   {col.header}
                 </th>
@@ -93,7 +91,7 @@ export function DataTable<T>({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-6">
+                <td colSpan={columns.length} className="px-5 py-6">
                   <span className="flex items-center justify-center gap-2 text-sm text-tp-muted">
                     <span
                       className="h-4 w-4 animate-spin rounded-full border-2 border-tp-neutral border-t-transparent"
@@ -105,10 +103,11 @@ export function DataTable<T>({
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-6">
-                  <p className="tp-empty">
-                    <strong>{emptyMessage}</strong>
-                  </p>
+                <td
+                  colSpan={columns.length}
+                  className="h-[160px] px-5 text-center align-middle text-[12px] text-tp-muted"
+                >
+                  {emptyMessage}
                 </td>
               </tr>
             ) : (
@@ -120,7 +119,13 @@ export function DataTable<T>({
                   {columns.map((col) => {
                     const value = (row as unknown as Record<string, unknown>)[col.key];
                     return (
-                      <td key={col.key} className={cn("px-4 py-2.5 align-middle", col.className)}>
+                      <td
+                        key={col.key}
+                        className={cn(
+                          "h-[76px] px-5 align-middle text-[12px]",
+                          col.className,
+                        )}
+                      >
                         {col.render ? col.render(row) : formatCell(value)}
                       </td>
                     );
@@ -132,15 +137,20 @@ export function DataTable<T>({
         </table>
       </div>
       {pagination ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-tp-line px-4 py-3">
-          <p className="text-xs text-tp-muted" aria-live="polite">
-            Menampilkan {from}–{to} dari {pagination.totalItems}
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-tp-line px-5 py-4 text-[11px] text-tp-muted">
+          <p aria-live="polite">
+            Menampilkan{" "}
+            <strong className="font-medium text-tp-text">
+              {from}–{to}
+            </strong>{" "}
+            dari{" "}
+            <strong className="font-medium text-tp-text">{pagination.totalItems}</strong>
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="flex items-center gap-2 text-xs text-tp-muted">
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2">
               Baris per halaman
-              <Select
-                className="w-auto"
+              <select
+                className="mx-2 h-[30px] rounded-[5px] border border-tp-line bg-tp-surface px-[7px] text-tp-text"
                 value={pagination.pageSize}
                 onChange={(e) => pagination.onPageSizeChange(Number(e.target.value))}
               >
@@ -149,30 +159,35 @@ export function DataTable<T>({
                     {size}
                   </option>
                 ))}
-              </Select>
+              </select>
             </label>
-            <Button
+            <button
               type="button"
-              variant="secondary"
-              onClick={() => pagination.onPageChange(pagination.page - 1)}
+              aria-label="Halaman sebelumnya"
+              className={PAGE_ICON_BUTTON}
               disabled={pagination.page <= 1 || loading}
+              onClick={() => pagination.onPageChange(pagination.page - 1)}
             >
-              Sebelumnya
-            </Button>
-            <span className="text-xs text-tp-muted" aria-live="polite">
-              Halaman {pagination.page} dari {totalPages}
+              <IconChevronLeft aria-hidden size={16} stroke={2} />
+            </button>
+            <span
+              aria-current="page"
+              className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border border-tp-line bg-tp-bg text-[12px] font-medium text-tp-text"
+            >
+              {pagination.page}
             </span>
-            <Button
+            <button
               type="button"
-              variant="secondary"
-              onClick={() => pagination.onPageChange(pagination.page + 1)}
+              aria-label="Halaman berikutnya"
+              className={PAGE_ICON_BUTTON}
               disabled={pagination.page >= totalPages || loading}
+              onClick={() => pagination.onPageChange(pagination.page + 1)}
             >
-              Berikutnya
-            </Button>
+              <IconChevronRight aria-hidden size={16} stroke={2} />
+            </button>
           </div>
-        </div>
+        </footer>
       ) : null}
-    </div>
+    </section>
   );
 }
