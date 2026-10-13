@@ -25,20 +25,27 @@ describe("Sidebar", () => {
     expect(screen.queryByText("Accounts")).toBeNull();
   });
 
-  it("keeps the Laporan Talent nav scoped to Operation and Chapter", () => {
+  // Master's TAN-154 amendment dropped the standalone `/reports/talent` entry,
+  // so the Operation/Admin-only nav item exercised here is now Employees.
+  it("keeps the Employees nav scoped to Operation and Admin", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
-    expect(compactNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    expect(desktopNav().queryByRole("link", { name: "Employees" })).toBeNull();
+    expect(compactNav().queryByRole("link", { name: "Employees" })).toBeNull();
     talent.unmount();
 
+    const chapter = renderSidebar({ role: "CHAPTER" });
+    expect(desktopNav().queryByRole("link", { name: "Employees" })).toBeNull();
+    expect(compactNav().queryByRole("link", { name: "Employees" })).toBeNull();
+    chapter.unmount();
+
     const admin = renderSidebar({ role: "ADMIN" });
-    expect(desktopNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
-    expect(compactNav().queryByRole("link", { name: "Laporan Talent" })).toBeNull();
+    expect(desktopNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
+    expect(compactNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
     admin.unmount();
 
     renderSidebar({ role: "OPERATION" });
-    expect(desktopNav().getByRole("link", { name: "Laporan Talent" })).toBeInTheDocument();
-    expect(compactNav().getByRole("link", { name: "Laporan Talent" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
+    expect(compactNav().getByRole("link", { name: "Employees" })).toBeInTheDocument();
   });
 
   it("expands a multi-page section on click", () => {

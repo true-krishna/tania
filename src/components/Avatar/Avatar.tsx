@@ -9,12 +9,13 @@ interface AvatarProps {
   className?: string;
 }
 
+// Canon tint+ink pairs (§IX): lilac/raw mint are never text colors, so the
+// avatar cycles the shipped tints with their text-safe ink variants.
 const TINTS = [
-  "bg-brand-50 text-brand-700",
-  "bg-brand-100 text-brand-700",
-  "bg-brand-100 text-brand-800",
-  "bg-brand-200 text-brand-800",
-  "bg-brand-200 text-brand-900",
+  "bg-tp-tint-violet text-tp-ink-violet",
+  "bg-tp-tint-mint text-tp-ink-mint",
+  "bg-tp-tint-sun text-tp-ink-sun",
+  "bg-tp-tint-peach text-tp-ink-peach",
 ];
 
 function initialsOf(name: string): string {
@@ -58,7 +59,7 @@ export function Avatar({ name, src, className }: AvatarProps) {
       role="img"
       aria-label={label}
       className={cn(
-        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold",
         tint,
         className,
       )}

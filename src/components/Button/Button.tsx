@@ -5,12 +5,16 @@ import * as React from "react";
 
 type Variant = "primary" | "secondary" | "ghost";
 
+/**
+ * Canon buttons (constitution design v4.0.0 §V): the shipped `.tp-btn` outline
+ * is the default treatment, and `.tp-btn--primary` is the single strongest
+ * action per area (§II). Canon ships no separate ghost treatment, so `ghost`
+ * resolves to the same outline — its old borderless look is retired.
+ */
 const VARIANTS: Record<Variant, string> = {
-  primary:
-    "bg-brand text-white shadow-sm hover:bg-brand-600 active:bg-brand-700",
-  secondary:
-    "border border-surface-border bg-white text-zinc-800 hover:bg-zinc-50 active:bg-zinc-100",
-  ghost: "text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200",
+  primary: "tp-btn tp-btn--primary",
+  secondary: "tp-btn",
+  ghost: "tp-btn",
 };
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -21,8 +25,8 @@ export function Button({ variant = "primary", className = "", ...rest }: ButtonP
   return (
     <button
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
         VARIANTS[variant],
+        "disabled:pointer-events-none disabled:opacity-50",
         className,
       )}
       {...rest}

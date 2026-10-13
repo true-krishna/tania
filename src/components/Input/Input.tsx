@@ -1,11 +1,9 @@
 import { cn } from "@/lib/cn";
 import * as React from "react";
 
-const CONTROL =
-  "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm transition-colors hover:border-brand focus:border-brand";
-
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
+/** Canon input (constitution design v4.0.0 §V): shipped `.tp-input` — pill, 44px, 1px `--tp-line`. */
 export function Input({ className = "", ...rest }: InputProps) {
-  return <input className={cn(CONTROL, className)} {...rest} />;
+  return <input className={cn("tp-input", className)} {...rest} />;
 }
