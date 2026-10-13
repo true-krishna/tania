@@ -200,8 +200,6 @@ export type ContractType =
   | 'KARYAWAN_TETAP'
   /** OUTSOURCE TKP. */
   | 'OUTSOURCE_TKP'
-  | 'PKWT'
-  | 'PKWTT'
   /** PROJECT BASED PROCUREMENT. */
   | 'PROJECT_BASED_PROCUREMENT'
   /** TKWT DIGITAL TALENT. */
@@ -474,7 +472,7 @@ export type EmploymentContract = {
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   employee: Employee;
-  /** null untuk kontrak tanpa batas waktu (PKWTT / KARYAWAN TETAP). */
+  /** null untuk kontrak tanpa batas waktu (KARYAWAN TETAP). */
   endDate?: Maybe<Scalars['Date']['output']>;
   endReason?: Maybe<ContractEndReason>;
   id: Scalars['ID']['output'];

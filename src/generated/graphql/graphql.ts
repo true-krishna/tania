@@ -83,8 +83,6 @@ export type ContractType =
   | 'KARYAWAN_TETAP'
   /** OUTSOURCE TKP. */
   | 'OUTSOURCE_TKP'
-  | 'PKWT'
-  | 'PKWTT'
   /** PROJECT BASED PROCUREMENT. */
   | 'PROJECT_BASED_PROCUREMENT'
   /** TKWT DIGITAL TALENT. */

@@ -44,7 +44,7 @@ type FormValues = {
 const EMPTY: FormValues = {
   employeeId: "",
   contractNo: "",
-  contractType: "PKWT",
+  contractType: CONTRACT_TYPE_ORDER[0],
   officeEmail: "",
   nomorInduk: "",
   bandPosition: "UNDEFINED",

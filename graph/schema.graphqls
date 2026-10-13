@@ -74,8 +74,6 @@ type EntraProvision {
 }
 
 enum ContractType {
-  PKWT
-  PKWTT
   """TPPBW PROHIRE."""
   TPPBW_PROHIRE
   """EMPLOYEE MOBILIT."""
@@ -351,7 +349,7 @@ type EmploymentContract {
   workLocation: WorkLocation!
   unit: Unit!
   startDate: Date!
-  """null untuk kontrak tanpa batas waktu (PKWTT / KARYAWAN TETAP)."""
+  """null untuk kontrak tanpa batas waktu (KARYAWAN TETAP)."""
   endDate: Date
   """Turunan tanggal + terminatedAt, tanpa cron (FR-34)."""
   status: EmploymentContractStatus!
@@ -445,7 +443,7 @@ input UpdateEmploymentContractInput {
 input RenewContractInput {
   predecessorContractId: ID!
   contractNo: String!
-  contractType: ContractType! = PKWT
+  contractType: ContractType! = TKWT_DIGITAL_TALENT
   officeEmail: String
   nomorInduk: String!
   bandPosition: BandPosition = UNDEFINED

@@ -7,8 +7,6 @@ import type {
 } from "@/generated/graphql/types";
 
 export const CONTRACT_TYPE_LABEL: Record<ContractType, string> = {
-  PKWT: "PKWT",
-  PKWTT: "PKWTT",
   TPPBW_PROHIRE: "TPPBW PROHIRE",
   EMPLOYEE_MOBILIT: "EMPLOYEE MOBILIT",
   PROJECT_BASED_PROCUREMENT: "PROJECT BASED PROCUREMENT",
@@ -19,8 +17,6 @@ export const CONTRACT_TYPE_LABEL: Record<ContractType, string> = {
 
 /** Contract types in the order they appear in selects. */
 export const CONTRACT_TYPE_ORDER: ContractType[] = [
-  "PKWT",
-  "PKWTT",
   "TPPBW_PROHIRE",
   "EMPLOYEE_MOBILIT",
   "PROJECT_BASED_PROCUREMENT",
@@ -29,9 +25,9 @@ export const CONTRACT_TYPE_ORDER: ContractType[] = [
   "TKWT_DIGITAL_TALENT",
 ];
 
-/** Open-ended types run without a fixed end date (PKWTT / KARYAWAN TETAP). */
+/** Only KARYAWAN TETAP runs without a fixed end date. */
 export function isOpenEndedContractType(contractType: ContractType): boolean {
-  return contractType === "PKWTT" || contractType === "KARYAWAN_TETAP";
+  return contractType === "KARYAWAN_TETAP";
 }
 
 export const CONTRACT_STATUS_LABEL: Record<EmploymentContractStatus, string> = {
