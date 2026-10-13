@@ -158,10 +158,15 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     );
     await screen.findByText("Andi Pratama");
 
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+
     const selects = screen.getAllByRole("combobox");
     fireEvent.change(selects[0], { target: { value: "u-1" } });
     fireEvent.change(selects[1], { target: { value: "INACTIVE" } });
 
+    expect(
+      screen.getByRole("button", { name: "Filter, 2 filter aktif" }),
+    ).toBeInTheDocument();
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
   });
