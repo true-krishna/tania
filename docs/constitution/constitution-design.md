@@ -2,7 +2,7 @@
 
 **Version**: 4.3.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-13
 **Source of record (two layers, one canon)**:
-1. **Owner-approved TANIA navy+red brand direction** — brand-role mapping and values are defined in Principle I from the approved TAN-99 exploration. It supersedes the prior Legion Violet brand mapping only; it does not make reconstructed logo artwork an official asset.
+1. **Owner-approved TANIA navy+red brand direction** — brand-role mapping and values are defined in Principle I from the approved TAN-99 exploration. It supersedes the prior Legion Violet brand mapping only. Amendment 4.3.0 extends it with the brand owner's **TANIA Brand Color Kit** (Color Guideline v1.2, Logo Guideline v1.1) and the owner's five decisions of 2026-10-13 (informational status, active red accent roles, danger distinctness, official logo assets, kit surfaces).
 2. **The `tania-design-system` package (TANIA Pulse)** — executable structural adaptation: Pulse components, radius scale, shadow, themes, icon set, app shell, and reference pages. Existing non-brand Pulse rules remain in force unless amended below.
 **Supersedes**: design constitution 4.1.0 for brand color and logo direction only; non-brand rules remain in force.
 **Scope**: all Tania user-interface work — dashboards, forms, data tables, admin panels.
@@ -19,19 +19,19 @@ The workflow remains **fully agentic** (Principle X): the constitution, the Legi
 
 `tokens/tokens.css` (`--tp-*` variables) is the single source of truth for color, radius, shadow, motion, and font stacks. Components **MUST NOT introduce new hex values**: consume `var(--tp-*)` (or the Tailwind preset mirror, Principle X). Component-specific values (px sizes, weights) MAY be concrete in place. Canonical values are changed only in `tokens.css` — never inline in components.
 
-- **Brand colors (owner-approved TAN-99 direction)**: Navy `#172B4D` (`--tp-brand-navy`) is the primary action and active-navigation color; deep navy `#0B1F4D` (`--tp-brand-navy-deep`) is its pressed/deep state. Red `#E1231A` (`--tp-brand-red`) is the brand accent, not a general error token; deep red `#B71C14` (`--tp-brand-red-deep`) is its deeper/accent variant. White text on these fills must meet the contrast floor (VI). Propagate to package tokens and Tailwind preset in the same implementation change.
-- **Semantic colors remain separate from brand**: success Mint `#168A5B` with text-safe ink `#0F6E48`; error/danger uses a dedicated semantic token and must not alias brand red without explicit token-role approval; warning Sun `#D9822B` with text-safe ink. Preserve existing status tint+ink distinctions and validate all pairings before shipping. Retired Violet/Lilac interactive tokens must not remain as brand-action aliases.
-- **Surfaces and typography**: retain existing Pulse light surfaces, neutral text/border tokens, and Nunito Sans stack/weights unless separately amended. Do not infer unspecified values from the mockup.
-- **Logo**: use only artwork supplied and approved by the brand owner. The TAN-99 embedded wordmark is exploratory and not confirmed as an official master; do not ship it as official. Use a labeled placeholder until approved artwork and light/dark variants are supplied.
+- **Brand colors (owner-approved TAN-99 direction, extended in 4.3.0)**: Navy `#172B4D` (`--tp-brand-navy`) is the primary action color; deep navy `#0B1F4D` (`--tp-brand-navy-deep`) is its pressed/deep state. Red `#E1231A` (`--tp-brand-red`) is the brand accent, not a general error token, with **explicit activated roles**: active navigation, links, the keyboard-focus ring, AI actions, and the logo plus mark. Its supporting values are deep red `#B71C14` (`--tp-brand-red-deep`, for small text on tint), tint `#FCE9E8` (`--tp-brand-red-tint`), tint line `#F5B8B5`, and on-red white (`--tp-brand-on-red`). White text on these fills must meet the contrast floor (VI). Propagate to package tokens and Tailwind preset in the same implementation change.
+- **Semantic colors remain separate from brand**: success Mint `#168A5B` with text-safe ink `#0F6E48`; informational/in-progress is Info blue `#2684FF` (`--tp-info`, tint `#E9F2FF`, ink `#0B5FD6`, 5.1:1 on tint) — the legacy Violet tint/ink pair is **retired entirely**, not kept as a category; warning Sun `#D9822B` with text-safe ink `#B54708`. Error/danger keeps its own dedicated token family (`--tp-peach` `#F97066`, tint `#FEE4E2`, ink `#B32318`) and **MUST stay distinguishable from brand red**: the kit's `danger = brand red` proposal is declined for exactly that reason, and every danger surface must additionally carry an icon and a text label, so state is never conveyed by colour alone (owner decision 2026-10-13). Preserve status tint+ink distinctions and validate all pairings before shipping. Retired Violet/Lilac interactive tokens must not remain as brand-action aliases.
+- **Surfaces and typography**: neutral surfaces are aligned to the brand kit palette — canvas `#F5F7FA` (`--tp-bg`), line `#DFE1E6` (`--tp-line`), mute `#6B778C` (`--tp-neutral`), and text-safe muted `#5E6C84` (`--tp-muted`, because `#6B778C` only reaches 4.2:1 on the canvas, where our secondary text also sits). Nunito Sans stack/weights are unchanged. Do not infer any other unspecified value from the mockup.
+- **Logo**: use only artwork supplied by the brand owner. That artwork now exists: the **TANIA Brand Color Kit** (2026-10-13) supplies the wordmark (navy and white variants) and the "T" icon, which are the official assets and ship from `public/brand/` in the dashboard repo. Never recreate the wordmark as text or hand-drawn SVG. The kit files are screenshot crops rather than a production vector master — request that master before print, or before any display larger than the 141px native wordmark width.
 - **A new color is never invented**: use approved tokens above or existing semantic tokens; document and approve additional roles/values before adding to `tokens.css` and mirroring in Tailwind.
 - **Radius** (Pulse character, ratified): `--tp-r-sm` 10px (tabs, small buttons) · `--tp-r-md` 14px (groups) · `--tp-r-lg` 20px (cards) · `--tp-r-xl` 28px (large panels) · `--tp-r-pill` 999px (buttons, inputs, chips). Never `50%`. The 999px pill is the practical equivalent of Legion's `rounded.full` 900px token and is ratified as such.
 - **Motion**: `--tp-ease` cubic-bezier(.2,.8,.2,1), `--tp-dur` 200ms.
 
-### II. One primary action, one dark card — Navy is the interactive voltage
+### II. One primary action, one dark card — navy is the action voltage, red the brand accent
 
-- **One primary button per area** — the single strongest action; all others default to outline `.tp-btn`. Primary fills `--tp-brand-navy` (`#172B4D`) with white text; hover/press use `--tp-brand-navy-deep` (`#0B1F4D`). Validate small-text contrast at ≥4.5:1. Red is not the primary action default; reserve it for brand accents and explicit destructive/error semantics through distinct semantic tokens.
-- **One dark navy card per screen** — reserved for emphasis (e.g. development-action panel); current navigation uses navy but is not an additional card.
-- Navy is the primary interactive voltage; red is a separate brand accent and must not encode success, warning, or danger merely by color reuse.
+- **One primary button per area** — the single strongest action; all others default to outline `.tp-btn`. Primary fills `--tp-brand-navy` (`#172B4D`) with white text; hover/press use `--tp-brand-navy-deep` (`#0B1F4D`). Validate small-text contrast at ≥4.5:1. Red is not the primary action default: it is the brand accent — active navigation, links, keyboard focus, AI actions, and the logo plus mark — and it is **never** the danger token (IX).
+- **One dark navy card per screen** — reserved for emphasis (e.g. development-action panel) and it stays navy. The active navigation item is not an additional dark card: it uses the brand red tint (V).
+- Navy carries primary actions; red carries brand accent. Neither may encode success, warning, or danger merely by colour reuse (IX).
 
 ### III. One family, binary weights — Nunito Sans
 
@@ -66,8 +66,8 @@ The workflow remains **fully agentic** (Principle X): the constitution, the Legi
 - **Input** (`.tp-input`): min-height 44px, padding 0 16px, 1px `--tp-line`, pill, surface bg, 400 14px.
 - **Chip** (`.tp-chip`): 12.5px weight 600, padding 4px 12px, pill; color = semantic tint bg + matching semantic ink.
 - **Tabs** (`.tp-tabs`/`.tp-tab`): container = `--tp-bg` bg, 1px line border, r-md, 4px padding/gap, horizontally scrollable; tab = 600 14px, r-sm, muted text; **active** (`aria-selected="true"`) = surface bg, ink text, `0 0 0 1px` line ring.
-- **Nav item** (`.tp-nav-item`): 12px radius, gap 12px, padding 10px 14px, weight 600; hover = `--tp-bg`; current (`aria-current="page"`) = approved navy bg, white text, with contrast-validated icon accents; do not hardcode them.
-- **AI insight** (`.tp-ai`): 1.5px `--tp-neutral` border, r-lg, approved neutral/semantic tint bg — AI content appears **only on user request**, never auto-injected.
+- **Nav item** (`.tp-nav-item`): 12px radius, gap 12px, padding 10px 14px, weight 600; hover = `--tp-bg`; current (`aria-current="page"`) = the brand kit's **"Cockpit" recipe**: `--tp-brand-red-tint` `#FCE9E8` background, `--tp-brand-red-deep` `#B71C14` text (5.6:1) and `--tp-brand-red` icon accents; do not hardcode them.
+- **AI insight** (`.tp-ai`): 1.5px `--tp-neutral` border, r-lg, `--tp-brand-red-tint` background (red is the AI/brand accent, kit v1.2) — AI content appears **only on user request**, never auto-injected.
 - **Empty state** (`.tp-empty`): muted 14px with bold ink lead line. Empty values are written **"—" with the reason stated** (what is missing, who can fill it). Read-only modes are labeled **"Hanya baca"** with no edit affordances.
 - **Card** (`.tp-card`): surface bg, 1px line border, r-lg 20px, 20px padding, `--tp-shadow`.
 
@@ -77,7 +77,7 @@ Accessibility floor (VI) applies to all of the above. For **new interactive comp
 
 - Contrast: body text ≥ **4.5:1**, icons and UI elements ≥ **3:1**. Validate navy, deep navy, red, semantic inks, and focus ring on actual surfaces before release; this constitution assumes no unverified ratios.
 - The 2026-10-09 primary-Violet mitigation is superseded by v4.2.0; see amendment log for historical rationale.
-- Keyboard focus is always visible: use 2px outline with 2px offset and a contrast-validated focus token. The previous mint focus value is not automatically replaced by brand red; select and validate the focus token during package propagation. Removing the outline is a defect.
+- Keyboard focus is always visible: 2px outline, 2px offset, one contrast-validated focus token. That token is now **selected: `--tp-brand-red` `#E1231A`** (4.3:1 on the `#F5F7FA` canvas — above the 3:1 UI floor; inside red-tint surfaces the contextual `--tp-brand-red-deep` token is used so text and icon detail stay ≥4.5:1). Removing the outline is a defect.
 - **Honor `prefers-reduced-motion`**: the shipped global kill (`transition/animation: none`) must survive refactors. The **only** autonomous animation in the product is the signal ripple in the profile header (5s ease-in-out loop).
 - Semantic state is expressed through ARIA (`aria-selected`, `aria-current`), not styling alone; standalone icons get a `title`.
 
@@ -85,7 +85,7 @@ Accessibility floor (VI) applies to all of the above. For **new interactive comp
 
 - **17 named glyphs** shipped in `icons/` (sprite `tania-icons.svg` and React `TaniaIcon`): beranda, dashboard, profil, chapter, timesheet, workload, feasibility, budget, assignment, idp, evaluasi, profil-cv, master-data, jejak-audit, ask-tania, sinyal, notifikasi. The sprite and React component are the authoritative inventory.
 - Style: **outline 2px, round caps/joins, 24px grid** (20px dense menus), main strokes in `currentColor`, exactly one colored detail per icon — brand navy (`--tania-primary`) for action markers, semantic Mint (`--tania-mint`) for data/info.
-- On active navy menu items, detail uses a contrast-validated contextual token; do not hardcode it.
+- On active menu items (`--tp-brand-red-tint` background) the coloured detail uses the contextual brand-red tokens, exactly as `.tp-nav-item[aria-current="page"]` does; everywhere else the detail stays brand navy / semantic Mint. Do not hardcode it.
 - Accent bridge variables map to brand navy and semantic Mint; primary-fill accents yield to white only when that fill passes contrast. Never hardcode accent colors in consuming components.
 
 ### VIII. Layout: 268px app shell, ≤860px collapse
@@ -101,8 +101,8 @@ Derived from the shipped reference pages (contoh-profil-talent, contoh-idp-evalu
 ### IX. Color semantics and usage discipline
 
 - **Proportion ≈60/30/10**: ~60% neutral surfaces, ~30% ink/navy, ~10% accents (brand red, mint, sun), adjusted for hierarchy and contrast.
-- White text only on contrast-validated navy/deep navy or other approved fills. Keep brand red distinct from danger/error tokens even if values are later aligned by explicit approval.
-- Status: Mint = positive, Sun = warning/achievement, dedicated error/danger token = destructive/attention, legacy Violet tint may remain only as a non-brand semantic category pending migration. Navy = primary action/current navigation; red = brand accent. Neutral = meters, AI borders, empty values.
+- White text only on contrast-validated navy/deep navy or other approved fills. Brand red stays a separate token family from danger/error: danger is never expressed by red alone, always with an icon and a text label.
+- Status: Mint = positive, Sun = warning/achievement, **Info blue = informational / in-progress**, dedicated error/danger token (always with icon + text) = destructive/attention. Navy = primary action; red = brand accent (active navigation, links, focus ring, AI actions, logo plus mark). Neutral = meters, AI borders, empty values.
 - **RBAC**: Admin, Operation, Chapter, Talent — display adapts per role, **brand colors are identical** for all roles.
 - **Logos**: Telkom Indonesia logo and TANIA wordmark come from official assets, never recreated as text.
 
@@ -119,10 +119,10 @@ Tania's FE workflow is **fully agentic** — no human transcribes designs into c
 ## Additional Constraints
 
 - **Light/dark themes**: TAN-99 is light-only and does not define dark-theme brand values. Preserve existing theme behavior, but do not infer or ship navy/red dark values until specified and contrast-validated. This is an implementation dependency, not permission to fall back to Violet.
-- **Data-viz patterns**: preserve information hierarchy and semantic roles; replace brand Violet with approved navy/red mapping only after chart contrast and meaning are validated. No multi-hue charts without a semantic need.
+- **Data-viz patterns**: preserve information hierarchy and semantic roles; replace brand Violet with approved navy/red mapping only after chart contrast and meaning are validated. No multi-hue charts without a semantic need. The kit's chart series order (chart-1 red, chart-2 blue, chart-3 green, chart-4 orange) is **not** adopted yet: our chart roles are semantic (distribution / missing / new talent / churn), not positional, so re-ordering them would change what each bar means. Revisit with a real multi-series chart.
 - **Illustration**: flat geometric blocks (squares, triangles, quarter circles, tiered circles) on Mist, single-hue tiered opacity instead of gradients, no faces — used for empty states and module headers. Current set is a sketch; production polish by an illustrator is pending.
 - **Functional density over editorial air** (Legion's enterprise doctrine, carried): tight consistent paddings, tables and forms built for internal B2B tooling.
-- **Official logos** (package rule 8): Telkom Indonesia logo and TANIA wordmark from original assets, never text stand-ins.
+- **Official logos** (package rule 8): the TANIA wordmark and "T" icon ship from the brand-owner kit (`public/brand/` in the dashboard repo), never as text stand-ins; the Telkom Indonesia logo still has no supplied asset.
 
 ## Known Gaps
 
@@ -135,7 +135,7 @@ The package does not define; until it does, derive by analogy from shipped value
 5. **Formal spacing scale and z-index system** — reuse shipped paddings on the 4px grid; no invented scale.
 6. **Icon coverage** beyond the 17 glyphs (same recipe extends the set).
 
-Navy+red brand roles are owner-approved. Dark-theme values, final semantic palettes, focus token, and official logo masters remain implementation dependencies. Historical Legion value-source notes apply only to superseded revisions.
+Navy+red brand roles are owner-approved, the focus token is selected (VI), the informational status role is closed (Info blue), and official logo artwork has been supplied. Dark-theme brand values and the production vector logo master remain implementation dependencies. Historical Legion value-source notes apply only to superseded revisions.
 
 ## Governance
 
@@ -147,7 +147,11 @@ Navy+red brand roles are owner-approved. Dark-theme values, final semantic palet
 
 | Version | Date | Change |
 |---|---|---|
+<<<<<<< HEAD
 | 4.3.0 | 2026-10-13 | Owner decision (TAN-170): §VIII content widths — the 1160px centered content container is retired; main is fluid with 24px side gutters and fills the viewport minus the 268px sidebar so content adapts to large viewports. Topbar horizontal padding 28px → 24px to stay aligned with the content gutter. Pages keep self-constrained widths (standard 860–900px, narrow/forms 560px). |
+=======
+| 4.3.0 | 2026-10-13 | Owner decisions closing the TAN-165 gap audit. (a) The legacy Violet tint/ink category becomes **Info blue** `#2684FF` / tint `#E9F2FF` / ink `#0B5FD6`, and the Violet pair is retired. (b) Red `#E1231A` gets **activated brand-accent roles** — active navigation (kit "Cockpit" recipe: `--tp-brand-red-tint` bg, `--tp-brand-red-deep` text/icon), links, keyboard-focus ring, AI actions — superseding 4.2.0's "navy is the active-navigation color" in §I/II/V/VI/IX. (c) Error/danger **must stay distinguishable** from brand red (kit's `danger = red` declined); danger keeps its own token family and must always carry icon + text. (d) Official logo artwork supplied in the brand kit now ships (`public/brand/`); placeholder retired. (e) Neutral surfaces align to the kit: canvas `#F5F7FA`, line `#DFE1E6`, mute `#6B778C`, muted `#5E6C84`. Non-brand Pulse rules unchanged. Amendment only; package/token propagation is the follow-up implementation change. |
+>>>>>>> ff2e39ac52fbd71b96bead6f44405900f1d57a7f
 | 4.2.0 | 2026-10-14 | Owner-approved TAN-99 direction: replace Violet brand/interactive voltage with navy `#172B4D` / deep navy `#0B1F4D`; establish red `#E1231A` / deep red `#B71C14` as separate brand accents, not implicit error tokens. Update primary/nav/button, icons and color semantics; retain non-brand Pulse rules. Require contrast validation and explicit focus-token selection. TAN-99 wordmark remains exploratory; official artwork must be supplied and approved. Dark-theme navy/red values remain unspecified pending validated mapping. Constitution amendment only; package/token propagation remains follow-up work. |
 | 4.1.0 | 2026-10-09 | Reconciled with TAN-99 hi-fi profile prototype and owner's product-wide contrast decision: primary button fill = primary-600, hover/press = primary-700; primary-500 retired from small-text fills; icon accent bridge and derived profile patterns codified. Superseded for brand colors by 4.2.0. |
 | 4.0.0 | 2026-10-07 | Owner instruction: re-ground the canon on **`DESIGN-legion.md` (values) + the re-based package "TANIA Pulse, Legion-aligned" (structure)**. Every `--tp-*` color re-based onto Legion ramps: Legion Purple `#875bf7`/primary-600 `#7839ee`/primary-900 `#491c96`, ink `#212121`, success/error/warning ramps (I, II, IX); Nunito Sans binary weights (700/400/600) replace Sora + Inter; weight 800 and negative tracking retired (III); Legion-flat depth restored with the card soft shadow and pill radius ratified as Pulse character exceptions (IV); component state model re-valued, Legion state-matrix discipline retained as the derivation rule for new components (V); contrast shortfall on primary-500 documented with the primary-600 mitigation (VI); icon accents re-based on Legion tokens (VII); layout shell re-verified unchanged (VIII); dark theme values re-based on Legion ramps and ratified (Additional Constraints). Pulse Indigo values (#6246EA, Sora/Inter, #101A47) retired with their source. |

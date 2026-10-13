@@ -88,7 +88,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
           </div>
         </Card>
       ) : (
-        <p className="w-fit rounded-full bg-tp-tint-violet px-4 py-1.5 text-sm text-tp-ink-violet">
+        <p className="w-fit rounded-full bg-tp-tint-info px-4 py-1.5 text-sm text-tp-ink-info">
           Assignment selesai.
         </p>
       )}

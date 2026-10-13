@@ -1,12 +1,14 @@
 // Pakai: module.exports = { presets: [require("./tokens/tailwind.preset.js")], content: [...] }
-// Mirror `tokens/tokens.css` (design constitution v4.2.0): navy = primary
-// action/active nav, red = brand accent. Alias Violet v4.0.0 (primary/lilac)
-// di-retire dan tidak dicerminkan di sini.
+// Mirror `tokens/tokens.css` (design constitution v4.3.0): navy = primary
+// action; red = brand accent (nav aktif, link, ring fokus, aksi AI); info =
+// kategori status informasional; danger token sendiri (bukan alias brand red).
+// Alias Violet v4.0.0 (primary/lilac) di-retire dan tidak dicerminkan di sini.
 module.exports = {
   theme: { extend: {
     colors: {
-      midnight:'#212121', mist:'#f2f4f7', line:'#d0d5dd', muted:'#667085', neutral:'#667085', nav:'#172B4D',
-      brand:{ navy:'#172B4D', 'navy-deep':'#0B1F4D', red:'#E1231A', 'red-deep':'#B71C14' },
+      midnight:'#212121', mist:'#F5F7FA', line:'#DFE1E6', muted:'#5E6C84', neutral:'#6B778C', nav:'#172B4D',
+      brand:{ navy:'#172B4D', 'navy-deep':'#0B1F4D', red:'#E1231A', 'red-deep':'#B71C14', 'red-tint':'#FCE9E8', 'red-tint-line':'#F5B8B5', 'on-red':'#FFFFFF' },
+      info:{ DEFAULT:'#2684FF', tint:'#E9F2FF', ink:'#0B5FD6' },
       mint:{ DEFAULT:'#168A5B', ink:'#0F6E48' }, peach:'#f97066', sun:'#D9822B'
     },
     fontFamily:{ display:['Nunito Sans','system-ui','sans-serif'], sans:['Nunito Sans','system-ui','sans-serif'] },

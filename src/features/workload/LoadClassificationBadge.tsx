@@ -8,7 +8,7 @@ import { Chip, type ChipTone } from "./Chip";
 const MAP: Record<LoadClassification, { label: string; tone: ChipTone }> = {
   OPTIMAL: { label: "Optimal", tone: "mint" },
   OVERLOAD: { label: "Kelebihan beban", tone: "peach" },
-  UNDERLOAD: { label: "Beban kurang", tone: "violet" },
+  UNDERLOAD: { label: "Beban kurang", tone: "info" },
   UNDEFINED_ACTIVITY: { label: "Data tidak lengkap", tone: "neutral" },
   UNDEFINED_TIME_SPENT: { label: "Data tidak lengkap", tone: "neutral" },
 };

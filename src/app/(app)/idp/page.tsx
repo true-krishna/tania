@@ -38,7 +38,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
-        <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-tp-brand-navy hover:text-tp-brand-navy-deep hover:underline">
+        <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
           {idp.talent.fullName}
         </Link>
         <span className="ml-2 text-xs text-zinc-400">{idp.talent.nomorInduk ?? "—"}</span>
@@ -71,7 +71,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
             "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
             idp.status === "COMPLETED" && "bg-green-100 text-green-700",
             idp.status === "NEEDS_REVIEW" && "bg-amber-100 text-amber-700",
-            idp.status === "IN_PROGRESS" && "bg-tp-tint-violet text-tp-ink-violet",
+            idp.status === "IN_PROGRESS" && "bg-tp-tint-info text-tp-ink-info",
           )}
         >
           {STATUS_LABEL[idp.status]}

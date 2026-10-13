@@ -1,24 +1,35 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TANIA Pulse (selaras Legion) · Brand guideline</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap">
-<style id="tp-tokens">/* TANIA Pulse: tokens (terang + gelap).
- * Brand roles mengikuti design constitution v4.2.0 (arah TAN-99 navy+red,
- * disetujui owner): navy = primary action & active navigation, red = brand
- * accent terpisah. Struktur, tipografi, radius, shadow tetap karakter Pulse.
+<style id="tp-tokens">
+/* TANIA Pulse: tokens (terang + gelap).
+ * Brand roles mengikuti design constitution v4.3.0 (arah TAN-99 navy+red,
+ * disetujui owner + kit TANIA Color Guideline v1.2) dan keputusan owner di
+ * TAN-165: navy = primary action; red = brand accent (nav aktif, link, ring
+ * fokus, aksi AI); info = kategori status informasional (menggantikan Violet);
+ * danger = token semantik sendiri, wajib dibedakan dari brand red.
+ * Struktur, tipografi, radius, shadow tetap karakter Pulse.
  * Alias Violet interaktif v4.0.0 (`--tp-primary`, `--tp-primary-deep`,
- * `--tp-lilac`) di-retire; tidak ada varian dark navy/red karena TAN-99
- * light-only (lihat Additional Constraints konstitusi). */
+ * `--tp-lilac`) di-retire; pasangan `--tp-tint-violet`/`--tp-ink-violet` juga
+ * di-retire total (digantikan `--tp-*info`). Tidak ada varian dark navy/red
+ * karena TAN-99 light-only (lihat Additional Constraints konstitusi). */
 :root{--tp-midnight:#212121;
 --tp-brand-navy:#172B4D;--tp-brand-navy-deep:#0B1F4D;--tp-brand-red:#E1231A;--tp-brand-red-deep:#B71C14;
+--tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;
 --tp-nav:var(--tp-brand-navy);--tp-on-nav:#FFFFFF;
---tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;
---tp-bg:#f2f4f7;--tp-surface:#FFFFFF;--tp-line:#d0d5dd;--tp-text:#212121;--tp-muted:#667085;
-/* `--tp-tint-*`/`--tp-ink-*`: pasangan semantik. Peach = error/danger khusus
- * (bukan alias brand red). Violet = kategori semantik legacy (in-progress/
- * info) yang belum dimigrasi — dipakai non-interaktif saja, bukan brand action. */
---tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-violet:#ece9fe;
---tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-violet:#6927da;
---tp-neutral:#667085;
+--tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;--tp-info:#2684FF;
+--tp-bg:#F5F7FA;--tp-surface:#FFFFFF;--tp-line:#DFE1E6;--tp-text:#212121;--tp-muted:#5E6C84;
+/* `--tp-tint-*`/`--tp-ink-*`: pasangan semantik. Peach = error/danger khusus —
+ * token sendiri, TIDAK meng-alias brand red (keputusan owner: danger wajib
+ * dibedakan; brand red hanya aksen/nav/link/fokus). Info = kategori
+ * informasional (in-progress dsb.) menggantikan Violet legacy. */
+--tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-info:#E9F2FF;
+--tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-info:#0B5FD6;
+--tp-neutral:#6B778C;
+/* Bridge aksen ikon (Principle VII): detail "action marker" tetap navy — kit
+ * v1.2 hanya menetapkan ikon merah untuk menu aktif (di-override di
+ * components.css `.tp-nav-item[aria-current]`), bukan untuk semua ikon. */
+--tania-primary:var(--tp-brand-navy);--tania-mint:var(--tp-mint-ink);
 --tp-font-display:Nunito Sans,system-ui,sans-serif;--tp-font-body:Nunito Sans,system-ui,-apple-system,"Segoe UI",sans-serif;
 --tp-r-sm:10px;--tp-r-md:14px;--tp-r-lg:20px;--tp-r-xl:28px;--tp-r-pill:999px;
 --tp-shadow:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.06);
@@ -28,12 +39,14 @@
  * nilai dark dan konstitusi melarang menginferensinya (bukan alasan kembali
  * ke Violet). Token dark non-brand tetap seperti v4.0.0. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
---tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
---tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
 
 :root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
---tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
---tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}</style><style id="tp-components">/* TANIA Pulse (selaras Legion): kelas komponen (.tp-*) */
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}
+</style><style id="tp-components">
+/* TANIA Pulse (selaras Legion): kelas komponen (.tp-*) */
 *{box-sizing:border-box}
 body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var(--tp-font-body)}
 .tp-h1{font:700 clamp(30px,5vw,40px)/1.1 var(--tp-font-display);margin:0}
@@ -45,24 +58,28 @@ body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var
 .tp-btn:hover{background:var(--tp-bg)}
 .tp-btn--primary{background:var(--tp-brand-navy);border-color:var(--tp-brand-navy);color:#fff}
 .tp-btn--primary:hover,.tp-btn--primary:active{background:var(--tp-brand-navy-deep);border-color:var(--tp-brand-navy-deep)}
-.tp-btn:focus-visible,.tp-input:focus-visible,.tp-tab:focus-visible,.tp-nav-item:focus-visible{outline:2px solid var(--tp-mint-ink);outline-offset:2px}
+.tp-btn:focus-visible,.tp-input:focus-visible,.tp-tab:focus-visible,.tp-nav-item:focus-visible{outline:2px solid var(--tp-brand-red);outline-offset:2px}
 .tp-input{width:100%;min-height:44px;padding:0 16px;border:1px solid var(--tp-line);border-radius:var(--tp-r-pill);background:var(--tp-surface);color:var(--tp-text);font:400 14px var(--tp-font-body)}
 .tp-chip{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:var(--tp-r-pill)}
 .tp-chip--peach{background:var(--tp-tint-peach);color:var(--tp-ink-peach)}
 .tp-chip--mint{background:var(--tp-tint-mint);color:var(--tp-ink-mint)}
 .tp-chip--sun{background:var(--tp-tint-sun);color:var(--tp-ink-sun)}
-.tp-chip--violet{background:var(--tp-tint-violet);color:var(--tp-ink-violet)}
+.tp-chip--info{background:var(--tp-tint-info);color:var(--tp-ink-info)}
 .tp-tabs{display:flex;gap:4px;overflow-x:auto;padding:4px;background:var(--tp-bg);border:1px solid var(--tp-line);border-radius:var(--tp-r-md)}
 .tp-tab{flex:none;font:600 14px var(--tp-font-body);padding:8px 14px;border:0;border-radius:var(--tp-r-sm);background:transparent;color:var(--tp-muted);cursor:pointer}
 .tp-tab[aria-selected="true"]{background:var(--tp-surface);color:var(--tp-text);box-shadow:0 0 0 1px var(--tp-line)}
 .tp-nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;color:var(--tp-text);text-decoration:none;font-weight:600}
 .tp-nav-item:hover{background:var(--tp-bg)}
-.tp-nav-item[aria-current="page"]{background:var(--tp-nav);color:var(--tp-on-nav);font-weight:600;--tania-primary:var(--tp-on-nav);--tp-mint-ink:#6ce9a6;--tania-mint:#6ce9a6}
-.tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-tint-violet)}
+/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks red-deep
+ * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Kartu gelap tetap
+ * navy (`--tp-nav`); hanya item menu aktif yang merah. */
+.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-deep);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-deep)}
+.tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-brand-red-tint)}
 .tp-empty{color:var(--tp-muted);font-size:14px;margin:0}
 .tp-empty strong{display:block;color:var(--tp-text);font-weight:600}
 .tp-icon{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}</style><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}.w{max-width:1000px;margin:0 auto;padding:40px 20px 80px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}.w{max-width:1000px;margin:0 auto;padding:40px 20px 80px}
 h2.tp-h2{margin:48px 0 8px}p.lead{color:var(--tp-muted);max-width:66ch;margin:0 0 18px}
 .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;align-items:center;padding:20px 0}
 .g{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
@@ -95,7 +112,7 @@ ul.t{margin:0;padding-left:18px;color:var(--tp-muted);font-size:14px;max-width:7
   <symbol id="tania-notifikasi" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17V11a6 6 0 1 1 12 0v6l1.5 2h-15z"/><path stroke="var(--tp-mint-ink)" d="M10 21h4"/></g></symbol>
 </svg>
 <div class="w">
-<div class="hero"><div><span class="tp-chip tp-chip--violet">Arah brand · TANIA Pulse v2 (selaras Legion)</span><h1 class="tp-h1" style="margin:14px 0 12px;font-size:clamp(34px,6vw,52px)">Tenang di atas, bertenaga di bawahnya.</h1><p class="lead" style="margin:0">Palet ungu Legion (primary-500) di atas kanvas netral Legion, dengan aksen semantik hijau, koral, dan kuning sebagai aksen kecil. Permukaan terang dan netral, sudut besar, satu kartu gelap sebagai penekanan, dan ilustrasi blok geometris. Tanpa gradien.</p></div><div><svg viewBox="0 0 520 300" role="img" aria-label="Ilustrasi mosaik: lingkaran bertingkat dan blok geometris"><rect width="520" height="300" rx="28" fill="var(--tp-bg)"/><g fill="var(--tp-brand-navy)"><circle cx="170" cy="150" r="118" fill-opacity=".1"/><circle cx="170" cy="150" r="92" fill-opacity=".18"/><circle cx="170" cy="150" r="66" fill-opacity=".34"/><circle cx="170" cy="150" r="40" fill-opacity=".62"/><circle cx="170" cy="150" r="16"/></g><rect x="310" y="38" width="86" height="86" fill="var(--tp-nav)"/><circle cx="353" cy="81" r="14" fill="var(--tp-mint)"/><path d="M404 38a86 86 0 0 1 86 86h-86z" fill="var(--tp-brand-red)"/><rect x="310" y="132" width="86" height="86" fill="var(--tp-tint-violet)"/><path d="M310 218v-60l60 60z" fill="var(--tp-brand-navy)"/><path d="M490 132v86h-86z" fill="var(--tp-mint)"/><rect x="404" y="132" width="12" height="12" fill="var(--tp-peach)"/><rect x="330" y="238" width="24" height="24" fill="var(--tp-sun)"/></svg></div></div>
+<div class="hero"><div><span class="tp-chip tp-chip--info">Arah brand · TANIA Pulse v2 (selaras Legion)</span><h1 class="tp-h1" style="margin:14px 0 12px;font-size:clamp(34px,6vw,52px)">Tenang di atas, bertenaga di bawahnya.</h1><p class="lead" style="margin:0">Palet brand navy+red (TAN-99 / kit Color Guideline v1.2) di atas kanvas netral, dengan aksen semantik hijau, biru info, koral, dan jingga sebagai aksen kecil. Permukaan terang dan netral, sudut besar, satu kartu gelap sebagai penekanan, dan ilustrasi blok geometris. Tanpa gradien.</p></div><div><svg viewBox="0 0 520 300" role="img" aria-label="Ilustrasi mosaik: lingkaran bertingkat dan blok geometris"><rect width="520" height="300" rx="28" fill="var(--tp-bg)"/><g fill="var(--tp-brand-navy)"><circle cx="170" cy="150" r="118" fill-opacity=".1"/><circle cx="170" cy="150" r="92" fill-opacity=".18"/><circle cx="170" cy="150" r="66" fill-opacity=".34"/><circle cx="170" cy="150" r="40" fill-opacity=".62"/><circle cx="170" cy="150" r="16"/></g><rect x="310" y="38" width="86" height="86" fill="var(--tp-nav)"/><circle cx="353" cy="81" r="14" fill="var(--tp-mint)"/><path d="M404 38a86 86 0 0 1 86 86h-86z" fill="var(--tp-brand-red)"/><rect x="310" y="132" width="86" height="86" fill="var(--tp-tint-info)"/><path d="M310 218v-60l60 60z" fill="var(--tp-brand-navy)"/><path d="M490 132v86h-86z" fill="var(--tp-mint)"/><rect x="404" y="132" width="12" height="12" fill="var(--tp-peach)"/><rect x="330" y="238" width="24" height="24" fill="var(--tp-sun)"/></svg></div></div>
 
 <h2 class="tp-h2">Dari moodboard ke brand</h2>
 <p class="lead">Yang saya baca dari board Pinterest kamu, dan bagaimana diterjemahkan. Gambar asli tidak saya salin ke guideline.</p>
@@ -103,8 +120,8 @@ ul.t{margin:0;padding-left:18px;color:var(--tp-muted);font-size:14px;max-width:7
 <p class="lead" style="margin-top:12px">Tidak diambil: gradasi dan efek mengilap, foto atau figur manusia dari pin, warna lime dari pin bernuansa gelap, dan logo pihak lain.</p>
 
 <h2 class="tp-h2">Warna</h2>
-<p class="lead">Perbandingan pakai: sekitar 60% latar netral dan putih, 30% navy/teks, 10% aksen (merah brand, success, warning, error). Merah brand adalah aksen terpisah, bukan token error.</p>
-<div class="g"><div class="sw"><i style="background:#212121"></i><div><b>Ink</b><code>#212121</code><br>Teks, judul</div></div><div class="sw"><i style="background:#172B4D"></i><div><b>Navy (brand)</b><code>#172B4D</code><br>Tombol utama, penanda aktif</div></div><div class="sw"><i style="background:#0B1F4D"></i><div><b>Navy deep (brand)</b><code>#0B1F4D</code><br>Kartu gelap, menu aktif, pressed</div></div><div class="sw"><i style="background:#E1231A"></i><div><b>Merah brand (accent)</b><code>#E1231A</code><br>Aksen brand, dekorasi</div></div><div class="sw"><i style="background:#168A5B"></i><div><b>Hijau sukses (500)</b><code>#168A5B</code><br>Selesai, info (ikon: #0F6E48)</div></div><div class="sw"><i style="background:#f97066"></i><div><b>Koral (error 400)</b><code>#f97066</code><br>Perlu perhatian, sorotan hangat</div></div><div class="sw"><i style="background:#D9822B"></i><div><b>Jingga (warning)</b><code>#D9822B</code><br>Pencapaian</div></div><div class="sw"><i style="background:#f2f4f7"></i><div><b>Netral (100)</b><code>#f2f4f7</code><br>Latar halaman, header profil</div></div><div class="sw"><i style="background:#667085"></i><div><b>Netral (500)</b><code>#667085</code><br>Progres, label, border blok AI</div></div></div>
+<p class="lead">Perbandingan pakai: sekitar 60% latar netral dan putih, 30% navy/teks, 10% aksen (merah brand, success, warning, error). Merah brand adalah aksen terpisah: dipakai untuk menu aktif, link, ring fokus, dan aksi AI — bukan token error. Danger punya token sendiri dan wajib dibedakan dengan ikon + teks.</p>
+<div class="g"><div class="sw"><i style="background:#212121"></i><div><b>Ink</b><code>#212121</code><br>Teks, judul</div></div><div class="sw"><i style="background:#172B4D"></i><div><b>Navy (brand)</b><code>#172B4D</code><br>Tombol utama, kartu gelap</div></div><div class="sw"><i style="background:#0B1F4D"></i><div><b>Navy deep (brand)</b><code>#0B1F4D</code><br>Hover dan tekan tombol utama</div></div><div class="sw"><i style="background:#E1231A"></i><div><b>Merah brand (accent)</b><code>#E1231A</code><br>Menu aktif, link, ring fokus, aksi AI, plus logo</div></div><div class="sw"><i style="background:#FCE9E8"></i><div><b>Merah brand tint</b><code>#FCE9E8</code><br>Latar menu aktif dan blok AI (teks: #B71C14)</div></div><div class="sw"><i style="background:#2684FF"></i><div><b>Biru info</b><code>#2684FF</code><br>Status informasional/berjalan (tint #E9F2FF, teks #0B5FD6)</div></div><div class="sw"><i style="background:#168A5B"></i><div><b>Hijau sukses (500)</b><code>#168A5B</code><br>Selesai (ikon: #0F6E48)</div></div><div class="sw"><i style="background:#f97066"></i><div><b>Koral (error 400)</b><code>#f97066</code><br>Perlu perhatian — token danger sendiri, wajib ikon+teks</div></div><div class="sw"><i style="background:#D9822B"></i><div><b>Jingga (warning)</b><code>#D9822B</code><br>Pencapaian</div></div><div class="sw"><i style="background:#F5F7FA"></i><div><b>Kanvas (100)</b><code>#F5F7FA</code><br>Latar halaman, header profil</div></div><div class="sw"><i style="background:#6B778C"></i><div><b>Netral (mute)</b><code>#6B778C</code><br>Progres, label, border blok AI (teks: #5E6C84)</div></div></div>
 
 <h2 class="tp-h2">Tipografi</h2>
 <div class="tp-card"><div class="tp-h1">Talent tumbuh, jalur terbuka</div><code>Nunito Sans Bold 700 · judul dan angka besar</code><p style="margin:14px 0 4px">Nunito Sans Regular untuk isi dan antarmuka, mudah dibaca di tabel padat dan layar kecil.</p><code>Nunito Sans 400 · isi dan label — 600 khusus teks aksi</code></div>
@@ -115,7 +132,7 @@ ul.t{margin:0;padding-left:18px;color:var(--tp-muted);font-size:14px;max-width:7
 <div class="tp-card"><span class="tp-label">Aktivitas kontribusi</span><div class="hm" aria-hidden="true"><i style="--o:0.15"></i><i style="--o:0.08"></i><i style="--o:0.55"></i><i style="--o:1.00"></i><i style="--o:0.08"></i><i style="--o:0.08"></i><i style="--o:0.85"></i><i style="--o:0.08"></i><i style="--o:0.15"></i><i style="--o:0.85"></i><i style="--o:0.08"></i><i style="--o:0.85"></i><i style="--o:0.15"></i><i style="--o:0.08"></i><i style="--o:0.08"></i><i style="--o:0.15"></i><i style="--o:0.55"></i><i style="--o:0.08"></i><i style="--o:0.15"></i><i style="--o:0.08"></i><i style="--o:0.85"></i><i style="--o:0.15"></i><i style="--o:0.08"></i><i style="--o:0.85"></i><i style="--o:0.08"></i><i style="--o:0.15"></i><i style="--o:1.00"></i><i style="--o:1.00"></i><i style="--o:0.30"></i><i style="--o:0.08"></i><i style="--o:0.85"></i><i style="--o:0.85"></i><i style="--o:0.55"></i><i style="--o:0.08"></i><i style="--o:0.15"></i><i style="--o:0.08"></i><i style="--o:0.30"></i><i style="--o:0.15"></i><i style="--o:0.30"></i><i style="--o:0.55"></i><i style="--o:0.15"></i><i style="--o:0.85"></i><i style="--o:0.08"></i><i style="--o:0.30"></i><i style="--o:0.30"></i><i style="--o:0.85"></i><i style="--o:1.00"></i><i style="--o:0.15"></i><i style="--o:0.08"></i><i style="--o:0.30"></i><i style="--o:0.30"></i><i style="--o:1.00"></i><i style="--o:0.15"></i><i style="--o:0.30"></i><i style="--o:0.08"></i><i style="--o:0.85"></i><i style="--o:0.30"></i><i style="--o:0.08"></i><i style="--o:0.85"></i><i style="--o:0.08"></i></div><p class="tp-label" style="margin:10px 0 0">Peta panas: satu warna navy, tingkat pekat menunjukkan nilai.</p></div>
 <div class="tp-card"><span class="tp-label">Skor rata-rata</span><svg viewBox="0 0 120 70" width="180" aria-label="Gauge 72 persen" style="display:block;margin-top:6px"><path d="M10 62A50 50 0 0 1 110 62" fill="none" stroke="var(--tp-line)" stroke-width="12" stroke-linecap="round"/><path d="M10 62A50 50 0 0 1 110 62" fill="none" stroke="var(--tp-brand-navy)" stroke-width="12" stroke-linecap="round" stroke-dasharray="113 157"/></svg><div class="big" style="margin-top:-6px">3.6</div><span class="tp-chip tp-chip--mint" style="margin-top:8px">Sesuai harapan</span></div>
 <div class="dk"><b style="font-family:var(--tp-font-display)">Aksi pengembangan</b><div class="tl"><span class="ck on"></span>Sertifikasi cloud dasar</div><div class="tl"><span class="ck on"></span>Mentoring bulanan</div><div class="tl"><span class="ck"></span>Proyek lintas chapter</div><p style="margin:10px 0 0;font-size:13px;color:var(--tp-on-nav)">Kartu navy: satu per layar.</p></div>
-<div class="tp-card"><h3 class="tp-h3">Tombol dan status</h3><div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0"><button class="tp-btn tp-btn--primary">Ask TANIA</button><button class="tp-btn">Export profil</button></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tp-chip tp-chip--violet">Berjalan</span><span class="tp-chip tp-chip--mint">Selesai</span><span class="tp-chip tp-chip--peach">Perlu review</span><span class="tp-chip tp-chip--sun">Pencapaian</span></div></div>
+<div class="tp-card"><h3 class="tp-h3">Tombol dan status</h3><div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0"><button class="tp-btn tp-btn--primary">Ask TANIA</button><button class="tp-btn">Export profil</button></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tp-chip tp-chip--info">Berjalan</span><span class="tp-chip tp-chip--mint">Selesai</span><span class="tp-chip tp-chip--peach">Perlu review</span><span class="tp-chip tp-chip--sun">Pencapaian</span></div></div>
 </div>
 
 <h2 class="tp-h2">Ilustrasi</h2>

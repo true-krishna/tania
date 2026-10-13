@@ -176,7 +176,7 @@ export default function DashboardPage() {
                         {a.jobRole.name} · {a.periodStart} — {a.periodEnd ?? "…"}
                       </p>
                     </div>
-                    <span className="rounded-md bg-tp-tint-violet px-2 py-0.5 text-xs font-semibold text-tp-ink-violet">
+                    <span className="rounded-md bg-tp-tint-info px-2 py-0.5 text-xs font-semibold text-tp-ink-info">
                       {ASSIGNMENT_STATUS_LABEL[a.status]}
                     </span>
                   </li>
@@ -221,7 +221,7 @@ export default function DashboardPage() {
           </div>
 
           <p className="text-sm">
-            <Link href="/idp/my" className="font-medium text-tp-brand-navy hover:text-tp-brand-navy-deep">
+            <Link href="/idp/my" className="font-medium text-tp-brand-red-deep hover:underline">
               Lihat IDP saya →
             </Link>
           </p>

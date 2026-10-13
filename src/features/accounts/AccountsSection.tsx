@@ -36,7 +36,7 @@ type AccountsSectionProps = {
 
 function RoleBadge({ role }: { role: string }) {
   return (
-    <span className="rounded-md bg-tp-tint-violet px-2 py-0.5 text-xs font-semibold text-tp-ink-violet">
+    <span className="rounded-md bg-tp-tint-info px-2 py-0.5 text-xs font-semibold text-tp-ink-info">
       {roleLabel[role as AccessRole] ?? role}
     </span>
   );

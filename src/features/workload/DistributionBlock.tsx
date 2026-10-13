@@ -12,14 +12,14 @@ const DIMENSIONS: { key: DistributionDimension; label: string }[] = [
 
 const LEGEND = [
   { key: "optimal", label: "Optimal", color: "var(--tp-ink-mint)" },
-  { key: "underload", label: "Beban kurang", color: "var(--tp-ink-violet)" },
+  { key: "underload", label: "Beban kurang", color: "var(--tp-ink-info)" },
   { key: "overload", label: "Kelebihan beban", color: "var(--tp-ink-peach)" },
   { key: "undefined", label: "Data tidak lengkap", color: "var(--tp-line)" },
 ] as const;
 
 const SEGMENT_CLASS: Record<(typeof LEGEND)[number]["key"], string> = {
   optimal: "bg-tp-tint-mint",
-  underload: "bg-tp-tint-violet",
+  underload: "bg-tp-tint-info",
   overload: "bg-tp-tint-peach",
   undefined: "bg-tp-line",
 };

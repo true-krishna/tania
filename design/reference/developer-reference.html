@@ -1,24 +1,35 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TANIA Pulse · Referensi developer</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap">
-<style id="tp-tokens">/* TANIA Pulse: tokens (terang + gelap).
- * Brand roles mengikuti design constitution v4.2.0 (arah TAN-99 navy+red,
- * disetujui owner): navy = primary action & active navigation, red = brand
- * accent terpisah. Struktur, tipografi, radius, shadow tetap karakter Pulse.
+<style id="tp-tokens">
+/* TANIA Pulse: tokens (terang + gelap).
+ * Brand roles mengikuti design constitution v4.3.0 (arah TAN-99 navy+red,
+ * disetujui owner + kit TANIA Color Guideline v1.2) dan keputusan owner di
+ * TAN-165: navy = primary action; red = brand accent (nav aktif, link, ring
+ * fokus, aksi AI); info = kategori status informasional (menggantikan Violet);
+ * danger = token semantik sendiri, wajib dibedakan dari brand red.
+ * Struktur, tipografi, radius, shadow tetap karakter Pulse.
  * Alias Violet interaktif v4.0.0 (`--tp-primary`, `--tp-primary-deep`,
- * `--tp-lilac`) di-retire; tidak ada varian dark navy/red karena TAN-99
- * light-only (lihat Additional Constraints konstitusi). */
+ * `--tp-lilac`) di-retire; pasangan `--tp-tint-violet`/`--tp-ink-violet` juga
+ * di-retire total (digantikan `--tp-*info`). Tidak ada varian dark navy/red
+ * karena TAN-99 light-only (lihat Additional Constraints konstitusi). */
 :root{--tp-midnight:#212121;
 --tp-brand-navy:#172B4D;--tp-brand-navy-deep:#0B1F4D;--tp-brand-red:#E1231A;--tp-brand-red-deep:#B71C14;
+--tp-brand-red-tint:#FCE9E8;--tp-brand-red-tint-line:#F5B8B5;--tp-brand-on-red:#FFFFFF;
 --tp-nav:var(--tp-brand-navy);--tp-on-nav:#FFFFFF;
---tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;
---tp-bg:#f2f4f7;--tp-surface:#FFFFFF;--tp-line:#d0d5dd;--tp-text:#212121;--tp-muted:#667085;
-/* `--tp-tint-*`/`--tp-ink-*`: pasangan semantik. Peach = error/danger khusus
- * (bukan alias brand red). Violet = kategori semantik legacy (in-progress/
- * info) yang belum dimigrasi — dipakai non-interaktif saja, bukan brand action. */
---tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-violet:#ece9fe;
---tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-violet:#6927da;
---tp-neutral:#667085;
+--tp-mint:#168A5B;--tp-mint-ink:#0F6E48;--tp-sun:#D9822B;--tp-peach:#f97066;--tp-info:#2684FF;
+--tp-bg:#F5F7FA;--tp-surface:#FFFFFF;--tp-line:#DFE1E6;--tp-text:#212121;--tp-muted:#5E6C84;
+/* `--tp-tint-*`/`--tp-ink-*`: pasangan semantik. Peach = error/danger khusus —
+ * token sendiri, TIDAK meng-alias brand red (keputusan owner: danger wajib
+ * dibedakan; brand red hanya aksen/nav/link/fokus). Info = kategori
+ * informasional (in-progress dsb.) menggantikan Violet legacy. */
+--tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-info:#E9F2FF;
+--tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-info:#0B5FD6;
+--tp-neutral:#6B778C;
+/* Bridge aksen ikon (Principle VII): detail "action marker" tetap navy — kit
+ * v1.2 hanya menetapkan ikon merah untuk menu aktif (di-override di
+ * components.css `.tp-nav-item[aria-current]`), bukan untuk semua ikon. */
+--tania-primary:var(--tp-brand-navy);--tania-mint:var(--tp-mint-ink);
 --tp-font-display:Nunito Sans,system-ui,sans-serif;--tp-font-body:Nunito Sans,system-ui,-apple-system,"Segoe UI",sans-serif;
 --tp-r-sm:10px;--tp-r-md:14px;--tp-r-lg:20px;--tp-r-xl:28px;--tp-r-pill:999px;
 --tp-shadow:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.06);
@@ -28,12 +39,14 @@
  * nilai dark dan konstitusi melarang menginferensinya (bukan alasan kembali
  * ke Violet). Token dark non-brand tetap seperti v4.0.0. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
---tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
---tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}}
 
 :root[data-theme="dark"]{--tp-mint-ink:#6ce9a6;--tp-bg:#101828;--tp-surface:#1d2939;--tp-line:#344054;--tp-text:#fcfcfd;--tp-muted:#98a2b3;
---tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-violet:#491c96;
---tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-violet:#c3b5fd;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}</style><style id="tp-components">/* TANIA Pulse (selaras Legion): kelas komponen (.tp-*) */
+--tp-tint-peach:#7a271a;--tp-tint-mint:#054f31;--tp-tint-sun:#792e0d;--tp-tint-info:#14305A;
+--tp-ink-peach:#fda19b;--tp-ink-mint:#6ce9a6;--tp-ink-sun:#fec84b;--tp-ink-info:#6AA6FF;--tp-neutral:#98a2b3;--tp-shadow:0 1px 2px rgba(0,0,0,.4);}
+</style><style id="tp-components">
+/* TANIA Pulse (selaras Legion): kelas komponen (.tp-*) */
 *{box-sizing:border-box}
 body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var(--tp-font-body)}
 .tp-h1{font:700 clamp(30px,5vw,40px)/1.1 var(--tp-font-display);margin:0}
@@ -45,24 +58,28 @@ body{margin:0;background:var(--tp-bg);color:var(--tp-text);font:400 16px/1.6 var
 .tp-btn:hover{background:var(--tp-bg)}
 .tp-btn--primary{background:var(--tp-brand-navy);border-color:var(--tp-brand-navy);color:#fff}
 .tp-btn--primary:hover,.tp-btn--primary:active{background:var(--tp-brand-navy-deep);border-color:var(--tp-brand-navy-deep)}
-.tp-btn:focus-visible,.tp-input:focus-visible,.tp-tab:focus-visible,.tp-nav-item:focus-visible{outline:2px solid var(--tp-mint-ink);outline-offset:2px}
+.tp-btn:focus-visible,.tp-input:focus-visible,.tp-tab:focus-visible,.tp-nav-item:focus-visible{outline:2px solid var(--tp-brand-red);outline-offset:2px}
 .tp-input{width:100%;min-height:44px;padding:0 16px;border:1px solid var(--tp-line);border-radius:var(--tp-r-pill);background:var(--tp-surface);color:var(--tp-text);font:400 14px var(--tp-font-body)}
 .tp-chip{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:var(--tp-r-pill)}
 .tp-chip--peach{background:var(--tp-tint-peach);color:var(--tp-ink-peach)}
 .tp-chip--mint{background:var(--tp-tint-mint);color:var(--tp-ink-mint)}
 .tp-chip--sun{background:var(--tp-tint-sun);color:var(--tp-ink-sun)}
-.tp-chip--violet{background:var(--tp-tint-violet);color:var(--tp-ink-violet)}
+.tp-chip--info{background:var(--tp-tint-info);color:var(--tp-ink-info)}
 .tp-tabs{display:flex;gap:4px;overflow-x:auto;padding:4px;background:var(--tp-bg);border:1px solid var(--tp-line);border-radius:var(--tp-r-md)}
 .tp-tab{flex:none;font:600 14px var(--tp-font-body);padding:8px 14px;border:0;border-radius:var(--tp-r-sm);background:transparent;color:var(--tp-muted);cursor:pointer}
 .tp-tab[aria-selected="true"]{background:var(--tp-surface);color:var(--tp-text);box-shadow:0 0 0 1px var(--tp-line)}
 .tp-nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;color:var(--tp-text);text-decoration:none;font-weight:600}
 .tp-nav-item:hover{background:var(--tp-bg)}
-.tp-nav-item[aria-current="page"]{background:var(--tp-nav);color:var(--tp-on-nav);font-weight:600;--tania-primary:var(--tp-on-nav);--tp-mint-ink:#6ce9a6;--tania-mint:#6ce9a6}
-.tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-tint-violet)}
+/* Nav aktif = resep "Cockpit" kit v1.2: latar brand-red-tint, teks red-deep
+ * (>=4.5:1 di atas tint), ikon red (ambang non-teks 3:1). Kartu gelap tetap
+ * navy (`--tp-nav`); hanya item menu aktif yang merah. */
+.tp-nav-item[aria-current="page"]{background:var(--tp-brand-red-tint);color:var(--tp-brand-red-deep);font-weight:600;--tania-primary:var(--tp-brand-red);--tania-mint:var(--tp-brand-red-deep)}
+.tp-ai{border:1.5px solid var(--tp-neutral);border-radius:var(--tp-r-lg);padding:16px 18px;background:var(--tp-brand-red-tint)}
 .tp-empty{color:var(--tp-muted);font-size:14px;margin:0}
 .tp-empty strong{display:block;color:var(--tp-text);font-weight:600}
 .tp-icon{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}</style><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}.w{max-width:980px;margin:0 auto;padding:40px 20px 80px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}.w{max-width:980px;margin:0 auto;padding:40px 20px 80px}
 h2.tp-h2{margin:44px 0 8px}p.lead{color:var(--tp-muted);max-width:66ch;margin:0 0 16px}
 .g{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 pre{margin:0;background:#212121;color:#eaecf0;border-radius:14px;padding:16px;overflow:auto;max-height:340px;font:500 12.5px/1.6 ui-monospace,Menlo,monospace}
@@ -70,7 +87,7 @@ pre{margin:0;background:#212121;color:#eaecf0;border-radius:14px;padding:16px;ov
 .sc{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--tp-line);vertical-align:top}th{color:var(--tp-muted);font-weight:600}
 code{font:500 12.5px ui-monospace,Menlo,monospace}
 .demo{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
-ul{color:var(--tp-muted);padding-left:20px;max-width:70ch}li{margin:4px 0}</style></head><body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></g><symbol id="i-beranda" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/><path stroke="var(--tp-brand-navy)" d="M10 19v-5h4v5"/></symbol><symbol id="i-dashboard" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="9" rx="2"/><rect x="13" y="4" width="7" height="5" rx="2"/><rect x="4" y="15" width="7" height="5" rx="2"/><rect stroke="var(--tp-mint-ink)" x="13" y="12" width="7" height="8" rx="2"/></symbol><symbol id="i-profil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path stroke="var(--tp-brand-navy)" d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></symbol><symbol id="i-talent" viewBox="0 0 24 24"><circle cx="12" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M10.5 9l-3 6M13.5 9l3 6"/><path stroke="var(--tp-brand-navy)" d="M8.5 17h7"/></symbol><symbol id="i-timesheet" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path stroke="var(--tp-brand-navy)" d="M12 7v5l3 2"/></symbol><symbol id="i-workload" viewBox="0 0 24 24"><path d="M5 20v-8M19 20V9"/><path stroke="var(--tp-mint-ink)" d="M12 20V5"/></symbol><symbol id="i-feasibility" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M8.5 14.5a6 6 0 1 1 7 0c-.8.7-1.5 1.5-1.5 2.5h-4c0-1-.7-1.8-1.5-2.5z"/><path stroke="var(--tp-mint-ink)" d="M10.5 11.5L12 13l1.5-1.5"/></symbol><symbol id="i-budget" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18"/><path stroke="var(--tp-brand-navy)" d="M16 15h.01" stroke-width="3"/></symbol><symbol id="i-ask" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path stroke="var(--tp-mint-ink)" d="M19 17v4M17 19h4"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path stroke="var(--tp-brand-navy)" d="M20 20l-4.5-4.5"/></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M5 19h14"/><path stroke="var(--tp-mint-ink)" d="M12 4v10M8 10l4 4 4-4"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 6h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3v-3H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/></symbol></defs></svg><div class="w"><span class="tp-chip tp-chip--violet">v2.0 · selaras Legion · untuk developer</span>
+ul{color:var(--tp-muted);padding-left:20px;max-width:70ch}li{margin:4px 0}</style></head><body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></g><symbol id="i-beranda" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/><path stroke="var(--tp-brand-navy)" d="M10 19v-5h4v5"/></symbol><symbol id="i-dashboard" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="9" rx="2"/><rect x="13" y="4" width="7" height="5" rx="2"/><rect x="4" y="15" width="7" height="5" rx="2"/><rect stroke="var(--tp-mint-ink)" x="13" y="12" width="7" height="8" rx="2"/></symbol><symbol id="i-profil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path stroke="var(--tp-brand-navy)" d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></symbol><symbol id="i-talent" viewBox="0 0 24 24"><circle cx="12" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M10.5 9l-3 6M13.5 9l3 6"/><path stroke="var(--tp-brand-navy)" d="M8.5 17h7"/></symbol><symbol id="i-timesheet" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path stroke="var(--tp-brand-navy)" d="M12 7v5l3 2"/></symbol><symbol id="i-workload" viewBox="0 0 24 24"><path d="M5 20v-8M19 20V9"/><path stroke="var(--tp-mint-ink)" d="M12 20V5"/></symbol><symbol id="i-feasibility" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M8.5 14.5a6 6 0 1 1 7 0c-.8.7-1.5 1.5-1.5 2.5h-4c0-1-.7-1.8-1.5-2.5z"/><path stroke="var(--tp-mint-ink)" d="M10.5 11.5L12 13l1.5-1.5"/></symbol><symbol id="i-budget" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18"/><path stroke="var(--tp-brand-navy)" d="M16 15h.01" stroke-width="3"/></symbol><symbol id="i-ask" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path stroke="var(--tp-mint-ink)" d="M19 17v4M17 19h4"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path stroke="var(--tp-brand-navy)" d="M20 20l-4.5-4.5"/></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M5 19h14"/><path stroke="var(--tp-mint-ink)" d="M12 4v10M8 10l4 4 4-4"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 6h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3v-3H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/></symbol></defs></svg><div class="w"><span class="tp-chip tp-chip--info">v2.0 · selaras Legion · untuk developer</span>
 <h1 class="tp-h1" style="margin-top:12px">TANIA Pulse: referensi developer</h1>
 <p class="lead" style="margin-top:10px">Token, kelas komponen, dan aturan yang dipakai di halaman Profil talent versi Pulse. Kode di bawah diambil langsung dari stylesheet halaman ini, jadi yang kamu lihat adalah yang dipakai.</p>
 <h2 class="tp-h2">1. Mulai cepat</h2>
@@ -78,15 +95,15 @@ ul{color:var(--tp-muted);padding-left:20px;max-width:70ch}li{margin:4px 0}</styl
 <div class="cb"><button class="cp" data-for="c-font">Salin</button><pre id="c-font"><code>&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&amp;display=swap"&gt;</code></pre></div>
 <p class="tp-label">tokens.css</p><div class="cb"><button class="cp" data-for="c-tok">Salin</button><pre id="c-tok"><code></code></pre></div><p class="tp-label">components.css</p><div class="cb"><button class="cp" data-for="c-comp">Salin</button><pre id="c-comp"><code></code></pre></div>
 <h2 class="tp-h2">2. Warna</h2>
-<div class="tp-card sc" style="padding:6px 8px"><table><tr><th>Token</th><th>Nilai</th><th>Pemakaian</th><th>Kontras</th></tr><tr><td><code>--tp-midnight / --tp-text</code></td><td>#212121</td><td>Teks utama, judul</td><td>≈15:1 di atas latar halaman</td></tr><tr><td><code>--tp-brand-navy</code></td><td>#172B4D</td><td>Tombol utama, penanda aktif, aksen ikon</td><td>14.1:1 dengan teks putih</td></tr><tr><td><code>--tp-brand-navy-deep</code></td><td>#0B1F4D</td><td>Hover dan tekan tombol utama</td><td>15.9:1 dengan teks putih</td></tr><tr><td><code>--tp-nav</code></td><td>var(--tp-brand-navy) · #172B4D</td><td>Kartu gelap dan menu aktif (teks putih)</td><td>14.1:1</td></tr><tr><td><code>--tp-brand-red / --tp-brand-red-deep</code></td><td>#E1231A / #B71C14</td><td>Aksen brand — bukan token error/danger</td><td>Putih di atas red 4.7:1; red-deep di atas Mist 6.0:1</td></tr><tr><td><code>--tp-mint / --tp-mint-ink</code></td><td>#168A5B / #0F6E48</td><td>Selesai, info, aksen ikon. Ink untuk ikon di atas putih</td><td>Ink 6.3:1 di atas putih</td></tr><tr><td><code>--tp-peach</code></td><td>#f97066</td><td>Perlu perhatian, sorotan hangat. Teks pakai --tp-ink-peach</td><td>Dekoratif</td></tr><tr><td><code>--tp-sun</code></td><td>#D9822B</td><td>Pencapaian; teks di atasnya ink #212121</td><td>—</td></tr><tr><td><code>--tp-bg / --tp-surface / --tp-line</code></td><td>#f2f4f7 / #FFFFFF / #d0d5dd</td><td>Latar halaman dan header profil (latar netral, tanpa gradasi) / kartu / garis</td><td>—</td></tr><tr><td><code>--tp-neutral / --tp-muted</code></td><td>#667085 (gelap: #98a2b3)</td><td>Progres, border blok AI, label, nilai kosong. Satu warna</td><td>4.5:1 di atas latar halaman</td></tr></table></div>
-<p class="lead" style="margin-top:12px">Palet mengikuti arah brand navy+red TAN-99 (konstitusi desain v4.2.0): navy sebagai warna interaktif utama, merah sebagai aksen brand terpisah, netral sebagai kanvas, success/error/warning sebagai aksen semantik. Merah brand adalah aksen terpisah (bukan token error) dan hijau hanya untuk data/ikon, bukan teks. Antarmuka tidak memakai gradien. Tema gelap tersedia lewat <code>prefers-color-scheme</code> atau <code>data-theme="dark"</code>.</p>
+<div class="tp-card sc" style="padding:6px 8px"><table><tr><th>Token</th><th>Nilai</th><th>Pemakaian</th><th>Kontras</th></tr><tr><td><code>--tp-midnight / --tp-text</code></td><td>#212121</td><td>Teks utama, judul</td><td>≈15:1 di atas latar halaman</td></tr><tr><td><code>--tp-brand-navy</code></td><td>#172B4D</td><td>Tombol utama, aksen ikon</td><td>14.1:1 dengan teks putih</td></tr><tr><td><code>--tp-brand-navy-deep</code></td><td>#0B1F4D</td><td>Hover dan tekan tombol utama</td><td>15.9:1 dengan teks putih</td></tr><tr><td><code>--tp-nav</code></td><td>var(--tp-brand-navy) · #172B4D</td><td>Kartu gelap (teks putih)</td><td>14.1:1</td></tr><tr><td><code>--tp-brand-red / --tp-brand-red-deep</code></td><td>#E1231A / #B71C14</td><td>Aksen brand: menu aktif, link, ring fokus, aksi AI. Bukan token error/danger</td><td>Teks link pakai red-deep (6.0:1 di atas kanvas); ring fokus red 4.3:1</td></tr><tr><td><code>--tp-brand-red-tint</code></td><td>#FCE9E8</td><td>Latar menu aktif dan blok AI (teks #B71C14)</td><td>5.6:1</td></tr><tr><td><code>--tp-info / --tp-tint-info / --tp-ink-info</code></td><td>#2684FF / #E9F2FF / #0B5FD6</td><td>Status informasional, in-progress, berjalan</td><td>Teks info 5.1:1 di atas tint</td></tr><tr><td><code>--tp-mint / --tp-mint-ink</code></td><td>#168A5B / #0F6E48</td><td>Selesai, aksen ikon. Ink untuk ikon di atas putih</td><td>Ink 6.3:1 di atas putih</td></tr><tr><td><code>--tp-peach / --tp-tint-peach / --tp-ink-peach</code></td><td>#f97066 / #fee4e2 / #b32318</td><td>Danger/error — token sendiri, wajib dibedakan dengan ikon + teks</td><td>Ink 5.5:1 di atas tint</td></tr><tr><td><code>--tp-sun</code></td><td>#D9822B</td><td>Pencapaian; teks di atasnya ink #212121</td><td>—</td></tr><tr><td><code>--tp-bg / --tp-surface / --tp-line</code></td><td>#F5F7FA / #FFFFFF / #DFE1E6</td><td>Latar halaman dan header profil (latar netral, tanpa gradasi) / kartu / garis</td><td>—</td></tr><tr><td><code>--tp-neutral / --tp-muted</code></td><td>#6B778C / #5E6C84 (gelap: #98a2b3)</td><td>Progres, border blok AI, label, nilai kosong. Muted dipakai untuk teks karena #6B778C hanya 4.2:1 di atas kanvas</td><td>Muted 4.9:1 di atas kanvas</td></tr></table></div>
+<p class="lead" style="margin-top:12px">Palet mengikuti arah brand navy+red TAN-99 (konstitusi desain v4.3.0 + kit Color Guideline v1.2): navy sebagai warna aksi utama, merah sebagai aksen brand (menu aktif, link, ring fokus, aksi AI), biru untuk status informasional, netral sebagai kanvas, success/warning/danger sebagai aksen semantik. Danger adalah token terpisah dari merah brand dan wajib dibedakan dengan ikon + teks; hijau hanya untuk data/ikon, bukan teks. Antarmuka tidak memakai gradien. Tema gelap tersedia lewat <code>prefers-color-scheme</code> atau <code>data-theme="dark"</code>.</p>
 <h2 class="tp-h2">3. Tipografi dan bentuk</h2>
 <div class="tp-card sc" style="padding:6px 8px"><table><tr><th>Peran</th><th>Font</th><th>Ukuran</th><th>Line-height</th><th>Tracking</th></tr><tr><td>Judul halaman</td><td>Nunito Sans 700</td><td>clamp(30px,5vw,40px)</td><td>1.1</td><td>0</td></tr><tr><td>Judul seksi</td><td>Nunito Sans 700</td><td>22px</td><td>1.25</td><td>0</td></tr><tr><td>Judul kartu</td><td>Nunito Sans 700</td><td>17px</td><td>1.3</td><td>0</td></tr><tr><td>Isi</td><td>Nunito Sans 400</td><td>16px</td><td>1.6</td><td>0</td></tr><tr><td>Label & metadata</td><td>Nunito Sans 400</td><td>13–14px</td><td>1.5</td><td>0</td></tr><tr><td>Tombol & tab</td><td>Nunito Sans 600</td><td>14px</td><td>1</td><td>0</td></tr></table></div>
 <p class="lead" style="margin-top:12px">Radius: 10 px (tombol kecil, tab), 14 px (grup), 20 px (kartu), 28 px (panel besar), pill penuh untuk tombol, input, dan chip. Tidak ada gradien di antarmuka: header profil memakai latar netral, progres dan border blok AI memakai satu warna netral.</p>
 <h2 class="tp-h2">4. Komponen</h2>
 <div class="g">
 <div class="tp-card"><h3 class="tp-h3">Tombol</h3><div class="demo"><button class="tp-btn tp-btn--primary"><svg class="tp-icon" aria-hidden="true"><use href="#i-ask"/></svg>Ask TANIA</button><button class="tp-btn"><svg class="tp-icon" aria-hidden="true"><use href="#i-download"/></svg>Export profil</button></div><p class="tp-label"><code>.tp-btn</code> <code>.tp-btn--primary</code>. Satu tombol primer per area.</p></div>
-<div class="tp-card"><h3 class="tp-h3">Input &amp; chip</h3><div class="demo"><input class="tp-input" placeholder="Cari data atau tanya TANIA…" aria-label="Cari"></div><div class="demo"><span class="tp-chip tp-chip--mint">Project Manager</span><span class="tp-chip tp-chip--peach">IDP berjalan</span><span class="tp-chip tp-chip--sun">Review Q4</span><span class="tp-chip tp-chip--violet">Squad A</span></div></div>
+<div class="tp-card"><h3 class="tp-h3">Input &amp; chip</h3><div class="demo"><input class="tp-input" placeholder="Cari data atau tanya TANIA…" aria-label="Cari"></div><div class="demo"><span class="tp-chip tp-chip--mint">Project Manager</span><span class="tp-chip tp-chip--peach">IDP berjalan</span><span class="tp-chip tp-chip--sun">Review Q4</span><span class="tp-chip tp-chip--info">Squad A</span></div></div>
 <div class="tp-card"><h3 class="tp-h3">Tab</h3><div class="tp-tabs" role="tablist"><button class="tp-tab" role="tab" aria-selected="true">Overview</button><button class="tp-tab" role="tab" aria-selected="false">Journey</button><button class="tp-tab" role="tab" aria-selected="false">Gap Analysis</button></div><p class="tp-label" style="margin-top:10px"><code>aria-selected="true"</code> menandai tab aktif.</p></div>
 <div class="tp-card"><h3 class="tp-h3">Item menu</h3><div style="display:grid;gap:4px"><a class="tp-nav-item" href="#" aria-current="page"><svg class="tp-icon" aria-hidden="true"><use href="#i-profil"/></svg>Profil Saya</a><a class="tp-nav-item" href="#"><svg class="tp-icon" aria-hidden="true"><use href="#i-workload"/></svg>Workload</a></div><p class="tp-label" style="margin-top:10px"><code>aria-current="page"</code> menandai halaman aktif.</p></div>
 <div class="tp-ai"><h3 class="tp-h3"><svg class="tp-icon" aria-hidden="true"><use href="#i-ask"/></svg> AI Insight</h3><p class="tp-empty">Border netral satu warna. Hanya muncul atas permintaan pengguna.</p></div>
@@ -95,8 +112,9 @@ ul{color:var(--tp-muted);padding-left:20px;max-width:70ch}li{margin:4px 0}</styl
 <h2 class="tp-h2">5. Tailwind</h2><div class="cb"><button class="cp" data-for="c-tw">Salin</button><pre id="c-tw"><code>module.exports = {
   theme: { extend: {
     colors: {
-      midnight:'#212121', mist:'#f2f4f7', line:'#d0d5dd', muted:'#667085', neutral:'#667085', nav:'#172B4D',
-      brand:{ navy:'#172B4D', 'navy-deep':'#0B1F4D', red:'#E1231A', 'red-deep':'#B71C14' },
+      midnight:'#212121', mist:'#F5F7FA', line:'#DFE1E6', muted:'#5E6C84', neutral:'#6B778C', nav:'#172B4D',
+      brand:{ navy:'#172B4D', 'navy-deep':'#0B1F4D', red:'#E1231A', 'red-deep':'#B71C14', 'red-tint':'#FCE9E8', 'red-tint-line':'#F5B8B5', 'on-red':'#FFFFFF' },
+      info:{ DEFAULT:'#2684FF', tint:'#E9F2FF', ink:'#0B5FD6' },
       mint:{ DEFAULT:'#168A5B', ink:'#0F6E48' }, peach:'#f97066', sun:'#D9822B'
     },
     fontFamily:{ display:['Nunito Sans','system-ui','sans-serif'], sans:['Nunito Sans','system-ui','sans-serif'] },

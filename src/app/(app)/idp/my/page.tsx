@@ -104,7 +104,7 @@ export default function MyIdpPage() {
               "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
               idp.status === "COMPLETED" && "bg-green-100 text-green-700",
               idp.status === "NEEDS_REVIEW" && "bg-amber-100 text-amber-700",
-              idp.status === "IN_PROGRESS" && "bg-tp-tint-violet text-tp-ink-violet",
+              idp.status === "IN_PROGRESS" && "bg-tp-tint-info text-tp-ink-info",
             )}
           >
             {STATUS_LABEL[idp.status]}
@@ -149,7 +149,7 @@ export default function MyIdpPage() {
                     aria-label={`Status aksi: ${action.description}`}
                     value={action.status}
                     onChange={(e) => handleUpdateStatus(action.id, e.target.value as DevelopmentActionStatus)}
-                    className="rounded-md border border-surface-border bg-white px-2 py-1 text-xs font-medium text-zinc-700 shadow-sm focus:border-tp-brand-navy"
+                    className="rounded-md border border-surface-border bg-white px-2 py-1 text-xs font-medium text-zinc-700 shadow-sm focus:border-tp-brand-red"
                   >
                     {(Object.keys(ACTION_STATUS_LABEL) as DevelopmentActionStatus[]).map((s) => (
                       <option key={s} value={s}>
