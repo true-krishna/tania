@@ -36,13 +36,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthGuard>
-      {/* Shell per constitution-design v4.0.0 §VIII: 268px sticky sidebar,
-       * topbar 16px 28px, main 24px 28px with a 1160px content container;
+      {/* Shell per constitution-design v4.3.0 §VIII: 268px sticky sidebar,
+       * topbar 16px 24px, main 24px fluid with no content cap — the content
+       * fills the viewport minus the sidebar and adapts to large viewports;
        * ≤860px the sidebar strip is static and paddings tighten. */}
       <div className="flex min-h-screen flex-col min-[861px]:flex-row">
         <Sidebar role={role} pathname={pathname} />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-tp-line bg-tp-surface px-4 py-3 min-[861px]:px-7 min-[861px]:py-4">
+          <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-tp-line bg-tp-surface px-4 py-3 min-[861px]:px-6 min-[861px]:py-4">
             <p className="truncate text-sm font-semibold text-zinc-700">{sectionForPath(pathname)}</p>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2.5">
@@ -64,8 +65,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </header>
-          <main className="flex-1 px-4 py-4 min-[861px]:px-7 min-[861px]:py-6">
-            <div className="mx-auto w-full max-w-[1160px]">{children}</div>
+          <main className="flex-1 px-4 py-4 min-[861px]:px-6 min-[861px]:py-6">
+            {children}
           </main>
         </div>
       </div>
