@@ -8,6 +8,8 @@
 
 **Revisi**: 2026-10-14 (clarify 2, TAN-203) — Keputusan pemilik produk untuk NC-02: **opsi (a) — saran tekstual di dalam jawaban percakapan** untuk MVP ("Oke coba A dulu"); opsi (b) rekomendasi terstruktur per topik dan (c) analisis berkala disimpan sebagai kandidat fase lanjutan. Spesifikasi dinyatakan **Final**.
 
+**Revisi**: 2026-10-14 (remediasi `/speckit.analyze`, TAN-203) — Konsistensi internal: contoh pertanyaan/story diselaraskan ke cakupan MVP karyawan & kontrak (Ringkasan, US2, US5); FR-01 diperlengkapi (chip per peran, teks UI Bahasa Indonesia); FR-03 input bebas tanpa pembatasan bahasa input; FR-06 diperjelas (agregat dalam cakupan setara dashboard FR-29); FR-10 menegaskan API key sebagai secret lingkungan (konstitusi Prinsip III/VIII); Key Entities menambah kewajiban deklarasi retensi, dasar pemrosesan, dan larangan data pribadi pada log (konstitusi Prinsip I–IV); checklist review diperbarui.
+
 **Status**: Final — seluruh butir klarifikasi (NC-01..NC-05) ditutup; siap untuk `/speckit.plan`. Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
 
 **Input**: `/speckit.specify` (TAN-203) — "Buat chatbot yang membantu chapter dan operation dalam aplikasi Tania yang tugasnya merangkum data, menunjukkan data, hingga memberikan rekomendasi untuk pengambilan keputusan."
@@ -19,7 +21,7 @@
 
 ## Ringkasan
 
-Pertanyaan manajemen sehari-hari — "talent siapa yang belum punya assignment?", "kontrak siapa yang segera berakhir?", "kondisi IDP chapter saya bagaimana?" — saat ini dijawab dengan rekap manual lewat beberapa layar. Aplikasi Tania sudah menyimpan data karyawan, kontrak, assignment, IDP, evaluasi performa, CV, dan master data, tetapi tidak menyediakan cara percakapan untuk memperoleh ringkasan, data, dan saran keputusan secara langsung.
+Pertanyaan manajemen sehari-hari — "kontrak siapa yang segera berakhir?", "karyawan siapa yang data dirinya belum lengkap?", "kondisi kontrak di cakupan chapter saya bagaimana?" — saat ini dijawab dengan rekap manual lewat beberapa layar. Aplikasi Tania sudah menyimpan data karyawan, kontrak, assignment, IDP, evaluasi performa, CV, dan master data, tetapi tidak menyediakan cara percakapan untuk memperoleh ringkasan, data, dan saran keputusan secara langsung.
 
 Spesifikasi ini menambahkan **asisten percakapan (chatbot) yang tertanam di aplikasi Tania** untuk peran **Chapter** dan **Operation** (MVP), dengan tiga kemampuan inti sesuai permintaan: **(1) merangkum data**, **(2) menunjukkan data**, dan **(3) memberikan rekomendasi untuk pengambilan keputusan**. Cakupan data MVP difokuskan pada **data karyawan dan data kontrak** terlebih dahulu (NC-01); domain lain menyusul pada fase lanjutan. Asisten bersifat *read-only*: ia hanya membaca data melalui kueri ber-hak-akses identik dengan penanya, tidak pernah mengubah data, dan mengarahkan pengguna ke modul terkait untuk aksi.
 
@@ -42,7 +44,7 @@ Sebagai **Chapter**, saya dapat membuka panel chat asisten dari dalam aplikasi T
 
 ### User Story 2 - Merangkum data dalam cakupan peran (Priority: P1)
 
-Sebagai **Chapter**, saya dapat meminta ringkasan kondisi data dalam cakupan saya (mis. "Ringkas kondisi talent dan assignment di chapter saya"), sehingga saya memperoleh gambaran cepat tanpa membuka beberapa layar.
+Sebagai **Chapter**, saya dapat meminta ringkasan kondisi data dalam cakupan saya (mis. "Ringkas kondisi karyawan dan kontrak di cakupan chapter saya"), sehingga saya memperoleh gambaran cepat tanpa membuka beberapa layar.
 
 **Why this priority**: "Merangkum data" adalah kemampuan pertama yang diminta pemilik produk dan nilai langsungnya paling terasa bagi Chapter/Operation.
 
@@ -65,7 +67,7 @@ Sebagai **Operation**, saya dapat mengajukan pertanyaan data spesifik (mis. "Sia
 
 **Acceptance Scenarios**:
 
-1. **Given** data kontrak dengan tanggal berakhir bervariasi, **When** Operation bertanya kontrak yang berakhir dalam 90 hari, **Then** jawaban memuat daftar/kembali jumlah yang tepat sesuai data, dengan nama dan atribut relevan.
+1. **Given** data kontrak dengan tanggal berakhir bervariasi, **When** Operation bertanya kontrak yang berakhir dalam 90 hari, **Then** jawaban memuat daftar atau jumlah yang tepat sesuai data, dengan nama dan atribut relevan.
 2. **Given** asisten menjawab dengan angka, **When** jawaban dirender, **Then** angka penting ditonjolkan (bold) dan disertai keterangan sumber/periode.
 3. **Given** pertanyaan meminta atribut sensitif, **When** jawaban dibuat, **Then** NIK dan atribut yang diatur FR-42 induk selalu tersamar (tidak ada jalur yang menampilkan nilai penuh).
 4. **Given** pertanyaan di luar domain data Tania (mis. cuaca, berita umum), **When** dikirim, **Then** asisten menolak dengan sopan dan menjelaskan bahwa ia hanya menjawab dari data Tania.
@@ -87,7 +89,7 @@ Sebagai **pemilik sistem**, saya memastikan asisten hanya menjawab dari data yan
 
 ### User Story 5 - Rekomendasi pengambilan keputusan (Priority: P2)
 
-Sebagai **Chapter**, saya dapat meminta rekomendasi berbasis data (mis. "Talent mana kandidat kuat untuk assignment X?") yang selalu merujuk dasar data dan ditandai sebagai saran, sehingga keputusan saya lebih cepat tanpa kehilangan tanggung jawab keputusan.
+Sebagai **Chapter**, saya dapat meminta rekomendasi berbasis data dalam cakupan saya (mis. "Karyawan mana yang perlu diprioritaskan untuk perpanjangan kontrak?") yang selalu merujuk dasar data dan ditandai sebagai saran, sehingga keputusan saya lebih cepat tanpa kehilangan tanggung jawab keputusan.
 
 **Why this priority**: Nilai pembeda fitur, tetapi bergantung pada fondasi jawaban berbasis data (US2/US3); bentuk rekomendasi telah diputuskan — saran tekstual dalam jawaban (NC-02, opsi a).
 
@@ -95,8 +97,8 @@ Sebagai **Chapter**, saya dapat meminta rekomendasi berbasis data (mis. "Talent 
 
 **Acceptance Scenarios**:
 
-1. **Given** Chapter meminta rekomendasi, **When** asisten menjawab, **Then** setiap rekomendasi disertai dasar data yang dirujuk (mis. kompetensi/beban/riwayat yang relevan) dan ditandai eksplisit sebagai rekomendasi, bukan keputusan.
-2. **Given** rekomendasi melibatkan aksi (mis. membuat assignment, mengubah IDP), **When** user mengikuti saran, **Then** asisten mengarahkan ke halaman modul terkait dan tidak pernah melakukan perubahan data sendiri.
+1. **Given** Chapter meminta rekomendasi, **When** asisten menjawab, **Then** setiap rekomendasi disertai dasar data yang dirujuk (mis. tanggal berakhir kontrak, kelengkapan data karyawan) dan ditandai eksplisit sebagai rekomendasi, bukan keputusan.
+2. **Given** rekomendasi melibatkan aksi (mis. memperbarui kontrak, melengkapi data karyawan), **When** user mengikuti saran, **Then** asisten mengarahkan ke halaman modul terkait dan tidak pernah melakukan perubahan data sendiri.
 3. **Given** data tidak cukup untuk memberi rekomendasi yang berdasar, **When** diminta, **Then** asisten menyatakan keterbatasannya dan menampilkan data yang tersedia sebagai ganti konjektur.
 4. **Given** rekomendasi diberikan, **When** data di layar modul berbeda dengan dasar yang dirujuk, **Then** hal itu dianggap cacat grounding (harus diperbaiki); angka rekomendasi wajib dapat ditelusuri ke sumber.
 
@@ -129,16 +131,16 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 
 ### Functional Requirements
 
-- **FR-01**: Sistem menyediakan panel asisten percakapan yang tertanam di aplikasi Tania, tersedia bagi peran **Chapter** dan **Operation** (MVP), dengan akses dari dashboard dan bubble akses dari halaman lain. Panel tidak tersedia bagi peran lain pada MVP (NC-03).
+- **FR-01**: Sistem menyediakan panel asisten percakapan yang tertanam di aplikasi Tania, tersedia bagi peran **Chapter** dan **Operation** (MVP), dengan akses dari dashboard dan bubble akses dari halaman lain, serta chip pertanyaan contoh sesuai peran; seluruh teks antarmuka panel memakai Bahasa Indonesia. Panel tidak tersedia bagi peran lain pada MVP (NC-03).
 - **FR-02**: Percakapan, riwayat, dan konteks asisten bersifat **privat mutlak per user**; tidak ada peran — termasuk Admin — yang dapat membaca isi percakapan user lain.
-- **FR-03**: Asisten menerima input bebas dalam Bahasa Indonesia maksimum 2.000 karakter per pesan dan **menjawab dalam Bahasa Indonesia**.
+- **FR-03**: Asisten menerima input bebas (maksimum 2.000 karakter per pesan) dan **menjawab dalam Bahasa Indonesia**.
 - **FR-04**: Asisten **merangkum data** (US2) dan **menunjukkan data** (US3) secara *grounded*: jawaban hanya disusun dari data live aplikasi melalui kueri read-only. Cakupan sumber data MVP: **data karyawan dan data kontrak** (NC-01), termasuk agregat dashboard yang diturunkan dari keduanya; domain lain (assignment, IDP, evaluasi performa, CV, master data, workload) menyusul pada fase lanjutan. Mengarang angka atau data di luar hasil kueri adalah cacat grounding yang wajib dicegah.
 - **FR-05**: Setiap jawaban berisi angka atau daftar wajib menyebut **sumber data dan periode/freshness** yang dipakai; angka penting ditonjolkan.
-- **FR-06**: Otorisasi kueri data asisten **identik dengan hak akses penanya** dan ditegakkan di sisi server pada setiap permintaan, mengikuti matriks peran & modul `002-tania-rbac` dan cakupan chapter-as-data — **tanpa amandemen matriks**. Data di luar hak akses dijawab dengan penolakan ramah "tidak memiliki akses", bukan datanya.
+- **FR-06**: Otorisasi kueri data asisten **identik dengan hak akses penanya** dan ditegakkan di sisi server pada setiap permintaan, mengikuti matriks peran & modul `002-tania-rbac` dan cakupan chapter-as-data — **tanpa amandemen matriks**. Data di luar hak akses dijawab dengan penolakan ramah "tidak memiliki akses", bukan datanya. Ringkasan/agregat yang dijawab asisten setara kemampuan ringkasan dashboard per peran (FR-29 induk): agregat atas data dalam cakupan — bukan pembukaan daftar lintas cakupan.
 - **FR-07**: Atribut terbatas mengikuti aturan aplikasi yang berlaku: NIK **selalu tersamar** (FR-42 induk) pada seluruh jawaban; tidak ada jalur asisten yang menampilkan nilai penuh.
 - **FR-08**: Asisten bersifat **read-only**: tidak pernah membuat, mengubah, atau menghapus data. Untuk aksi, ia mengarahkan pengguna ke halaman modul terkait.
 - **FR-09**: Asisten dapat memberikan **rekomendasi pengambilan keputusan** (US5) berupa **saran tekstual di dalam jawaban percakapan** (keputusan NC-02 — opsi a): setiap rekomendasi selalu merujuk dasar data yang dapat diperiksa, ditandai eksplisit sebagai rekomendasi/saran, dan tidak menggantikan keputusan pejabat berwenang. Rekomendasi terstruktur per topik (opsi b) dan analisis berkala (opsi c) di luar MVP — kandidat fase lanjutan.
-- **FR-10**: Guardrail biaya: model hemat sesuai provider, batas token keluaran per jawaban, riwayat konteks maksimum 12 pesan, pesan maksimum 2.000 karakter, dan **pencatatan pemakaian token per pesan** untuk laporan biaya; menaikkan batas mana pun memerlukan persetujuan pemilik produk. *(NC-04 terjawab: organisasi memakai **provider model milik sendiri**, integrasi cukup dengan API key — tanpa dependensi vendor eksternal tertentu; penempatan komponen orkestrasi diputuskan pada fase `/speckit.plan`.)*
+- **FR-10**: Guardrail biaya: model hemat sesuai provider, batas token keluaran per jawaban, riwayat konteks maksimum 12 pesan, pesan maksimum 2.000 karakter, dan **pencatatan pemakaian token per pesan** untuk laporan biaya; menaikkan batas mana pun memerlukan persetujuan pemilik produk. API key provider disimpan sebagai secret lingkungan/platform secret store — tidak pernah di-commit maupun di-log (konstitusi Prinsip III/VIII). *(NC-04 terjawab: organisasi memakai **provider model milik sendiri**, integrasi cukup dengan API key — tanpa dependensi vendor eksternal tertentu; penempatan komponen orkestrasi diputuskan pada fase `/speckit.plan`.)*
 - **FR-11**: Kegagalan layanan model atau kueri ditangani dengan pesan kegagalan yang ramah dan jujur; sistem tidak pernah menampilkan jawaban tersusun saat sumber data tidak tersedia.
 - **FR-12**: Pertanyaan di luar domain data Tania ditolak dengan sopan beserta penjelasan cakupan asisten.
 
@@ -147,6 +149,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 - **ChatConversation**: percakapan asisten milik tepat satu user; memuat kepemilikan (user), waktu mulai, dan status. Privat mutlak; tidak ada relasi baca lintas user.
 - **ChatMessage**: pesan dalam percakapan; memuat peran pengirim (user/asisten), isi pesan, pemakaian token (input/keluaran), dan waktu. Menyimpan rujukan sumber data yang dipakai untuk menyusun jawaban (untuk keperluan audit kualitas jawaban, tanpa membuka isi percakapan ke peran lain).
 - Entitas bisnis (karyawan, kontrak, assignment, IDP, evaluasi, CV, master data) **tidak diubah** oleh fitur ini — asisten hanya membaca melalui kueri ber-otorisasi.
+- Kepatuhan data pribadi (konstitusi Prinsip I–IV): retensi percakapan (kapan dihapus/dianonimkan), dasar pemrosesan atas konten pertanyaan yang dikirim ke provider model, dan larangan data pribadi pada log komponen AI **wajib dideklarasikan eksplisit** pada data-model fase `/speckit.plan` — bukan opsional.
 
 ## Success Criteria *(mandatory)*
 
@@ -199,8 +202,8 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 ## Review & Acceptance Checklist
 
 - [x] Seluruh butir klarifikasi (NC-01..NC-05) terjawab dan dicatat pada bagian Keputusan Klarifikasi (ditutup 2026-10-14).
-- [ ] Setiap user story memiliki acceptance scenario Given/When/Then yang dapat diuji.
-- [ ] Tidak ada requirement yang bertentangan dengan `001` (FR-29/FR-30/FR-40/FR-42) dan `002-tania-rbac`.
-- [ ] Prinsip read-only & grounded terverifikasi pada setiap story terkait.
-- [ ] Guardrail biaya (FR-10) disetujui pemilik produk secara eksplisit.
-- [ ] Status spesifikasi diubah menjadi Final sebelum `/speckit.plan`.
+- [x] Setiap user story memiliki acceptance scenario Given/When/Then yang dapat diuji. (Diverifikasi `/speckit.analyze` 2026-10-14.)
+- [x] Tidak ada requirement yang bertentangan dengan `001` (FR-29/FR-30/FR-40/FR-42) dan `002-tania-rbac`. (Diverifikasi `/speckit.analyze` 2026-10-14.)
+- [x] Prinsip read-only & grounded terverifikasi pada setiap story terkait. (Diverifikasi `/speckit.analyze` 2026-10-14.)
+- [ ] Guardrail biaya (FR-10) disetujui pemilik produk secara eksplisit. (Menunggu konfirmasi bersama persetujuan breakdown.)
+- [x] Status spesifikasi diubah menjadi Final sebelum `/speckit.plan`.
