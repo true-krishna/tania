@@ -149,6 +149,8 @@ describe("IdpPage (Apollo, US3)", () => {
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
     expect(screen.getByText("1/2")).toBeInTheDocument(); // completed/total actions
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
     expect(screen.getByRole("option", { name: "Berjalan" })).toBeInTheDocument();
   });
 
@@ -171,6 +173,8 @@ describe("IdpPage (Apollo, US3)", () => {
     );
 
     await screen.findByText("Andi Pratama");
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
     fireEvent.change(screen.getByRole("combobox", { name: /status/i }), {
       target: { value: "COMPLETED" },
     });

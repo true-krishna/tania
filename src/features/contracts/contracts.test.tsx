@@ -333,6 +333,42 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
     expect(screen.getAllByText("Aktif").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/2025-07-01/)).toBeInTheDocument();
   });
+
+  it("filters by jenis via the collapsible filter panel", async () => {
+    const filteredMock = {
+      request: {
+        query: EmploymentContractsDocument,
+        variables: { filter: { contractType: "KARYAWAN_TETAP" }, first: 25, after: null },
+      },
+      result: {
+        data: {
+          employmentContracts: {
+            __typename: "EmploymentContractConnection",
+            totalCount: 0,
+            edges: [],
+            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+          },
+        },
+      },
+    };
+    render(
+      <MockedProvider mocks={[listMock, filteredMock]}>
+        <ContractsPage />
+      </MockedProvider>
+    );
+
+    await screen.findByText("PKWT/2025/002");
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Jenis" }), {
+      target: { value: "KARYAWAN_TETAP" },
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Filter, 1 filter aktif" }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText(/tidak ada kontrak yang cocok/i)).toBeInTheDocument();
+  });
 });
 
 const contractDetailNode = {

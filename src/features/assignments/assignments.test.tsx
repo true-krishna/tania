@@ -135,6 +135,8 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
     expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /buat assignment/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
     expect(screen.getByLabelText("Talent")).toBeInTheDocument();
   });
 

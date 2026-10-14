@@ -6,6 +6,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { FilterButton } from "@/components/FilterButton";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
@@ -120,12 +121,15 @@ export default function AssignmentsPage() {
   const [talentId, setTalentId] = React.useState("");
   const [projectId, setProjectId] = React.useState("");
   const [status, setStatus] = React.useState<AssignmentStatus | "ALL">("ALL");
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const { status: query, data, error } = useAssignments({
     employeeId: talentId || undefined,
     projectId: projectId || undefined,
     status: status === "ALL" ? undefined : status,
   });
   const projects = useProjects();
+  const activeFilters =
+    (talentId ? 1 : 0) + (projectId ? 1 : 0) + (status !== "ALL" ? 1 : 0);
   const { pageRows, pagination, resetPage } = useTablePagination(data);
 
   return (
@@ -141,50 +145,59 @@ export default function AssignmentsPage() {
           ) : undefined
         }
         filters={
-          <>
-            {ownOnly ? null : (
-              <TalentFilter
-                value={talentId}
-                onChange={(value) => {
-                  setTalentId(value);
-                  resetPage();
-                }}
-              />
-            )}
-            <label className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Project</span>
-              <Select
-                value={projectId}
-                onChange={(e) => {
-                  setProjectId(e.target.value);
-                  resetPage();
-                }}
-              >
-                <option value="">Semua</option>
-                {projects.data?.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Status</span>
-              <Select
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value as AssignmentStatus | "ALL");
-                  resetPage();
-                }}
-              >
-                <option value="ALL">Semua</option>
-                <option value="ACTIVE">Aktif</option>
-                <option value="COMPLETED">Selesai</option>
-              </Select>
-            </label>
-          </>
+          <FilterButton
+            activeCount={activeFilters}
+            expanded={filtersOpen}
+            onClick={() => setFiltersOpen((open) => !open)}
+            panelId="assignment-filter-panel"
+          />
         }
       />
+
+      {filtersOpen ? (
+        <div id="assignment-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
+          {ownOnly ? null : (
+            <TalentFilter
+              value={talentId}
+              onChange={(value) => {
+                setTalentId(value);
+                resetPage();
+              }}
+            />
+          )}
+          <label className="flex items-center gap-2 text-sm text-zinc-700">
+            <span>Project</span>
+            <Select
+              value={projectId}
+              onChange={(e) => {
+                setProjectId(e.target.value);
+                resetPage();
+              }}
+            >
+              <option value="">Semua</option>
+              {projects.data?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-zinc-700">
+            <span>Status</span>
+            <Select
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value as AssignmentStatus | "ALL");
+                resetPage();
+              }}
+            >
+              <option value="ALL">Semua</option>
+              <option value="ACTIVE">Aktif</option>
+              <option value="COMPLETED">Selesai</option>
+            </Select>
+          </label>
+        </div>
+      ) : null}
 
       {query === "loading" ? (
         <LoadingState />
