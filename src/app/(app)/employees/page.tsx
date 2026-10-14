@@ -16,6 +16,7 @@ import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
 import { EMPLOYEE_STATUS_LABEL } from "@/features/employees/labels";
 import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 
@@ -49,12 +50,12 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
         >
           {employee.fullName}
         </Link>
-        <span className="block text-xs text-zinc-500">{employee.nomorInduk ?? "—"}</span>
+        <span className="block text-xs text-zinc-500">{orDash(employee.nomorInduk)}</span>
       </td>
-      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">{employee.nikMasked}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.email}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.unit?.name ?? "—"}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.jobRole?.name ?? "—"}</td>
+      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">{orDash(employee.nikMasked)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.email)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.unit?.name)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.jobRole?.name)}</td>
       <td className="px-4 py-2.5">
         <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
           {EMPLOYEE_STATUS_LABEL[employee.status]}
@@ -115,7 +116,7 @@ function ChapterTalentList() {
                   {talent.fullName}
                 </Link>
               </td>
-              <td className="px-4 py-2.5 text-zinc-600">{talent.nomorInduk ?? "—"}</td>
+              <td className="px-4 py-2.5 text-zinc-600">{orDash(talent.nomorInduk)}</td>
             </tr>
           ))}
         </BoardTable>

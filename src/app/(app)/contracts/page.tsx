@@ -20,6 +20,7 @@ import type {
   EmploymentContractFilter,
   EmploymentContractStatus,
 } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
 
 type ContractRowData = {
   id: string;
@@ -65,9 +66,9 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
         </Link>
       </td>
       <td className="px-4 py-2.5 text-zinc-600">{CONTRACT_TYPE_LABEL[contract.contractType]}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{contract.unit.name}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{contract.jobRole.name}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{contract.nomorInduk}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(contract.unit.name)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(contract.jobRole.name)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(contract.nomorInduk)}</td>
       <td className="px-4 py-2.5 text-zinc-600">
         {contract.startDate} — {contract.endDate ?? "tidak berbatas"}
       </td>

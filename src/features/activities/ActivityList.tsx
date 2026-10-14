@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
+import { orDash } from "@/lib/cell";
 import { ACTIVITY_TYPE_LABEL } from "./mocks";
 import { ActivityStatusBadge } from "./ActivityStatusBadge";
 import type { PersonalWorkActivity } from "./types";
@@ -87,7 +88,7 @@ export function ActivityList({
               <td className="px-4 py-2.5 text-zinc-600">
                 {activity.startDate} — {activity.endDate ?? "sekarang"}
               </td>
-              <td className="px-4 py-2.5 text-zinc-600">{activity.project?.name ?? "—"}</td>
+              <td className="px-4 py-2.5 text-zinc-600">{orDash(activity.project?.name)}</td>
               <td className="px-4 py-2.5 text-zinc-600">{activity.priority.name}</td>
               <td className="px-4 py-2.5">
                 <ActivityStatusBadge status={activity.status} />

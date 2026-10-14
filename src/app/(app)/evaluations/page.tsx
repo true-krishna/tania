@@ -10,6 +10,7 @@ import {
   FillStateBadge,
   PeriodStateBadge,
 } from "@/features/evaluations/EvaluationBadges";
+import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 
 /**
@@ -111,9 +112,9 @@ export default function EvaluationsPage() {
                 <tr key={entry.talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
                   <td className="px-4 py-2.5">
                     <span className="text-sm font-medium text-zinc-900">{entry.talent.fullName}</span>
-                    <span className="ml-2 text-xs text-zinc-400">{entry.talent.nomorInduk ?? "—"}</span>
+                    <span className="ml-2 text-xs text-zinc-400">{orDash(entry.talent.nomorInduk)}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-zinc-600">{entry.talent.jobRole?.name ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-zinc-600">{orDash(entry.talent.jobRole?.name)}</td>
                   <td className="px-4 py-2.5">
                     <FillStateBadge fillState={entry.fillState} />
                   </td>

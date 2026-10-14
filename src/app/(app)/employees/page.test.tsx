@@ -116,6 +116,17 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     expect(screen.queryByText(/3273012345678901/)).not.toBeInTheDocument();
   });
 
+  it("renders a dash for cells without a value (TAN-189)", async () => {
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "-" })).toBeInTheDocument();
+  });
+
   it("re-queries with the typed search filter", async () => {
     const mocks = [
       unitsMock,

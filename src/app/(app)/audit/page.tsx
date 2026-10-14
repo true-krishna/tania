@@ -11,6 +11,7 @@ import { useAuditLogs } from "@/features/audit/useAuditLogs";
 import { ACTION_LABEL, ACTION_PILL } from "@/features/audit/actionLabels";
 import type { AuditLogsQuery } from "@/generated/graphql";
 import type { AccessRole } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
 
 const ROLE_LABEL: Record<AccessRole, string> = roleLabel;
 
@@ -43,13 +44,13 @@ function AuditRow({ log }: { log: AuditLogNode }) {
         {log.entityId ? ` · ${log.entityId}` : ""}
       </td>
       <td className="px-4 py-2.5 text-zinc-600">
-        {log.actor?.fullName ?? "—"}
+        {orDash(log.actor?.fullName)}
         <span className="block text-xs text-zinc-500">
-          {log.actorRole ? ROLE_LABEL[log.actorRole] : "—"}
+          {orDash(log.actorRole ? ROLE_LABEL[log.actorRole] : null)}
         </span>
       </td>
       <td className="px-4 py-2.5 text-xs text-zinc-500">
-        {log.ip ?? "—"}
+        {orDash(log.ip)}
         {log.requestId ? (
           <code className="block max-w-[160px] truncate" title={log.requestId}>
             {log.requestId}
@@ -67,7 +68,7 @@ function AuditRow({ log }: { log: AuditLogNode }) {
             Sesudah: {log.after}
           </span>
         ) : null}
-        {!log.before && !log.after ? "—" : null}
+        {!log.before && !log.after ? "-" : null}
       </td>
     </tr>
   );

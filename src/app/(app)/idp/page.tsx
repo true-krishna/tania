@@ -10,6 +10,7 @@ import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
 import { useIdps } from "@/features/idp/useIdps";
 import { cn } from "@/lib/cn";
+import { orDash } from "@/lib/cell";
 import type { IdpStatus } from "@/generated/graphql/types";
 
 type IdpListRow = {
@@ -43,9 +44,9 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
         <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
           {idp.talent.fullName}
         </Link>
-        <span className="ml-2 text-xs text-zinc-400">{idp.talent.nomorInduk ?? "—"}</span>
+        <span className="ml-2 text-xs text-zinc-400">{orDash(idp.talent.nomorInduk)}</span>
       </td>
-      <td className="px-4 py-2.5 text-zinc-600">{idp.developmentObjective}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(idp.developmentObjective)}</td>
       <td className="px-4 py-2.5 text-zinc-600">
         {idp.timelineStart} — {idp.timelineEnd}
       </td>
