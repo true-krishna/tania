@@ -174,7 +174,7 @@ describe("ActivityList — states and ownership", () => {
         onDelete={vi.fn()}
       />,
     );
-    expect(screen.getAllByRole("button", { name: /^Ubah / })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: /^Aksi / })).toHaveLength(1);
     expect(screen.getByText("Bukan milik Anda")).toBeInTheDocument();
   });
 });
@@ -206,7 +206,8 @@ describe("ActivitiesPageView — create, edit, delete against the store", () => 
     renderWorkspace();
     await screen.findByText("Implementasi form aktivitas");
 
-    fireEvent.click(screen.getByRole("button", { name: "Ubah Implementasi form aktivitas" }));
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Implementasi form aktivitas" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ubah" }));
     fireEvent.change(screen.getByLabelText("Judul aktivitas"), {
       target: { value: "Implementasi form aktivitas v2" },
     });
@@ -222,7 +223,8 @@ describe("ActivitiesPageView — create, edit, delete against the store", () => 
     renderWorkspace();
     await screen.findByText("Implementasi form aktivitas");
 
-    fireEvent.click(screen.getByRole("button", { name: "Hapus Implementasi form aktivitas" }));
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Implementasi form aktivitas" }));
+    fireEvent.click(screen.getByRole("button", { name: "Hapus" }));
 
     await waitFor(() => expect(screen.queryByText("Implementasi form aktivitas")).toBeNull());
     expect(screen.getByText('Aktivitas "Implementasi form aktivitas" dihapus.')).toBeInTheDocument();

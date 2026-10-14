@@ -5,7 +5,9 @@ import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { roleLabel } from "@/features/accounts/roles";
 import { useEmployees } from "@/features/employees/useEmployees";
@@ -114,6 +116,18 @@ export function AccountsSection({
 
   return (
     <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Akun Pengguna"
+        subtitle="Kelola akun dan peran akses di sistem Tania."
+        actions={
+          creating ? undefined : (
+            <Button type="button" onClick={() => setCreating(true)}>
+              Tambah Akun
+            </Button>
+          )
+        }
+      />
+
       {creating ? (
         <form
           onSubmit={handleSubmit}
@@ -196,61 +210,69 @@ export function AccountsSection({
             </Button>
           </div>
         </form>
-      ) : (
-        <div>
-          <Button type="button" onClick={() => setCreating(true)}>
-            Tambah Akun
-          </Button>
-        </div>
-      )}
+      ) : null}
 
       {!accounts || accounts.length === 0 ? (
         <EmptyState message="Belum ada akun pengguna." />
       ) : (
-        <>
-          <BoardTable
-            caption="Daftar akun pengguna"
-            columns={[
-              { key: "name", label: "Nama" },
-              { key: "email", label: "Email" },
-              { key: "role", label: "Peran" },
-              { key: "status", label: "Status" },
-              { key: "actions", label: "Aksi" },
-            ]}
-            footer={<Pagination {...pagination} />}
-          >
-            {pageRows.map((account) => (
-              <tr
-                key={account.id}
-                className="border-b border-board-border transition-colors hover:bg-zinc-50"
-              >
-                <td className="px-4 py-2.5 font-medium text-zinc-900">{account.fullName}</td>
-                <td className="px-4 py-2.5 text-zinc-600">{account.email}</td>
-                <td className="px-4 py-2.5">
-                  <RoleBadge role={account.accessRole} />
-                </td>
-                <td className="px-4 py-2.5">
-                  <StatusBadge active={account.status === "ACTIVE"} />
-                </td>
-                <td className="px-4 py-2.5">
-                  {confirmRevokeId === account.id ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => {
-                          void onRevokeSessions(account.id).finally(() => setConfirmRevokeId(null));
-                        }}
-                      >
-                        Ya, cabut
-                      </Button>
-                      <Button type="button" variant="ghost" onClick={() => setConfirmRevokeId(null)}>
-                        Batal
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
+        <BoardTable
+          caption="Daftar akun pengguna"
+          columns={[
+            { key: "name", label: "Nama" },
+            { key: "email", label: "Email" },
+            { key: "role", label: "Peran" },
+            { key: "status", label: "Status" },
+            { key: "actions", label: "Aksi" },
+          ]}
+          footer={<Pagination {...pagination} />}
+        >
+          {pageRows.map((account) => (
+            <tr
+              key={account.id}
+              className="border-b border-board-border transition-colors hover:bg-zinc-50"
+            >
+              <td className="px-4 py-2.5 font-medium text-zinc-900">{account.fullName}</td>
+              <td className="px-4 py-2.5 text-zinc-600">{account.email}</td>
+              <td className="px-4 py-2.5">
+                <RoleBadge role={account.accessRole} />
+              </td>
+              <td className="px-4 py-2.5">
+                <StatusBadge active={account.status === "ACTIVE"} />
+              </td>
+              <td className="px-4 py-2.5">
+                {confirmRevokeId === account.id ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        void onRevokeSessions(account.id).finally(() => setConfirmRevokeId(null));
+                      }}
+                    >
+                      Ya, cabut
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={() => setConfirmRevokeId(null)}>
+                      Batal
+                    </Button>
+                  </div>
+                ) : (
+                  <RowActionsMenu
+                    label={`Aksi ${account.fullName}`}
+                    actions={[
+                      {
+                        label: account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan",
+                        onSelect: () =>
+                          void onSetStatus(
+                            account.id,
+                            account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                          ),
+                      },
+                      { label: "Cabut Sesi", onSelect: () => setConfirmRevokeId(account.id) },
+                    ]}
+                  >
+                    <label className="flex items-center gap-2 text-sm text-zinc-700">
+                      <span>Peran</span>
                       <Select
                         aria-label={`Ubah peran ${account.fullName}`}
                         className="w-auto"
@@ -263,32 +285,13 @@ export function AccountsSection({
                           </option>
                         ))}
                       </Select>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() =>
-                          void onSetStatus(
-                            account.id,
-                            account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                          )
-                        }
-                      >
-                        {account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setConfirmRevokeId(account.id)}
-                      >
-                        Cabut Sesi
-                      </Button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
+                    </label>
+                  </RowActionsMenu>
+                )}
+            </td>
+          </tr>
+        ))}
           </BoardTable>
-        </>
       )}
     </div>
   );

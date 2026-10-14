@@ -116,61 +116,63 @@ export default function ContractsPage() {
             <Button variant="primary">+ Tambah Kontrak</Button>
           </Link>
         }
+        search={
+          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
+            <span className="sr-only">Cari kontrak</span>
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                resetPage();
+              }}
+              placeholder="Cari nama karyawan, no kontrak, atau nomor induk…"
+            />
+          </label>
+        }
+        filters={
+          <>
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Jenis</span>
+              <Select
+                value={contractType}
+                onChange={(e) => {
+                  setContractType(e.target.value as ContractType | "ALL");
+                  resetPage();
+                }}
+                className="w-auto"
+              >
+                <option value="ALL">Semua</option>
+                {CONTRACT_TYPE_ORDER.map((type) => (
+                  <option key={type} value={type}>
+                    {CONTRACT_TYPE_LABEL[type]}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Status</span>
+              <Select
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value as EmploymentContractStatus | "ALL");
+                  resetPage();
+                }}
+                className="w-auto"
+              >
+                <option value="ALL">Semua</option>
+                {(Object.keys(CONTRACT_STATUS_LABEL) as Array<
+                  keyof typeof CONTRACT_STATUS_LABEL
+                >).map((value) => (
+                  <option key={value} value={value}>
+                    {CONTRACT_STATUS_LABEL[value]}
+                  </option>
+                ))}
+              </Select>
+            </label>
+          </>
+        }
       />
-
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex flex-1 items-center gap-2 text-sm text-zinc-700">
-          <span className="sr-only">Cari kontrak</span>
-          <Input
-            type="search"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              resetPage();
-            }}
-            placeholder="Cari nama karyawan, no kontrak, atau nomor induk…"
-            className="max-w-xs"
-          />
-        </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <span>Jenis</span>
-          <Select
-            value={contractType}
-            onChange={(e) => {
-              setContractType(e.target.value as ContractType | "ALL");
-              resetPage();
-            }}
-            className="w-auto"
-          >
-            <option value="ALL">Semua</option>
-            {CONTRACT_TYPE_ORDER.map((type) => (
-              <option key={type} value={type}>
-                {CONTRACT_TYPE_LABEL[type]}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <span>Status</span>
-          <Select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as EmploymentContractStatus | "ALL");
-              resetPage();
-            }}
-            className="w-auto"
-          >
-            <option value="ALL">Semua</option>
-            {(Object.keys(CONTRACT_STATUS_LABEL) as Array<
-              keyof typeof CONTRACT_STATUS_LABEL
-            >).map((value) => (
-              <option key={value} value={value}>
-                {CONTRACT_STATUS_LABEL[value]}
-              </option>
-            ))}
-          </Select>
-        </label>
-      </div>
 
       {query === "loading" ? (
         <LoadingState />

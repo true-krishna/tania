@@ -1,6 +1,5 @@
 "use client";
 
-import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
 import { AccountsSection } from "@/features/accounts/AccountsSection";
 import { useUsers } from "@/features/accounts/useAccounts";
@@ -21,32 +20,29 @@ export default function AccountsPage() {
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <PageHeader title="Akun Pengguna" subtitle="Kelola akun dan peran akses di sistem Tania." />
-      <AccountsSection
-        accounts={data}
-        status={status}
-        error={error}
-        onCreate={async (values) => {
-          await accountMutations.create(values);
-          pushToast("success", `Akun "${values.email}" berhasil dibuat.`);
-        }}
-        onChangeRole={(userId, accessRole) =>
-          report(
-            () => accountMutations.changeRole(userId, accessRole),
-            "Peran akses berhasil diubah.",
-          )
-        }
-        onSetStatus={(userId, next) =>
-          report(
-            () => accountMutations.setStatus(userId, next),
-            next === "ACTIVE" ? "Akun berhasil diaktifkan." : "Akun berhasil dinonaktifkan.",
-          )
-        }
-        onRevokeSessions={(userId) =>
-          report(() => accountMutations.revokeSessions(userId), "Sesi pengguna berhasil dicabut.")
-        }
-      />
-    </section>
+    <AccountsSection
+      accounts={data}
+      status={status}
+      error={error}
+      onCreate={async (values) => {
+        await accountMutations.create(values);
+        pushToast("success", `Akun "${values.email}" berhasil dibuat.`);
+      }}
+      onChangeRole={(userId, accessRole) =>
+        report(
+          () => accountMutations.changeRole(userId, accessRole),
+          "Peran akses berhasil diubah.",
+        )
+      }
+      onSetStatus={(userId, next) =>
+        report(
+          () => accountMutations.setStatus(userId, next),
+          next === "ACTIVE" ? "Akun berhasil diaktifkan." : "Akun berhasil dinonaktifkan.",
+        )
+      }
+      onRevokeSessions={(userId) =>
+        report(() => accountMutations.revokeSessions(userId), "Sesi pengguna berhasil dicabut.")
+      }
+    />
   );
 }

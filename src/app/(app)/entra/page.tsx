@@ -4,10 +4,10 @@ import Link from "next/link";
 import * as React from "react";
 import { ApolloError, useMutation } from "@apollo/client";
 import { BoardTable, type Column } from "@/components/BoardTable";
-import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import {
   EmployeesWithoutEntraDocument,
   ProvisionEntraAccountDocument,
@@ -140,17 +140,16 @@ export default function EntraProvisioningPage() {
                     )}
                   </td>
                   <td className="px-4 py-2.5">
-                    <Button
-                      variant="secondary"
-                      disabled={busyId !== null}
-                      onClick={() => void provision(employee.id, employee.fullName)}
-                    >
-                      {busyId === employee.id
-                        ? "Memproses…"
-                        : failed
-                          ? "Coba lagi"
-                          : "Provisioning"}
-                    </Button>
+                    <RowActionsMenu
+                      label={`Aksi ${employee.fullName}`}
+                      actions={[
+                        {
+                          label: busyId === employee.id ? "Memproses…" : failed ? "Coba lagi" : "Provisioning",
+                          onSelect: () => void provision(employee.id, employee.fullName),
+                          disabled: busyId !== null,
+                        },
+                      ]}
+                    />
                   </td>
                 </tr>
               );

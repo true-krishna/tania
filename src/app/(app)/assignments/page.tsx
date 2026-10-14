@@ -4,6 +4,7 @@ import Link from "next/link";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
+import { Button } from "@/components/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
@@ -119,58 +120,56 @@ export default function AssignmentsPage() {
         subtitle={(role && SUBTITLE[role]) ?? "Penugasan talent ke project."}
         actions={
           manage ? (
-            <Link
-              href="/assignments/new"
-              className="inline-flex items-center rounded-md bg-tp-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-tp-brand-navy-deep active:bg-tp-brand-navy-deep"
-            >
-              + Buat Assignment
+            <Link href="/assignments/new" className="no-underline">
+              <Button variant="primary">+ Buat Assignment</Button>
             </Link>
           ) : undefined
         }
+        filters={
+          <>
+            {ownOnly ? null : (
+              <TalentFilter
+                value={talentId}
+                onChange={(value) => {
+                  setTalentId(value);
+                  resetPage();
+                }}
+              />
+            )}
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Project</span>
+              <Select
+                value={projectId}
+                onChange={(e) => {
+                  setProjectId(e.target.value);
+                  resetPage();
+                }}
+              >
+                <option value="">Semua</option>
+                {projects.data?.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Status</span>
+              <Select
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value as AssignmentStatus | "ALL");
+                  resetPage();
+                }}
+              >
+                <option value="ALL">Semua</option>
+                <option value="ACTIVE">Aktif</option>
+                <option value="COMPLETED">Selesai</option>
+              </Select>
+            </label>
+          </>
+        }
       />
-
-      <div className="flex flex-wrap items-center gap-3">
-        {ownOnly ? null : (
-          <TalentFilter
-            value={talentId}
-            onChange={(value) => {
-              setTalentId(value);
-              resetPage();
-            }}
-          />
-        )}
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <span>Project</span>
-          <Select
-            value={projectId}
-            onChange={(e) => {
-              setProjectId(e.target.value);
-              resetPage();
-            }}
-          >
-            <option value="">Semua</option>
-            {projects.data?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <span>Status</span>
-          <Select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as AssignmentStatus | "ALL");
-              resetPage();
-            }}
-          >
-            <option value="ALL">Semua</option>
-            <option value="ACTIVE">Aktif</option>
-            <option value="COMPLETED">Selesai</option>
-          </Select>
-        </label>
-      </div>
 
       {query === "loading" ? (
         <LoadingState />

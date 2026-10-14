@@ -87,6 +87,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Digital Business & Technology" }));
     fireEvent.click(screen.getByRole("button", { name: "Ubah" }));
     fireEvent.change(screen.getByLabelText("Nama Unit"), { target: { value: "Digital" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
@@ -116,6 +117,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Digital Business & Technology" }));
     fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Unit berhasil dinonaktifkan.");
@@ -139,6 +141,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Digital Business & Technology" }));
     fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(serverMessage);
@@ -289,7 +292,9 @@ describe("master-data search (FR-001–FR-008)", () => {
 
     expect(screen.getByText("Zeta Target")).toBeInTheDocument();
     expect(screen.queryByText("Tidak ada hasil yang cocok dengan pencarian.")).not.toBeInTheDocument();
-    expect(screen.getByText(/Menampilkan 1–1 dari 1/)).toBeInTheDocument();
+    expect(
+      screen.getByText((_, el) => el?.textContent === "Menampilkan 1–1 dari 1"),
+    ).toBeInTheDocument();
   });
 
   it("leaves an open create form untouched while searching (FR-008)", async () => {

@@ -69,6 +69,7 @@ describe("ProjectsPage (Apollo)", () => {
     );
 
     expect(await screen.findByText("Enterprise Network")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Enterprise Network" }));
     fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(serverMessage);

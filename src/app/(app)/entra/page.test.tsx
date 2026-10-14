@@ -79,7 +79,13 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     expect(screen.getByText("Belum dibuat")).toBeInTheDocument();
     expect(screen.getByText("Gagal")).toBeInTheDocument();
     expect(screen.getByText("graph unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Aksi Budi Santoso" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Aksi Rina Kusuma" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Budi Santoso" }));
     expect(screen.getByRole("button", { name: /provisioning/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Rina Kusuma" }));
     expect(screen.getByRole("button", { name: /coba lagi/i })).toBeInTheDocument();
   });
 
@@ -120,6 +126,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
       },
     ]);
 
+    fireEvent.click(await screen.findByRole("button", { name: "Aksi Budi Santoso" }));
     fireEvent.click(await screen.findByRole("button", { name: /provisioning/i }));
 
     expect(await screen.findByText(/provisi akun budi santoso berhasil/i)).toBeInTheDocument();
@@ -156,6 +163,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
       listMock,
     ]);
 
+    fireEvent.click(await screen.findByRole("button", { name: "Aksi Rina Kusuma" }));
     fireEvent.click(await screen.findByRole("button", { name: /coba lagi/i }));
 
     expect(await screen.findByText(/provisi akun rina kusuma gagal/i)).toBeInTheDocument();
@@ -180,6 +188,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
       },
     ]);
 
+    fireEvent.click(await screen.findByRole("button", { name: "Aksi Budi Santoso" }));
     fireEvent.click(await screen.findByRole("button", { name: /provisioning/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/aturan bisnis belum terpenuhi/i);

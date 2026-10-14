@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BoardTable } from "@/components/BoardTable";
+import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
@@ -26,12 +27,9 @@ export default function EvaluationPeriodsPage() {
           title="Periode Evaluasi"
           subtitle="Kelola periode evaluasi performa (Admin)."
           actions={
-            <Link
-              href="/evaluations/periods/new"
-              className="inline-flex items-center rounded-md bg-tp-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-tp-brand-navy-deep active:bg-tp-brand-navy-deep"
-            >
-              + Buat Periode
-            </Link>
+            <Link href="/evaluations/periods/new" className="no-underline">
+            <Button variant="primary">+ Buat Periode</Button>
+          </Link>
           }
         />
         <EmptyState message="Belum ada periode evaluasi. Buat periode pertama." />
@@ -44,11 +42,8 @@ export default function EvaluationPeriodsPage() {
         title="Periode Evaluasi"
         subtitle="Kelola periode evaluasi performa (Admin)."
         actions={
-          <Link
-            href="/evaluations/periods/new"
-            className="inline-flex items-center rounded-md bg-tp-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-tp-brand-navy-deep active:bg-tp-brand-navy-deep"
-          >
-            + Buat Periode
+          <Link href="/evaluations/periods/new" className="no-underline">
+            <Button variant="primary">+ Buat Periode</Button>
           </Link>
         }
       />
