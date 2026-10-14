@@ -184,17 +184,6 @@ describe("ProfilePage (TAN-188)", () => {
     expect(await screen.findByText("Beban kerja periode ini")).toBeInTheDocument();
   });
 
-  it("shows recent activities on the Aktivitas tab", async () => {
-    renderProfile();
-    await screen.findByRole("heading", { name: "Ilham Fadillah" });
-
-    fireEvent.click(screen.getByRole("tab", { name: "Aktivitas" }));
-
-    expect(await screen.findByText("Implementasi form aktivitas")).toBeInTheDocument();
-    expect(screen.getByText("Pelatihan Go Clean Architecture")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /kelola aktivitas/i })).toBeInTheDocument();
-  });
-
   it("shows the personal IDP plan on the IDP tab", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });

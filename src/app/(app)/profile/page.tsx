@@ -4,7 +4,6 @@ import * as React from "react";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import {
-  ActivitiesSection,
   AssignmentsSection,
   ContractsSection,
   IdpSection,
@@ -15,27 +14,20 @@ import {
 import { useSessionRole } from "@/lib/auth/guard";
 import { canAccess } from "@/lib/auth/matrix";
 
-type ProfileTab =
-  | "personal"
-  | "contracts"
-  | "assignments"
-  | "workload"
-  | "activities"
-  | "idp";
+type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp";
 
 const PROFILE_TABS: { id: ProfileTab; label: string; module?: "idp" }[] = [
   { id: "personal", label: "Informasi pribadi" },
   { id: "contracts", label: "Kontrak" },
   { id: "assignments", label: "Assignment" },
   { id: "workload", label: "Workload" },
-  { id: "activities", label: "Aktivitas" },
   { id: "idp", label: "IDP Saya", module: "idp" },
 ];
 
 /**
- * `/profile` (TAN-188): all of the signed-in user's information on one page —
- * personal data, contract history, assignments, workload, activities and the
- * personal IDP plan. Read-only; capture and editing stay in their own modules.
+ * `/profile` (TAN-188): the signed-in user's information on one page — personal
+ * data, contract history, assignments, workload and the personal IDP plan.
+ * Read-only; capture and editing stay in their own modules.
  */
 export default function ProfilePage() {
   const role = useSessionRole();
@@ -83,8 +75,6 @@ export default function ProfilePage() {
 
       {selectedTab === "workload" ? (
         <WorkloadSection />
-      ) : selectedTab === "activities" ? (
-        <ActivitiesSection />
       ) : selectedTab === "idp" ? (
         <IdpSection />
       ) : status === "loading" ? (
