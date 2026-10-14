@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { useCurrentEvaluationPeriod } from "@/features/evaluations/useCurrentEvaluationPeriod";
 import { useEvaluationRoster } from "@/features/evaluations/useEvaluationRoster";
 import {
   FillStateBadge,
   PeriodStateBadge,
 } from "@/features/evaluations/EvaluationBadges";
+import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 
 /**
@@ -20,6 +23,7 @@ import { useSessionRole } from "@/lib/auth/guard";
  */
 export default function EvaluationsPage() {
   const role = useSessionRole();
+  const router = useRouter();
   const current = useCurrentEvaluationPeriod();
   const roster = useEvaluationRoster(current.data?.id ?? null);
   const period = current.data;
@@ -101,7 +105,7 @@ export default function EvaluationsPage() {
               { key: "talent", label: "Talent" },
               { key: "jobRole", label: "Job Role" },
               { key: "status", label: "Status" },
-              { key: "action", label: "" },
+              { key: "actions", label: "Aksi", className: "col-action" },
             ]}
             footer={<Pagination {...pagination} />}
           >
@@ -111,19 +115,23 @@ export default function EvaluationsPage() {
                 <tr key={entry.talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
                   <td className="px-4 py-2.5">
                     <span className="text-sm font-medium text-zinc-900">{entry.talent.fullName}</span>
-                    <span className="ml-2 text-xs text-zinc-400">{entry.talent.nomorInduk ?? "—"}</span>
+                    <span className="ml-2 text-xs text-zinc-400">{orDash(entry.talent.nomorInduk)}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-zinc-600">{entry.talent.jobRole?.name ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-zinc-600">{orDash(entry.talent.jobRole?.name)}</td>
                   <td className="px-4 py-2.5">
                     <FillStateBadge fillState={entry.fillState} />
                   </td>
-                  <td className="px-4 py-2.5 text-right">
-                    <Link
-                      href={`/evaluations/${period.id}/${entry.talent.id}`}
-                      className="inline-flex items-center rounded-md border border-tp-brand-red/20 bg-tp-brand-red/5 px-3 py-1 text-xs font-medium text-tp-brand-red-deep shadow-sm hover:bg-tp-brand-red/10"
-                    >
-                      {readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai"}
-                    </Link>
+                  <td className="col-action">
+                    <RowActionsMenu
+                      label={`Aksi ${entry.talent.fullName}`}
+                      actions={[
+                        {
+                          label: readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai",
+                          onSelect: () =>
+                            router.push(`/evaluations/${period.id}/${entry.talent.id}`),
+                        },
+                      ]}
+                    />
                   </td>
                 </tr>
               );

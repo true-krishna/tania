@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { FilterButton } from "@/components/FilterButton";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useIdps } from "@/features/idp/useIdps";
 import { cn } from "@/lib/cn";
+import { orDash } from "@/lib/cell";
 import type { IdpStatus } from "@/generated/graphql/types";
 
 type IdpListRow = {
@@ -36,6 +40,7 @@ function actionProgress(row: IdpListRow) {
 }
 
 function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
+  const router = useRouter();
   const { total, done, donePct } = actionProgress(idp);
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
@@ -43,9 +48,9 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
         <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
           {idp.talent.fullName}
         </Link>
-        <span className="ml-2 text-xs text-zinc-400">{idp.talent.nomorInduk ?? "—"}</span>
+        <span className="ml-2 text-xs text-zinc-400">{orDash(idp.talent.nomorInduk)}</span>
       </td>
-      <td className="px-4 py-2.5 text-zinc-600">{idp.developmentObjective}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(idp.developmentObjective)}</td>
       <td className="px-4 py-2.5 text-zinc-600">
         {idp.timelineStart} — {idp.timelineEnd}
       </td>
@@ -79,12 +84,24 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
           {STATUS_LABEL[idp.status]}
         </span>
       </td>
+      <td className="col-action">
+        <RowActionsMenu
+          label={`Aksi ${idp.talent.fullName}`}
+          actions={[
+            {
+              label: "Lihat detail",
+              onSelect: () => router.push(`/idp/${idp.id}`),
+            },
+          ]}
+        />
+      </td>
     </tr>
   );
 }
 
 export default function IdpPage() {
   const [status, setStatus] = React.useState<IdpStatus | "ALL">("ALL");
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const { status: query, data, error } = useIdps({
     status: status === "ALL" ? undefined : status,
   });
@@ -101,6 +118,17 @@ export default function IdpPage() {
           </Link>
         }
         filters={
+          <FilterButton
+            activeCount={status !== "ALL" ? 1 : 0}
+            expanded={filtersOpen}
+            onClick={() => setFiltersOpen((open) => !open)}
+            panelId="idp-filter-panel"
+          />
+        }
+      />
+
+      {filtersOpen ? (
+        <div id="idp-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
             <Select
@@ -116,8 +144,8 @@ export default function IdpPage() {
               <option value="COMPLETED">Selesai</option>
             </Select>
           </label>
-        }
-      />
+        </div>
+      ) : null}
 
       {query === "loading" ? (
         <LoadingState />
@@ -135,6 +163,7 @@ export default function IdpPage() {
               { key: "timeline", label: "Timeline" },
               { key: "progress", label: "Progres Aksi" },
               { key: "status", label: "Status" },
+              { key: "actions", label: "Aksi", className: "col-action" },
             ]}
             footer={<Pagination {...pagination} />}
           >

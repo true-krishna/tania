@@ -4,11 +4,13 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { LogoutDocument } from "@/generated/graphql";
-import { IconChartBar, IconClockHour3 } from "@tabler/icons-react";
+import { IconChartBar, IconClockHour3, IconUser } from "@tabler/icons-react";
 import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { roleLabel } from "@/features/accounts/roles";
+import { authConfig } from "@/lib/auth/config";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
+import { onSessionExpired } from "@/lib/auth/session-expiry";
 import { clearSession, getSession } from "@/lib/auth/token-store";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +18,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const role = useSessionRole();
   const pathname = usePathname();
   const [logout] = useMutation(LogoutDocument);
+
+  // Session expiry while the app is open (refresh link failed and cleared the
+  // session) routes back to sign-in; AuthGuard only covers the initial mount.
+  React.useEffect(() => {
+    if (authConfig.localOnly) return;
+    return onSessionExpired(() => router.replace("/login"));
+  }, [router]);
 
   // Profile shown in the top-bar avatar; read once at mount, like `useSessionRole`.
   const [session] = React.useState(() => getSession());
@@ -51,6 +60,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 email={session?.email}
                 roleLabel={role ? roleLabel[role] : null}
                 items={[
+                  { href: "/profile", label: "Profil saya", icon: IconUser },
                   { href: "/activities", label: "Aktivitas saya", icon: IconClockHour3 },
                   { href: "/workload", label: "Workload", icon: IconChartBar },
                 ]}

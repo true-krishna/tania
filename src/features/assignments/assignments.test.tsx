@@ -19,6 +19,14 @@ import {
 } from "@/generated/graphql";
 
 const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => nav,
+  notFound: () => {
+    throw new Error("notFound");
+  },
+}));
 
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,
@@ -127,6 +135,8 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
     expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /buat assignment/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
     expect(screen.getByLabelText("Talent")).toBeInTheDocument();
   });
 

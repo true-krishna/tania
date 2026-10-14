@@ -52,6 +52,21 @@ describe("RowActionsMenu", () => {
     expect(screen.queryByRole("button", { name: "Ubah" })).not.toBeInTheDocument();
   });
 
+  it("keeps a disabled trigger closed", () => {
+    render(
+      <RowActionsMenu
+        label="Aksi Unit A"
+        disabled
+        actions={[{ label: "Ubah", onSelect: vi.fn() }]}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Aksi Unit A" });
+    expect(trigger).toBeDisabled();
+    fireEvent.click(trigger);
+    expect(screen.queryByRole("button", { name: "Ubah" })).not.toBeInTheDocument();
+  });
+
   it("renders custom panel content above the actions", () => {
     render(
       <RowActionsMenu

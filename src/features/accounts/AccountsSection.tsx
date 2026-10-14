@@ -13,6 +13,7 @@ import { roleLabel } from "@/features/accounts/roles";
 import { useEmployees } from "@/features/employees/useEmployees";
 import type { UsersQuery } from "@/generated/graphql";
 import type { AccessRole, AccountStatus } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
 
 type Account = UsersQuery["users"][number];
 
@@ -222,7 +223,7 @@ export function AccountsSection({
             { key: "email", label: "Email" },
             { key: "role", label: "Peran" },
             { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi" },
+            { key: "actions", label: "Aksi", className: "col-action" },
           ]}
           footer={<Pagination {...pagination} />}
         >
@@ -232,14 +233,14 @@ export function AccountsSection({
               className="border-b border-board-border transition-colors hover:bg-zinc-50"
             >
               <td className="px-4 py-2.5 font-medium text-zinc-900">{account.fullName}</td>
-              <td className="px-4 py-2.5 text-zinc-600">{account.email}</td>
+              <td className="px-4 py-2.5 text-zinc-600">{orDash(account.email)}</td>
               <td className="px-4 py-2.5">
                 <RoleBadge role={account.accessRole} />
               </td>
               <td className="px-4 py-2.5">
                 <StatusBadge active={account.status === "ACTIVE"} />
               </td>
-              <td className="px-4 py-2.5">
+              <td className="col-action">
                 {confirmRevokeId === account.id ? (
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
