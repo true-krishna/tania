@@ -177,7 +177,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 ## Dependencies
 
 - Data domain terimplementasi di `tania-backend` (karyawan, kontrak, assignment, IDP, evaluasi performa, CV, master data) beserta otorisasi server-side yang berlaku (`002-tania-rbac`).
-- Keputusan pemilik produk atas NC-02 (bentuk rekomendasi) sebelum spec difinalkan dan dipecah menjadi issue.
+- Persetujuan eksplisit pemilik produk sebelum spesifikasi dipecah menjadi issue implementasi.
 - Ketersediaan API key provider model milik organisasi pada lingkungan yang disetujui (NC-04).
 - Konstitusi teknis repo (frontend statis + GraphQL Go) untuk penempatan komponen orkestrasi AI.
 
