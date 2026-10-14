@@ -5,6 +5,7 @@ import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { ACTIVITY_TYPE_LABEL } from "./mocks";
 import { ActivityStatusBadge } from "./ActivityStatusBadge";
 import type { PersonalWorkActivity } from "./types";
@@ -93,26 +94,13 @@ export function ActivityList({
               </td>
               <td className="px-4 py-2.5">
                 {owned ? (
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => onEdit(activity)}
-                      disabled={busy}
-                      aria-label={`Ubah ${activity.title}`}
-                    >
-                      Ubah
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => onDelete(activity)}
-                      disabled={busy}
-                      aria-label={`Hapus ${activity.title}`}
-                    >
-                      Hapus
-                    </Button>
-                  </div>
+                  <RowActionsMenu
+                    label={`Aksi ${activity.title}`}
+                    actions={[
+                      { label: "Ubah", onSelect: () => onEdit(activity), disabled: busy },
+                      { label: "Hapus", onSelect: () => onDelete(activity), danger: true, disabled: busy },
+                    ]}
+                  />
                 ) : (
                   <span className="block text-right text-xs text-zinc-400">Bukan milik Anda</span>
                 )}

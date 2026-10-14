@@ -120,6 +120,7 @@ describe("accounts management (Admin) — T053", () => {
     const adminRow = rowOf("Sari Dewi");
     expect(within(adminRow).getAllByRole("cell")[2]).toHaveTextContent("Admin");
     expect(within(adminRow).getAllByRole("cell")[3]).toHaveTextContent("Aktif");
+    fireEvent.click(within(adminRow).getByRole("button", { name: "Aksi Sari Dewi" }));
     expect(screen.getByLabelText("Ubah peran Sari Dewi")).toHaveValue("ADMIN");
 
     const talentRow = rowOf("Budi Santoso");
@@ -241,6 +242,7 @@ describe("accounts management (Admin) — T053", () => {
     ]);
 
     await screen.findByText("Budi Santoso");
+    fireEvent.click(within(rowOf("Budi Santoso")).getByRole("button", { name: "Aksi Budi Santoso" }));
     fireEvent.change(screen.getByLabelText("Ubah peran Budi Santoso"), {
       target: { value: "CHAPTER" },
     });
@@ -275,7 +277,8 @@ describe("accounts management (Admin) — T053", () => {
     ]);
 
     await screen.findByText("Sari Dewi");
-    fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
+    fireEvent.click(within(rowOf("Sari Dewi")).getByRole("button", { name: "Aksi Sari Dewi" }));
+    fireEvent.click(within(rowOf("Sari Dewi")).getByRole("button", { name: "Nonaktifkan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Akun berhasil dinonaktifkan.");
   });
@@ -291,6 +294,7 @@ describe("accounts management (Admin) — T053", () => {
     ]);
 
     await screen.findByText("Sari Dewi");
+    fireEvent.click(within(rowOf("Sari Dewi")).getByRole("button", { name: "Aksi Sari Dewi" }));
     fireEvent.click(within(rowOf("Sari Dewi")).getByRole("button", { name: "Cabut Sesi" }));
 
     expect(screen.getByText("Cabut semua sesi akun ini?")).toBeInTheDocument();
@@ -311,6 +315,7 @@ describe("accounts management (Admin) — T053", () => {
     ]);
 
     await screen.findByText("Sari Dewi");
+    fireEvent.click(within(rowOf("Sari Dewi")).getByRole("button", { name: "Aksi Sari Dewi" }));
     fireEvent.click(within(rowOf("Sari Dewi")).getByRole("button", { name: "Cabut Sesi" }));
     fireEvent.click(screen.getByRole("button", { name: "Ya, cabut" }));
 

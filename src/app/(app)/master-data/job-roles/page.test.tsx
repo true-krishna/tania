@@ -78,6 +78,7 @@ describe("JobRolesPage (Apollo)", () => {
     );
 
     expect(await screen.findByText("Software Engineer")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Software Engineer" }));
     fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(serverMessage);

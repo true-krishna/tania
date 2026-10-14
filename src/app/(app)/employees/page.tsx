@@ -160,29 +160,29 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             </Link>
           ) : undefined
         }
-      />
-
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex flex-1 items-center gap-2 text-sm text-zinc-700">
-          <span className="sr-only">Cari karyawan</span>
-          <Input
-            type="search"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              resetPage();
-            }}
-            placeholder="Cari nama, email, atau nomor induk…"
-            className="max-w-xs"
+        search={
+          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
+            <span className="sr-only">Cari karyawan</span>
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                resetPage();
+              }}
+              placeholder="Cari nama, email, atau nomor induk…"
+            />
+          </label>
+        }
+        filters={
+          <FilterButton
+            activeCount={activeFilters}
+            expanded={filtersOpen}
+            onClick={() => setFiltersOpen((open) => !open)}
+            panelId="employee-filter-panel"
           />
-        </label>
-        <FilterButton
-          activeCount={activeFilters}
-          expanded={filtersOpen}
-          onClick={() => setFiltersOpen((open) => !open)}
-          panelId="employee-filter-panel"
-        />
-      </div>
+        }
+      />
 
       {filtersOpen ? (
         <div id="employee-filter-panel" className="tp-card flex flex-wrap items-end gap-4">

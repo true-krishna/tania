@@ -6,7 +6,9 @@ import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 
 export type MasterDataItem = { id: string; name: string; isActive: boolean };
@@ -134,6 +136,36 @@ export function MasterDataSection<T extends MasterDataItem>({
 
   return (
     <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Master Data"
+        subtitle="Reference data for the talent ecosystem, managed by Admin."
+        actions={
+          editing ? undefined : (
+            <Button type="button" onClick={openCreate}>
+              {addLabel}
+            </Button>
+          )
+        }
+        search={
+          searchable && items && items.length > 0 ? (
+            <div className="relative w-full max-w-sm">
+              <IconSearch
+                className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
+                aria-hidden
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={`${searchLabel}…`}
+                aria-label={searchLabel}
+                className="h-11 w-full rounded-full border border-tp-line bg-tp-surface pl-11 pr-4 text-sm text-tp-text placeholder:text-tp-muted"
+              />
+            </div>
+          ) : undefined
+        }
+      />
+
       {editing ? (
         <form
           onSubmit={handleSubmit}
@@ -167,120 +199,51 @@ export function MasterDataSection<T extends MasterDataItem>({
             </Button>
           </div>
         </form>
-      ) : (
-        <div>
-          <Button type="button" onClick={openCreate}>
-            {addLabel}
-          </Button>
-        </div>
-      )}
+      ) : null}
 
       {!items || items.length === 0 ? (
         <EmptyState message={emptyMessage} />
+      ) : visibleItems && visibleItems.length === 0 ? (
+        // No match is its own message, distinct from the "no data yet"
+        // empty state (FR-006).
+        <p className="text-sm text-tp-muted">Tidak ada hasil yang cocok dengan pencarian.</p>
       ) : (
-        <>
-          <BoardTable
-            caption={caption}
-            columns={[
-              { key: "name", label: nameLabel },
-              ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
-              { key: "status", label: "Status" },
-              { key: "actions", label: "Aksi" },
-            ]}
-            footer={<Pagination {...pagination} />}
-          >
-            {pageRows.map((item) => (
-              <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-                <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
-                {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
-                <td className="px-4 py-2.5">
-                  <StatusBadge active={item.isActive} />
-                </td>
-                <td className="px-4 py-2.5">
-                  {editingId === item.id ? (
-                    <span className="text-xs text-zinc-400">Mengedit…</span>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Button type="button" variant="ghost" onClick={() => startEdit(item)}>
-                        Ubah
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => void onToggleActive(item.id, !item.isActive)}
-                      >
-                        {item.isActive ? "Nonaktifkan" : "Aktifkan"}
-                      </Button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </BoardTable>
-          {searchable ? (
-            <div className="relative max-w-sm">
-              <IconSearch
-                className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
-                aria-hidden
-              />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={`${searchLabel}…`}
-                aria-label={searchLabel}
-                className="h-11 w-full rounded-full border border-tp-line bg-tp-surface pl-11 pr-4 text-sm text-tp-text placeholder:text-tp-muted"
-              />
-            </div>
-          ) : null}
-
-          {visibleItems && visibleItems.length === 0 ? (
-            // No match is its own message, distinct from the "no data yet"
-            // empty state (FR-006).
-            <p className="text-sm text-tp-muted">Tidak ada hasil yang cocok dengan pencarian.</p>
-          ) : (
-            <>
-              <BoardTable
-                caption={caption}
-                columns={[
-                  { key: "name", label: nameLabel },
-                  ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
-                  { key: "status", label: "Status" },
-                  { key: "actions", label: "Aksi" },
-                ]}
-              >
-                {pageRows.map((item) => (
-                  <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-                    <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
-                    {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
-                    <td className="px-4 py-2.5">
-                      <StatusBadge active={item.isActive} />
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {editingId === item.id ? (
-                        <span className="text-xs text-zinc-400">Mengedit…</span>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Button type="button" variant="ghost" onClick={() => startEdit(item)}>
-                            Ubah
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => void onToggleActive(item.id, !item.isActive)}
-                          >
-                            {item.isActive ? "Nonaktifkan" : "Aktifkan"}
-                          </Button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </BoardTable>
-              <Pagination {...pagination} />
-            </>
-          )}
-        </>
+        <BoardTable
+          caption={caption}
+          columns={[
+            { key: "name", label: nameLabel },
+            ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
+            { key: "status", label: "Status" },
+            { key: "actions", label: "Aksi" },
+          ]}
+          footer={<Pagination {...pagination} />}
+        >
+          {pageRows.map((item) => (
+            <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
+              <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
+              {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
+              <td className="px-4 py-2.5">
+                <StatusBadge active={item.isActive} />
+              </td>
+              <td className="px-4 py-2.5">
+                {editingId === item.id ? (
+                  <span className="text-xs text-zinc-400">Mengedit…</span>
+                ) : (
+                  <RowActionsMenu
+                    label={`Aksi ${item.name}`}
+                    actions={[
+                      { label: "Ubah", onSelect: () => startEdit(item) },
+                      {
+                        label: item.isActive ? "Nonaktifkan" : "Aktifkan",
+                        onSelect: () => void onToggleActive(item.id, !item.isActive),
+                      },
+                    ]}
+                  />
+                )}
+              </td>
+            </tr>
+          ))}
+        </BoardTable>
       )}
     </div>
   );

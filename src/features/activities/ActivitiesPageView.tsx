@@ -116,6 +116,70 @@ export function ActivitiesPageView() {
             + Catat aktivitas
           </Button>
         }
+        filters={
+          <>
+            <div className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Jenis</span>
+              <Select
+                aria-label="Filter jenis aktivitas"
+                value={filter.activityType}
+                onChange={(e) => setFilterValue("activityType", e.target.value as ActivityType | "")}
+              >
+                <option value="">Semua</option>
+                <option value="working">Bekerja</option>
+                <option value="training">Pelatihan</option>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Status</span>
+              <Select
+                aria-label="Filter status aktivitas"
+                value={filter.statusId}
+                onChange={(e) => setFilterValue("statusId", e.target.value)}
+              >
+                <option value="">Semua</option>
+                {ACTIVITY_STATUSES.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Project</span>
+              <Select
+                aria-label="Filter project aktivitas"
+                value={filter.projectId}
+                onChange={(e) => setFilterValue("projectId", e.target.value)}
+              >
+                <option value="">Semua</option>
+                {ACTIVITY_PROJECTS.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Dari tanggal</span>
+              <Input
+                aria-label="Filter tanggal mulai dari"
+                type="date"
+                value={filter.startDate}
+                onChange={(e) => setFilterValue("startDate", e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Sampai tanggal</span>
+              <Input
+                aria-label="Filter tanggal mulai sampai"
+                type="date"
+                value={filter.endDate}
+                onChange={(e) => setFilterValue("endDate", e.target.value)}
+              />
+            </div>
+          </>
+        }
       />
 
       {success ? (
@@ -151,66 +215,6 @@ export function ActivitiesPageView() {
         </Card>
       ) : null}
 
-      <Card>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <FilterField label="Jenis">
-            <Select
-              aria-label="Filter jenis aktivitas"
-              value={filter.activityType}
-              onChange={(e) => setFilterValue("activityType", e.target.value as ActivityType | "")}
-            >
-              <option value="">Semua</option>
-              <option value="working">Bekerja</option>
-              <option value="training">Pelatihan</option>
-            </Select>
-          </FilterField>
-          <FilterField label="Status">
-            <Select
-              aria-label="Filter status aktivitas"
-              value={filter.statusId}
-              onChange={(e) => setFilterValue("statusId", e.target.value)}
-            >
-              <option value="">Semua</option>
-              {ACTIVITY_STATUSES.map((status) => (
-                <option key={status.id} value={status.id}>
-                  {status.name}
-                </option>
-              ))}
-            </Select>
-          </FilterField>
-          <FilterField label="Project">
-            <Select
-              aria-label="Filter project aktivitas"
-              value={filter.projectId}
-              onChange={(e) => setFilterValue("projectId", e.target.value)}
-            >
-              <option value="">Semua</option>
-              {ACTIVITY_PROJECTS.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </Select>
-          </FilterField>
-          <FilterField label="Dari tanggal">
-            <Input
-              aria-label="Filter tanggal mulai dari"
-              type="date"
-              value={filter.startDate}
-              onChange={(e) => setFilterValue("startDate", e.target.value)}
-            />
-          </FilterField>
-          <FilterField label="Sampai tanggal">
-            <Input
-              aria-label="Filter tanggal mulai sampai"
-              type="date"
-              value={filter.endDate}
-              onChange={(e) => setFilterValue("endDate", e.target.value)}
-            />
-          </FilterField>
-        </div>
-      </Card>
-
       <ActivityList
         status={status}
         activities={data}
@@ -222,14 +226,5 @@ export function ActivitiesPageView() {
         onRetry={reload}
       />
     </section>
-  );
-}
-
-function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-      <span>{label}</span>
-      {children}
-    </div>
   );
 }
