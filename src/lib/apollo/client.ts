@@ -10,6 +10,7 @@ import { setContext } from "@apollo/client/link/context";
 import { onError } from "@apollo/client/link/error";
 import { clearSession, getSession, setSession } from "@/lib/auth/token-store";
 import { refreshSessionToken } from "@/lib/auth/refresh";
+import { notifySessionExpired } from "@/lib/auth/session-expiry";
 import { getGraphqlEndpoint } from "@/lib/apollo/endpoint";
 
 /**
@@ -46,7 +47,8 @@ function createCache(): InMemoryCache {
  * On an auth error (expired/invalid access token) the error link tries to
  * rehydrate the session once via `refreshSession` and retries the original
  * request with the fresh token. Only when the refresh itself fails is the
- * local session cleared (forcing sign-in again).
+ * local session cleared (forcing sign-in again) and the app routed to /login
+ * (session-expiry listener, src/app/(app)/layout.tsx).
  */
 export function createApolloClient(): ApolloClient<unknown> {
   const uri = getGraphqlEndpoint();
@@ -77,6 +79,7 @@ export function createApolloClient(): ApolloClient<unknown> {
     const session = getSession();
     if (!session?.refreshToken) {
       clearSession();
+      notifySessionExpired();
       return;
     }
 
@@ -101,6 +104,7 @@ export function createApolloClient(): ApolloClient<unknown> {
         })
         .catch(() => {
           clearSession();
+          notifySessionExpired();
           if (!subscriber.closed) {
             subscriber.error(new Error("Session expired. Please sign in again."));
           }
