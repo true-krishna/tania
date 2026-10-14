@@ -2,6 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-10-14
+**Updated**: 2026-10-14 (`/speckit.clarify`, TAN-187)
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -13,7 +14,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +32,5 @@
 
 ## Notes
 
-- **FR-010 menyisakan SATU marker [NEEDS CLARIFICATION]**: lingkup otorisasi ("only operational can do CRUD for master data") bertentangan dengan spesifikasi yang sudah diratifikasi (`001` FR-16 dan Matriks Peran & Modul `002` menetapkan **Admin** sebagai pengelola master data). Butuh ratifikasi pemilik produk sebelum `/speckit.clarify` atau `/speckit.plan` — lihat bagian *Perlu Keputusan Pemilik Produk* pada spec.
-- Semua item lain lulus validasi. Isi spec tidak bergantung pada jawaban FR-010 (semua kebutuhan Create dapat dieksekusi terlepas dari peran yang akhirnya berhak).
+- **FR-010 tertutup** (`/speckit.clarify`, TAN-187, 2026-10-14): peran pengelola master data adalah **Admin** (bukan Operation); hanya Admin yang dapat CRUD master data (Job Role, Unit, Initiative). Otorisasi kembali ke Matriks Peran & Modul `002-tania-rbac` yang berlaku — tanpa amandemen matriks. Marker `[NEEDS CLARIFICATION]` sudah dihapus; seluruh item lulus validasi.
+- Spesifikasi siap untuk `/speckit.plan`.
