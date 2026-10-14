@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useAssignments } from "@/features/assignments/useAssignments";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
@@ -27,6 +29,7 @@ type AssignmentRowData = {
 };
 
 function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
+  const router = useRouter();
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
@@ -45,6 +48,17 @@ function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
       </td>
       <td className="px-4 py-2.5">
         <StatusBadge active={assignment.status === "ACTIVE"} />
+      </td>
+      <td className="col-action">
+        <RowActionsMenu
+          label={`Aksi ${assignment.talent.fullName}`}
+          actions={[
+            {
+              label: "Lihat detail",
+              onSelect: () => router.push(`/assignments/${assignment.id}`),
+            },
+          ]}
+        />
       </td>
     </tr>
   );
@@ -188,6 +202,7 @@ export default function AssignmentsPage() {
               { key: "jobRole", label: "Job Role" },
               { key: "periode", label: "Periode" },
               { key: "status", label: "Status" },
+              { key: "actions", label: "Aksi", className: "col-action" },
             ]}
             footer={<Pagination {...pagination} />}
           >

@@ -70,7 +70,7 @@ export function ActivityList({
           { key: "project", label: "Project" },
           { key: "priority", label: "Prioritas" },
           { key: "status", label: "Status" },
-          { key: "actions", label: "Aksi", className: "text-right" },
+          { key: "actions", label: "Aksi", className: "col-action" },
         ]}
         footer={<Pagination {...pagination} />}
       >
@@ -93,7 +93,7 @@ export function ActivityList({
               <td className="px-4 py-2.5">
                 <ActivityStatusBadge status={activity.status} />
               </td>
-              <td className="px-4 py-2.5">
+              <td className="col-action">
                 {owned ? (
                   <RowActionsMenu
                     label={`Aksi ${activity.title}`}
@@ -103,7 +103,7 @@ export function ActivityList({
                     ]}
                   />
                 ) : (
-                  <span className="block text-right text-xs text-zinc-400">Bukan milik Anda</span>
+                  <RowActionsMenu label={`Aksi ${activity.title}`} disabled />
                 )}
               </td>
             </tr>

@@ -12,7 +12,7 @@ import {
   UnitsDocument,
 } from "@/generated/graphql";
 
-const nav = vi.hoisted(() => ({ replace: vi.fn() }));
+const nav = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => nav }));
 
@@ -125,6 +125,19 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "-" })).toBeInTheDocument();
+  });
+
+  it("opens the row action menu and navigates to the detail page (TAN-189)", async () => {
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lihat detail" }));
+    expect(nav.push).toHaveBeenCalledWith("/employees/emp-1");
   });
 
   it("re-queries with the typed search filter", async () => {

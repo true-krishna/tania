@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
@@ -18,6 +18,15 @@ import {
   UnitsDocument,
 } from "@/generated/graphql";
 import { workLocationFormValue } from "@/features/contracts/labels";
+
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => nav,
+  notFound: () => {
+    throw new Error("notFound");
+  },
+}));
 
 const unitsMock = {
   request: { query: UnitsDocument, variables: { includeInactive: true } },

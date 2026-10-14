@@ -14,6 +14,8 @@ export interface RowAction {
 interface RowActionsMenuProps {
   label: string;
   actions?: readonly RowAction[];
+  /** Matikan trigger (mis. baris tanpa aksi untuk pengguna saat ini). */
+  disabled?: boolean;
   /** Konten tambahan di atas daftar aksi (mis. kontrol ubah peran). */
   children?: React.ReactNode;
 }
@@ -30,7 +32,7 @@ interface MenuPosition {
  * `position: fixed` mengikuti posisi trigger karena `.table-scroll` memotong
  * dropdown absolut, dan menutup saat scroll/resize agar posisinya tak pernah basi.
  */
-export function RowActionsMenu({ label, actions = [], children }: RowActionsMenuProps) {
+export function RowActionsMenu({ label, actions = [], disabled = false, children }: RowActionsMenuProps) {
   const [open, setOpen] = React.useState(false);
   const [position, setPosition] = React.useState<MenuPosition | null>(null);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -88,12 +90,13 @@ export function RowActionsMenu({ label, actions = [], children }: RowActionsMenu
       <button
         ref={triggerRef}
         type="button"
+        disabled={disabled}
         aria-label={label}
         aria-haspopup="true"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={toggle}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-tp-muted transition-colors hover:bg-tp-bg hover:text-tp-text"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-tp-muted transition-colors hover:bg-tp-bg hover:text-tp-text disabled:pointer-events-none disabled:opacity-40"
       >
         <IconDotsVertical aria-hidden size={18} stroke={2} />
       </button>
