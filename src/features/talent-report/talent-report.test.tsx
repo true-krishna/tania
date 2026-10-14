@@ -35,6 +35,7 @@ import {
   MOCK_MOVEMENT_TREND,
   MOCK_TALENT_REPORT,
   MOCK_TALENT_REPORT_EMPTY,
+  MOCK_TALENT_REPORT_EMPTY_API_SHAPE,
   MOCK_TALENT_REPORT_RANGE,
 } from "./mocks";
 import type {
@@ -493,6 +494,12 @@ describe("useTalentReport (T022 / FR-11, FR-12, FR-15)", () => {
     await screen.findByText("empty");
   });
 
+  it("reports empty when the API sends zero-count categories instead of empty arrays", async () => {
+    renderHook([rangeMock, reportMock(fullPeriod, MOCK_TALENT_REPORT_EMPTY_API_SHAPE)]);
+
+    await screen.findByText("empty");
+  });
+
   it("maps a server FORBIDDEN to the forbidden status (SC-05)", async () => {
     renderHook([
       rangeMock,
@@ -544,6 +551,16 @@ describe("TalentReportContent (T023 / SC-04, SC-05)", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Terapkan" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("explains an empty range even when the API sends zero-count categories", async () => {
+    renderPage([rangeMock, reportMock(fullPeriod, MOCK_TALENT_REPORT_EMPTY_API_SHAPE)]);
+
+    expect(
+      await screen.findByText(
+        "Tidak ada data pada rentang ini. Pilih rentang bulan lain untuk melihat laporan.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows the access-denied state on FORBIDDEN (SC-05)", async () => {
