@@ -1,6 +1,7 @@
 "use client";
 
 import { Pagination } from "@/components/Pagination";
+import { orDash } from "@/lib/cell";
 import { cn } from "@/lib/cn";
 import * as React from "react";
 
@@ -29,11 +30,6 @@ interface DataTableProps<T> {
   loading?: boolean;
   emptyMessage?: string;
   pagination?: DataTablePagination;
-}
-
-function formatCell(value: unknown): string {
-  if (value == null || value === "") return "—";
-  return String(value);
 }
 
 export function DataTable<T>({
@@ -85,7 +81,7 @@ export function DataTable<T>({
                     const value = (row as unknown as Record<string, unknown>)[col.key];
                     return (
                       <td key={col.key} className={cn(col.className)}>
-                        {col.render ? col.render(row) : formatCell(value)}
+                        {col.render ? col.render(row) : orDash(value)}
                       </td>
                     );
                   })}

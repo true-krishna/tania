@@ -59,14 +59,18 @@ export default function EvaluationTemplatesPage() {
           <tr key={template.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
             <td className="px-4 py-2.5 text-zinc-900">{template.name}</td>
             <td className="px-4 py-2.5">
-              <ul className="flex flex-col gap-0.5 text-xs text-zinc-600">
-                {template.criteria.map((c) => (
-                  <li key={c.id}>
-                    {c.position}. {c.label} —{" "}
-                    <span className="text-zinc-400">{ANSWER_TYPE_LABEL[c.answerType]}</span>
-                  </li>
-                ))}
-              </ul>
+              {template.criteria.length ? (
+                <ul className="flex flex-col gap-0.5 text-xs text-zinc-600">
+                  {template.criteria.map((c) => (
+                    <li key={c.id}>
+                      {c.position}. {c.label} —{" "}
+                      <span className="text-zinc-400">{ANSWER_TYPE_LABEL[c.answerType]}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                "-"
+              )}
             </td>
             <td className="px-4 py-2.5">
               <StatusBadge active={template.isActive} />

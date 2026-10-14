@@ -21,6 +21,7 @@ import {
   useEmployeesWithoutEntra,
 } from "@/features/entra/useEmployeesWithoutEntra";
 import { mapSubmitError } from "@/lib/errors";
+import { orDash } from "@/lib/cell";
 
 const COLUMNS: Column[] = [
   { key: "name", label: "Nama" },
@@ -120,7 +121,7 @@ export default function EntraProvisioningPage() {
                       {employee.fullName}
                     </Link>
                   </td>
-                  <td className="px-4 py-2.5 text-zinc-600">{employee.email}</td>
+                  <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.email)}</td>
                   <td className="px-4 py-2.5">
                     {outcome ? (
                       <>
@@ -130,9 +131,11 @@ export default function EntraProvisioningPage() {
                           {ENTRA_PROVISION_STATUS_LABEL[outcome.status]}
                         </span>
                         <span className="mt-1 block text-xs text-zinc-500">
-                          {failed
-                            ? outcome.lastError
-                            : outcome.upn ?? outcome.action}
+                          {orDash(
+                            failed
+                              ? outcome.lastError
+                              : outcome.upn ?? outcome.action
+                          )}
                         </span>
                       </>
                     ) : (

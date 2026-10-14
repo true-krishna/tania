@@ -12,6 +12,7 @@ import { useAssignments } from "@/features/assignments/useAssignments";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useProjects } from "@/features/master-data/useMasterData";
 import type { AccessRole, AssignmentStatus } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 
@@ -35,10 +36,10 @@ function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
         >
           {assignment.talent.fullName}
         </Link>
-        <span className="block text-xs text-zinc-500">{assignment.talent.nomorInduk ?? "—"}</span>
+        <span className="block text-xs text-zinc-500">{orDash(assignment.talent.nomorInduk)}</span>
       </td>
-      <td className="px-4 py-2.5 text-zinc-600">{assignment.project.name}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{assignment.jobRole.name}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(assignment.project.name)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(assignment.jobRole.name)}</td>
       <td className="px-4 py-2.5 text-zinc-600">
         {assignment.periodStart} — {assignment.periodEnd ?? "sekarang"}
       </td>

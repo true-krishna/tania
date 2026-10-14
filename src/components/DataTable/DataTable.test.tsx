@@ -36,9 +36,9 @@ describe("DataTable", () => {
     expect(screen.getByRole("cell", { name: "Budi Santoso" })).toBeInTheDocument();
   });
 
-  it("renders an em dash for missing plain values", () => {
+  it("renders a dash for missing plain values", () => {
     renderTable();
-    expect(screen.getByRole("cell", { name: "—" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "-" })).toBeInTheDocument();
   });
 
   it("renders custom cell content through render", () => {
