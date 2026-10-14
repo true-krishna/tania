@@ -61,6 +61,7 @@ export default function EvaluationPeriodsPage() {
           { key: "state", label: "State" },
           { key: "status", label: "Status" },
         ]}
+        footer={<Pagination {...pagination} />}
       >
         {pageRows.map((period) => (
           <tr key={period.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
@@ -78,7 +79,6 @@ export default function EvaluationPeriodsPage() {
           </tr>
         ))}
       </BoardTable>
-      <Pagination {...pagination} />
     </section>
   );
 }

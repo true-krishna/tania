@@ -12,8 +12,8 @@ const EXPECTED: Record<Module, Record<AccessRole, boolean>> = {
   entra: { ADMIN: false, OPERATION: true, CHAPTER: false, TALENT: false },
   contracts: { ADMIN: true, OPERATION: true, CHAPTER: false, TALENT: false },
   assignments: { ADMIN: false, OPERATION: true, CHAPTER: true, TALENT: true },
-  idp: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
-  evaluations: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
+  idp: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: true },
+  evaluations: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: true },
   cv: { ADMIN: false, OPERATION: false, CHAPTER: true, TALENT: true },
   masterData: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   accounts: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
@@ -38,9 +38,9 @@ describe("role & module matrix (002-tania-rbac)", () => {
     expect(canAccess(undefined, "dashboard")).toBe(false);
   });
 
-  it("keeps the deferred modules closed for every role", () => {
-    expect(isModuleOpen("idp")).toBe(false);
-    expect(isModuleOpen("evaluations")).toBe(false);
+  it("keeps IDP and Evaluation open per the feature/design baseline (TAN-178)", () => {
+    expect(isModuleOpen("idp")).toBe(true);
+    expect(isModuleOpen("evaluations")).toBe(true);
     expect(isModuleOpen("assignments")).toBe(true);
   });
 });

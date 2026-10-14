@@ -217,6 +217,7 @@ export function AccountsSection({
               { key: "status", label: "Status" },
               { key: "actions", label: "Aksi" },
             ]}
+            footer={<Pagination {...pagination} />}
           >
             {pageRows.map((account) => (
               <tr
@@ -287,7 +288,6 @@ export function AccountsSection({
               </tr>
             ))}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       )}
     </div>

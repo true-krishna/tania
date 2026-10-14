@@ -189,12 +189,12 @@ export default function AssignmentsPage() {
               { key: "periode", label: "Periode" },
               { key: "status", label: "Status" },
             ]}
+            footer={<Pagination {...pagination} />}
           >
             {pageRows.map((assignment) => (
               <AssignmentRow key={assignment.id} assignment={assignment} />
             ))}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       )}
     </section>

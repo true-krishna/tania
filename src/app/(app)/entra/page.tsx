@@ -103,7 +103,7 @@ export default function EntraProvisioningPage() {
 
       {status === "ready" && employees && employees.length > 0 ? (
         <>
-          <BoardTable caption="Talent tanpa akun Entra" columns={COLUMNS}>
+          <BoardTable caption="Talent tanpa akun Entra" columns={COLUMNS} footer={<Pagination {...pagination} />}>
             {pageRows.map((employee) => {
               const outcome = employee.entraProvision;
               const failed = outcome?.status === "FAILED";
@@ -156,7 +156,6 @@ export default function EntraProvisioningPage() {
               );
             })}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       ) : null}
     </section>

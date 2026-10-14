@@ -103,6 +103,7 @@ export default function EvaluationsPage() {
               { key: "status", label: "Status" },
               { key: "action", label: "" },
             ]}
+            footer={<Pagination {...pagination} />}
           >
             {pageRows.map((entry) => {
               const already = entry.fillState === "EVALUATED";
@@ -128,7 +129,6 @@ export default function EvaluationsPage() {
               );
             })}
           </BoardTable>
-          <Pagination {...pagination} />
         </>
       )}
     </section>
