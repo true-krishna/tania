@@ -118,4 +118,23 @@ describe("useTablePagination", () => {
 
     expect(loadMore).not.toHaveBeenCalled();
   });
+
+  it("locks the pagination controls while more rows are loading", () => {
+    const rows = Array.from({ length: 25 }, (_, i) => i);
+    const { result, rerender } = renderHook(
+      ({ loading }) =>
+        useTablePagination(rows, {
+          totalItems: 57,
+          hasMore: true,
+          loadingMore: loading,
+          loadMore: () => {},
+        }),
+      { initialProps: { loading: false } },
+    );
+
+    expect(result.current.pagination.disabled).toBe(false);
+    act(() => result.current.pagination.onPageChange(4));
+    rerender({ loading: true });
+    expect(result.current.pagination.disabled).toBe(true);
+  });
 });

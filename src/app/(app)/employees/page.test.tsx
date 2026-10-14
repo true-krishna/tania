@@ -92,12 +92,12 @@ const pageTwo = {
 };
 
 const firstPageMock = {
-  request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
+  request: { query: EmployeesDocument, variables: { filter: {}, first: 100, after: null } },
   result: pageOne,
 };
 
 const nextPageMock = {
-  request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: "c-2" } },
+  request: { query: EmployeesDocument, variables: { filter: {}, first: 100, after: "c-2" } },
   result: pageTwo,
 };
 
@@ -148,7 +148,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       {
         request: {
           query: EmployeesDocument,
-          variables: { filter: { search: "citra" }, first: 25, after: null },
+          variables: { filter: { search: "citra" }, first: 100, after: null },
         },
         result: {
           data: {
@@ -175,8 +175,9 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       target: { value: "citra" },
     });
 
-    expect(await screen.findByText("Citra Lestari")).toBeInTheDocument();
-    expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
+    // The search is debounced, so the requery lands after the debounce delay.
+    await waitFor(() => expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument());
+    expect(screen.getByText("Citra Lestari")).toBeInTheDocument();
   });
 
   it("filters by divisi and status", async () => {
@@ -187,7 +188,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       {
         request: {
           query: EmployeesDocument,
-          variables: { filter: { unitId: "u-1", status: "INACTIVE" }, first: 25, after: null },
+          variables: { filter: { unitId: "u-1", status: "INACTIVE" }, first: 100, after: null },
         },
         result: {
           data: {
@@ -246,7 +247,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
         mocks={[
           unitsMock,
           {
-            request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
+            request: { query: EmployeesDocument, variables: { filter: {}, first: 100, after: null } },
             result: {
               data: {
                 employees: {

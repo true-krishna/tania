@@ -50,6 +50,9 @@ export function useTablePagination<T>(
       page: safePage,
       pageSize,
       totalItems: total,
+      // Lock page navigation while a load-more fetch is in flight so users
+      // cannot stack jumps onto pages that are still being chained in.
+      disabled: loadingMore,
       onPageChange: setPage,
       onPageSizeChange: (next: number) => {
         setPageSize(next);

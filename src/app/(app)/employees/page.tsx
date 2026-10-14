@@ -18,6 +18,7 @@ import { EMPLOYEE_STATUS_LABEL } from "@/features/employees/labels";
 import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 
@@ -153,17 +154,30 @@ function ChapterTalentList() {
 }
 
 function EmployeeDirectory({ manage }: { manage: boolean }) {
-  const [search, setSearch] = React.useState("");
+  const [searchInput, setSearchInput] = React.useState("");
+  const search = useDebouncedValue(searchInput);
   const [unitId, setUnitId] = React.useState("");
   const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const units = useUnits();
-  const { status: query, employees, totalCount, hasNextPage, loadingMore, error, loadMore } =
-    useEmployees({
+  const {
+    status: query,
+    employees,
+    totalCount,
+    hasNextPage,
+    loadingMore,
+    stalled,
+    error,
+    loadMore,
+    reload,
+  } = useEmployees(
+    {
       search: search || undefined,
       unitId: unitId || undefined,
       status: status === "ALL" ? undefined : status,
-    });
+    },
+    100
+  );
   const activeFilters = (unitId ? 1 : 0) + (status !== "ALL" ? 1 : 0);
   const { pageRows, pagination, resetPage } = useTablePagination(employees, {
     totalItems: totalCount,
@@ -171,6 +185,8 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
     loadingMore,
     loadMore,
   });
+  const hintFrom = (pagination.page - 1) * pagination.pageSize + 1;
+  const hintTo = Math.min(pagination.page * pagination.pageSize, totalCount);
 
   return (
     <section className="flex flex-col gap-4">
@@ -193,9 +209,9 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             <span className="sr-only">Cari karyawan</span>
             <Input
               type="search"
-              value={search}
+              value={searchInput}
               onChange={(e) => {
-                setSearch(e.target.value);
+                setSearchInput(e.target.value);
                 resetPage();
               }}
               placeholder="Cari nama, email, atau nomor induk…"
@@ -255,6 +271,21 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         </div>
       ) : null}
 
+      {stalled && query === "ready" ? (
+        <div className="tp-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-amber-800">
+          <span>Sebagian data belum berhasil dimuat dari server.</span>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              reload();
+              resetPage();
+            }}
+          >
+            Muat ulang
+          </Button>
+        </div>
+      ) : null}
+
       {query === "loading" ? (
         <LoadingState />
       ) : query === "error" ? (
@@ -267,6 +298,13 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             {pageRows.map((employee) => (
               <EmployeeRow key={employee.id} employee={employee} />
             ))}
+            {loadingMore && pageRows.length === 0 ? (
+              <tr>
+                <td colSpan={COLUMNS.length} className="px-4 py-6 text-center text-sm text-zinc-500">
+                  Memuat baris {hintFrom}–{hintTo} dari {totalCount}…
+                </td>
+              </tr>
+            ) : null}
           </BoardTable>
         </>
       )}
