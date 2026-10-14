@@ -15,8 +15,11 @@ import {
 } from "@/generated/graphql";
 
 import { ToastProvider } from "@/components/Toast";
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
   useParams: () => ({ periodId: "period-1", employeeId: "emp-1" }),
+  useRouter: () => nav,
 }));
 
 const runningPeriod = {
@@ -76,12 +79,35 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
     expect(screen.getByText("Budi Santoso")).toBeInTheDocument();
     expect(screen.getByText("Belum dinilai")).toBeInTheDocument();
     expect(screen.getByText("Dinilai")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^nilai$/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /nilai ulang/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+    expect(screen.getByRole("button", { name: /^nilai$/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Budi Santoso" }));
+    expect(screen.getByRole("button", { name: /nilai ulang/i })).toBeInTheDocument();
     expect(screen.getByText("1/2 talent dinilai")).toBeInTheDocument();
   });
 
-  it("shows a closed period as read-only with Lihat links (no scoring)", async () => {
+  it("navigates from the row action menu to the evaluation form", async () => {
+    render(
+      <MockedProvider
+        mocks={[
+          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
+          {
+            request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
+            result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+          },
+        ]}
+      >
+        <EvaluationsPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+    fireEvent.click(screen.getByRole("button", { name: /^nilai$/i }));
+    expect(nav.push).toHaveBeenCalledWith("/evaluations/period-1/emp-1");
+  });
+
+  it("shows a closed period as read-only with a Lihat action only", async () => {
     render(
       <MockedProvider
         mocks={[
@@ -97,8 +123,9 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
     );
 
     expect(await screen.findByText("Q2 2025")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /lihat/i })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /nilai/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+    expect(screen.getByRole("button", { name: /lihat/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^nilai/i })).not.toBeInTheDocument();
   });
 
   it("shows an empty state when there is no running period", async () => {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import IdpPage from "@/app/(app)/idp/page";
@@ -17,6 +17,15 @@ import {
   IdpsDocument,
   UpdateDevelopmentActionStatusDocument,
 } from "@/generated/graphql";
+
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => nav,
+  notFound: () => {
+    throw new Error("notFound");
+  },
+}));
 
 const talent = {
   __typename: "Employee",
@@ -140,6 +149,8 @@ describe("IdpPage (Apollo, US3)", () => {
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
     expect(screen.getByText("1/2")).toBeInTheDocument(); // completed/total actions
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
     expect(screen.getByRole("option", { name: "Berjalan" })).toBeInTheDocument();
   });
 
@@ -162,6 +173,8 @@ describe("IdpPage (Apollo, US3)", () => {
     );
 
     await screen.findByText("Andi Pratama");
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
     fireEvent.change(screen.getByRole("combobox", { name: /status/i }), {
       target: { value: "COMPLETED" },
     });

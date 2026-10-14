@@ -3,24 +3,30 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client";
-import { IconArrowRight, IconLock, IconMail } from "@tabler/icons-react";
+import {
+  IconAlertCircle,
+  IconArrowRight,
+  IconLock,
+  IconMail,
+} from "@tabler/icons-react";
 import { LoginDocument } from "@/generated/graphql";
 import { authConfig } from "@/lib/auth/config";
 import { setSession } from "@/lib/auth/token-store";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { Brand } from "@/components/Brand";
 import { BrandPanel } from "./BrandPanel";
 
 /**
- * Login form — mockup structure (TAN-160) on canon tokens (constitution-design
- * v4.2.0). The mockup's navy/red palette and its uppercase eyebrows are
- * translated (see the issue comment for the recorded deviations): colors come
- * from `--tp-*`, action copy is sentence case (§III), and every interactive
- * element keeps the shipped focus ring (§VI).
- *
- * The mockup ships no social sign-in, so the vendor-color SSO icons and the
- * illustrated promo art are gone; SSO remains deferred (plan.md R3). Copy is
- * the owner's revision from the TAN-160 review: no invite-only caveat, no
+ * Login form — TAN-191 redesign on canon tokens (constitution-design
+ * v4.3.1). Owner direction: the page must read brand-red first ("our primary
+ * color red"), so the submit button fills `--tp-brand-red` (hover/press
+ * `--tp-brand-red-deep`, white text 4.7:1) instead of the navy default — a
+ * recorded §II deviation scoped to this page. The important-modifier
+ * overrides exist because the unlayered `.tp-*` classes beat layered
+ * Tailwind utilities regardless of specificity. Danger keeps its dedicated
+ * tokens (tint + ink + icon, §IX) and never reuses brand red. Copy is the
+ * owner's revision from the TAN-160 review: no invite-only caveat, no
  * pending-invite notice and no admin-contact affordance.
  */
 export default function LoginForm() {
@@ -72,8 +78,12 @@ export default function LoginForm() {
       <BrandPanel />
 
       <section className="flex w-full items-center justify-center bg-tp-bg px-6 py-12 lg:w-1/2 lg:px-10">
-        <div className="flex w-full max-w-[560px] flex-col">
-          <p className="text-[13px] font-semibold text-tp-brand-red-deep">
+        <div className="flex w-full max-w-[440px] flex-col">
+          <div className="lg:hidden">
+            <Brand variant="small" className="text-[40px]" />
+          </div>
+
+          <p className="mt-8 text-[13px] font-semibold text-tp-brand-red-deep lg:mt-0">
             Selamat datang kembali
           </p>
 
@@ -81,7 +91,7 @@ export default function LoginForm() {
             Masuk ke TANIA
           </h1>
 
-          <form onSubmit={onSubmit} className="mt-7 flex flex-col gap-4">
+          <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="login-email"
@@ -98,7 +108,7 @@ export default function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   placeholder="nama@perusahaan.com"
-                  className="h-14 pl-12!"
+                  className="h-12 pl-12!"
                 />
               </IconField>
             </div>
@@ -119,13 +129,20 @@ export default function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   placeholder="Masukkan password"
-                  className="h-14 pl-12!"
+                  className="h-12 pl-12!"
                 />
               </IconField>
             </div>
 
             {error ? (
-              <p className="text-sm text-tp-ink-peach" role="alert">
+              <p
+                role="alert"
+                className="flex items-start gap-2.5 rounded-tp-md bg-tp-tint-peach px-4 py-3 text-sm font-semibold text-tp-ink-peach"
+              >
+                <IconAlertCircle
+                  aria-hidden="true"
+                  className="mt-0.5 h-4.5 w-4.5 shrink-0"
+                />
                 {error}
               </p>
             ) : null}
@@ -133,10 +150,10 @@ export default function LoginForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="mt-1 h-14 w-full justify-center text-[15px]"
+              className="mt-2 h-13 w-full justify-center bg-tp-brand-red! border-tp-brand-red! hover:bg-tp-brand-red-deep! hover:border-tp-brand-red-deep! active:bg-tp-brand-red-deep! active:border-tp-brand-red-deep!"
             >
               {loading ? "Memproses…" : "Masuk ke workspace"}
-              <IconArrowRight aria-hidden="true" className="h-5 w-5" />
+              <IconArrowRight aria-hidden="true" className="h-5 w-5 shrink-0" />
             </Button>
           </form>
         </div>

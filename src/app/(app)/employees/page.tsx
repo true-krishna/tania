@@ -10,12 +10,14 @@ import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
 import { EMPLOYEE_STATUS_LABEL } from "@/features/employees/labels";
 import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 
@@ -37,9 +39,11 @@ const COLUMNS: Column[] = [
   { key: "unit", label: "Divisi" },
   { key: "jobRole", label: "Job Role" },
   { key: "status", label: "Status" },
+  { key: "actions", label: "Aksi", className: "col-action" },
 ];
 
 function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
+  const router = useRouter();
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
@@ -49,16 +53,27 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
         >
           {employee.fullName}
         </Link>
-        <span className="block text-xs text-zinc-500">{employee.nomorInduk ?? "—"}</span>
+        <span className="block text-xs text-zinc-500">{orDash(employee.nomorInduk)}</span>
       </td>
-      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">{employee.nikMasked}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.email}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.unit?.name ?? "—"}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.jobRole?.name ?? "—"}</td>
+      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">{orDash(employee.nikMasked)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.email)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.unit?.name)}</td>
+      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.jobRole?.name)}</td>
       <td className="px-4 py-2.5">
         <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
           {EMPLOYEE_STATUS_LABEL[employee.status]}
         </span>
+      </td>
+      <td className="col-action">
+        <RowActionsMenu
+          label={`Aksi ${employee.fullName}`}
+          actions={[
+            {
+              label: "Lihat detail",
+              onSelect: () => router.push(`/employees/${employee.id}`),
+            },
+          ]}
+        />
       </td>
     </tr>
   );
@@ -86,6 +101,7 @@ function OwnEmployeeRedirect() {
 }
 
 function ChapterTalentList() {
+  const router = useRouter();
   const { status, data, error } = useAssignableTalents();
 
   return (
@@ -106,6 +122,7 @@ function ChapterTalentList() {
           columns={[
             { key: "name", label: "Nama" },
             { key: "nomorInduk", label: "Nomor Induk" },
+            { key: "actions", label: "Aksi", className: "col-action" },
           ]}
         >
           {data.map((talent) => (
@@ -115,7 +132,18 @@ function ChapterTalentList() {
                   {talent.fullName}
                 </Link>
               </td>
-              <td className="px-4 py-2.5 text-zinc-600">{talent.nomorInduk ?? "—"}</td>
+              <td className="px-4 py-2.5 text-zinc-600">{orDash(talent.nomorInduk)}</td>
+              <td className="col-action">
+                <RowActionsMenu
+                  label={`Aksi ${talent.fullName}`}
+                  actions={[
+                    {
+                      label: "Lihat detail",
+                      onSelect: () => router.push(`/employees/${talent.id}`),
+                    },
+                  ]}
+                />
+              </td>
             </tr>
           ))}
         </BoardTable>

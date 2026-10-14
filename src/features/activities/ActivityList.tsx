@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
+import { orDash } from "@/lib/cell";
 import { ACTIVITY_TYPE_LABEL } from "./mocks";
 import { ActivityStatusBadge } from "./ActivityStatusBadge";
 import type { PersonalWorkActivity } from "./types";
@@ -69,7 +70,7 @@ export function ActivityList({
           { key: "project", label: "Project" },
           { key: "priority", label: "Prioritas" },
           { key: "status", label: "Status" },
-          { key: "actions", label: "Aksi", className: "text-right" },
+          { key: "actions", label: "Aksi", className: "col-action" },
         ]}
         footer={<Pagination {...pagination} />}
       >
@@ -87,12 +88,12 @@ export function ActivityList({
               <td className="px-4 py-2.5 text-zinc-600">
                 {activity.startDate} — {activity.endDate ?? "sekarang"}
               </td>
-              <td className="px-4 py-2.5 text-zinc-600">{activity.project?.name ?? "—"}</td>
+              <td className="px-4 py-2.5 text-zinc-600">{orDash(activity.project?.name)}</td>
               <td className="px-4 py-2.5 text-zinc-600">{activity.priority.name}</td>
               <td className="px-4 py-2.5">
                 <ActivityStatusBadge status={activity.status} />
               </td>
-              <td className="px-4 py-2.5">
+              <td className="col-action">
                 {owned ? (
                   <RowActionsMenu
                     label={`Aksi ${activity.title}`}
@@ -102,7 +103,7 @@ export function ActivityList({
                     ]}
                   />
                 ) : (
-                  <span className="block text-right text-xs text-zinc-400">Bukan milik Anda</span>
+                  <RowActionsMenu label={`Aksi ${activity.title}`} disabled />
                 )}
               </td>
             </tr>
