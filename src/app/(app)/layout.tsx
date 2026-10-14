@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { LogoutDocument } from "@/generated/graphql";
-import { IconChartBar, IconClockHour3 } from "@tabler/icons-react";
+import { IconChartBar, IconClockHour3, IconUser } from "@tabler/icons-react";
 import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { roleLabel } from "@/features/accounts/roles";
@@ -51,6 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 email={session?.email}
                 roleLabel={role ? roleLabel[role] : null}
                 items={[
+                  { href: "/profile", label: "Profil saya", icon: IconUser },
                   { href: "/activities", label: "Aktivitas saya", icon: IconClockHour3 },
                   { href: "/workload", label: "Workload", icon: IconChartBar },
                 ]}
