@@ -39,6 +39,10 @@ export function Pagination({
   const from = totalItems > 0 ? (page - 1) * pageSize + 1 : 0;
   const to = Math.min(page * pageSize, totalItems);
 
+  const windowSize = Math.min(3, totalPages);
+  const windowStart = Math.min(Math.max(1, page), totalPages - windowSize + 1);
+  const pages = Array.from({ length: windowSize }, (_, i) => windowStart + i);
+
   return (
     <div className={cn("flex w-full flex-wrap items-center justify-between gap-3", className)}>
       <p aria-live="polite">
@@ -77,11 +81,19 @@ export function Pagination({
                 <IconChevronLeft aria-hidden size={18} stroke={2} />
               </button>
             </li>
-            <li>
-              <span aria-current={disabled ? undefined : "page"} className="page-current">
-                {page}
-              </span>
-            </li>
+            {pages.map((n) => (
+              <li key={n}>
+                <button
+                  type="button"
+                  className={cn("page-num", n === page && "page-num-active")}
+                  aria-current={disabled || n !== page ? undefined : "page"}
+                  disabled={disabled || n === page}
+                  onClick={() => onPageChange(n)}
+                >
+                  {n}
+                </button>
+              </li>
+            ))}
             <li>
               <button
                 type="button"

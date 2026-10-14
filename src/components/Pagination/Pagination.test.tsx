@@ -53,6 +53,61 @@ describe("Pagination", () => {
     expect(current).toHaveAttribute("aria-current", "page");
   });
 
+  it("shows three numbered page buttons anchored on the current page", () => {
+    renderPagination({ page: 1, pageSize: 10, totalItems: 57 });
+
+    expect(screen.getByRole("button", { name: "1" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "2" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "3" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "4" })).not.toBeInTheDocument();
+  });
+
+  it("slides the window forward on next and clamps it on the last pages", () => {
+    const view = render(
+      <Pagination
+        page={2}
+        pageSize={10}
+        totalItems={57}
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
+      />,
+    );
+
+    for (const n of ["2", "3", "4"]) {
+      expect(screen.getByRole("button", { name: n })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("button", { name: "5" })).not.toBeInTheDocument();
+
+    view.rerender(
+      <Pagination
+        page={6}
+        pageSize={10}
+        totalItems={57}
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
+      />,
+    );
+    for (const n of ["4", "5", "6"]) {
+      expect(screen.getByRole("button", { name: n })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("button", { name: "3" })).not.toBeInTheDocument();
+  });
+
+  it("shows only as many numbered buttons as there are pages for small datasets", () => {
+    renderPagination({ page: 2, pageSize: 10, totalItems: 20 });
+
+    expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "3" })).not.toBeInTheDocument();
+  });
+
+  it("jumps to a page when its number is clicked", () => {
+    const { onPageChange } = renderPagination({ page: 1, pageSize: 10, totalItems: 57 });
+
+    fireEvent.click(screen.getByRole("button", { name: "3" }));
+    expect(onPageChange).toHaveBeenCalledWith(3);
+  });
+
   it("navigates through the previous and next buttons", () => {
     const { onPageChange } = renderPagination({ page: 2 });
 
@@ -109,6 +164,7 @@ describe("Pagination", () => {
     expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled();
     expect(screen.getByLabelText("Baris per halaman")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "3" })).toBeDisabled();
     expect(screen.getByText("2")).not.toHaveAttribute("aria-current");
   });
 
