@@ -7,7 +7,6 @@ import {
   IconFileCv,
   IconLayoutGrid,
   IconTarget,
-  IconUser,
   IconUserPlus,
   IconUserShield,
   IconUsers,
@@ -51,7 +50,6 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  */
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
-  { kind: "link", href: "/profile", label: "Profil saya", icon: IconUser, roles: ALL },
   { kind: "link", href: "/activities", label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
   { kind: "link", href: "/workload", label: "Workload", icon: IconChartBar, roles: ALL },
   {
