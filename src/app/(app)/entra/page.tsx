@@ -27,7 +27,7 @@ const COLUMNS: Column[] = [
   { key: "name", label: "Nama" },
   { key: "email", label: "Email" },
   { key: "provision", label: "Hasil provisi" },
-  { key: "action", label: "Aksi" },
+  { key: "action", label: "Aksi", className: "col-action" },
 ];
 
 export default function EntraProvisioningPage() {
@@ -142,7 +142,7 @@ export default function EntraProvisioningPage() {
                       <span className="text-xs text-zinc-500">Belum dibuat</span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5">
+                  <td className="col-action">
                     <RowActionsMenu
                       label={`Aksi ${employee.fullName}`}
                       actions={[

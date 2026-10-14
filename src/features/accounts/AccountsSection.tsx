@@ -223,7 +223,7 @@ export function AccountsSection({
             { key: "email", label: "Email" },
             { key: "role", label: "Peran" },
             { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi" },
+            { key: "actions", label: "Aksi", className: "col-action" },
           ]}
           footer={<Pagination {...pagination} />}
         >
@@ -240,7 +240,7 @@ export function AccountsSection({
               <td className="px-4 py-2.5">
                 <StatusBadge active={account.status === "ACTIVE"} />
               </td>
-              <td className="px-4 py-2.5">
+              <td className="col-action">
                 {confirmRevokeId === account.id ? (
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>

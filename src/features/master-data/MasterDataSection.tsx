@@ -214,7 +214,7 @@ export function MasterDataSection<T extends MasterDataItem>({
             { key: "name", label: nameLabel },
             ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
             { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi" },
+            { key: "actions", label: "Aksi", className: "col-action" },
           ]}
           footer={<Pagination {...pagination} />}
         >
@@ -225,7 +225,7 @@ export function MasterDataSection<T extends MasterDataItem>({
               <td className="px-4 py-2.5">
                 <StatusBadge active={item.isActive} />
               </td>
-              <td className="px-4 py-2.5">
+              <td className="col-action">
                 {editingId === item.id ? (
                   <span className="text-xs text-zinc-400">Mengedit…</span>
                 ) : (

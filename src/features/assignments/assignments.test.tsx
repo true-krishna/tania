@@ -19,6 +19,14 @@ import {
 } from "@/generated/graphql";
 
 const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => nav,
+  notFound: () => {
+    throw new Error("notFound");
+  },
+}));
 
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,

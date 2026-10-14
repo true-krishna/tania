@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable, type Column } from "@/components/BoardTable";
@@ -8,6 +9,7 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
 import {
@@ -44,9 +46,11 @@ const COLUMNS: Column[] = [
   { key: "nomorInduk", label: "Nomor Induk" },
   { key: "period", label: "Periode" },
   { key: "status", label: "Status" },
+  { key: "actions", label: "Aksi", className: "col-action" },
 ];
 
 function ContractRow({ contract }: { contract: ContractRowData }) {
+  const router = useRouter();
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
@@ -76,6 +80,17 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
         <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
           {CONTRACT_STATUS_LABEL[contract.status]}
         </span>
+      </td>
+      <td className="col-action">
+        <RowActionsMenu
+          label={`Aksi ${contract.contractNo}`}
+          actions={[
+            {
+              label: "Lihat detail",
+              onSelect: () => router.push(`/contracts/${contract.id}`),
+            },
+          ]}
+        />
       </td>
     </tr>
   );

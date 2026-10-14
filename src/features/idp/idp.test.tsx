@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import IdpPage from "@/app/(app)/idp/page";
@@ -17,6 +17,15 @@ import {
   IdpsDocument,
   UpdateDevelopmentActionStatusDocument,
 } from "@/generated/graphql";
+
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => nav,
+  notFound: () => {
+    throw new Error("notFound");
+  },
+}));
 
 const talent = {
   __typename: "Employee",

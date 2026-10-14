@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useIdps } from "@/features/idp/useIdps";
 import { cn } from "@/lib/cn";
@@ -37,6 +39,7 @@ function actionProgress(row: IdpListRow) {
 }
 
 function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
+  const router = useRouter();
   const { total, done, donePct } = actionProgress(idp);
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
@@ -79,6 +82,17 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
         >
           {STATUS_LABEL[idp.status]}
         </span>
+      </td>
+      <td className="col-action">
+        <RowActionsMenu
+          label={`Aksi ${idp.talent.fullName}`}
+          actions={[
+            {
+              label: "Lihat detail",
+              onSelect: () => router.push(`/idp/${idp.id}`),
+            },
+          ]}
+        />
       </td>
     </tr>
   );
@@ -136,6 +150,7 @@ export default function IdpPage() {
               { key: "timeline", label: "Timeline" },
               { key: "progress", label: "Progres Aksi" },
               { key: "status", label: "Status" },
+              { key: "actions", label: "Aksi", className: "col-action" },
             ]}
             footer={<Pagination {...pagination} />}
           >
