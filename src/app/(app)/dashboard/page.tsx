@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Avatar } from "@/components/Avatar";
 import { BarList } from "@/components/BarList";
 import { Card } from "@/components/Card";
 import { ErrorState, LoadingState } from "@/components/DataState";
@@ -8,11 +9,13 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import {
   IconClipboardText,
+  IconDatabase,
   IconTarget,
   IconUserShield,
   IconUsers,
 } from "@tabler/icons-react";
 import { roleLabel } from "@/features/accounts/roles";
+import { OperationCycleWidgets } from "@/features/contracts/OperationCycleWidgets";
 import { useDashboard } from "@/features/dashboard/useDashboard";
 import { TalentReportContent } from "@/features/talent-report/TalentReportPageView";
 import type { AssignmentStatus } from "@/generated/graphql/types";
@@ -43,15 +46,27 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-zinc-500">{children}</p>;
 }
 
+function PersonRow({ name, code }: { name: string; code: string | null }) {
+  return (
+    <li className="flex items-center gap-3 rounded-lg border border-surface-border px-3 py-2">
+      <Avatar name={name} />
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
+        <p className="truncate text-xs text-zinc-500">{code ?? "—"}</p>
+      </div>
+    </li>
+  );
+}
+
 /**
  * Role-scoped dashboard (US4 / FR-30). The served SDL returns a `Dashboard`
  * union; the concrete member is narrowed from `__typename`, then the matching
  * widget groups render. Data is kept fresh via `cache-and-network` (FR-30).
  *
- * Amandemen penempatan (2026-10-12, keputusan pemilik produk, TAN-154):
- * untuk OperationDashboard & ChapterDashboard konten widget digantikan oleh
- * konten Laporan Talent (TalentReportContent); Admin & Talent tetap
- * melihat widget eksisting — laporan talent adalah konten Operation/Chapter.
+ * Operation renders its employee summary (FR-29/FR-40: headcount, per-unit
+ * distribution, non-assignable, recent changes, contract lifecycle) and the
+ * talent report (spek 003, amandemen penempatan TAN-154); Chapter renders the
+ * talent report only.
  */
 export default function DashboardPage() {
   const { status, data, error } = useDashboard();
@@ -120,7 +135,41 @@ export default function DashboardPage() {
         </>
       ) : null}
 
-      {dash.__typename === "OperationDashboard" ? <TalentReportContent /> : null}
+      {dash.__typename === "OperationDashboard" ? (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Karyawan aktif" value={dash.totalActiveEmployees} icon={IconUsers} />
+            <StatCard label="Tidak assignable" value={dash.nonAssignableEmployees} icon={IconClipboardText} />
+            <StatCard label="Unit" value={dash.employeesPerUnit.length} icon={IconDatabase} />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel title="Karyawan per Unit">
+              {dash.employeesPerUnit.length ? (
+                <BarList items={dash.employeesPerUnit.map((u) => ({ label: u.unit.name, value: u.count }))} />
+              ) : (
+                <EmptyNote>Belum ada karyawan per unit.</EmptyNote>
+              )}
+            </Panel>
+
+            <Panel title="Perubahan Karyawan Terbaru">
+              {dash.recentEmployeeChanges.length ? (
+                <ul className="flex flex-col gap-2">
+                  {dash.recentEmployeeChanges.map((e) => (
+                    <PersonRow key={e.id} name={e.fullName} code={e.nomorInduk} />
+                  ))}
+                </ul>
+              ) : (
+                <EmptyNote>Belum ada perubahan terbaru.</EmptyNote>
+              )}
+            </Panel>
+          </div>
+
+          <OperationCycleWidgets />
+
+          <TalentReportContent />
+        </>
+      ) : null}
 
       {dash.__typename === "ChapterDashboard" ? <TalentReportContent /> : null}
 
