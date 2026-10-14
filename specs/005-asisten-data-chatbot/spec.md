@@ -6,7 +6,9 @@
 
 **Revisi**: 2026-10-14 (clarify 1, TAN-203) — Keputusan pemilik produk: MVP fokus **data karyawan & data kontrak** terlebih dahulu (NC-01); peran MVP **Chapter & Operation** terkonfirmasi (NC-03); **provider model milik sendiri, integrasi cukup dengan API key** (NC-04); **Epic Avatar/Copilot AI (TAN-44/45) diabaikan & dibatalkan** karena semula uji coba (NC-05). Bentuk rekomendasi (NC-02) menunggu keputusan atas analisis pros/cons yang disampaikan pada TAN-203.
 
-**Status**: Draft (revisi 2) — klarifikasi ronde 1: NC-01, NC-03, NC-04, NC-05 **ditutup**; **NC-02 masih terbuka**. Belum Final, belum menjadi dasar pembuatan issue implementasi.
+**Revisi**: 2026-10-14 (clarify 2, TAN-203) — Keputusan pemilik produk untuk NC-02: **opsi (a) — saran tekstual di dalam jawaban percakapan** untuk MVP ("Oke coba A dulu"); opsi (b) rekomendasi terstruktur per topik dan (c) analisis berkala disimpan sebagai kandidat fase lanjutan. Spesifikasi dinyatakan **Final**.
+
+**Status**: Final — seluruh butir klarifikasi (NC-01..NC-05) ditutup; siap untuk `/speckit.plan`. Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
 
 **Input**: `/speckit.specify` (TAN-203) — "Buat chatbot yang membantu chapter dan operation dalam aplikasi Tania yang tugasnya merangkum data, menunjukkan data, hingga memberikan rekomendasi untuk pengambilan keputusan."
 
@@ -87,7 +89,7 @@ Sebagai **pemilik sistem**, saya memastikan asisten hanya menjawab dari data yan
 
 Sebagai **Chapter**, saya dapat meminta rekomendasi berbasis data (mis. "Talent mana kandidat kuat untuk assignment X?") yang selalu merujuk dasar data dan ditandai sebagai saran, sehingga keputusan saya lebih cepat tanpa kehilangan tanggung jawab keputusan.
 
-**Why this priority**: Nilai pembeda fitur, tetapi bergantung pada fondasi jawaban berbasis data (US2/US3) dan keputusan kedalaman rekomendasi (NC-02).
+**Why this priority**: Nilai pembeda fitur, tetapi bergantung pada fondasi jawaban berbasis data (US2/US3); bentuk rekomendasi telah diputuskan — saran tekstual dalam jawaban (NC-02, opsi a).
 
 **Independent Test**: Dengan data seed yang diketahui, minta rekomendasi; verifikasi setiap rekomendasi merujuk data yang dapat diperiksa, ditandai sebagai saran, dan tidak mengubah data apa pun.
 
@@ -135,7 +137,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 - **FR-06**: Otorisasi kueri data asisten **identik dengan hak akses penanya** dan ditegakkan di sisi server pada setiap permintaan, mengikuti matriks peran & modul `002-tania-rbac` dan cakupan chapter-as-data — **tanpa amandemen matriks**. Data di luar hak akses dijawab dengan penolakan ramah "tidak memiliki akses", bukan datanya.
 - **FR-07**: Atribut terbatas mengikuti aturan aplikasi yang berlaku: NIK **selalu tersamar** (FR-42 induk) pada seluruh jawaban; tidak ada jalur asisten yang menampilkan nilai penuh.
 - **FR-08**: Asisten bersifat **read-only**: tidak pernah membuat, mengubah, atau menghapus data. Untuk aksi, ia mengarahkan pengguna ke halaman modul terkait.
-- **FR-09**: Asisten dapat memberikan **rekomendasi pengambilan keputusan** (US5) yang selalu: (a) merujuk dasar data yang dapat diperiksa, (b) ditandai eksplisit sebagai rekomendasi/saran, (c) tidak menggantikan keputusan pejabat berwenang. **Bentuk/kedalaman rekomendasi masih menunggu keputusan NC-02** (opsi a/b/c beserta pros-cons disampaikan pada TAN-203); butir ini final setelah keputusan tersebut.
+- **FR-09**: Asisten dapat memberikan **rekomendasi pengambilan keputusan** (US5) berupa **saran tekstual di dalam jawaban percakapan** (keputusan NC-02 — opsi a): setiap rekomendasi selalu merujuk dasar data yang dapat diperiksa, ditandai eksplisit sebagai rekomendasi/saran, dan tidak menggantikan keputusan pejabat berwenang. Rekomendasi terstruktur per topik (opsi b) dan analisis berkala (opsi c) di luar MVP — kandidat fase lanjutan.
 - **FR-10**: Guardrail biaya: model hemat sesuai provider, batas token keluaran per jawaban, riwayat konteks maksimum 12 pesan, pesan maksimum 2.000 karakter, dan **pencatatan pemakaian token per pesan** untuk laporan biaya; menaikkan batas mana pun memerlukan persetujuan pemilik produk. *(NC-04 terjawab: organisasi memakai **provider model milik sendiri**, integrasi cukup dengan API key — tanpa dependensi vendor eksternal tertentu; penempatan komponen orkestrasi diputuskan pada fase `/speckit.plan`.)*
 - **FR-11**: Kegagalan layanan model atau kueri ditangani dengan pesan kegagalan yang ramah dan jujur; sistem tidak pernah menampilkan jawaban tersusun saat sumber data tidak tersedia.
 - **FR-12**: Pertanyaan di luar domain data Tania ditolak dengan sopan beserta penjelasan cakupan asisten.
@@ -169,6 +171,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 - Integrasi data di luar Tania (SAP, Jira/Azure DevOps, HR system, M365/Teams).
 - Suara/teleponi, unggah dokumen ke asisten, dan multi-bahasa selain Bahasa Indonesia.
 - Notifikasi email/Teams dari asisten.
+- Rekomendasi terstruktur per topik (opsi b NC-02) dan analisis berkala lintas cakupan (opsi c NC-02) — kandidat fase lanjutan setelah MVP.
 - Perubahan matriks RBAC atau skema entitas bisnis yang ada.
 
 ## Dependencies
@@ -188,14 +191,14 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 ## Keputusan Klarifikasi
 
 - **NC-01 — Cakupan sumber data MVP** — **DITUTUP (2026-10-14)**: fokus ke **data kontrak dan data karyawan** terlebih dahulu; domain lain menyusul pada fase lanjutan. (FR-04, Ringkasan, Out of Scope.)
-- **NC-02 — Bentuk rekomendasi** — **TERBUKA**: pemilik produk meminta analisis pros/cons tiap opsi — (a) saran tekstual dalam jawaban, (b) rekomendasi terstruktur per topik, (c) analisis berkala lintas cakupan — sebelum memutuskan. Analisis disampaikan pada TAN-203 (2026-10-14); FR-09 menunggu keputusan ini.
+- **NC-02 — Bentuk rekomendasi** — **DITUTUP (2026-10-14)**: pemilik produk memilih **opsi (a) — saran tekstual di dalam jawaban percakapan** untuk MVP. Opsi (b) rekomendasi terstruktur per topik dan (c) analisis berkala disimpan sebagai kandidat fase lanjutan. (FR-09, US5, Out of Scope.)
 - **NC-03 — Peran pengguna MVP** — **DITUTUP (2026-10-14)**: **Chapter dan Operation dahulu**; perluasan ke peran lain menyusul. (FR-01, US1.)
 - **NC-04 — Provider model AI** — **DITUTUP (2026-10-14)**: organisasi memiliki **provider sendiri**; integrasi cukup dengan API key. Penempatan komponen orkestrasi ditetapkan pada `/speckit.plan`. (FR-10, Assumptions.)
 - **NC-05 — Posisi Epic Avatar/Copilot (TAN-44/45)** — **DITUTUP (2026-10-14)**: epic diabaikan dan dibatalkan di tracker (semula uji coba); spesifikasi ini berdiri sendiri.
 
 ## Review & Acceptance Checklist
 
-- [ ] NC-02 terjawab dan dicatat pada bagian ini (NC-01, NC-03, NC-04, NC-05 ditutup pada 2026-10-14).
+- [x] Seluruh butir klarifikasi (NC-01..NC-05) terjawab dan dicatat pada bagian Keputusan Klarifikasi (ditutup 2026-10-14).
 - [ ] Setiap user story memiliki acceptance scenario Given/When/Then yang dapat diuji.
 - [ ] Tidak ada requirement yang bertentangan dengan `001` (FR-29/FR-30/FR-40/FR-42) dan `002-tania-rbac`.
 - [ ] Prinsip read-only & grounded terverifikasi pada setiap story terkait.
