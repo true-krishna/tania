@@ -5,6 +5,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { FilterButton } from "@/components/FilterButton";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { Select } from "@/components/Select";
@@ -85,6 +86,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
 
 export default function IdpPage() {
   const [status, setStatus] = React.useState<IdpStatus | "ALL">("ALL");
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const { status: query, data, error } = useIdps({
     status: status === "ALL" ? undefined : status,
   });
@@ -101,6 +103,17 @@ export default function IdpPage() {
           </Link>
         }
         filters={
+          <FilterButton
+            activeCount={status !== "ALL" ? 1 : 0}
+            expanded={filtersOpen}
+            onClick={() => setFiltersOpen((open) => !open)}
+            panelId="idp-filter-panel"
+          />
+        }
+      />
+
+      {filtersOpen ? (
+        <div id="idp-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
             <Select
@@ -116,8 +129,8 @@ export default function IdpPage() {
               <option value="COMPLETED">Selesai</option>
             </Select>
           </label>
-        }
-      />
+        </div>
+      ) : null}
 
       {query === "loading" ? (
         <LoadingState />
