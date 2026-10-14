@@ -33,6 +33,7 @@ export default function UnitsPage() {
       items={data}
       status={status}
       error={error}
+      searchable
       extraColumn={{ label: "Proyek", render: (unit) => unit.projects.length }}
       onCreate={({ name }) => detectError(() => unitMutations.create({ name }), `Unit "${name}" berhasil dibuat.`)}
       onUpdate={(id, { name }) => detectError(() => unitMutations.update(id, { name }), "Unit berhasil diubah.")}

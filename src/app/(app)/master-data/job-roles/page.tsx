@@ -34,6 +34,7 @@ export default function JobRolesPage() {
       items={data}
       status={status}
       error={error}
+      searchable
       select={{
         label: "Chapter",
         placeholder: "pilih chapter (boleh kosong) —",
