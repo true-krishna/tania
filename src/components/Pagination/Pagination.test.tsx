@@ -16,8 +16,8 @@ function renderPagination(overrides?: Partial<PaginationProps>) {
     onPageSizeChange: vi.fn(),
     ...overrides,
   };
-  render(<Pagination {...props} />);
-  return props;
+  const view = render(<Pagination {...props} />);
+  return { ...props, container: view.container };
 }
 
 describe("Pagination", () => {
@@ -25,6 +25,25 @@ describe("Pagination", () => {
     renderPagination({ page: 2, pageSize: 10, totalItems: 57 });
     expect(screen.getByText("11–20")).toBeInTheDocument();
     expect(screen.getByText("57")).toBeInTheDocument();
+  });
+
+  it("splits the info and the controls into two sections", () => {
+    const { container } = renderPagination({ page: 2, pageSize: 10, totalItems: 57 });
+
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveClass("w-full");
+    expect(root.children).toHaveLength(2);
+    expect(root.children[0]).toHaveTextContent("Menampilkan");
+    expect(root.children[1]).toContainElement(screen.getByLabelText("Baris per halaman"));
+    expect(root.children[1]).toContainElement(
+      screen.getByRole("navigation", { name: "Navigasi halaman" }),
+    );
+  });
+
+  it("highlights the total count", () => {
+    renderPagination({ page: 2, pageSize: 10, totalItems: 57 });
+
+    expect(screen.getByText("57")).toHaveClass("page-total");
   });
 
   it("marks the current page", () => {

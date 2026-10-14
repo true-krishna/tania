@@ -40,13 +40,13 @@ export function Pagination({
   const to = Math.min(page * pageSize, totalItems);
 
   return (
-    <div className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
+    <div className={cn("flex w-full flex-wrap items-center justify-between gap-3", className)}>
       <p aria-live="polite">
         Menampilkan{" "}
         <strong>
           {from}–{to}
         </strong>{" "}
-        dari <strong>{totalItems}</strong>
+        dari <span className="page-total">{totalItems}</span>
       </p>
       <div className="flex items-center gap-2">
         <label className="flex items-center gap-2">
@@ -74,7 +74,7 @@ export function Pagination({
                 disabled={disabled || page <= 1}
                 onClick={() => onPageChange(page - 1)}
               >
-                <IconChevronLeft aria-hidden size={16} stroke={2} />
+                <IconChevronLeft aria-hidden size={18} stroke={2} />
               </button>
             </li>
             <li>
@@ -90,7 +90,7 @@ export function Pagination({
                 disabled={disabled || page >= totalPages}
                 onClick={() => onPageChange(page + 1)}
               >
-                <IconChevronRight aria-hidden size={16} stroke={2} />
+                <IconChevronRight aria-hidden size={18} stroke={2} />
               </button>
             </li>
           </ul>
