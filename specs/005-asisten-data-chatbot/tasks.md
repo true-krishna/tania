@@ -392,3 +392,75 @@ T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak C
 - **Log**: hanya ID teknis, putaran tool, jumlah token, durasi, kode error — tanpa isi pesan/nama/NIK (T012, T020, T033).
 - **Drift SDL frontend** (T022) dicatat sebagai perubahan terpisah yang disengaja — bukan disembunyikan di diff fitur.
 - **Commit per task atau kelompok logis**; jalankan test sebelum commit. `spec.md` (TAN-203) dan keputusan arsitektur plan **tidak** diubah — kecuali penambahan butir FR-13/FR-14 atas instruksi pemilik (2026-10-15) yang tercatat di bagian Revisi spec.md.
+
+---
+
+## Phase K4: Convergence
+
+**Scope**: `/speckit.converge` dijalankan **2026-10-15** terhadap keadaan **kode yang sudah mendarat**, bukan terhadap diff. Basis yang diperiksa: `tania-backend` `master` `711685f` (K1 `5ab2e62`…`2a3c0d9` sudah merge, plus follow-up `4ca2856` compose pass-through dan `9013a15` test gateway) dan `tania-dashboard` `master` `b096e3c` (K2 `8ac6e22`…`3ae7a0d` sudah merge). Sumber intent: `spec.md` (14 FR · 4 SC · 6 US/22 AC), `plan.md` (D1–D9, R1–R11, Open Item 1–4), `tasks.md` (T001–T034, semuanya masih tak-tercentang), dan empat dokumen konstitusi di `.specify/memory/`. Tidak ada hook `.specify/extensions.yml`.
+
+**Hasil**: 13 temuan (7 HIGH · 3 MEDIUM · 3 LOW; 4 `missing` · 4 `partial` · 3 `contradicts` · 2 `unrequested`). ID dilanjutkan dari maksimum yang ada (T034). **Tidak ada CRITICAL**: tidak ditemukan pelanggaran prinsip MUST konstitusi di kode (log bersih dari data pribadi, RBAC server-side utuh, retensi benar-benar menghapus, tanpa dependensi baru). Task di bawah **belum dikerjakan** — mengerjakannya adalah tugas `/speckit.implement`.
+
+- [ ] T035 Jadikan `sendChatMessage` idempoten menyeluruh: kiriman ulang dengan `clientRequestId` yang sama mengembalikan jawaban yang sudah tersimpan, bukan menjalankan model lagi per FR-14/`contracts/chat.md` §Idempotensi (contradicts)
+      → `tania-backend`: `internal/usecase/chat.go` (`Send`/`answer`), `internal/repository/postgres/chat.go` (+ query "jawaban setelah pesan ini"), `internal/usecase/chat_test.go`.
+      **Bukti gap**: `AppendMessage` memakai ulang baris USER (`ON CONFLICT … DO UPDATE`), lalu `answer()` selalu dipanggil — jadi percobaan ulang menambah **pesan ASSISTANT kedua** untuk satu pertanyaan dan **membelanjakan token lagi**, padahal `TestChatServiceSendIsIdempotent` menyatakan "the cost do not grow either" dan SDL menjanjikan "idempoten (tidak menggandakan pesan)".
+      **Verifikasi**: test — kirim dua kali dengan id sama → tepat 1 pesan USER, tepat 1 pesan ASSISTANT, gateway dipanggil 1× untuk pertanyaan itu; hapus/ubah komentar klaim biaya pada test yang ada.
+
+- [ ] T036 Beri penolakan kuota chat pesan Indonesia sendiri + state UI "kuota tercapai" per FR-13/T025/T028 (partial)
+      → `tania-backend`: `internal/domain/chat.go` (sentinel khusus, mis. `ErrChatRateLimited` dengan pesan yang menyebut kapan boleh mencoba lagi), `graph/errors.go`, `internal/usecase/chat.go`; `tania-dashboard`: `src/features/assistant/AssistantPanel.tsx` (+ test).
+      **Bukti gap**: kuota 20/jam memakai sentinel login bersama `ErrRateLimited` ("too many attempts") sehingga pemanggil chat menerima pesan **Inggris tanpa waktu coba lagi** lewat `presentError` → `RATE_LIMITED` dan `errorMessage()`; panel tetap menampilkan "Coba ulang" yang akan gagal lagi. FR-13 menuntut pesan ramah yang menyebut kapan pengguna dapat mencoba lagi.
+      **Verifikasi**: test backend (kode + pesan error spesifik chat) dan test komponen (state kuota: teks, kirim nonaktif / coba ulang disembunyikan); UAT §E butir 4 memakai pesan itu.
+
+- [ ] T037 Tegakkan anggaran laten **satu jawaban** di `ChatService.answer` (bukan hanya per permintaan provider) per plan D5/R2/SC-001 (partial)
+      → `tania-backend`: `internal/usecase/chat.go` (satu deadline konteks untuk seluruh loop tool), `internal/domain/chat.go`, `internal/usecase/chat_test.go`.
+      **Bukti gap**: `ChatRequestTimeout` 25 s berlaku per putaran model, sedangkan loop mengizinkan **5 putaran**; `/graphql` dibungkus `requestTimeout(30*time.Second, …)` → `http.TimeoutHandler` yang menjawab `{"error":"request timeout"}` (503, bukan GraphQL). Jawaban multi-putaran yang lambat mati oleh middleware dengan error **opaque**, bukan kegagalan jujur `CHAT_FAILED`, dan SC-001 (<30 detik) bocor tanpa jejak.
+      **Verifikasi**: test dengan gateway lambat — total anggaran jawaban dipatuhi, error yang keluar `ErrChatFailed` (kode `CHAT_FAILED`), bukan 503; catat margin terhadap 30 s.
+
+- [ ] T038 Sediakan laporan biaya bulanan + peringatan 80% dari plafon ≈3.000 pesan/bulan beserta pemantau (Operation) per plan Open Item 4(a)/SC-004 (missing)
+      → agregasi `sum(input_tokens)`/`sum(output_tokens)` per hari/user pada `chat_messages`; bentuk yang dipilih (job terjadwal / query terjadwal + runbook pemantauan) dicatat di `docs/` atau `quickstart.md` §E.
+      **Bukti gap**: plan Open Item 4(a) disetujui pemilik dengan plafon + peringatan 80% + laporan bulanan + pemantau Operation, tetapi **tidak ada kode, task, maupun prosedur** — T033 hanya melakukan agregasi ad-hoc saat UAT. Tidak ditemukan rujukan `plafon`/`laporan bulanan` di luar `specs/005`.
+      **Verifikasi**: agregasi bulanan terbentuk dari tabel tanpa alat tambahan; ambang 80% punya pemicu yang jelas (job/alert atau langkah runbook dengan penanggung jawab); prosedur tercatat dan teruji dengan cutoff tersimulasi.
+
+- [ ] T039 Pisahkan skenario e2e sesuai T029/T034: invariant panel tanpa provider + assertion balasan & coba-ulang ber-gerbang `E2E_AI_PROVIDER=1` per T029/T034/FR-11 (partial)
+      → `tania-dashboard`: `e2e/critical-path.spec.ts` (+ `e2e/README.md`).
+      **Bukti gap**: satu-satunya skenario "T029 — Chapter membuka panel asisten dan menerima balasan" menuntut balasan model **tanpa gerbang apa pun**; `E2E_AI_PROVIDER` tidak muncul di repo mana pun dan skenario T034 (provider mati → state gagal → provider hidup → coba ulang dengan `clientRequestId` sama, riwayat tetap satu pesan USER) **belum ada**.
+      **Verifikasi**: `pnpm run test:e2e` hijau **tanpa** provider (skenario balasan ter-`skip` eksplisit, bukan gagal, bukan diklaim lulus) dan skenario T034 hijau dengan `E2E_AI_PROVIDER=1` pada stack hidup.
+
+- [ ] T040 Jalankan suite DB-backed terhadap PostgreSQL+Redis terisolasi dan catat hasilnya (T003 uji terapan, T021 `TestGraphQLEndToEnd` termasuk alur chat, sebagian T033) per T021/T030 (missing)
+      **Bukti gap**: `TEST_DATABASE_URL`/`TEST_REDIS_ADDR` tidak tersedia di runtime implementasi dan DB bersama tidak boleh dipakai, sehingga alur e2e DB (grounded via tool, isolasi dua Chapter, retry idempoten, retensi dengan cutoff tersimulasi) **belum pernah dieksekusi terhadap PostgreSQL nyata** — dilaporkan jujur sebagai ter-`Skip`.
+      **Verifikasi**: `make test-integration` hijau pada DB terisolasi (compose DB sekali pakai / service CI), hasil + commit dicatat; bila izin lingkungan tetap tidak ada, tetap laporkan sebagai belum diverifikasi — jangan klaim lulus.
+
+- [ ] T041 Selesaikan konflik merge pada kanon design dan mendaratkannya sebagai commit dokumen tersendiri per Konstitusi Design / temuan analyze F-01 (contradicts)
+      → `tania-dashboard`: `.specify/memory/constitution-design.md` **dan** cerminnya `docs/constitution/constitution-design.md:150–155` (keduanya masih memuat `<<<<<<< HEAD` / `=======` / `>>>>>>> 556ac03`).
+      **Bukti gap**: log amandemen punya dua baris 4.3.0 yang bertabrakan dan 4.3.1 yang tak terbaca sebagai riwayat; rujukan prinsip pada review (§VI a11y, §IX chip/warna yang dipakai fitur ini) tidak dapat dipercaya sampai konflik selesai. Berkas ada di `master`, jadi ini cacat repo, bukan cacat branch.
+      **Verifikasi**: `grep -rn "<<<<<<<\|>>>>>>>" .specify docs` bersih; baris 4.3.1 dipertahankan, duplikat 4.3.0 dibuang, versi akhir cocok dengan `tokens.css`/preset Tailwind yang benar-benar terkirim; tidak mencampur perubahan kode fitur.
+
+- [ ] T042 Sinkronkan cermin kontrak desain ke SDL yang dilayani per Konstitusi API 1.1.1 (missing)
+      → `specs/001-employee-digital-talent-management/contracts/schema.graphql` (`Unit` tanpa `code`; `Employee.birthDate: Date!`/`gender: Gender!`; 4× `contractNo: String!`) dan `specs/004-master-data-create/contracts/master-data-create.md:11`.
+      **Bukti gap**: konstitusi mewajibkan cermin ikut disalin ("never let the two drift"); T022 hanya menyalin salinan sisi konsumen (`tania-dashboard/graph/schema.graphqls`, sekarang identik `da1510ce…` dengan backend) sehingga cermin spec masih bentuk pra-drift.
+      **Verifikasi**: diff cermin vs `tania-backend/graph/schema.graphqls` bersih, atau pengecualiannya dicatat sebagai amandemen eksplisit.
+
+- [ ] T043 Tetapkan pemilik & keterlacakan perubahan master-data "Kode Unit" (+ konsumen null-safe) yang ikut mendarat bersama T022 per Technical I / temuan analyze F-03 (unrequested)
+      → `tania-dashboard`: berkas non-chat pada commit `8ac6e22` (form unit + query `units` mengambil `code`, konsumen `birthDate`/`gender`/`contractNo` null-safe) dan `specs/004-master-data-create/` (plan menyatakan "tanpa perubahan skema/API").
+      **Bukti gap**: `Unit.code: String!` membuat `createUnit`/`updateUnit` **wajib** ber-argumen `code`; UI master-data existing harus ditambah field + validasi + kolom, padahal tidak ada FR, task, atau spec yang memiliki perubahan ini — setiap baris diff wajib tertelusur ke requirement.
+      **Verifikasi**: keputusan pemilik tercatat (issue lanjutan gelombang master-data dan/atau amandemen spec 004 dengan label/format/kolom), review pemilik gelombang master-data atas `8ac6e22`, dan tidak ada sisa perubahan non-chat yang tak bertuan di diff fitur.
+
+- [ ] T044 Tambahkan artefak checklist keamanan `specs/005-asisten-data-chatbot/checklists/security.md` per Konstitusi Security / temuan analyze F-10 (missing)
+      **Bukti gap**: `specs/005-asisten-data-chatbot/` tidak punya `checklists/`, sedangkan konstitusi mewajibkan security checklist (klasifikasi, dasar pemrosesan, hak subjek, retensi, jalur breach) tercatat sebelum approval. Isinya ada di `data-model.md` §Klasifikasi dan DAMP ditunda ke gerbang rilis (plan Open Item 3, disinggung T033) — yang hilang adalah jejak checklist-nya.
+      **Verifikasi**: checklist ada dan setiap butir merujuk `data-model.md` §Klasifikasi + retensi 90 hari + penundaan DAMP; ditandatangani sebelum gerbang rilis.
+
+- [ ] T045 Jadikan satu sumber nilai guardrail dan rujukkan dokumen ke sana (buang duplikasi yang mulai berbeda) per plan D6/Technical I (partial)
+      → rujukan tunggal: `internal/domain/chat.go` (konstanta, sudah satu-satunya sumber mesin) + plan D6; yang perlu dirapikan: `spec.md` FR-10 (belum memuat timeout 25 s & kuota), `data-model.md` (belum memuat keduanya), `contracts/chat.md` §Guardrail, `tasks.md`, `quickstart.md` §E4.
+      **Bukti gap**: satu nilai yang disetujui tersebar di 6 dokumen dengan isi yang sudah tidak seragam — satu perubahan nilai = banyak suntingan yang mudah tertinggal.
+      **Verifikasi**: setiap dokumen menunjuk plan D6/konstanta, tidak ada angka guardrail yang ditulis ulang tanpa rujukan; `grep` angka guardrail menunjukkan satu sumber.
+
+- [ ] T046 Selaraskan sisa inkonsistensi dokumen: "status" pada §Key Entities vs data-model, kalimat rusak `quickstart.md` §Kriteria lulus, dan rujukan salah pada T033 per temuan analyze F-11/F-13 (contradicts)
+      → `specs/005-asisten-data-chatbot/spec.md:153` ("waktu mulai, dan **status**" — data-model menegaskan tidak ada status alur kerja), `quickstart.md:79` ("satu saja gagal = pem blockers rilis"), `tasks.md` T033 ("checklists §E terisi" untuk laten <30 s & sampling SC-002 — keduanya hidup di §B.2/T031).
+      **Verifikasi**: tidak ada lagi pertentangan satu-field antara spec dan data-model; kalimat kriteria lulus §E utuh; rujukan T033 menunjuk §B.2/T031.
+
+- [ ] T047 Pakai perlakuan chip netral bersama (`src/components/Chip`) di panel asisten, atau catat alasan tidak memakainya per Konstitusi Design/Technical I (unrequested)
+      → `tania-dashboard`: `src/features/assistant/AssistantPanel.tsx:367,452` mengulang literal `"border border-tp-line bg-tp-bg text-tp-muted"` — persis varian `neutral` milik `src/components/Chip/Chip.tsx` (yang mendarat di `master` `f9503a9`, sesudah K2).
+      **Bukti gap**: nilai chip netral kini punya dua pemilik; chip saran adalah `<button>` sedangkan `Chip` adalah `<span>`, sehingga reuse memerlukan pembungkus/kelas bersama — duplikasi token inilah yang perlu diselesaikan atau dinyatakan sengaja.
+      **Verifikasi**: tidak ada lagi nilai varian chip yang digandakan (atau ada catatan keputusan eksplisit); tampilan chip tidak berubah.
+
+**Checkpoint K4**: seluruh task di atas tercentang atau terblokir dengan alasan jujur; gerbang rilis K3 (T030–T034) baru dapat ditutup setelah T035–T041 selesai, sebab keempatnya mengubah perilaku yang diuji UAT/probe.
