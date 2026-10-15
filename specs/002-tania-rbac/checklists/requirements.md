@@ -32,6 +32,7 @@
 ## Notes
 
 - Klarifikasi 1 (2026-10-08, TAN-144): hak baca modul Assignment = Operation (lihat semua), bukan Admin — keputusan pemilik produk diterapkan pada Matriks Peran & Modul dengan catatan revisi pada spec.
+- Klarifikasi 4 (2026-10-15, TAN-212): Admin = **kelola penuh** pada seluruh modul aktif — baris Data karyawan & kontrak kerja (Admin "lihat semua" → "kelola"), Assignment (Admin "—" → "kelola"), dan Profil CV (Admin "—" → "kelola"). Membalik clarify 1. Modul bertanda \* tetap ditunda as is.
 - Klarifikasi 2 (2026-10-08, TAN-144): modul IDP & evaluasi performa (termasuk periode & template evaluasi) ditunda dari iterasi 2 dan diarahkan ke integrasi WAD — baris matriks ditandai ditunda (\*), definisi akses tetap terdokumentasi, modul diperlakukan belum tersedia (deny-by-default) selama ditunda.
 - Validasi lolos pada iterasi pertama; spesifikasi konsisten dengan spesifikasi induk (`specs/001-employee-digital-talent-management/spec.md`) — semua ketentuan RBAC induk diturunkan, tidak ada yang bertentangan (lihat tabel Rujukan Silang).
 - Keputusan di luar spesifikasi induk terkonfirmasi pemilik produk (klarifikasi TAN-144): proteksi satu-satunya akun Admin aktif — menonaktifkan maupun mengubah peran menjauh dari Admin (diperluas amandemen 2026-10-12); pembatasan laju login — ambang dipin di plan (10 gagal / 15 menit / sumber); tanpa perubahan kata sandi mandiri (kredensial dikelola Entra).
