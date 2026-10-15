@@ -8,9 +8,9 @@
 
 **Repositori**: `tania-backend` (orkestrasi AI, skema GraphQL, migrasi) + `tania-dashboard` (rumah spec & UI asisten). Branch kerja: `agent/diggie/8aff2b1806a1`.
 
-**Tests**: Ya — konstitusi §II/§III menuntut gerbang mesin; test menjadi **task tersendiri** (T018–T021, T028, T029), bukan diselipkan ke task implementasi. Karena test ini menguji paket nyata (usecase Go, transport, komponen React), urutannya: task implementasi → task test yang menguji paket itu → harus lulus sebelum checkpoint gelombang dinyatakan tertutup.
+**Tests**: Ya — konstitusi §II/§III menuntut gerbang mesin; test menjadi **task tersendiri** (T018–T021, T028, T029, T034), bukan diselipkan ke task implementasi. Karena test ini menguji paket nyata (usecase Go, transport, komponen React), urutannya: task implementasi → task test yang menguji paket itu → harus lulus sebelum checkpoint gelombang dinyatakan tertutup.
 
-**Organization**: Task dikelompokkan per gelombang roadmap plan — **K0** (verifikasi provider) → **K1** (backend) → **K2** (frontend) → **K3** (E2E/UAT). Penomoran `T001…T033` berurutan lintas gelombang.
+**Organization**: Task dikelompokkan per gelombang roadmap plan — **K0** (verifikasi provider) → **K1** (backend) → **K2** (frontend) → **K3** (E2E/UAT). Penomoran `T001…T034` berurutan lintas gelombang.
 
 ## Format: `[ID] [P?] [US?] Description`
 
@@ -33,7 +33,7 @@
 | **K0** — Verifikasi provider (prasyarat) | Enumerasi model + probe tool calling **sebelum** kode integrasi nyata ditulis | T001–T002 | Open Item 2 · dasar keputusan `AI_PROVIDER_MODEL` |
 | **K1** — Fondasi backend | Migrasi 2 tabel · domain/repo/usecase chat · 3 baca ber-cakupan (D9) · gateway OpenAI-compatible · toolset & loop · SDL + gqlgen · resolver · wiring · retensi | T003–T021 | US4, US6, FR-02/04/06/07/08/10/11 |
 | **K2** — Frontend | **Salin ulang SDL** → codegen → panel + bubble + chips + guard peran → app shell → test komponen → Playwright | T022–T029 | US1, FR-01/03/05/12 |
-| **K3** — E2E & UAT | Gerbang mesin · UAT Chapter/Operation · probe keamanan · biaya/retensi/rate limit · SC-001–SC-004 | T030–T033 | SC-001–SC-004 |
+| **K3** — E2E & UAT | Gerbang mesin · UAT Chapter/Operation · probe keamanan · biaya/retensi/rate limit · SC-001–SC-004 | T030–T034 | SC-001–SC-004 |
 
 ---
 
@@ -41,7 +41,7 @@
 
 **Purpose**: Memastikan endpoint provider benar-benar OpenAI-compatible **dan** mendukung tool calling sebelum bentuk grounding dikunci. Bila tidak didukung, keputusan dikembalikan ke pemilik (plan Open Item 2) — kontingensi **tidak** dibangun spekulatif (Technical I).
 
-> **⏸ MENUNGGU KREDENSIAL** — `AI_PROVIDER_BASE_URL`/`AI_PROVIDER_API_KEY` dipasang **sendiri oleh pemilik** ke env/secret store. Jangan meminta atau menempelkan kredensial di komentar. Kedua task di bawah berstatus menunggu sampai pemilik menyatakan sudah terpasang. **Tidak ada task lain yang terhalang**: T003–T021 memakai `fakeGateway` deterministik (tanpa kredensial), dan T030–T031 (gerbang mesin) juga berjalan tanpa provider nyata. Hanya **T032** (probe provider mati) dan **T033** (verifikasi provider nyata end-to-end) yang benar-benar butuh endpoint hidup.
+> **⏸ MENUNGGU KREDENSIAL** — `AI_PROVIDER_BASE_URL`/`AI_PROVIDER_API_KEY` dipasang **sendiri oleh pemilik** ke env/secret store. Jangan meminta atau menempelkan kredensial di komentar. Kedua task di bawah berstatus menunggu sampai pemilik menyatakan sudah terpasang. **Tidak ada task lain yang terhalang**: T003–T021 memakai `fakeGateway` deterministik (tanpa kredensial), dan T030–T031 (gerbang mesin) juga berjalan tanpa provider nyata. Hanya **T032** (probe provider mati), **T033** (verifikasi provider nyata end-to-end), dan **T034** (balasan grounded lewat browser) yang benar-benar butuh endpoint hidup.
 
 - [ ] T001 [US2] ⏸ **Enumerasi model provider (K0)** — tanpa perubahan berkas kode; keluaran dicatat di laporan K0.
       Jalankan `curl -sS "$AI_PROVIDER_BASE_URL/models" -H "Authorization: Bearer $AI_PROVIDER_API_KEY" | jq -r '.data[].id'`
@@ -238,13 +238,13 @@
       **Verifikasi**: `pnpm test` hijau.
       **Menutup**: US1/US5/US6 · FR-01/03/05/11 · S2 · Design §VI.
 
-- [ ] T029 [P] [US1] **E2E Playwright**
+- [ ] T029 [P] [US1] **E2E Playwright — invariant panel (tanpa provider)**
       → `e2e/critical-path.spec.ts`
-      Skenario tambahan: login **Chapter** → buka panel → kirim satu pertanyaan → balasan tampil di thread (harness & `loginAs` existing, termasuk mode `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1`); **Talent/Admin** → panel/bubble tidak tersedia. Tanpa mengubah skenario critical-path existing.
-      **Verifikasi**: `pnpm run test:e2e` (stack e2e per `e2e/README.md`) — skenario baru lulus, skenario existing tidak regresi.
-      **Menutup**: US1 AC1–AC4 · FR-01 · SC-001 (bagian alur).
+      Skenario: login **Chapter** → bubble terlihat → panel terbuka (mouse dan keyboard) → fokus pindah ke input → chip contoh Chapter mengisi draft + penghitung karakter → input dibatasi 2.000 karakter → `Escape` menutup dan fokus kembali ke pemicu; **Talent/Admin** → panel/bubble tidak tersedia. Seluruh langkah di sini tidak memanggil model, jadi lulus tanpa provider (mode `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1`). Tanpa mengubah skenario critical-path existing.
+      **Verifikasi**: `pnpm run test:e2e` — skenario invariant lulus; skenario existing tidak regresi. Jalur yang butuh balasan nyata ada di T034 (K3).
+      **Menutup**: US1 AC1/AC4 · FR-01 · Design §VI.
 
-**Checkpoint K2**: `pnpm run lint` + `pnpm run typecheck` + `pnpm test` + `pnpm run generate:check` hijau; panel & bubble terpasang di shell, role-gated, dengan riwayat; E2E Playwright alur Chapter lulus.
+**Checkpoint K2**: `pnpm run lint` + `pnpm run typecheck` + `pnpm test` + `pnpm run generate:check` hijau; panel & bubble terpasang di shell, role-gated, dengan riwayat; E2E Playwright invariant panel & guard peran lulus (tanpa provider). Balasan grounded **tidak** termasuk gate K2 — ada di T034.
 
 ---
 
@@ -272,7 +272,13 @@
       **Verifikasi**: checklists §E terisi; angka laten & token dicatat di laporan.
       **Menutup**: US6 · FR-10 · SC-001/SC-002/SC-004 · Security II/IV · plan Open Item 3 (DAMP pra-rilis dijalankan di gerbang rilis).
 
-**Checkpoint K3**: SC-001–SC-004 dinyatakan terpenuhi berdasarkan T030–T033; seluruh probe §D lulus; DAMP pra-rilis dijalankan konkret sebelum rilis.
+- [ ] T034 **E2E Playwright — balasan grounded & retry idempoten (butuh API hidup + provider)** — ⏸ menunggu K0.
+      → `e2e/critical-path.spec.ts`
+      Skenario: login **Chapter** → buka panel → kirim satu pertanyaan → bubble USER tampil → **balasan ASSISTANT** masuk dan “Belum terjawab” tidak ada → `Escape` menutup; lalu jalur S2: provider dimatikan → kirim → state gagal ramah → provider dinyalakan → “coba ulang” memakai `clientRequestId` **sama** → riwayat tetap **satu** pesan USER. Skenario di-`skip` eksplisit kecuali `E2E_AI_PROVIDER=1`, sebab tanpa provider API menjawab “asisten belum dikonfigurasi” dan assertion balasan tidak mungkin lulus — inilah sebabnya skenario ini **bukan** gate K2.
+      **Verifikasi**: `E2E_AI_PROVIDER=1 pnpm run test:e2e` hijau; tanpa env itu skenario ter-`skip` (bukan gagal, bukan diklaim lulus).
+      **Menutup**: US1 AC2/AC3 · FR-11 · S2 · SC-001.
+
+**Checkpoint K3**: SC-001–SC-004 dinyatakan terpenuhi berdasarkan T030–T034; seluruh probe §D lulus; DAMP pra-rilis dijalankan konkret sebelum rilis.
 
 ---
 
@@ -280,7 +286,7 @@
 
 ### Antar gelombang
 
-- **K0** — tidak memblokir penulisan kode (fake gateway deterministik), tetapi **memblokir integrasi nyata** dan seluruh T031–T033. T001 → T002; keduanya ⏸ menunggu kredensial dari pemilik.
+- **K0** — tidak memblokir penulisan kode (fake gateway deterministik), tetapi **memblokir integrasi nyata** dan seluruh T031–T034. T001 → T002; keduanya ⏸ menunggu kredensial dari pemilik.
 - **K1** — T003 → T004 → (T005, T010, T011, T014) → T012 → T013 → T015 → T016 → T017; test T018–T021 setelah task yang diujinya.
 - **K2** — **hanya** bergantung pada **T014**. T022 → T023 → T024 → (T025, T026) → T027 → T028, lalu T029. K2 boleh mulai begitu T014 ada, tanpa menunggu T012/T013/T015/T016/T017.
 - **K3** — butuh K0 (provider) + K1 + K2 selesai.
@@ -347,11 +353,12 @@ T004 ───► T014 (SDL + gqlgen) ──────────────
 | T026 | US1 AC1/AC4 · FR-01 · Design I/II/VI |
 | T027 | US1 AC1/AC4 · FR-01 · R-8 · Security III |
 | T028 | US1/US5/US6 · FR-01/03/05 · S2 · Design §VI |
-| T029 | US1 AC1–AC4 · FR-01 · SC-001 |
+| T029 | US1 AC1/AC4 · FR-01 · Design §VI |
 | T030 | Technical II/III · SC-003 (otomatis) |
 | T031 | US1/US2/US3/US5/US6 · FR-01/03/04/05/07/08/09/12 · SC-001/SC-002 |
 | T032 | US4 · FR-02/06/07/08/11/12 · SC-003 |
 | T033 | US6 · FR-10 · SC-001/SC-002/SC-004 · Security II/IV · plan Open Item 3 |
+| T034 | US1 AC2/AC3 · FR-11 · S2 · SC-001 |
 
 **Disetujui pemilik meski tidak diminta eksplisit oleh FR**: **rate limit 20 pesan/jam/user** (T012, T018, T032, T033 — nilai FR-10 yang disetujui 2026-10-14) dan **job retensi 90 hari hard delete** (T003, T005, T017, T033 — Security IV/data-model, disetujui 2026-10-14). Keduanya task tersendiri, bukan sisipan.
 
@@ -365,13 +372,13 @@ Urutan minimum yang sudah membuat inti spec dapat digunakan Chapter/Operation:
 2. **T022 + T023 + T024 + T025 + T026 + T027** — panel & bubble terpasang, role-gated.
 3. **T030** — gerbang mesin.
 
-T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak Chapter dengan FORBIDDEN. T017 (retensi) & rate limit (di T012) wajib ikut rilis: keduanya syarat kepatuhan/biaya yang sudah disetujui pemilik, bukan penyempurnaan. Test (T018–T021, T028, T029) dan UAT (T031–T033) adalah gerbang mutu & penerimaan — tidak boleh dilewati karena US4/SC-003 adalah syarat rilis.
+T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak Chapter dengan FORBIDDEN. T017 (retensi) & rate limit (di T012) wajib ikut rilis: keduanya syarat kepatuhan/biaya yang sudah disetujui pemilik, bukan penyempurnaan. Test (T018–T021, T028, T029) dan UAT (T031–T034) adalah gerbang mutu & penerimaan — tidak boleh dilewati karena US4/SC-003 adalah syarat rilis.
 
 ---
 
 ## Yang masih menunggu (bukan blocker penulisan kode)
 
-1. **Kredensial provider (K0)** — T001 & T002 ⏸ menunggu pemilik memasang `AI_PROVIDER_BASE_URL`/`AI_PROVIDER_API_KEY` sendiri. **Jangan** meminta atau menempelkan kredensial di komentar. Dampak: integrasi nyata, T032 (probe provider mati) dan T033 (verifikasi biaya end-to-end) tidak dapat dijalankan; seluruh task lain tetap dapat dikerjakan dan diuji (fake gateway deterministik).
+1. **Kredensial provider (K0)** — T001 & T002 ⏸ menunggu pemilik memasang `AI_PROVIDER_BASE_URL`/`AI_PROVIDER_API_KEY` sendiri. **Jangan** meminta atau menempelkan kredensial di komentar. Dampak: integrasi nyata, T032 (probe provider mati), T033 (verifikasi biaya end-to-end) dan T034 (balasan grounded lewat browser) tidak dapat dijalankan; seluruh task lain tetap dapat dikerjakan dan diuji (fake gateway deterministik).
 2. **Izin menjalankan DB terisolasi** — T003 (uji terapan), T021 (`make test-integration`) dan sebagian T033 butuh PostgreSQL+Redis. **Jangan** menjalankan `make up`/migrasi/seed terhadap database bersama. Bila lingkungan terisolasi belum tersedia, task DB-backed ditandai belum diverifikasi secara jujur (suite ter-`Skip`), bukan diklaim lulus.
 3. **DAMP pra-rilis** — checklist DAMP dijalankan konkret pada gerbang rilis (plan Open Item 3), tidak di gelombang task ini.
 4. **Sub-issue implementasi** — **tidak** dibuat di sini. Tracking implementasi (per gelombang/task di atas) dibuat pada tahap berikutnya atas instruksi pemilik.
