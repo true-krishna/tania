@@ -242,15 +242,15 @@ test("T028 — Talent tidak melihat laporan; rute lama redirect ke Dashboard (FR
 });
 
 // ---------------------------------------------------------------------------
-// T029 — Asisten Data (005-asisten-data-chatbot, K2)
+// T029 — Asisten Data: invariant panel (005-asisten-data-chatbot, K2)
 //
-// ⚠ Prasyarat: backend K1 (SDL + `sendChatMessage` + `ChatService`) sudah
-// mendarat dan provider (`AI_PROVIDER_*`) terpasang — keduanya belum ada saat
-// spec ini ditulis, jadi skenario pertama belum dapat dijalankan (lihat laporan
-// issue TAN-211). Skenario kedua (guard peran) hanya butuh app shell.
+// Skenario di bawah tidak memanggil model: panel, fokus, chip, batas panjang,
+// dan guard peran semuanya lokal, jadi lulus tanpa provider. Balasan grounded +
+// retry idempoten ada di T034 (K3) dan di-`skip` eksplisit kecuali
+// `E2E_AI_PROVIDER=1` — lihat `e2e/README.md`.
 // ---------------------------------------------------------------------------
 
-test("T029 — Chapter membuka panel asisten dan menerima balasan", async ({ page }) => {
+test("T029 — Chapter membuka panel: fokus, chip, batas 2.000 karakter, tutup (tanpa provider)", async ({ page }) => {
   await loginAs(page, SEED_USERS.CHAPTER);
   await page.goto("/dashboard");
 
@@ -260,7 +260,59 @@ test("T029 — Chapter membuka panel asisten dan menerima balasan", async ({ pag
 
   const dialog = page.getByRole("dialog", { name: "Asisten data Tania" });
   await expect(dialog).toBeVisible();
-  await expect(page.getByLabel("Pertanyaan untuk asisten")).toBeFocused();
+
+  const input = page.getByLabel("Pertanyaan untuk asisten");
+  await expect(input).toBeFocused();
+
+  // Chip contoh Chapter mengisi draft + penghitung karakter (FR-01/FR-05).
+  const chip = "Siapa saja yang kontraknya berakhir dalam 90 hari?";
+  await dialog.getByRole("button", { name: chip }).click();
+  await expect(input).toHaveValue(chip);
+  await expect(dialog.getByText(`${chip.length}/2000 karakter`)).toBeVisible();
+
+  // Batas 2.000 karakter ditegakkan di input itu sendiri (`maxLength`). Jalur
+  // "di atas batas" tidak dapat dicapai lewat UI karena browser sudah memotong;
+  // jalur itu diuji unit di T028 (blokir tanpa memanggil mutation).
+  await expect(input).toHaveAttribute("maxlength", "2000");
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(bubble).toBeFocused();
+});
+
+test("T029 — peran non-MVP tidak melihat panel/bubble asisten (FR-01)", async ({ page }) => {
+  const role = process.env.E2E_ROLE ?? process.env.NEXT_PUBLIC_DEFAULT_ACCESS_ROLE ?? "TALENT";
+  await loginAs(page, SEED_USERS[role] ?? SEED_USERS.TALENT);
+  await page.goto("/dashboard");
+
+  await expect(page.getByRole("button", { name: "Buka asisten data" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Asisten data Tania" })).toHaveCount(0);
+});
+
+// ---------------------------------------------------------------------------
+// T034 — Asisten Data: balasan grounded & retry idempoten (K3)
+//
+// ⚠ Butuh API hidup + provider AI. Tanpa provider, `sendChatMessage` menjawab
+// "asisten belum dikonfigurasi", sehingga assertion balasan tidak mungkin lulus
+// — karena itu skenario ini **bukan** gate K2 dan di-`skip` secara eksplisit
+// kecuali `E2E_AI_PROVIDER=1` (lihat `e2e/README.md`). Ter-`skip` bukan lulus.
+// ---------------------------------------------------------------------------
+
+test("T034 — Chapter menerima balasan grounded dari asisten (butuh provider)", async ({ page }) => {
+  test.skip(
+    process.env.E2E_AI_PROVIDER !== "1",
+    "butuh API + provider AI: jalankan dengan E2E_AI_PROVIDER=1 (lihat e2e/README.md)",
+  );
+
+  await loginAs(page, SEED_USERS.CHAPTER);
+  await page.goto("/dashboard");
+
+  const bubble = page.getByRole("button", { name: "Buka asisten data" });
+  await expect(bubble).toBeVisible();
+  await bubble.click();
+
+  const dialog = page.getByRole("dialog", { name: "Asisten data Tania" });
+  await expect(dialog).toBeVisible();
 
   const question = "Siapa saja yang kontraknya berakhir dalam 90 hari?";
   await page.getByLabel("Pertanyaan untuk asisten").fill(question);
@@ -275,13 +327,4 @@ test("T029 — Chapter membuka panel asisten dan menerima balasan", async ({ pag
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(bubble).toBeFocused();
-});
-
-test("T029 — peran non-MVP tidak melihat panel/bubble asisten (FR-01)", async ({ page }) => {
-  const role = process.env.E2E_ROLE ?? process.env.NEXT_PUBLIC_DEFAULT_ACCESS_ROLE ?? "TALENT";
-  await loginAs(page, SEED_USERS[role] ?? SEED_USERS.TALENT);
-  await page.goto("/dashboard");
-
-  await expect(page.getByRole("button", { name: "Buka asisten data" })).toHaveCount(0);
-  await expect(page.getByRole("dialog", { name: "Asisten data Tania" })).toHaveCount(0);
 });
