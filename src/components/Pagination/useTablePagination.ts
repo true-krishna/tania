@@ -6,6 +6,10 @@ type UseTablePaginationOptions = {
   /** Total dataset size; defaults to the loaded rows length. Cursor lists pass the connection's totalCount. */
   totalItems?: number;
   initialPageSize?: number;
+  /** Controlled page size: the hook mirrors it instead of owning the state, for lists whose page size drives a query variable. */
+  pageSize?: number;
+  /** Called with the chosen size; pair with controlled pageSize. Page resets to 1 either way. */
+  onPageSizeChange?: (pageSize: number) => void;
   /** Cursor lists: true while the connection still has pages beyond the loaded rows. */
   hasMore?: boolean;
   loadingMore?: boolean;
@@ -19,7 +23,8 @@ export function useTablePagination<T>(
   const { totalItems, initialPageSize = 10, hasMore = false, loadingMore = false, loadMore } =
     options;
   const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(initialPageSize);
+  const [ownedPageSize, setOwnedPageSize] = React.useState(initialPageSize);
+  const pageSize = options.pageSize ?? ownedPageSize;
 
   const total = totalItems ?? rows?.length ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / Math.max(1, pageSize)));
@@ -55,7 +60,8 @@ export function useTablePagination<T>(
       disabled: loadingMore,
       onPageChange: setPage,
       onPageSizeChange: (next: number) => {
-        setPageSize(next);
+        if (options.onPageSizeChange) options.onPageSizeChange(next);
+        else setOwnedPageSize(next);
         setPage(1);
       },
     },

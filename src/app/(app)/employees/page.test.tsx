@@ -125,7 +125,6 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /muat berikutnya/i }));
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "-" })).toBeInTheDocument();
   });
@@ -227,7 +226,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
   });
 
-  it("appends the next page when Muat berikutnya is clicked (speckit §5)", async () => {
+  it("auto-fetches the next cursor page to fill the shown page", async () => {
     const mocks = [
       unitsMock,
       firstPageMock,
@@ -239,13 +238,9 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       </MockedProvider>
     );
     await screen.findByText("Andi Pratama");
-    expect(screen.queryByText("Eko Prasetyo")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /muat berikutnya/i }));
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.getByText("Andi Pratama")).toBeInTheDocument();
-    // hasNextPage is false on the last page: the load-more action is gone.
-    expect(screen.queryByRole("button", { name: /muat berikutnya/i })).toBeNull();
   });
 
   it("shows the empty state when no employees are returned", async () => {

@@ -45,6 +45,28 @@ describe("useTablePagination", () => {
     expect(result.current.pageRows).toHaveLength(50);
   });
 
+  it("mirrors a controlled page size and reports the choice", () => {
+    const onPageSizeChange = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ pageSize }: { pageSize: number }) =>
+        useTablePagination(ROWS, { pageSize, onPageSizeChange }),
+      { initialProps: { pageSize: 10 } },
+    );
+
+    expect(result.current.pagination.pageSize).toBe(10);
+    act(() => {
+      result.current.pagination.onPageChange(3);
+      result.current.pagination.onPageSizeChange(25);
+    });
+    expect(onPageSizeChange).toHaveBeenCalledWith(25);
+    // The page resets even though the size is controlled.
+    expect(result.current.pagination.page).toBe(1);
+
+    rerender({ pageSize: 25 });
+    expect(result.current.pagination.pageSize).toBe(25);
+    expect(result.current.pageRows).toHaveLength(25);
+  });
+
   it("resetPage brings the state back to the first page", () => {
     const { result } = renderHook(() => useTablePagination(ROWS));
 

@@ -65,7 +65,7 @@ const unitsMock = {
   },
 };
 
-// The directory sends first = the page size chosen in the footer (default 25,
+// first mirrors the page size chosen in the Pagination footer (default 25,
 // the API default from speckit data-model §5).
 const firstPageMock = {
   request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
@@ -74,19 +74,14 @@ const firstPageMock = {
   },
 };
 
-const secondPageMock = {
-  request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: "C25" } },
-  result: {
-    data: { employees: employeesPage(147, ids(26, 50), true, "C50") },
-  },
-};
-
-const thirdPageMock = {
-  request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: "C50" } },
-  result: {
-    data: { employees: employeesPage(147, ids(51, 75), false, "C75") },
-  },
-};
+function pageMock(first: number, after: string | null, from: number, to: number, hasNextPage: boolean, endCursor: string | null) {
+  return {
+    request: { query: EmployeesDocument, variables: { filter: {}, first, after } },
+    result: {
+      data: { employees: employeesPage(147, ids(from, to), hasNextPage, endCursor) },
+    },
+  };
+}
 
 function appCache() {
   return new InMemoryCache({
@@ -109,16 +104,12 @@ function tableRows(container: HTMLElement) {
   return within(container.querySelector("tbody") as HTMLElement).queryAllByRole("row");
 }
 
-function loadMoreButton() {
-  return screen.getByRole("button", { name: /muat berikutnya/i });
-}
-
 async function choosePageSize(size: string) {
   fireEvent.change(screen.getByLabelText(/baris per halaman/i), { target: { value: size } });
 }
 
 describe("EmployeeDirectory pagination (Operation)", () => {
-  it("shows the first chunk with the connection total and a load-more action", async () => {
+  it("shows the first client page with the connection total", async () => {
     const { container } = renderDirectory([unitsMock, firstPageMock]);
 
     await waitFor(() => expect(tableRows(container)).toHaveLength(25));
@@ -126,16 +117,10 @@ describe("EmployeeDirectory pagination (Operation)", () => {
     expect(screen.getByText("Karyawan 25")).toBeInTheDocument();
     expect(screen.queryByText("Karyawan 26")).not.toBeInTheDocument();
     expect(container.querySelector(".page-total")?.textContent).toBe("147");
-    expect(loadMoreButton()).toBeInTheDocument();
   });
 
   it("refetches page 1 with the page size the user chooses", async () => {
-    const tenRowsMock = {
-      request: { query: EmployeesDocument, variables: { filter: {}, first: 10, after: null } },
-      result: {
-        data: { employees: employeesPage(147, ids(1, 10), true, "C10") },
-      },
-    };
+    const tenRowsMock = pageMock(10, null, 1, 10, true, "C10");
     const { container } = renderDirectory([unitsMock, firstPageMock, tenRowsMock]);
     await waitFor(() => expect(tableRows(container)).toHaveLength(25));
 
@@ -148,24 +133,34 @@ describe("EmployeeDirectory pagination (Operation)", () => {
 
   // Interaction-heavy: jsdom + Apollo scheduling in CI needs more than the
   // default 5s test timeout.
-  it("appends the next chunk on Muat berikutnya while locking the control", { timeout: 20000 }, async () => {
-    const delayedSecondPage = { ...secondPageMock, delay: 150 };
-    const { container } = renderDirectory([unitsMock, firstPageMock, delayedSecondPage, thirdPageMock]);
+  it("chains the cursor fetch for a page beyond the loaded rows, with hint and locked controls", { timeout: 20000 }, async () => {
+    const fiftyRows = pageMock(50, null, 1, 50, true, "C50");
+    const delayedSecondChunk = { ...pageMock(50, "C50", 51, 100, true, "C100"), delay: 150 };
+    const lastChunk = pageMock(50, "C100", 101, 147, false, "C147");
+    const { container } = renderDirectory([
+      unitsMock,
+      firstPageMock,
+      fiftyRows,
+      delayedSecondChunk,
+      lastChunk,
+    ]);
     await waitFor(() => expect(tableRows(container)).toHaveLength(25));
 
-    fireEvent.click(loadMoreButton());
-    // While the fetch is in flight the control is locked and rows stay shown.
-    expect(loadMoreButton()).toBeDisabled();
-
+    await choosePageSize("50");
     await waitFor(() => expect(tableRows(container)).toHaveLength(50));
-    expect(screen.getByText("Karyawan 50")).toBeInTheDocument();
-    expect(loadMoreButton()).toBeEnabled();
 
-    fireEvent.click(loadMoreButton());
-    await waitFor(() => expect(tableRows(container)).toHaveLength(75));
-    expect(screen.getByText("Karyawan 75")).toBeInTheDocument();
-    // hasNextPage is false on the last chunk: the load-more action is gone.
-    expect(screen.queryByRole("button", { name: /muat berikutnya/i })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "3" }));
+
+    // While the fetchMore chain is in flight the table shows a loading hint
+    // and the pagination controls are locked.
+    expect(await screen.findByText(/Memuat baris 101–147 dari 147/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled();
+    expect(tableRows(container)).toHaveLength(1); // only the loading-hint row
+
+    await waitFor(() => expect(tableRows(container)).toHaveLength(47), { timeout: 4000 });
+    expect(screen.getByText("Karyawan 147")).toBeInTheDocument();
+    expect(screen.queryByText(/Memuat baris/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled(); // last page
   });
 
   it("shows the stall banner with a reload action when a fetch adds no rows", { timeout: 20000 }, async () => {
@@ -184,10 +179,9 @@ describe("EmployeeDirectory pagination (Operation)", () => {
     const { container } = renderDirectory([unitsMock, firstPageMock, duplicateSecondPage, freshFirstPage]);
     await waitFor(() => expect(tableRows(container)).toHaveLength(25));
 
-    fireEvent.click(loadMoreButton());
+    fireEvent.click(screen.getByRole("button", { name: "2" }));
+
     expect(await screen.findByText(/Sebagian data belum berhasil dimuat/i)).toBeInTheDocument();
-    expect(tableRows(container)).toHaveLength(25);
-    expect(loadMoreButton()).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: /muat ulang/i }));
     await waitFor(() => expect(screen.queryByText(/Sebagian data belum berhasil dimuat/i)).not.toBeInTheDocument());

@@ -9,6 +9,7 @@ import { Button } from "@/components/Button";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
+import { Pagination, useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
@@ -31,9 +32,6 @@ type EmployeeRowData = {
   unit: { name: string } | null;
   jobRole: { name: string } | null;
 };
-
-// Page-size choices for the directory; 25 is the API default (speckit §5).
-const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 const COLUMNS: Column[] = [
   { key: "name", label: "Nama" },
@@ -161,6 +159,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   const [unitId, setUnitId] = React.useState("");
   const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  // The chosen page size drives the query's first (API default 25, speckit §5).
   const [pageSize, setPageSize] = React.useState(25);
   const units = useUnits();
   const {
@@ -182,7 +181,16 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
     pageSize
   );
   const activeFilters = (unitId ? 1 : 0) + (status !== "ALL" ? 1 : 0);
-  const loaded = employees?.length ?? 0;
+  const { pageRows, pagination, resetPage } = useTablePagination(employees, {
+    totalItems: totalCount,
+    pageSize,
+    onPageSizeChange: setPageSize,
+    hasMore: hasNextPage,
+    loadingMore,
+    loadMore,
+  });
+  const hintFrom = (pagination.page - 1) * pagination.pageSize + 1;
+  const hintTo = Math.min(pagination.page * pagination.pageSize, totalCount);
 
   return (
     <section className="flex flex-col gap-4">
@@ -206,7 +214,10 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             <Input
               type="search"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                resetPage();
+              }}
               placeholder="Cari nama, email, atau nomor induk…"
             />
           </label>
@@ -227,7 +238,10 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             <span>Divisi</span>
             <Select
               value={unitId}
-              onChange={(e) => setUnitId(e.target.value)}
+              onChange={(e) => {
+                setUnitId(e.target.value);
+                resetPage();
+              }}
               className="w-auto"
             >
               <option value="">Semua</option>
@@ -242,7 +256,10 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             <span>Status</span>
             <Select
               value={status}
-              onChange={(e) => setStatus(e.target.value as EmployeeStatus | "ALL")}
+              onChange={(e) => {
+                setStatus(e.target.value as EmployeeStatus | "ALL");
+                resetPage();
+              }}
               className="w-auto"
             >
               <option value="ALL">Semua</option>
@@ -261,7 +278,13 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       {stalled && query === "ready" ? (
         <div className="tp-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-amber-800">
           <span>Sebagian data belum berhasil dimuat dari server.</span>
-          <Button variant="secondary" onClick={reload}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              reload();
+              resetPage();
+            }}
+          >
             Muat ulang
           </Button>
         </div>
@@ -274,46 +297,17 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       ) : !employees || employees.length === 0 ? (
         <EmptyState message="Tidak ada karyawan yang cocok dengan pencarian/filter." />
       ) : (
-        <BoardTable
-          caption="Daftar karyawan"
-          columns={COLUMNS}
-          footer={
-            <div className="flex w-full flex-wrap items-center justify-between gap-3">
-              <p aria-live="polite">
-                Menampilkan{" "}
-                <strong>
-                  {loaded > 0 ? `1–${loaded}` : "0"}
-                </strong>{" "}
-                dari <span className="page-total">{totalCount}</span>
-              </p>
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2">
-                  Baris per halaman
-                  <select
-                    className="page-size mx-2"
-                    value={pageSize}
-                    disabled={loadingMore}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                  >
-                    {PAGE_SIZE_OPTIONS.map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {hasNextPage ? (
-                  <Button variant="secondary" disabled={loadingMore || stalled} onClick={loadMore}>
-                    Muat berikutnya
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          }
-        >
-          {employees.map((employee) => (
+        <BoardTable caption="Daftar karyawan" columns={COLUMNS} footer={<Pagination {...pagination} />}>
+          {pageRows.map((employee) => (
             <EmployeeRow key={employee.id} employee={employee} />
           ))}
+          {loadingMore && pageRows.length === 0 ? (
+            <tr>
+              <td colSpan={COLUMNS.length} className="px-4 py-6 text-center text-sm text-zinc-500">
+                Memuat baris {hintFrom}–{hintTo} dari {totalCount}…
+              </td>
+            </tr>
+          ) : null}
         </BoardTable>
       )}
     </section>

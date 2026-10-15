@@ -70,16 +70,16 @@ export function useEmployees(filter: EmployeeFilter = {}, first = 25): Employees
   // A fetch that grows nothing while the server still claims hasNextPage means
   // the accumulated window can never reach the advertised total (e.g. the
   // keyset window shifted). Stop paging and let the UI offer a reload. The
-  // stall is keyed to the filter it happened under, so changing the filter
-  // implicitly clears it.
-  const filterKey = JSON.stringify(clean ?? {});
-  const [stall, setStall] = React.useState({ key: filterKey, stalled: false });
-  const stalled = stall.key === filterKey && stall.stalled;
+  // stall is keyed to the variables it happened under (filter + page size), so
+  // changing either implicitly clears it.
+  const stallKey = JSON.stringify([clean ?? {}, first]);
+  const [stall, setStall] = React.useState({ key: stallKey, stalled: false });
+  const stalled = stall.key === stallKey && stall.stalled;
   const beforeFetchRef = React.useRef<{ count: number; key: string } | null>(null);
   React.useEffect(() => {
     if (loadingMore) {
       if (beforeFetchRef.current === null) {
-        beforeFetchRef.current = { count: employees?.length ?? 0, key: filterKey };
+        beforeFetchRef.current = { count: employees?.length ?? 0, key: stallKey };
       }
       return;
     }
@@ -93,10 +93,12 @@ export function useEmployees(filter: EmployeeFilter = {}, first = 25): Employees
     ) {
       setStall({ key: before.key, stalled: true });
     }
-  }, [loadingMore, employees, hasNextPage, filterKey, stalled]);
+  }, [loadingMore, employees, hasNextPage, stallKey, stalled]);
 
   function loadMore() {
     if (!endCursor || stalled) return;
+    // A rejected fetchMore is surfaced through the query error / stall state;
+    // swallow the promise to keep it off the global unhandled-rejection path.
     void fetchMore({
       variables: { filter: clean, first, after: endCursor },
       updateQuery: (prev, { fetchMoreResult }) => {
@@ -113,11 +115,11 @@ export function useEmployees(filter: EmployeeFilter = {}, first = 25): Employees
           },
         };
       },
-    });
+    }).catch(() => {});
   }
 
   function reload() {
-    setStall({ key: filterKey, stalled: false });
+    setStall({ key: stallKey, stalled: false });
     void refetch();
   }
 
