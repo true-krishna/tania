@@ -481,3 +481,16 @@ T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak C
 **Checkpoint K4**: seluruh task di atas tercentang atau terblokir dengan alasan jujur; gerbang rilis K3 (T030–T034) baru dapat ditutup setelah T035–T041 selesai, sebab keempatnya mengubah perilaku yang diuji UAT/probe.
 
 **Status per 2026-10-15**: selesai — T035, T036 (backend + frontend; sisa butir UAT pada stack hidup), T037, T044, T046, T047. Dialihkan ke gelombang master-data sebagai TAN-213 — T042, T043. Ditahan sebagai tindakan tata kelola kanon (sudah dirutekan pemilik ke agen khusus) — T041. Belum dikerjakan — T038 (fitur baru, butuh keputusan bentuk), T040 (butuh DB terisolasi), T045 (penyeragaman rujukan guardrail). Sisa T039: skenario coba-ulang ber-provider belum ditulis.
+
+## Phase K5: Convergence (2026-10-15)
+
+**Scope**: `/speckit.converge` kedua untuk 005-asisten-data-chatbot, dijalankan pada keadaan kode yang **sudah bergerak** sejak Phase K4: `tania-backend` `master` `c0540f4` (termasuk `dcff25c` perbaikan chat K4, `b8821d5` salin ulang cermin TAN-213, dan `762906a` perbaikan laporan TAN-209) dan `tania-dashboard` `master` `a457fb9` (termasuk `4d75152` state kuota FR-13 + chip, `555ffa8`+`35770c2` perbaikan kanon design, `7d29e19` pengaman drift SDL, `fb85ca9` pemisahan T029/T034). Klaim "selesai" pada Phase K4 **diverifikasi ulang ke kode dan test**, bukan dipercaya.
+
+**Hasil**: seluruh temuan Phase K4 yang ditandai selesai memang ada di kode (`FindExchange` + replay jawaban, `NewChatRateLimited` + `RetryAfter`, `answerBudget` = satu anggaran jawaban, `checklists/security.md`, perbaikan dokumen, `CHIP_VARIANTS.neutral`), dan Phase K4 yang masih terbuka tetap memiliki task-nya — tidak digandakan di sini. **Satu temuan baru** muncul dari kode yang berubah setelah salinan terakhir; ID dilanjutkan dari maksimum (T047) → T048.
+
+- [ ] T048 Salin ulang SDL yang dilayani ke **ketiga** salinan konsumen dan jadikan `pnpm run schema:drift` hijau per Konstitusi API 1.1.1/T022/R8 (partial)
+      → `tania-dashboard`: `graph/schema.graphqls` (sumber codegen) + `specs/001-employee-digital-talent-management/contracts/schema.graphql` + `src/generated/graphql/` (`pnpm run codegen`); salinan cermin di repo `tania-backend`.
+      **Bukti gap**: SDL yang dilayani `tania-backend` `master` kini `d35e0988…` (commit `762906a fix(report): floor dashboard time filter start at 2022` mengubah docstring `TalentReportRange`), sedangkan ketiga salinan masih `da1510ce…` (hash sebelum TAN-209) — jadi pengaman `scripts/check-schema-drift.sh` (`pnpm run schema:drift`, ditambahkan `7d29e19`) **merah pada keadaan sekarang**. Invarian byte-for-byte T022 beserta mode kegagalan R8 bocor lagi karena tidak ada yang menjalankan pengaman setelah SDL bergerak.
+      **Verifikasi**: `pnpm run schema:drift` hijau (ketiga salinan identik dengan SDL yang dilayani) + `pnpm run codegen` + `pnpm run generate:check` hijau; salinan ulang tetap menjadi commit terpisah yang terlihat (bukan disembunyikan di diff fitur); jalankan juga `pnpm run schema:drift` pada gerbang K3 (T030) dan catat hasilnya.
+
+**Checkpoint K5**: `pnpm run schema:drift` hijau, atau perbedaannya dicatat eksplisit sebagai pengecualian yang disetujui — bukan dibiarkan merah tanpa catatan.
