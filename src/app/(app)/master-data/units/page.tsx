@@ -8,7 +8,7 @@ import {
 } from "@/features/master-data/MasterDataSection";
 import { useUnitMutations } from "@/features/master-data/useMasterDataMutations";
 
-type Unit = MasterDataItem & { projects: { length: number } };
+type Unit = MasterDataItem & { code: string; projects: { length: number } };
 
 export default function UnitsPage() {
   const { status, data, error } = useUnits();
@@ -30,13 +30,23 @@ export default function UnitsPage() {
       emptyMessage="Belum ada unit. Tambahkan unit pertama."
       addLabel="Tambah Unit"
       nameLabel="Nama Unit"
+      codeLabel="Kode Unit"
+      codePlaceholder="cth: DBT"
+      codeOf={(unit) => unit.code}
       items={data}
       status={status}
       error={error}
       searchable
       extraColumn={{ label: "Proyek", render: (unit) => unit.projects.length }}
-      onCreate={({ name }) => detectError(() => unitMutations.create({ name }), `Unit "${name}" berhasil dibuat.`)}
-      onUpdate={(id, { name }) => detectError(() => unitMutations.update(id, { name }), "Unit berhasil diubah.")}
+      onCreate={({ name, code }) =>
+        detectError(
+          () => unitMutations.create({ name, code }),
+          `Unit "${name}" berhasil dibuat.`,
+        )
+      }
+      onUpdate={(id, { name, code }) =>
+        detectError(() => unitMutations.update(id, { name, code }), "Unit berhasil diubah.")
+      }
       onToggleActive={(id, isActive) =>
         detectError(
           () => unitMutations.toggleActive(id, isActive),

@@ -121,11 +121,13 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-zinc-500">Tanggal Lahir</dt>
-                <dd className="text-zinc-900">{employee.birthDate}</dd>
+                <dd className="text-zinc-900">{employee.birthDate ?? "—"}</dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-zinc-500">Jenis Kelamin</dt>
-                <dd className="text-zinc-900">{GENDER_LABEL[employee.gender]}</dd>
+                <dd className="text-zinc-900">
+                  {employee.gender ? GENDER_LABEL[employee.gender] : "—"}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-zinc-500">Telepon</dt>

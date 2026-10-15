@@ -19,8 +19,11 @@ export function PersonalInfoSection({ employee }: { employee: ProfileEmployee | 
       <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         <Field label="NIK" value={employee.nikMasked} mono />
         <Field label="Email" value={employee.email} />
-        <Field label="Tanggal Lahir" value={employee.birthDate} />
-        <Field label="Jenis Kelamin" value={GENDER_LABEL[employee.gender]} />
+        <Field label="Tanggal Lahir" value={employee.birthDate ?? "—"} />
+        <Field
+          label="Jenis Kelamin"
+          value={employee.gender ? GENDER_LABEL[employee.gender] : "—"}
+        />
         <Field label="Telepon" value={employee.phone ?? "—"} />
         <Field label="Alamat" value={employee.address ?? "—"} />
         <Field label="Pendidikan Terakhir" value={employee.latestEducation ?? "—"} />

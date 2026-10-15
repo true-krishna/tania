@@ -56,7 +56,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         ← Kembali ke daftar kontrak
       </Link>
       <PageHeader
-        title={contract.contractNo}
+        title={contract.contractNo ?? "—"}
         subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
         actions={
           !isOpenEndedContractType(contract.contractType) ? (
@@ -194,7 +194,7 @@ function ContractEditForm({
     }
   );
   const [values, setValues] = React.useState<FormValues>(() => ({
-    contractNo: contract.contractNo,
+    contractNo: contract.contractNo ?? "",
     officeEmail: contract.officeEmail ?? "",
     bandPosition: contract.bandPosition,
     jobTitle: contract.jobTitle ?? "",

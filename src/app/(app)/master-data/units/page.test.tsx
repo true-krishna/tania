@@ -15,6 +15,7 @@ const mocks = [
         units: [
           {
             id: "u-1",
+            code: "DBT",
             name: "Digital Business & Technology",
             isActive: true,
             projects: [
@@ -24,6 +25,7 @@ const mocks = [
           },
           {
             id: "u-2",
+            code: "ECSS",
             name: "Enabler & Corporate Shared Services",
             isActive: false,
             projects: [],

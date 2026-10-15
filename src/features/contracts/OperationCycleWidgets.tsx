@@ -38,7 +38,7 @@ function computePreRetirement(
 ): PreRetirementHit[] {
   return candidates
     .map((node) => {
-      const date = retirementDate(node.birthDate, age);
+      const date = node.birthDate ? retirementDate(node.birthDate, age) : null;
       return date ? { node, daysUntil: daysUntil(date, now) } : null;
     })
     .filter((hit): hit is PreRetirementHit => hit !== null && hit.daysUntil <= 90)
