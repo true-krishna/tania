@@ -92,10 +92,10 @@ Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER id
 | Peran Admin/Talent memanggil operasi chat | `FORBIDDEN` | Panel/bubble tidak dirender; akses langsung tetap ditolak server |
 | `content` kosong / > 2.000 karakter | Ditolak **sebelum** pemanggilan model (tidak memicu pemakaian token) | `maxLength` input + pesan "Maksimal 2.000 karakter."; tidak ada bubble baru |
 | `conversationId` bukan milik pemanggil / tidak ada | `NOT_FOUND` | Toast error; panel tetap pada daftar percakapan miliknya |
-| `AI_PROVIDER_*` belum dikonfigurasi | Kegagalan eksplisit "asisten belum dikonfigurasi" | Pesan gagal ramah di thread (FR-11) |
-| Provider model gagal/timeout/putaran tool habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (FR-11) | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; tidak ada angka yang ditampilkan |
+| `AI_PROVIDER_*` belum dikonfigurasi | Kegagalan eksplisit "asisten belum dikonfigurasi" (`CHAT_NOT_CONFIGURED`) | Pesan gagal ramah di thread (FR-11) |
+| Provider model gagal/timeout/anggaran jawaban habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (`CHAT_FAILED`; anggaran satu jawaban 25 s, plan D5/R2) | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; tidak ada angka yang ditampilkan |
 | `clientRequestId` hilang/bukan UUID | Ditolak sebelum menyentuh model | — |
-| Kuota per user terlampaui (**20 pesan/jam**, konstanta disetujui) | Ditolak **sebelum** pemanggilan model — tidak ada token terpakai | Pesan ramah "batas pesan per jam tercapai"; tombol kirim nonaktif sampai jendela bergeser |
+| Kuota per user terlampaui (**20 pesan/jam**, konstanta disetujui) | Ditolak **sebelum** pemanggilan model — tidak ada token terpakai; kode `CHAT_RATE_LIMITED` + `extensions.retryAfterSeconds` (sisa jendela) | Pesan ramah "kuota asisten tercapai … Coba lagi dalam N menit." (pesan server ditampilkan apa adanya); tombol kirim nonaktif **dan** tombol "coba ulang" disembunyikan sampai jendela bergeser |
 | Pertanyaan di luar domain Tania (FR-12) | Model diarahkan system prompt menolak sopan + menjelaskan cakupan | Ditampilkan sebagai jawaban biasa |
 
 ## Toolset data (read-only; diekspos ke model, bukan ke klien)

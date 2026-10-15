@@ -150,7 +150,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 
 ### Key Entities *(include if feature involves data)*
 
-- **ChatConversation**: percakapan asisten milik tepat satu user; memuat kepemilikan (user), waktu mulai, dan status. Privat mutlak; tidak ada relasi baca lintas user.
+- **ChatConversation**: percakapan asisten milik tepat satu user; memuat kepemilikan (user) dan waktu mulai. Percakapan tidak punya status alur kerja (`data-model.md` §ChatConversation — percakapan asisten: hanya kepemilikan + waktu). Privat mutlak; tidak ada relasi baca lintas user.
 - **ChatMessage**: pesan dalam percakapan; memuat peran pengirim (user/asisten), isi pesan, pemakaian token (input/keluaran), dan waktu. Menyimpan rujukan sumber data yang dipakai untuk menyusun jawaban (untuk keperluan audit kualitas jawaban, tanpa membuka isi percakapan ke peran lain).
 - Entitas bisnis (karyawan, kontrak, assignment, IDP, evaluasi, CV, master data) **tidak diubah** oleh fitur ini — asisten hanya membaca melalui kueri ber-otorisasi.
 - Kepatuhan data pribadi (konstitusi Prinsip I–IV): retensi percakapan (kapan dihapus/dianonimkan), dasar pemrosesan atas konten pertanyaan yang dikirim ke provider model, dan larangan data pribadi pada log komponen AI **wajib dideklarasikan eksplisit** pada data-model fase `/speckit.plan` — bukan opsional.

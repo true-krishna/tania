@@ -76,5 +76,5 @@ Login sebagai **Chapter** (chapter A berisi data seed).
 
 ## Kriteria lulus
 
-- Seluruh gerbang otomatis (A) hijau; seluruh skenario B–C sesuai harapan; **seluruh probe D lulus** (satu saja gagal = pem blockers rilis — US4 adalah syarat rilis).
+- Seluruh gerbang otomatis (A) hijau; seluruh skenario B–C sesuai harapan; **seluruh probe D lulus** (satu saja gagal = penghalang rilis — US4 adalah syarat rilis).
 - SC-001–SC-004 dapat dinyatakan terpenuhi berdasarkan B–E.
