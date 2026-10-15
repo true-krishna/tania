@@ -123,6 +123,8 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       </MockedProvider>
     );
 
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "-" })).toBeInTheDocument();
   });
@@ -175,8 +177,9 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       target: { value: "citra" },
     });
 
-    expect(await screen.findByText("Citra Lestari")).toBeInTheDocument();
-    expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
+    // The search is debounced, so the requery lands after the debounce delay.
+    await waitFor(() => expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument());
+    expect(screen.getByText("Citra Lestari")).toBeInTheDocument();
   });
 
   it("filters by divisi and status", async () => {

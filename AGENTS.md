@@ -1,6 +1,6 @@
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
@@ -46,6 +46,64 @@ refactor/reports-data-fetching
 docs/agents-branch-naming
 chore/bump-next-version
 ```
+
+# Coding Standards
+
+Follow the principles from Ryan McDermott's Clean Code JavaScript guide.
+
+## Naming
+
+- Use descriptive, searchable names.
+- Avoid abbreviations unless universally understood.
+- Prefer clarity over brevity.
+
+## Functions
+
+- Keep functions focused on a single responsibility.
+- Prefer small functions.
+- Prefer object parameters when a function requires more than 2–3 arguments.
+- Avoid boolean flags that change behavior.
+- Extract complex logic into well-named helpers.
+
+## Control Flow
+
+- Prefer guard clauses and early returns.
+- Avoid deep nesting.
+- Keep conditionals simple and readable.
+
+## Data
+
+- Prefer immutable updates over mutation.
+- Avoid shared mutable state.
+- Use array methods (`map`, `filter`, `reduce`, `some`, `every`) when they improve readability.
+
+## Error Handling
+
+- Throw meaningful errors.
+- Do not silently swallow exceptions.
+- Handle errors at the appropriate boundary.
+
+## React and Next.js
+
+- Components should have a single responsibility.
+- Extract reusable logic into hooks.
+- Prefer Server Components by default.
+- Use Client Components only when interactivity is required.
+- Keep component files focused and reasonably sized.
+
+## Duplication
+
+- Avoid copy-paste code.
+- Extract shared abstractions only when duplication is proven.
+- Do not introduce premature abstractions.
+
+## General
+
+- Prioritize readability over cleverness.
+- Remove dead code and commented-out code.
+- Leave touched code cleaner than you found it.
+- Favor composition over inheritance.
+- Follow existing project conventions unless explicitly refactoring.
 
 # Code Comments
 
