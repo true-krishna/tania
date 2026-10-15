@@ -1,11 +1,12 @@
 # Implementation Plan — RBAC Tania (Kontrol Akses Berbasis Peran)
 
-**Feature Branch**: `002-tania-rbac` | **Date**: 2026-10-11 | **Spec**:
+**Feature Branch**: `002-tania-rbac` | **Date**: 2026-10-11 (revisi 2026-10-15) | **Spec**:
 `specs/002-tania-rbac/spec.md` + `specs/001-employee-digital-talent-management/spec.md`
-(clarify 12, amandemen 2026-10-10)
+(clarify 12, amandemen 2026-10-10; **clarify 4 — Admin kelola penuh**, amandemen 2026-10-15)
 
 **Input**: Spesifikasi RBAC dari `/speckit.specify` + `/speckit.clarify` (TAN-144),
-diperintahkan lewat `/speckit.plan` (TAN-156).
+diperintahkan lewat `/speckit.plan` (TAN-156); diperbarui lewat `/speckit.plan` lanjutan
+(TAN-212) untuk amandemen **clarify 4** (Admin = kelola penuh) — lihat §14.
 
 **Repos**: `codex/backend/tania-backend` + `codex/frontend/tania-dashboard` — plan ini
 mencakup kedua repo (RBAC adalah perubahan lintas-repo yang kecil dan menyatu; pola
@@ -38,16 +39,22 @@ keputusan bentuk yang memandu plan ini:
 
 **Keluaran utama plan ini** (delta di atas kode existing):
 
-- Membalik baca Assignment: Admin ✘ / Operation ✔ read-only "lihat semua" (saat ini
-  terbalik di kode).
+- **Admin kelola penuh (clarify 4, 2026-10-15 — §14)**: Admin berwenang penuh pada
+  seluruh modul aktif, termasuk Assignment, Kontrak, Data karyawan, CV, dan Provisi
+  Entra. Baris matriks Admin berubah (Assignment/CV: `—` → `kelola`; Data karyawan &
+  kontrak: `lihat semua` → `kelola`) dan gate backend/FE diselaraskan.
+- Menyelaraskan baca Assignment untuk Operation: Operation ✔ read-only "lihat semua"
+  (sebelumnya ditolak di kode); mutasi tetap untuk peran berwenang (Chapter dalam
+  cakupan, Admin).
 - Menutup modul IDP & Evaluation (query + mutation, semua peran) dengan pesan FORBIDDEN
   yang jelas ("modul ditunda"), bukan menghapus kode.
 - Menegakkan **kebaruan data akun per request** (FR-17): perubahan peran/status berlaku
   untuk operasi berikutnya, bukan setelah refresh token (gap nyata — §3.1).
 - Menambah **perlindungan Admin terakhir** (US2): menonaktifkan / mengubah peran
   satu-satunya akun Admin aktif → ditolak.
-- Menyelaraskan frontend: matriks per-modul sebagai satu sumber gating UI, hapus entri
-  nav IDP/Evaluations, perbaiki dashboard per peran, perbaiki halaman Assignment.
+- Menyelaraskan frontend: matriks per-modul sebagai satu sumber gating UI, perbaiki
+  dashboard per peran, perbaiki halaman Assignment, dan (clarify 4) buka seluruh menu
+  aktif untuk Admin.
 
 **Ruang lingkup keluar** (tetap di luar): login SSO Entra (Entra hanya untuk provisi
 akun — workstream pengelolaan talent, TAN-140/TAN-145), perubahan kata sandi mandiri,
@@ -94,30 +101,31 @@ Yang **sudah ada** dan di-reuse (semua terverifikasi di kode `master`):
 | # | Gap | Bukti di kode | Aksi |
 | --- | --- | --- | --- |
 | G1 | **Kebaruan per request belum ada**: identitas (peran) hanya dari klaim JWT — middleware tidak membaca ulang baris akun; perubahan peran/status baru berlaku setelah refresh (≤15 menit), akun nonaktif masih bisa beroperasi sampai access token kadaluarsa | `middleware.go:140-170` — hanya `verifier.Parse` + denylist | Middleware membaca ulang akun (status + peran) per request via sub (R1.3) |
-| G2 | **Baca Assignment terbalik**: saat ini Admin baca penuh, Operation ditolak — matriks membaliknya (Admin ✘, Operation ✔ "lihat semua" read-only; mutasi tetap Chapter saja) | `internal/usecase/assignment.go` | Tukar peran baca; mutasi tetap Chapter-only (R1.1) |
+| G2 | **Gate Assignment belum sesuai matriks**: Operation ditolak padahal berhak "lihat semua" read-only; Admin belum diberi kelola penuh (clarify 4) | `internal/usecase/assignment.go` | Operation baca semua (read-only); Admin kelola penuh; mutasi Chapter dalam cakupan (R1.1/R6.2) |
 | G3 | **IDP & Evaluation masih bisa diakses** (Chapter/Talent/Admin sesuai peran lama) — matriks menunda modul: deny semua peran, termasuk template & periode (*) | `internal/usecase/idp.go`, `evaluation.go` | Gerbang modul: deny dengan FORBIDDEN + pesan "modul ditunda" (R1.2) |
 | G4 | **Widget dashboard IDP/eval** masih ada di `ChapterDashboard`/`TalentDashboard` | `graph/schema.graphqls:580-594` | Hapus field yang ditunda — dua fase, selaras FE (R2/R3) |
 | G5 | **Admin terakhir belum dilindungi**: tidak ada guard "satu-satunya Admin aktif" pada SetStatus/UpdateRole | `internal/usecase/account.go` | Guard dalam transaksi yang sama (R1.4) |
-| G6 | Riwayat assignment pada detail karyawan untuk Admin | `AssignmentService.ForEmployee` dipakai FE detail karyawan | Ikut tertutup oleh G2 (Admin ✘) — selaras clarify 12(c) |
+| G6 | Riwayat assignment pada detail karyawan untuk Admin | `AssignmentService.ForEmployee` dipakai FE detail karyawan | Admin boleh melihat (kelola penuh, clarify 4) — gate `ForEmployee` + Admin |
 | G7 | **Cakupan tidak terdefinisi belum punya pesan khusus**: `ChapterScope` menolak dengan `ErrForbidden` generik — FR-20/US4-5 menuntut "penjelasan bahwa cakupan tidak terdefinisi" (berbeda dari anti-enumerasi FR-16) | `internal/usecase/scope.go:15-31` | Sentinel `ErrScopeUndefined` → FORBIDDEN + pesan khusus + test US4-5 (R1.5) |
 
-Yang **sudah selaras matriks** (tidak diubah): master data baca semua peran / kelola
-Admin; `Employee.List` Admin+Operation (Chapter ditolak — daftar seluruh karyawan bukan
-modul Chapter); `Employee.Get` via `CanAccessEmployee`; CV Talent kelola-milik / Chapter
-baca-cakupan read-only; akun & audit Admin-only; kaskade deaktivasi karyawan → akun.
+Yang **sudah selaras matriks** (tidak diubah kecuali penambahan Admin dari clarify 4):
+master data baca semua peran / kelola Admin; `Employee.List` Admin+Operation (Chapter
+ditolak — daftar seluruh karyawan bukan modul Chapter); `Employee.Get` via
+`CanAccessEmployee`; CV Talent kelola-milik / Chapter baca-cakupan read-only; akun &
+audit Admin-only; kaskade deaktivasi karyawan → akun. Clarify 4 menambahkan **Admin**
+ke gate kelola modul-modul ini (§14).
 
 ### 3.2 `tania-dashboard` (`gitlab.playcourt.id/codex/frontend/tania-dashboard`)
 
-- `src/components/Sidebar/nav.ts` — **sumber kebenaran menu** dengan array peran eksplisit
-  (cocok untuk matriks): saat ini `assignments: ["CHAPTER","ADMIN"]` — target matriks
-  `["CHAPTER","OPERATION","TALENT"]` (Operation lihat semua, Talent lihat miliknya, Admin
-  dihapus — keputusan F3 plan 001, 2026-10-12); entri `idp` & `evaluations` ada (dihapus
-  dari nav — ditunda semua peran); `employees: ["OPERATION","ADMIN"]` — target ditambah
-  Chapter (lihat cakupan) & Talent (lihat data diri), keputusan F2 plan 001 (N1);
-  `cv: ["TALENT","CHAPTER"]`, `accounts: ["ADMIN"]` — sesuai; `master-data: ["ADMIN"]` —
-  **keputusan terbuka O6** (matriks memberi hak *lihat* Operation/Chapter/Talent: buka nav
-  baca read-only, atau pangkas hak lihat di matriks; manajemen tetap Admin). Klaim
-  "sudah sesuai" sebelumnya dicabut (N2).
+- `src/components/Sidebar/nav.ts` — **sumber kebenaran menu** dengan array peran eksplisit.
+  Catatan 2026-10-15: sejak TAN-178 nav **tidak lagi membaca `MODULE_ROLES`** dan
+  dikembalikan ke baseline desain, sehingga `nav.ts` dan `matrix.ts` bisa berbeda — R6
+  menyelaraskannya. Target clarify 4: Admin tampil di semua menu aktif (termasuk Provisi
+  Entra & CV); `assignments` = `["CHAPTER","OPERATION","TALENT","ADMIN"]`;
+  `employees`/`contracts` + Admin (kelola penuh); entri `idp` & `evaluations` **as is**;
+  `master-data: ["ADMIN"]` — **keputusan terbuka O6** (matriks memberi hak *lihat*
+  Operation/Chapter/Talent: buka nav baca read-only, atau pangkas hak lihat di matriks;
+  manajemen tetap Admin). Klaim "sudah sesuai" sebelumnya dicabut (N2).
 - `src/lib/auth/roles.ts` + `guard.tsx` — gating route memakai hierarki `atLeast()`
   (TALENT<CHAPTER<OPERATION<ADMIN) yang **menyimpang dari matriks** (menganggap Admin
   dapat semuanya; nyatanya Admin kehilangan baca Assignment). Perlu set peran eksplisit
@@ -153,7 +161,7 @@ flowchart TD
     D -->|status != active| X1
     D --> E["Identity = peran TERKINI<br/>(bukan klaim JWT)"]
     E --> F{Gate usecase}
-    F -->|"RequireRole: modul tidak diberikan<br/>(mis. baca Assignment sbg Admin)"| X2[403 FORBIDDEN + pesan jelas]
+    F -->|"RequireRole: modul tidak diberikan<br/>(mis. Operation mengelola akun)"| X2[403 FORBIDDEN + pesan jelas]
     F -->|"Gerbang modul ditunda<br/>(IDP/Evaluation, semua peran)"| X2
     F -->|"ChapterScope: data di luar cakupan"| X3[404 NOT_FOUND anti-enumerasi]
     F -->|OK| G[Resolver → Repository]
@@ -190,7 +198,7 @@ flowchart LR
     title="Defer = gerbang, bukan penghapusan"
     M["Matriks (SoT)<br/>baris IDP/Evaluation = ✘ semua peran (*)"] --> G["Gerbang modul<br/>usecase: ErrModuleUnavailable → FORBIDDEN"]
     G --> B["Backend: kode & SDL modul tetap"]
-    G --> F["FE: nav dihapus, route dijaga nonaktif"]
+    G --> F["FE: nav/route dijaga (baseline desain TAN-178 — as is)"]
     M -.reaktivasi.-> R["Ubah baris matriks (amandemen spec)<br/>→ buka gerbang + kembalikan nav"]
 ```
 
@@ -202,10 +210,12 @@ flowchart LR
 | --- | --- | --- |
 | Autentikasi | ✔ fondasi ada | **R1.3** baca ulang akun per request di middleware (G1); lainnya reuse |
 | Akun user | ✔ Admin-only | **R1.4** guard Admin-terakhir (G5); cakupan test audit semua operasi akun |
-| Assignment | ⚠ baca terbalik | **R1.1** tukar baca: Operation "lihat semua" read-only, Admin ✘ (G2/G6); mutasi tetap Chapter-only |
-| Data karyawan | ✔ selaras | Tanpa perubahan gate; riwayat assignment utk Admin tertutup via R1.1 |
+| Assignment | ⚠ gate belum sesuai | **R1.1** Operation baca "lihat semua" read-only; **R6.2** Admin kelola penuh (G2/G6) |
+| Data karyawan | ⚠ Admin belum kelola | **R6.3** tambah Admin ke operasi kelola (`Create`/`Update`); baca Admin sudah ada |
+| Kontrak kerja | ⚠ Admin belum | **R6.2** tambah Admin ke baca + mutasi (`contract.go` — Operation-only saat ini) |
+| Provisi Entra | ⚠ Admin belum | **R6.2** tambah Admin ke `entra.go` (Operation-only saat ini) |
 | Master data | ✔ selaras | Tanpa perubahan (baca semua peran, kelola Admin) |
-| CV | ✔ selaras | Tanpa perubahan |
+| CV | ⚠ Admin belum | **R6.3** tambah Admin ke gate CV (lewat `ProfileFor`/daftar talent) |
 | IDP | ✘ ditunda | **R1.2** gerbang deny semua peran (G3); kode tetap |
 | Evaluation (+template/periode*) | ✘ ditunda | **R1.2** idem |
 | Dashboard | ⚠ widget IDP/eval | **R3.1** hapus field ditunda dari union (dua fase) |
@@ -216,10 +226,10 @@ flowchart LR
 | Modul | Delta |
 | --- | --- |
 | Sumber gating | **R2.1** `src/lib/auth/matrix.ts` — set peran eksplisit per modul (cermin matriks); `nav.ts` & `guard.tsx` memakainya; hierarki `atLeast()` dipensiunkan dari gating modul |
-| Sidebar/nav | **R2.2** hapus entri `idp` & `evaluations`; `assignments → ["CHAPTER","OPERATION","TALENT"]` |
-| Route terjaga | **R2.3** `/idp`, `/evaluations/*` dijaga nonaktif semua peran (redirect/notFound; kode fitur tetap) |
-| Assignment | **R2.4** halaman baca: Operation read-only & Talent lihat miliknya (keputusan F3 plan 001, 2026-10-12 — menggantikan opsi R7 "via CV saja"); aksi kelola tetap Chapter |
-| Employees | Tampil untuk Operation + Admin + Chapter + Talent (keputusan F2 plan 001, 2026-10-12): Admin read-only konteks penautan akun (tanpa riwayat assignment), Chapter lihat cakupan (per talent), Talent lihat data diri; Operation kelola |
+| Sidebar/nav | **R2.2** `assignments → ["CHAPTER","OPERATION","TALENT"]` **+ Admin**; `entra` + Admin, `cv` + Admin (clarify 4); entri `idp`/`evaluations` **as is** (baseline desain TAN-178) |
+| Route terjaga | **R2.3** `/idp`, `/evaluations/*` — status **as is** (baseline desain TAN-178 membukanya di FE; backend tetap menolak — §14) |
+| Assignment | **R2.4** halaman baca: Operation read-only & Talent lihat miliknya (keputusan F3 plan 001, 2026-10-12); aksi kelola Chapter dan **Admin** (clarify 4) |
+| Employees | Tampil untuk Operation + Admin + Chapter + Talent (keputusan F2 plan 001, 2026-10-12): **Admin kelola penuh** (clarify 4 — menggantikan read-only administratif), Chapter lihat cakupan (per talent), Talent lihat data diri; Operation kelola |
 | Dashboard | **R2.5** pangkas query & widget IDP/eval per peran; ringkasan per peran sesuai matriks |
 | Token store / refresh | Tidak diubah |
 
@@ -230,7 +240,9 @@ Delta minimal — **tidak ada folder/paket baru** di luar:
 ```
 tania-backend/
 ├─ internal/transport/httpapi/middleware.go   # R1.3: baca ulang akun per request (butuh akses repo users)
-├─ internal/usecase/assignment.go             # R1.1: peran baca sesuai matriks
+├─ internal/usecase/assignment.go             # R1.1/R6.2: peran baca + Admin kelola penuh
+├─ internal/usecase/contract.go, entra.go     # R6.2: +Admin (baca & mutasi)
+├─ internal/usecase/cv.go, employee.go        # R6.3: +Admin (kelola)
 ├─ internal/usecase/idp.go, evaluation.go     # R1.2: gerbang modul ditunda
 ├─ internal/usecase/rbac.go                   # BARU (satu file): gate modul + helper matriks
 ├─ internal/domain/errors.go                  # sentinel ErrModuleUnavailable (+ pemetaan FORBIDDEN di resolver)
@@ -240,7 +252,7 @@ tania-backend/
 
 tania-dashboard/
 ├─ src/lib/auth/matrix.ts                     # BARU: set peran per modul (cermin matriks)
-├─ src/components/Sidebar/nav.ts              # R2.2
+├─ src/components/Sidebar/nav.ts              # R2.2/R6.4
 ├─ src/lib/auth/guard.tsx (atau setara)       # R2.1: pakai matrix.ts
 ├─ src/app/(protected)/idp/**, evaluations/** # R2.3: dijaga nonaktif (kode tetap)
 ├─ src/features/assignments/**                # R2.4
@@ -297,6 +309,14 @@ semua operasi akun; snapshot tanpa rahasia (`userSnapshot` membuang hash). Baca 
 Admin-only. Test cakupan diperluas memastikan setiap mutasi akun tercatat dan payload
 bebas kredensial.
 
+### 7.8 Admin sebagai superuser (clarify 4, 2026-10-15)
+Admin berwenang penuh pada seluruh modul aktif — bukan read-only, bukan pengecualian.
+Deny-by-default (FR-03) tetap berlaku: baris bertanda \* (IDP/evaluasi/periode/template)
+masih ditutup untuk semua peran, termasuk Admin. Pola guard (`RequireRole`,
+`ChapterScope`) tidak berubah — hanya daftar peran yang bertambah. Modul personal
+(CV “milik saya”, “Evaluasi Saya”) tetap tidak bermakna bagi Admin: akses CV Admin
+lewat `ProfileFor`/daftar talent, bukan “profil sendiri”.
+
 ## 8. Scalability Consideration
 
 - Baca ulang akun per request = lookup PK `users` (±5.000 akun, terindeks) — sub-ms di
@@ -311,16 +331,18 @@ bebas kredensial.
 | Gelombang | Isi | Prasyarat |
 | --- | --- | --- |
 | **R0 — Sinkronisasi** | Merge branch spec `agent/cobra/9e2ad56b14ef` (002 + amandemen 001) ke `master` kedua repo; plan.md ikut ter-merge | — |
-| **R1 — Backend enforcement** | R1.1 tukar baca Assignment (G2/G6) · R1.2 gerbang modul IDP/Evaluation (G3) · R1.3 kebaruan per request (G1) · R1.4 guard Admin-terakhir (G5) · R1.5 pesan khusus cakupan tidak terdefinisi (G7, `ErrScopeUndefined`) · pemetaan error FORBIDDEN/NOT_FOUND · test matriks per sel | R0 |
+| **R1 — Backend enforcement** | R1.1 baca Assignment Operation "lihat semua" read-only (G2/G6) · R1.2 gerbang modul IDP/Evaluation (G3) · R1.3 kebaruan per request (G1) · R1.4 guard Admin-terakhir (G5) · R1.5 pesan khusus cakupan tidak terdefinisi (G7, `ErrScopeUndefined`) · pemetaan error FORBIDDEN/NOT_FOUND · test matriks per sel | R0 |
 | **R2 — Frontend** | R2.1 `matrix.ts` + nav/guard (G5) · R2.2 nav (assignments +Operation/+Talent, employees +Chapter/+Talent — §3.2) · R2.3 route terjaga · R2.4 Assignment baca Operation/Talent · R2.5 pangkas dashboard | R0 |
 | **R3 — Kontrak & integrasi** | R3.1 hapus field dashboard ditunda — **dua fase**: FE berhenti mem-query dulu, lalu hapus field SDL + contract test · `make generate` / `npm run generate` idempoten | R1, R2 |
 | **R4 — UAT & regresi** | Skrip UAT per peran (matriks 12×4; termasuk pengukuran SC-003 buat akun < 2 menit) · regresi lintas-modul §11.3 · gerbang CI penuh | R3 |
 | **R5 — Penutupan** | Runbook reaktivasi modul (ubah matriks → buka gerbang → kembalikan nav) + retro | R4 |
+| **R6 — Admin kelola penuh** (clarify 4, 2026-10-15) | R6.1 `matrix.ts` +Admin (`assignments`/`entra`/`cv` + `MANAGE_ROLES`) · R6.2 backend +Admin di gate Assignment, Kontrak, Entra · R6.3 backend +Admin di gate CV & kelola Data karyawan · R6.4 nav: Provisi Entra & CV untuk Admin · R6.5 test matriks per sel + RTL nav + e2e 4 peran | R1, R2 |
 
 Pemetaan user story 002 → gelombang: US1 (R1, R3) · US2 (R1.4, test akun existing) ·
 US3 (R1.1/R1.2, R3) · US4 (scope existing, R3 e2e) · US5 (R1.3) · US6 (audit existing,
 R1 verifikasi cakupan). Keputusan clarify 12: R1.3 (kebaruan), R1.1+R2.2 (baca
-Assignment), R1.2 (defer), R2.5 (dashboard). Keputusan pemetaan submenu TAN-144
+Assignment), R1.2 (defer), R2.5 (dashboard). Amandemen **clarify 4** (Admin kelola
+penuh) → **R6**. Keputusan pemetaan submenu TAN-144
 (2026-10-12): R1.5 (G7), nav Employees utk Chapter/Talent (N1), R2.4 +Talent (R7
 selesai); O5 (baris matriks WAD) & O6 (hak lihat Master Data non-Admin) tetap
 keputusan terbuka (tercatat di plan 001).
@@ -334,9 +356,10 @@ per record utk Operation) tetap di workstream itu.
 
 - **Backend — test matriks**: tabel per modul × peran × operasi (OK / FORBIDDEN /
   NOT_FOUND) di lapisan usecase (fake) — satu tabel eksplisit mencerminkan 12×4.
-  Termasuk: baca Assignment (Operation ✔ semua / Chapter cakupan / Talent miliknya via
-  CV / Admin ✘), mutasi Assignment (Chapter ✔, lainnya ✘), modul ditunda (semua peran
-  ✘, termasuk Admin), akun & audit (Admin-only), master data (baca semua, kelola Admin).
+  Termasuk: baca Assignment (Operation ✔ semua / Chapter cakupan / Talent miliknya /
+  **Admin ✔**), mutasi Assignment (Chapter & **Admin** ✔, lainnya ✘), Kontrak/Entra/CV/
+  Data karyawan **Admin ✔ kelola penuh** (R6), modul ditunda (semua peran ✘, termasuk
+  Admin), akun & audit (Admin-only), master data (baca semua, kelola Admin).
 - **Backend — khusus**: kebaruan per request (ubah peran/status → operasi berikutnya
   memakai nilai baru; akun nonaktif tertolak); guard Admin-terakhir (SetStatus dan
   UpdateRole; kasus multi-Admin); deteksi reuse refresh (existing, dipertahankan);
@@ -356,11 +379,13 @@ per record utk Operation) tetap di workstream itu.
 
 ### 11.1 Smoke (jalur kritis, cepat)
 Login 4 peran; dashboard ke-render tanpa widget IDP/eval untuk semua peran; halaman
-Assignment terbuka utk Operation & Chapter; CV Talent.
+Assignment terbuka utk Operation, Chapter & Admin; CV Talent & Admin; Provisi Entra
+Operation & Admin.
 
 ### 11.2 Feature (per modul)
-Sel matriks yang berubah: Assignment (swap baca), IDP/Evaluation (deny semua), akun
-(Admin-terakhir), dashboard (pangkas field). Setiap PR wajib lulus smoke + test matriks.
+Sel matriks yang berubah: Assignment (baca Operation), IDP/Evaluation (deny semua), akun
+(Admin-terakhir), dashboard (pangkas field), **sel Admin kelola penuh (R6: Assignment,
+Kontrak, Entra, CV, Data karyawan)**. Setiap PR wajib lulus smoke + test matriks.
 
 ### 11.3 Cross-module (risiko integrasi tertinggi)
 Perubahan peran di tengah sesi → berlaku di operasi berikutnya; deaktivasi karyawan →
@@ -375,14 +400,15 @@ Setiap PR: smoke + test matriks; sebelum rilis: suite penuh + regresi lintas-mod
 
 | # | Risiko/Keputusan | Dampak | Tindakan |
 | --- | --- | --- | --- |
-| R1 | Baris matriks "Data karyawan & kontrak — Admin: lihat semua" bersanding dengan clarify 12(c) "Admin hanya RBAC & Master Data" | Ambiguitas kecil | **Dikonfirmasi 2026-10-12** (pemetaan submenu TAN-144; keputusan F2 plan 001): baca karyawan bagi Admin bersifat administratif read-only — konteks penautan akun, tanpa riwayat assignment; catatan matriks ditambahkan ke spec (amandemen 2026-10-12) |
+| R1 | Baris matriks "Data karyawan & kontrak — Admin: lihat semua" vs clarify 12(c) "Admin hanya RBAC & Master Data" | Sudah tidak ambigu | **Diperbarui 2026-10-15 (clarify 4)**: Admin = **kelola penuh** — menggantikan keputusan "administratif read-only" 2026-10-12; catatan matriks + revisi spec disesuaikan |
 | R2 | Modul WAD (`/activities`, `/workload`) belum ada di matriks — FR-03 mewajibkan baris matriks sebelum akses | Kepatuhan matriks | **Open item O5** (plan 001, 2026-10-12): usulan baris "Aktivitas & workload — semua peran: lihat"; diputuskan bersama project Tania WAD Integration (TAN-96+); tidak memblokir plan ini |
 | R3 | Branch spec `agent/cobra/9e2ad56b14ef` belum ter-merge | Folder spec terbelah | R0 mewajibkan merge lebih dulu |
 | R4 | Penghapusan field dashboard = perubahan kontrak destruktif | Contract test | Dua fase (§9 R3.1): FE berhenti query → hapus field + test |
 | R5 | Interplay pengelolaan-talent (kontrak aktif sebagai sumber cakupan; FR-09 Entra) | Perubahan antarmuka | Antarmuka `ChapterScope` tidak berubah; **gerbang penerimaan**: US4-4 (kontrak aktif berpindah) dieksekusi setelah workstream ter-merge — iterasi ini FR-18 diterima sampai antarmuka helper + isolasi data (US4-1/2/3/5); catatan status ditambahkan ke FR-18 spec (amandemen 2026-10-12) |
-| R6 | Hierarki `atLeast()` FE menyimpang dari matriks | Gating UI salah untuk Admin | R2.1 set peran eksplisit per modul |
+| R6 | Hierarki `atLeast()` FE menyimpang dari matriks; `nav.ts` tak lagi memakai `MODULE_ROLES` (TAN-178) | Gating UI tak konsisten dgn `matrix.ts`/server | R2.1 set peran eksplisit per modul + **R6.1/R6.4** sinkronkan `nav.ts` dengan matriks Admin-kelola-penuh |
 | R7 | Talent "lihat miliknya" (Assignment) — permukaan UI | Ekspektasi fitur | **Selesai 2026-10-12** (pemetaan submenu TAN-144 + keputusan F3 plan 001): Talent membaca miliknya di halaman Assignment (server `ForEmployee` sudah mendukung); nav Admin dihapus sesuai matriks |
 | R8 | Angka rate limit | Ambang kepatuhan | **Terkunci** (klarifikasi TAN-144): 10 kegagalan / 15 menit / sumber — `LOGIN_RATE_MAX=10`, `LOGIN_RATE_WINDOW=15m` (default existing, env-tunable) |
+| R9 | Clarify 4 (Admin kelola penuh) membalik clarify 1 & keputusan 2026-10-12; modul IDP/Evaluation tetap ditunda **as is** | Perubahan otorisasi permanen; menu IDP/Evaluation masih tampil di FE padahal server menolak | Diputuskan pemilik produk (2026-10-15, TAN-212); spec + plan diamandemen; sel FE/BE diselaraskan via **R6**; gap IDP/Evaluation dicatat sebagai utang yang disengaja (§14) |
 
 ### Constitution Check
 
@@ -407,7 +433,38 @@ mengikat. Pemeriksaan:
 
 ## 13. Milestone Artefak
 
-- `specs/002-tania-rbac/plan.md` — di-mirror byte-identik ke kedua repo (pola TAN-141).
+- `specs/002-tania-rbac/plan.md` — di-mirror byte-identik ke kedua repo (pola TAN-141);
+  **revisi 2026-10-15** menambahkan gelombang **R6 — Admin kelola penuh** (clarify 4,
+  TAN-212).
 - Berikutnya: `/speckit.tasks` (project **Tania RBAC**) — urutan task mengikuti §9,
   task UI tetap tercatat di `tasks.md` backend (keputusan "opsi C" plan Foundation).
 - Runbook reaktivasi modul ditunda (R5) — bagian dari penutupan.
+
+---
+
+## 14. Amandemen 2026-10-15 (clarify 4) — Admin kelola penuh
+
+**Keputusan pemilik produk (TAN-212)**: Admin berwenang **kelola penuh** pada seluruh
+modul aktif; modul bertanda \* (IDP, evaluasi performa, periode & template) **tetap
+ditunda as is**. Ini membalik clarify 1 (Assignment: Admin "—") dan menggantikan
+keputusan "administratif read-only" 2026-10-12, serta menyesuaikan spec.md + checklist.
+
+| # | Delta | Berkas | Test |
+| --- | --- | --- | --- |
+| R6.1 | FE gating: +Admin pada `assignments`, `entra`, `cv`; `MANAGE_ROLES` +Admin utk `employees` & `assignments` | `src/lib/auth/matrix.ts` | `matrix.test.ts` per sel |
+| R6.2 | BE: +`RoleAdmin` pada gate Assignment (baca + mutasi), Kontrak (baca + mutasi), Entra | `internal/usecase/assignment.go`, `contract.go`, `entra.go` | tabel matriks per sel |
+| R6.3 | BE: +`RoleAdmin` pada CV (`ProfileFor`/`Upsert`) & operasi kelola Data karyawan (`Create`/`Update`) | `internal/usecase/cv.go`, `employee.go` | tabel matriks per sel |
+| R6.4 | FE nav: tampilkan **Provisi Entra** & **CV** untuk Admin; entri `idp`/`evaluations` dibiarkan as is | `src/components/Sidebar/nav.ts` | sidebar render per peran |
+| R6.5 | UAT: matriks per sel + e2e 4 peran (Admin membuka tiap modul aktif) | e2e Playwright | — |
+
+**Kasus semantik**: "CV milik saya" dan "Evaluasi Saya" adalah konsep personal — Admin
+tidak punya karyawan sendiri. Admin mengakses CV lewat `ProfileFor`/daftar talent;
+menu "Evaluasi Saya" tetap hanya Talent (modul evaluasi juga masih ditunda).
+
+**Yang sengaja dibiarkan (as is)**: menu IDP & Evaluations tetap tampil di sidebar
+(baseline desain TAN-178) sementara backend menolak dengan FORBIDDEN "modul ditunda".
+Gap ini dicatat sebagai utang yang disengaja sampai pemilik produk memutuskan
+reaktivasi (§4.3).
+
+**Deny-by-default tetap berlaku** (FR-03): baris bertanda \* tetap ditutup untuk semua
+peran, termasuk Admin.
