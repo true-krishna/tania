@@ -266,8 +266,9 @@ test("T029 — Chapter membuka panel asisten dan menerima balasan", async ({ pag
   await page.getByLabel("Pertanyaan untuk asisten").fill(question);
   await page.getByRole("button", { name: "Kirim pertanyaan" }).click();
 
-  // Bubble user tampil optimistis, lalu balasan asisten masuk ke thread.
-  await expect(dialog.getByText(question)).toBeVisible();
+  // Bubble user tampil optimistis — dipilih lewat `data-role`, sebab teks
+  // pertanyaan ini juga muncul sebagai chip contoh statis.
+  await expect(dialog.locator('[data-role="USER"]', { hasText: question })).toBeVisible();
   await expect(dialog.locator('[data-role="ASSISTANT"]').first()).toBeVisible({ timeout: 30_000 });
   await expect(dialog.getByText("Belum terjawab")).toHaveCount(0);
 
