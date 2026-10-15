@@ -48,18 +48,18 @@ function mainNav(page: Page) {
 
 /** Entri sidebar yang wajib tampil (matriks peran & modul, plan §2/R2.2). */
 const NAV_VISIBLE: Record<Role, readonly string[]> = {
-  ADMIN: ["Dashboard", "Aktivitas saya", "Workload", "Employees", "Kontrak", "Assignments", "Provisi Entra", "CV", "Master Data", "Audit"],
+  ADMIN: ["Dashboard", "Aktivitas saya", "Workload", "Data Karyawan", "Kontrak", "Assignments", "Provisi Entra", "CV", "Master Data", "Audit"],
   OPERATION: [
     "Dashboard",
     "Aktivitas saya",
     "Workload",
-    "Employees",
+    "Data Karyawan",
     "Provisi Entra",
     "Kontrak",
     "Assignments",
   ],
-  CHAPTER: ["Dashboard", "Aktivitas saya", "Workload", "Employees", "Assignments", "CV"],
-  TALENT: ["Dashboard", "Aktivitas saya", "Workload", "Employees", "Assignments", "CV"],
+  CHAPTER: ["Dashboard", "Aktivitas saya", "Workload", "Data Karyawan", "Assignments", "CV"],
+  TALENT: ["Dashboard", "Aktivitas saya", "Workload", "Data Karyawan", "Assignments", "CV"],
 };
 
 /** Entri sidebar yang wajib tidak tampil — termasuk modul ditunda (IDP/Evaluasi). */

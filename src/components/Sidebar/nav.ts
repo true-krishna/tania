@@ -47,6 +47,12 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * Evaluations, Master Data) are groups rendered as expandable submenus; the
  * rest are direct links. Visibility is role-scoped at the UI layer — the
  * backend still enforces authorization (FR-16).
+ *
+ * R2.2 (002-tania-rbac): each entry mirrors the role/module matrix. Every
+ * module a role may *read* has a menu entry, even when the page turns out
+ * read-only for that role — Data Karyawan for Chapter (scoped) and Talent
+ * (own record), Assignments for Operation (read-only) and Talent (own history).
+ * IDP & Evaluation entries stay as is (TAN-178 baseline, modules deferred).
  */
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
@@ -57,11 +63,11 @@ export const NAV: readonly NavEntry[] = [
     id: "employee",
     label: "Employee",
     icon: IconUsers,
-    roles: ["CHAPTER", "OPERATION", "ADMIN"],
+    roles: ALL,
     children: [
-      { href: "/employees", label: "Data Karyawan", roles: ["OPERATION", "ADMIN"] },
+      { href: "/employees", label: "Data Karyawan", roles: ALL },
       { href: "/contracts", label: "Kontrak", roles: ["OPERATION", "ADMIN"] },
-      { href: "/assignments", label: "Assignments", roles: ["CHAPTER", "ADMIN"] },
+      { href: "/assignments", label: "Assignments", roles: ALL },
     ],
   },
   { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },

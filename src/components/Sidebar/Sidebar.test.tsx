@@ -37,16 +37,18 @@ describe("Sidebar", () => {
     }
   });
 
-  it("keeps the Employee section scoped to Operation and Admin", () => {
+  it("mirrors the module matrix in the Employee section (R2.2)", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().queryByRole("button", { name: "Employee" })).toBeNull();
-    expect(compactNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
+    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
     talent.unmount();
 
     const chapter = renderSidebar({ role: "CHAPTER" });
     fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
     expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
-    expect(desktopNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
     expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
     chapter.unmount();
 
