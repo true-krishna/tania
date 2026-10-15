@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "codegen": "graphql-codegen --config codegen.ts",
     "generate": "pnpm run codegen",
-    "generate:check": "graphql-codegen --config codegen.ts --check"
+    "generate:check": "graphql-codegen --config codegen.ts --check",
+    "schema:drift": "sh scripts/check-schema-drift.sh"
   },
   "dependencies": {
     "@apollo/client": "^3.14.1",
