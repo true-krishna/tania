@@ -92,12 +92,12 @@ const pageTwo = {
 };
 
 const firstPageMock = {
-  request: { query: EmployeesDocument, variables: { filter: {}, first: 100, after: null } },
+  request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
   result: pageOne,
 };
 
 const nextPageMock = {
-  request: { query: EmployeesDocument, variables: { filter: {}, first: 100, after: "c-2" } },
+  request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: "c-2" } },
   result: pageTwo,
 };
 
@@ -123,6 +123,9 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       </MockedProvider>
     );
 
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /muat berikutnya/i }));
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "-" })).toBeInTheDocument();
   });
@@ -148,7 +151,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       {
         request: {
           query: EmployeesDocument,
-          variables: { filter: { search: "citra" }, first: 100, after: null },
+          variables: { filter: { search: "citra" }, first: 25, after: null },
         },
         result: {
           data: {
@@ -188,7 +191,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       {
         request: {
           query: EmployeesDocument,
-          variables: { filter: { unitId: "u-1", status: "INACTIVE" }, first: 100, after: null },
+          variables: { filter: { unitId: "u-1", status: "INACTIVE" }, first: 25, after: null },
         },
         result: {
           data: {
@@ -224,7 +227,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
   });
 
-  it("auto-fetches the next cursor page to fill the shown page", async () => {
+  it("appends the next page when Muat berikutnya is clicked (speckit §5)", async () => {
     const mocks = [
       unitsMock,
       firstPageMock,
@@ -236,9 +239,13 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       </MockedProvider>
     );
     await screen.findByText("Andi Pratama");
+    expect(screen.queryByText("Eko Prasetyo")).not.toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("button", { name: /muat berikutnya/i }));
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.getByText("Andi Pratama")).toBeInTheDocument();
+    // hasNextPage is false on the last page: the load-more action is gone.
+    expect(screen.queryByRole("button", { name: /muat berikutnya/i })).toBeNull();
   });
 
   it("shows the empty state when no employees are returned", async () => {
@@ -247,7 +254,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
         mocks={[
           unitsMock,
           {
-            request: { query: EmployeesDocument, variables: { filter: {}, first: 100, after: null } },
+            request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
             result: {
               data: {
                 employees: {
