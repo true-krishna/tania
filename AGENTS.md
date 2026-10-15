@@ -47,6 +47,64 @@ docs/agents-branch-naming
 chore/bump-next-version
 ```
 
+# Coding Standards
+
+Follow the principles from Ryan McDermott's Clean Code JavaScript guide.
+
+## Naming
+
+- Use descriptive, searchable names.
+- Avoid abbreviations unless universally understood.
+- Prefer clarity over brevity.
+
+## Functions
+
+- Keep functions focused on a single responsibility.
+- Prefer small functions.
+- Prefer object parameters when a function requires more than 2–3 arguments.
+- Avoid boolean flags that change behavior.
+- Extract complex logic into well-named helpers.
+
+## Control Flow
+
+- Prefer guard clauses and early returns.
+- Avoid deep nesting.
+- Keep conditionals simple and readable.
+
+## Data
+
+- Prefer immutable updates over mutation.
+- Avoid shared mutable state.
+- Use array methods (`map`, `filter`, `reduce`, `some`, `every`) when they improve readability.
+
+## Error Handling
+
+- Throw meaningful errors.
+- Do not silently swallow exceptions.
+- Handle errors at the appropriate boundary.
+
+## React and Next.js
+
+- Components should have a single responsibility.
+- Extract reusable logic into hooks.
+- Prefer Server Components by default.
+- Use Client Components only when interactivity is required.
+- Keep component files focused and reasonably sized.
+
+## Duplication
+
+- Avoid copy-paste code.
+- Extract shared abstractions only when duplication is proven.
+- Do not introduce premature abstractions.
+
+## General
+
+- Prioritize readability over cleverness.
+- Remove dead code and commented-out code.
+- Leave touched code cleaner than you found it.
+- Favor composition over inheritance.
+- Follow existing project conventions unless explicitly refactoring.
+
 # Code Comments
 
 Do not add JSDoc/@param/@returns blocks by default. They are unnecessary noise on components, hooks, and obvious functions.
