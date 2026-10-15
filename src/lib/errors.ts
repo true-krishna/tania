@@ -16,6 +16,11 @@ export const ERROR_CODES = [
   "CONFLICT",
   "PRECONDITION_FAILED",
   "RATE_LIMITED",
+  // Kode modul asisten (FR-13/FR-11). Dipisahkan dari RATE_LIMITED login agar
+  // panel dapat memperlakukan penolakan kuota sebagai keadaan tersendiri.
+  "CHAT_RATE_LIMITED",
+  "CHAT_FAILED",
+  "CHAT_NOT_CONFIGURED",
   "INTERNAL",
 ] as const;
 
@@ -34,6 +39,9 @@ export const ERROR_LABEL: Record<ErrorCode, string> = {
   CONFLICT: "Data sudah ada atau bertentangan.",
   PRECONDITION_FAILED: "Aturan bisnis belum terpenuhi.",
   RATE_LIMITED: "Terlalu banyak permintaan. Silakan coba lagi.",
+  CHAT_RATE_LIMITED: "Batas pertanyaan per jam tercapai. Coba lagi nanti.",
+  CHAT_FAILED: "Asisten gagal menjawab, coba lagi.",
+  CHAT_NOT_CONFIGURED: "Asisten belum dikonfigurasi.",
   INTERNAL: "Terjadi kesalahan. Silakan coba lagi.",
 };
 
@@ -65,6 +73,9 @@ export function mapErrorBehavior(code: ErrorCode): ErrorBehavior {
     case "CONFLICT":
     case "PRECONDITION_FAILED":
     case "RATE_LIMITED":
+    case "CHAT_RATE_LIMITED":
+    case "CHAT_FAILED":
+    case "CHAT_NOT_CONFIGURED":
     case "INTERNAL":
       return { kind: "action" };
   }
@@ -89,6 +100,19 @@ export function errorField(error: ApolloError | null | undefined): string | null
   for (const gqlError of error?.graphQLErrors ?? []) {
     const field = gqlError.extensions?.field;
     if (typeof field === "string" && field) return field;
+  }
+  return null;
+}
+
+/**
+ * Wait time the server attached to an assistant quota refusal (FR-13), from
+ * `extensions.retryAfterSeconds`. Null when the error carries none, so the
+ * caller can tell "the window ends in N seconds" from "unknown".
+ */
+export function errorRetryAfterSeconds(error: ApolloError | null | undefined): number | null {
+  for (const gqlError of error?.graphQLErrors ?? []) {
+    const seconds = Number(gqlError.extensions?.retryAfterSeconds);
+    if (Number.isFinite(seconds) && seconds > 0) return seconds;
   }
   return null;
 }

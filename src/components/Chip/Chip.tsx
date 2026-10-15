@@ -9,7 +9,12 @@ import { cn } from "@/lib/cn";
 export type ChipVariant = "neutral" | "info" | "success" | "warning" | "danger";
 export type ChipSize = "small" | "medium" | "large";
 
-const VARIANTS: Record<ChipVariant, string> = {
+/**
+ * Treatment class per variant, exported so a non-`Chip` element (e.g. the
+ * assistant's suggestion buttons) can carry the same tokens instead of copying
+ * them — one owner per variant value (constitution design §IX, T047).
+ */
+export const CHIP_VARIANTS: Record<ChipVariant, string> = {
   info: "bg-tp-tint-info text-tp-ink-info",
   success: "bg-tp-tint-mint text-tp-ink-mint",
   warning: "bg-tp-tint-sun text-tp-ink-sun",
@@ -50,7 +55,7 @@ export function Chip({
       className={cn(
         "inline-flex items-center rounded-full font-semibold",
         SIZES[size],
-        VARIANTS[variant],
+        CHIP_VARIANTS[variant],
         className,
       )}
     >

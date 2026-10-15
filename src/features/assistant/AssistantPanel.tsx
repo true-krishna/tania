@@ -14,8 +14,9 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { useToast } from "@/components/Toast";
 import { cn } from "@/lib/cn";
+import { CHIP_VARIANTS } from "@/components/Chip/Chip";
 import { useSessionRole } from "@/lib/auth/guard";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, errorRetryAfterSeconds, graphQLErrorCode } from "@/lib/errors";
 
 /** Batas panjang pesan (FR-10) — konstanta kontrak, bukan env. */
 export const CHAT_MAX_LENGTH = 2000;
@@ -193,6 +194,12 @@ export function AssistantPanel({
   const [selectedId, setSelectedId] = React.useState<string | null | undefined>(undefined);
   const [draft, setDraft] = React.useState("");
   const [pending, setPending] = React.useState<Record<string, PendingSend[]>>({});
+  // Penolakan kuota per jam (FR-13) bukan sekadar toast: selama jendela belum
+  // bergeser, kirim dinonaktifkan dan tombol "coba ulang" disembunyikan —
+  // mengulang sekarang hanya akan ditolak lagi (kontrak chat §Kontrak error).
+  const [quota, setQuota] = React.useState<{ message: string; retryAfterSeconds: number } | null>(
+    null,
+  );
 
   const conversations = useQuery(ChatConversationsDocument, {
     skip: !open || !assistantRole,
@@ -219,6 +226,13 @@ export function AssistantPanel({
   }, [open, assistantRole]);
 
   // Percakapan terbaru dimuat otomatis agar riwayat langsung tampil.
+
+  const quotaWaitMs = (quota?.retryAfterSeconds ?? 0) * 1000;
+  React.useEffect(() => {
+    if (!quota) return;
+    const timer = window.setTimeout(() => setQuota(null), Math.max(quotaWaitMs, 1000));
+    return () => window.clearTimeout(timer);
+  }, [quota, quotaWaitMs]);
 
   const activePending = activeId ? (pending[activeId] ?? []) : [];
 
@@ -249,6 +263,7 @@ export function AssistantPanel({
           (item) => item.clientRequestId !== clientRequestId,
         ),
       }));
+      setQuota(null);
       // Percakapan yang sudah tampil perlu dimuat ulang agar balasan server
       // masuk; percakapan yang baru dibuat termuat sendiri saat aktif.
       if (conversationId === activeId) await messages.refetch();
@@ -261,7 +276,18 @@ export function AssistantPanel({
             : item,
         ),
       }));
-      pushToast("error", errorMessage(error as ApolloError, "Asisten gagal menjawab. Silakan coba lagi."));
+      const apolloError = error as ApolloError;
+      if (graphQLErrorCode(apolloError) === "CHAT_RATE_LIMITED") {
+        setQuota({
+          message: errorMessage(apolloError, "Batas pertanyaan per jam tercapai."),
+          retryAfterSeconds: errorRetryAfterSeconds(apolloError) ?? 0,
+        });
+        return;
+      }
+      pushToast(
+        "error",
+        errorMessage(apolloError, "Asisten gagal menjawab. Silakan coba lagi."),
+      );
     }
   }
 
@@ -364,10 +390,10 @@ export function AssistantPanel({
                       onClick={() => setSelectedId(conversation.id)}
                       aria-current={conversation.id === activeId ? "true" : undefined}
                       className={cn(
-                        "tp-chip border border-tp-line",
+                        "tp-chip",
                         conversation.id === activeId
-                          ? "bg-tp-brand-red-tint text-tp-brand-red-ink"
-                          : "bg-tp-bg text-tp-muted",
+                          ? "border border-tp-line bg-tp-brand-red-tint text-tp-brand-red-ink"
+                          : CHIP_VARIANTS.neutral,
                       )}
                     >
                       {conversation.messageCount} pesan
@@ -402,15 +428,17 @@ export function AssistantPanel({
                     {unanswered.some((item) => item.id === message.id) && (
                       <div className="mt-2 flex items-center gap-2 text-xs text-tp-ink-peach">
                         <span>Belum terjawab</span>
-                        <Button
-                          variant="secondary"
-                          className="text-xs"
-                          onClick={() =>
-                            void deliver(activeId!, message.content, message.clientRequestId!)
-                          }
-                        >
-                          Coba ulang
-                        </Button>
+                        {!quota && (
+                          <Button
+                            variant="secondary"
+                            className="text-xs"
+                            onClick={() =>
+                              void deliver(activeId!, message.content, message.clientRequestId!)
+                            }
+                          >
+                            Coba ulang
+                          </Button>
+                        )}
                       </div>
                     )}
                   </Bubble>
@@ -421,13 +449,17 @@ export function AssistantPanel({
                     {item.status === "failed" && (
                       <div className="mt-2 flex items-center gap-2 text-xs text-tp-ink-peach">
                         <span>Belum terkirim</span>
-                        <Button
-                          variant="secondary"
-                          className="text-xs"
-                          onClick={() => void deliver(activeId!, item.content, item.clientRequestId)}
-                        >
-                          Coba ulang
-                        </Button>
+                        {!quota && (
+                          <Button
+                            variant="secondary"
+                            className="text-xs"
+                            onClick={() =>
+                              void deliver(activeId!, item.content, item.clientRequestId)
+                            }
+                          >
+                            Coba ulang
+                          </Button>
+                        )}
                       </div>
                     )}
                   </Bubble>
@@ -435,6 +467,11 @@ export function AssistantPanel({
                 {busy && (
                   <p role="status" className="text-xs text-tp-muted">
                     Asisten sedang menyusun jawaban…
+                  </p>
+                )}
+                {quota && (
+                  <p role="status" className="text-xs text-tp-ink-peach">
+                    {quota.message}
                   </p>
                 )}
               </div>
@@ -449,7 +486,7 @@ export function AssistantPanel({
                   key={question}
                   type="button"
                   onClick={() => setDraft(question)}
-                  className="tp-chip border border-tp-line bg-tp-bg text-left text-tp-muted"
+                  className={cn("tp-chip", CHIP_VARIANTS.neutral, "text-left")}
                 >
                   {question}
                 </button>
@@ -480,7 +517,7 @@ export function AssistantPanel({
             />
             <Button
               onClick={() => void handleSend()}
-              disabled={busy || !draft.trim() || overLimit}
+              disabled={busy || !!quota || !draft.trim() || overLimit}
               aria-label="Kirim pertanyaan"
             >
               <IconSend size={16} aria-hidden />
