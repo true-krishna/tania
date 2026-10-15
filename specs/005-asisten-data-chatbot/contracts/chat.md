@@ -54,16 +54,25 @@ type Mutation {
   """Mulai percakapan baru milik pemanggil."""
   createChatConversation: ChatConversation!
   """Kirim pesan user; sinkron; mengembalikan PESAN ASISTEN hasil grounding.
-     Pesan USER tersimpan otomatis sebelum pemanggilan model."""
-  sendChatMessage(conversationId: ID!, content: String!): ChatMessage!
+     Pesan USER tersimpan sebelum pemanggilan model; kirim ulang dengan
+     clientRequestId yang sama bersifat idempoten (tidak menggandakan pesan)."""
+  sendChatMessage(conversationId: ID!, content: String!, clientRequestId: ID!): ChatMessage!
 }
 ```
+
+### Idempotensi kirim (S2)
+
+Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER identik** di riwayat (dan di jendela konteks 12 pesan). Kontraknya:
+
+- Klien membuat `clientRequestId` (UUID) **sekali per kiriman user** dan memakai id yang sama saat "coba ulang" (bukan id baru per percobaan).
+- Server: bila di percakapan itu **sudah ada** pesan USER dengan `clientRequestId` sama → pesan itu **dipakai ulang** (tidak insert baru), lalu pemrosesan jawaban dijalankan; bila belum ada → insert pesan USER baru, lalu proses. Unik parsial `(conversation_id, client_request_id)` menjaga ini di level DB.
+- Efek yang diharapkan: retry tidak menambah pesan, tidak menggeser jendela konteks, dan tidak menambah biaya context; `clientRequestId` yang sama di percakapan lain = pesan yang berbeda (unik per percakapan).
 
 ## Otorisasi (FR-01/FR-02/FR-06)
 
 - **Seluruh operasi chat**: `RequireRole(identity, RoleChapter, RoleOperation)` — **Admin & Talent ditolak pada MVP** (NC-03; FR-01: panel tidak tersedia bagi peran lain).
 - **Kepemilikan**: setiap baca/tulis percakapan difilter `WHERE user_id = pemanggil`; percakapan orang lain (termasuk milik Admin dibaca Chapter, dsb.) → `NOT_FOUND`, bukan `FORBIDDEN` (anti-enumerasi, pola `internal/usecase/scope.go`). **Tanpa pengecualian Admin** (FR-02 verbatim).
-- **Kueri data oleh asisten**: tool memanggil usecase domain existing dengan `domain.Identity` penanya — otorisasi & cakupan chapter-as-data diwariskan, **matriks RBAC tanpa amandemen**. UI guard (`CHAPTER/OPERATION`) hanya kenyamanan.
+- **Kueri data oleh asisten**: tool memanggil usecase domain dengan `domain.Identity` penanya. Baca *single-record* ber-cakupan diwarisi apa adanya (`EmployeeService.Get`); baca *daftar* ber-cakupan chapter **ditambahkan** di lapisan usecase (gate `RequireRole(Chapter, Operation)`) karena baca daftar existing bersifat Operation/Admin-only — **matriks RBAC tanpa amandemen** karena tidak ada permukaan GraphQL baru. UI guard (`CHAPTER/OPERATION`) hanya kenyamanan.
 - Read-only: tidak ada tool/mutasi tulis data bisnis (FR-08). Satu-satunya penulisan adalah percakapan milik pemanggil.
 
 ## Kontrak error
@@ -74,21 +83,24 @@ type Mutation {
 | `content` kosong / > 2.000 karakter | Ditolak **sebelum** pemanggilan model (tidak memicu pemakaian token) | `maxLength` input + pesan "Maksimal 2.000 karakter."; tidak ada bubble baru |
 | `conversationId` bukan milik pemanggil / tidak ada | `NOT_FOUND` | Toast error; panel tetap pada daftar percakapan miliknya |
 | `AI_PROVIDER_*` belum dikonfigurasi | Kegagalan eksplisit "asisten belum dikonfigurasi" | Pesan gagal ramah di thread (FR-11) |
-| Provider model gagal/timeout/putaran tool habis | Tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (FR-11) | Bubble gagal + tombol coba ulang; tidak ada angka yang ditampilkan |
+| Provider model gagal/timeout/putaran tool habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (FR-11) | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; tidak ada angka yang ditampilkan |
+| `clientRequestId` hilang/bukan UUID | Ditolak sebelum menyentuh model | — |
 | Pertanyaan di luar domain Tania (FR-12) | Model diarahkan system prompt menolak sopan + menjelaskan cakupan | Ditampilkan sebagai jawaban biasa |
 
 ## Toolset data (read-only; diekspos ke model, bukan ke klien)
 
 Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (NIK hanya `nikMasked`; tanpa field keamanan/akun; tanpa data domain di luar MVP — assignment/IDP/evaluasi/CV/master data/workload tidak diekspos pada MVP).
 
-| Tool | Parameter | Mengadaptasi (existing) | Catatan |
+| Tool | Parameter | Sumber data (dengan identitas penanya) | Catatan |
 | --- | --- | --- | --- |
-| `ringkas_data` | — | komposisi `EmployeeService.List` + `ContractService.Expiring/NeedingFollowUp` | Snapshot agregat sesuai peran: jumlah karyawan aktif (cakupan), kontrak segera berakhir (≤90 hari), perlu tindak lanjut, distribusi per unit (Operation) — satu sumber angka untuk US2 |
-| `cari_karyawan` | `search`, `unitId?`, `jobRoleId?`, `status?` | `EmployeeService.List` | Hasil dibatasi (≤25 baris) + indikator ada-lagi |
-| `detail_karyawan` | `employeeId` | `EmployeeService.Get` | `NOT_FOUND` untuk di luar cakupan (anti-enumerasi existing) |
-| `kontrak_segera_berakhir` | `days?` (default 90, maks 180) | `ContractService.Expiring` | Jendela FR-40 |
-| `karyawan_perlu_tindak_lanjut` | — | `ContractService.NeedingFollowUp` | Kontrak habis tanpa perpanjangan (US10 induk) |
-| `karyawan_data_belum_lengkap` | — | metode baca baru (NULL-check field opsional; lihat `data-model.md`) | Satu-satunya penambahan baca |
+| `ringkas_data` | — | angka dashboard existing (`DashboardService.For`) + agregat kontrak ber-cakupan | Snapshot agregat sesuai peran: jumlah karyawan aktif (cakupan), kontrak segera berakhir (≤90 hari), perlu tindak lanjut, distribusi per unit (Operation) — satu sumber angka untuk US2; angka yang sudah ada di dashboard diambil dari sana agar FR-29/FR-30 konsisten by construction |
+| `cari_karyawan` | `search`, `unitId?`, `jobRoleId?`, `status?` | daftar/pencarian karyawan **ber-cakupan** (Chapter) / `EmployeeService.List` (Operation) | Hasil dibatasi (≤25 baris) + indikator ada-lagi |
+| `detail_karyawan` | `employeeId` | `EmployeeService.Get` (sudah ber-cakupan) | `NOT_FOUND` untuk di luar cakupan (anti-enumerasi existing) |
+| `kontrak_segera_berakhir` | `days?` (default 90, maks 180) | kontrak **ber-cakupan** (`ScopeChapterID`) untuk Chapter / `ContractService.Expiring` untuk Operation | Jendela FR-40 |
+| `karyawan_perlu_tindak_lanjut` | — | `EmployeesNeedingFollowUp` + scope chapter untuk Chapter | Kontrak habis tanpa perpanjangan (US10 induk) |
+| `karyawan_data_belum_lengkap` | — | baca baru ber-cakupan (NULL-check field opsional; lihat `data-model.md`) | Penambahan baca bersama dua lainnya |
+
+**Batas yang dijaga (R-11)**: baca ber-cakupan chapter hidup di lapisan usecase/repository dan **tidak** diekspos sebagai query/mutation GraphQL. Bila diekspos, Chapter akan memperoleh permukaan `employmentContracts`/`expiringContracts` milik Operation — itu amandemen matriks RBAC. `ScopeChapterID` hanya diisi server dari identitas pemanggil; resolver `employmentContracts(filter:)` tidak memetakan nilai dari klien ke field ini.
 
 **Protokol loop** (diegakkan usecase, bukan harapan prompt): maksimum 5 putaran tool per jawaban; setiap hasil tool diberi label sumber + `fetchedAt` (dasar FR-05); jawaban final wajib memuat sumber & waktu data; tool error → dilaporkan ke model sebagai kegagalan (jawaban jujur, bukan konjektur).
 
@@ -105,7 +117,7 @@ Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (N
 - Panel asisten: akses dari dashboard + bubble melayang dari halaman lain; hanya dirender untuk `CHAPTER`/`OPERATION`.
 - Daftar percakapan milik user + tombol "Percakapan baru"; memilih percakapan memuat riwayat (`chatMessages`).
 - Chip pertanyaan contoh **per peran** (statis di frontend, dipetakan ke toolset yang benar-benar tersedia) — contoh Chapter & Operation berbeda sesuai cakupan.
-- Input: `maxLength` 2.000 + penghitung; kirim dinonaktifkan saat menunggu balasan; state gagal ramah dengan coba ulang.
+- Input: `maxLength` 2.000 + penghitung; kirim dinonaktifkan saat menunggu balasan; state gagal ramah dengan coba ulang yang mengirim ulang `clientRequestId` yang sama (idempoten).
 - Seluruh teks UI Bahasa Indonesia; komponen memakai TANIA Pulse (`Card`, `Button`, `Input`, `DataState`, `Toast`); tombol buka asisten memakai peran aksen merah brand "AI actions" (`--tp-brand-red`).
 
 ## Referensi
@@ -113,5 +125,5 @@ Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (N
 - SDL & resolver (setelah implementasi): `tania-backend/graph/schema.graphqls`, `graph/schema.resolvers.go`.
 - Usecase & otorisasi: `internal/usecase/chat.go`, `internal/usecase/chat_tools.go`, `internal/usecase/authz_test.go`, `internal/usecase/scope.go`.
 - Gateway: `internal/platform/llm/openai.go`; konfigurasi: `internal/config/config.go`.
-- Usecase yang diadaptasi: `internal/usecase/employee.go`, `internal/usecase/contract.go`, `internal/usecase/dashboard.go`.
+- Usecase & baca ber-cakupan: `internal/usecase/employee.go`, `internal/usecase/contract.go`, `internal/usecase/dashboard.go`; perluasan filter internal `domain.ContractFilter.ScopeChapterID` di `internal/domain/contract.go`; repository `internal/repository/postgres/employee.go` (`Search` + `scopeChapterID`, `EmployeesNeedingFollowUp`) dan `internal/repository/postgres/contract.go`.
 - Frontend: `src/features/assistant/`, codegen `src/generated/graphql/` (regenerasi wajib).

@@ -2,7 +2,7 @@
 
 **Feature**: `005-asisten-data-chatbot` (TAN-203 · plan TAN-204) · **Date**: 2026-10-14
 
-Dua entitas baru (**ChatConversation**, **ChatMessage**) + satu **penambahan baca** pada data karyawan. Entitas bisnis existing (karyawan, kontrak, assignment, IDP, evaluasi, CV, master data, user/audit) **tidak diubah** — asisten hanya membaca melalui usecase ber-otorisasi (kontrak spec, Out of Scope: "Perubahan matriks RBAC atau skema entitas bisnis yang ada").
+Dua entitas baru (**ChatConversation**, **ChatMessage**) + **tiga penambahan baca ber-cakupan chapter** (daftar karyawan, kontrak segera berakhir, kelengkapan data diri). Entitas bisnis existing (karyawan, kontrak, assignment, IDP, evaluasi, CV, master data, user/audit) **tidak diubah** — asisten hanya membaca melalui usecase ber-otorisasi (kontrak spec, Out of Scope: "Perubahan matriks RBAC atau skema entitas bisnis yang ada").
 
 ## ChatConversation — percakapan asisten
 
@@ -27,8 +27,9 @@ Dua entitas baru (**ChatConversation**, **ChatMessage**) + satu **penambahan bac
 | `inputTokens` / `outputTokens` | int / `int NOT NULL DEFAULT 0` | Pemakaian token per pesan asisten (FR-10/US6) — bahan laporan biaya; 0 untuk pesan user |
 | `sources` | jsonb / `jsonb` | Rujukan sumber jawaban asisten: daftar `{tool, params, rowCount, fetchedAt}` — audit kualitas jawaban (US5 skenario 4); **tidak** menambah permukaan baca bagi peran lain (hanya pemilik, lewat percakapannya) |
 | `createdAt` | time / `timestamptz` | Waktu pesan |
+| `clientRequestId` | UUID / `client_request_id uuid NULL` | **Idempotensi kirim (S2)**: dikirim klien bersama pesan; `UNIQUE (conversation_id, client_request_id) WHERE client_request_id IS NOT NULL`. Kirim ulang dengan id yang sama (retry UI setelah kegagalan provider) **memakai ulang** pesan `USER` yang sudah tersimpan — tidak membuat duplikat dan tidak menggandakan konteks; `NULL` untuk pesan `ASSISTANT` |
 
-Indeks: `(conversation_id, created_at)` untuk thread; `(user_id, last_message_at)` untuk daftar percakapan; `created_at` untuk job retensi.
+Indeks: `(conversation_id, created_at)` untuk thread; `(user_id, last_message_at)` untuk daftar percakapan; `created_at` untuk job retensi; unik parsial `(conversation_id, client_request_id)` untuk idempotensi kirim.
 
 ## Klasifikasi & kepatuhan data pribadi (konstitusi Prinsip I–IV — deklarasi wajib)
 
@@ -37,14 +38,24 @@ Indeks: `(conversation_id, created_at)` untuk thread; `(user_id, last_message_at
 | Klasifikasi | `chat_messages.content` (kedua arah) dan `chat_conversations` = **data pribadi umum** dengan kandungan potensial: nama karyawan, unit/chapter, tanggal kontrak, NIK **hanya bentuk tersamar** (`nikMasked`, FR-07) — NIK penuh tidak pernah memasuki tabel ini karena tidak pernah keluar dari lapisan domain (R-5 research). `user_id` = penanda teknis pemilik |
 | Lawful basis (Prinsip I) | **Kepentingan sah — pelaksanaan fungsi kepegawaian internal** (pengelolaan data talent oleh Chapter/Operation). Tujuan: menyusun jawaban asisten atas data dalam cakupan pemanggil. Tidak dipakai untuk pelatihan model, profil, atau tujuan lain (purpose limitation) |
 | Pemrosesan oleh provider (Prinsip I/III) | Konten pertanyaan + hasil tool **dikirim ke provider model milik organisasi** (NC-04 — di dalam perimeter internal) untuk menghasilkan balasan; API key dari secret store/env, tidak pernah di-commit/di-log (FR-10). Tidak ada provider pihak ketiga eksternal pada MVP |
-| Retensi (Prinsip IV) | **Proposal: 90 hari sejak pesan terakhir, lalu hapus permanen** percakapan + pesan via job scheduled (pola `runRetentionJob`); setiap run tercatat di audit trail. ⚠️ Angka ini **proposal plan** — perlu persetujuan pemilik produk (Open Item 1 plan) |
+| Retensi (Prinsip IV) | **90 hari sejak pesan terakhir, lalu hapus permanen** percakapan + pesan via job scheduled (pola `runRetentionJob`; aksi **hard delete** — berbeda dari anonimisasi retensi karyawan — dan setiap run tercatat di audit trail). **Disetujui pemilik produk 2026-10-14**; Open Item 1 plan ditutup |
 | Log (Prinsip II/IX) | Log modul chat hanya memuat: ID percakapan, ID user (penanda teknis), jumlah putaran tool, jumlah token, durasi, dan kode error. **Tanpa isi pesan, tanpa nama/NIK/konten tool result** |
 | Hak subjek data (Prinsip IV) | Isi percakapan adalah data pribadi milik user yang bersangkutan: permintaan penghapusan dipenuhi oleh retensi otomatis ≤90 hari; akses/lihat = panel riwayat miliknya sendiri; tidak ada penyaluran ke pihak luar organisasi |
 | DAMP | Pemrosesan dinilai risiko rendah–sedang (provider internal, minimisasi field, retensi pendek); checklist DAMP dijalankan konkret pada gerbang rilis (Open Item 3 plan) |
 
-## Penambahan baca: karyawan dengan data diri belum lengkap
+## Penambahan baca ber-cakupan chapter (koreksi review 2026-10-14)
 
-Contoh pendorong spec ("karyawan siapa yang data dirinya belum lengkap?") belum memiliki kueri existing. Ditambahkan **satu metode baca** di lapisan repository/usecase karyawan (read-only, tanpa perubahan skema/tabel): daftar karyawan (ter-filter cakupan identitas pemanggil) yang memiliki field opsional data diri kosong — kelompok field mengikuti form data diri existing (data pribadi opsional: tanggal lahir, jenis kelamin, telepon, alamat, pendidikan terakhir, institusi, jurusan). Keluaran memakai DTO aman yang sama dengan tool lain. Ini satu-satunya penambahan kemampuan baca; semua tool lain mengadaptasi metode existing.
+Review arsitektur menemukan bahwa klaim plan "tool mengadaptasi usecase existing" tidak berlaku untuk persona utama: `EmployeeService.List` hanya Admin+Operation, `ContractService.List/Get/Expiring/NeedingFollowUp` hanya Operation dan tanpa scope chapter, dan `ChapterDashboard` tidak memuat angka karyawan/kontrak. Tanpa penambahan di bawah, 5 dari 6 tool menolak Chapter dengan `FORBIDDEN` — padahal Chapter persona MVP (US2 AC1, US4 AC1, US5).
+
+Ditambahkan **tiga baca read-only ber-cakupan** (semuanya tanpa perubahan skema/tabel existing, gated `RequireRole(Chapter, Operation)` di usecase, dan **tidak diekspos sebagai query GraphQL** — lihat R-11 untuk alasan matriks RBAC):
+
+1. **Daftar/pencarian karyawan dalam cakupan** — reuse `EmployeeRepository.Search(ctx, filter, scopeChapterID *string, page)` yang sudah ada; `scopeChapterID = nil` untuk Operation, `ChapterScope(identity)` untuk Chapter (`ErrNotFound`/cakupan tak terdefinisi mengikuti perilaku `scope.go`). Memakai DTO aman yang sama dengan tool lain.
+2. **Karyawan perlu tindak lanjut dalam cakupan** — `EmployeesNeedingFollowUp` + parameter scope (`jr.chapter_id`).
+3. **Kontrak segera berakhir dalam cakupan** — perluasan internal `domain.ContractFilter` dengan `ScopeChapterID *string` → clause `jr.chapter_id` (baris kontrak menyimpan `job_role_id`, dan `contractSelect` sudah join job role/chapter). Field ini **hanya diisi server dari identitas pemanggil**; resolver `employmentContracts(filter:)` tidak boleh memetakan nilai dari klien ke field ini (kalau tidak, permukaan Operation-wide bocor ke Chapter = amandemen matriks).
+
+Kelengkapan data diri (contoh pendorong spec "karyawan siapa yang data dirinya belum lengkap?") memakai pola (1): daftar karyawan dalam cakupan yang memiliki field opsional data diri kosong — kelompok field mengikuti form data diri existing (tanggal lahir, jenis kelamin, telepon, alamat, pendidikan terakhir, institusi, jurusan).
+
+Catatan: baca *single-record* ber-cakupan (`EmployeeService.Get`) tetap dipakai apa adanya untuk `detail_karyawan`.
 
 ## Relasi & antarmuka
 
@@ -57,6 +68,8 @@ domain.LLMGateway ◄── platform/llm/openai.go   (OpenAI-compatible endpoint
 
 - `domain.ChatRepository` (interface baru): `CreateConversation`, `ListConversations(userID, page)`, `GetConversation(userID, id)` → `ErrNotFound` bila bukan milik pemanggil, `AppendMessage`, `ListMessages(conversationID, page)`, `DeleteOlderThan(ctx, cutoff) → count` (untuk retensi).
 - `domain.LLMGateway` (interface baru): `Complete(ctx, ChatRequest) (ChatResponse, error)` — request memuat system prompt, riwayat terpotong 12 pesan, definisi toolset, dan hasil tool; response memuat teks jawaban, pemakaian token, dan tool-calls bila ada.
+- Baca ber-cakupan (R-11, semuanya read-only dan **internal** — bukan permukaan GraphQL): daftar/pencarian karyawan dalam cakupan (reuse `EmployeeRepository.Search` + `scopeChapterID`), `EmployeesNeedingFollowUp` + scope, kontrak ber-cakupan via `domain.ContractFilter.ScopeChapterID`, dan daftar karyawan dengan data diri belum lengkap.
+- `domain.ContractFilter` (existing, diperluas **internal**): `+ ScopeChapterID *string` — diisi server dari identitas pemanggil, tidak pernah dari input klien.
 - Transisi status: tidak ada (lihat di atas). Validasi: panjang pesan, kepemilikan, peran — rinci di `contracts/chat.md`.
 
 ## Yang sengaja TIDAK ada
