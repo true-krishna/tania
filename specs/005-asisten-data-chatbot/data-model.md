@@ -25,7 +25,7 @@ Dua entitas baru (**ChatConversation**, **ChatMessage**) + **tiga penambahan bac
 | `role` | enum / `text CHECK` | `USER` atau `ASSISTANT` (enum GraphQL `ChatMessageRole`) |
 | `content` | text | Isi pesan. Pesan `USER` **maks 2.000 karakter** (FR-03/FR-10 — ditolak sebelum menyentuh model); pesan `ASSISTANT` terikat `AI_MAX_OUTPUT_TOKENS` |
 | `inputTokens` / `outputTokens` | int / `int NOT NULL DEFAULT 0` | Pemakaian token per pesan asisten (FR-10/US6) — bahan laporan biaya; 0 untuk pesan user |
-| `sources` | jsonb / `jsonb` | Rujukan sumber jawaban asisten: daftar `{tool, params, rowCount, fetchedAt}` — audit kualitas jawaban (US5 skenario 4); **tidak** menambah permukaan baca bagi peran lain (hanya pemilik, lewat percakapannya) |
+| `sources` | jsonb / `jsonb` | Rujukan sumber jawaban asisten: daftar `{tool, params, rowCount, fetchedAt}` — audit kualitas jawaban (US5 skenario 4); **internal**, tidak diekspos ke GraphQL (klien melihat rujukan dari teks jawaban, FR-05) |
 | `createdAt` | time / `timestamptz` | Waktu pesan |
 | `clientRequestId` | UUID / `client_request_id uuid NULL` | **Idempotensi kirim (S2)**: dikirim klien bersama pesan; `UNIQUE (conversation_id, client_request_id) WHERE client_request_id IS NOT NULL`. Kirim ulang dengan id yang sama (retry UI setelah kegagalan provider) **memakai ulang** pesan `USER` yang sudah tersimpan — tidak membuat duplikat dan tidak menggandakan konteks; `NULL` untuk pesan `ASSISTANT` |
 

@@ -85,6 +85,7 @@ tania-backend/
 └── cmd/api/main.go                 # wiring ChatService + purge percakapan pada job retensi existing
 
 tania-dashboard/
+├── graph/schema.graphqls           # salinan SDL backend = sumber codegen; **disalin ulang** setelah skema chat masuk backend
 ├── src/features/assistant/
 │   ├── assistant.graphql           # dokumen GraphQL (query riwayat, mutation kirim)
 │   ├── AssistantPanel.tsx          # panel chat (riwayat, chip, input ≤2000, state muat/gagal)
@@ -116,7 +117,7 @@ tania-dashboard/
 | --- | --- | --- |
 | US1 — panel + riwayat (P1) | Frontend panel & bubble + `chatConversations`/`chatMessages`/`createChatConversation` | Riwayat persist di PostgreSQL per user; role gate UI `CHAPTER/OPERATION` + server |
 | US2 — ringkasan cakupan (P1) | Tool `ringkas_data` (snapshot agregat karyawan & kontrak sesuai peran) | Angka yang sudah ada di dashboard diambil dari `DashboardService.For(identity)`/`DashboardRepository` (FR-29/FR-30 konsisten by construction — S3); agregat kontrak (belum ada di dashboard, juga tidak untuk Chapter) dari baca ber-cakupan D9 |
-| US3 — tanya data faktual (P1) | Tool `cari_karyawan`, `detail_karyawan`, `kontrak_segera_berakhir`, `karyawan_perlu_tindak_lanjut` | Mapper tipis di atas usecase existing + baca ber-cakupan D9 untuk Chapter (baca kontrak existing menolak Chapter); hasil dibatasi (page size kecil) & diproyeksikan aman |
+| US3 — tanya data faktual (P1) | Tool `cari_karyawan`, `detail_karyawan`, `kontrak_segera_berakhir`, `karyawan_perlu_tindak_lanjut` | Mapper tipis di atas usecase existing + baca ber-cakupan D9 untuk Chapter (baca kontrak existing menolak Chapter); jendela kontrak mengikuti FR-40 (default 90 hari, maks 180); hasil dibatasi (page size kecil) & diproyeksikan aman |
 | US4 — otorisasi & privasi (P1) | Semua tool berjalan dengan `domain.Identity` penanya; privasi percakapan di repo/usecase | `ChapterScope` + `RequireRole` existing + gate `RequireRole(Chapter, Operation)` pada baca D9; test lintas-cakupan (dua chapter) & anti-baca lintas user; NIK hanya `nikMasked` keluar dari lapisan domain (FR-07) |
 | US5 — rekomendasi tekstual (P2) | System prompt: rekomendasi selalu dirujuk ke dasar data + berlabel saran + arahkan ke modul; read-only dipaksa arsitektur (tidak ada tool tulis) | FR-09 opsi (a); kegagalan grounding diuji (data tidak cukup → jujur) |
 | US6 — guardrail biaya (P2) | Penolakan >2.000 karakter sebelum memanggil model; konteks 12 pesan; pencatatan token per pesan | D6; FR-10; penolakan tidak memicu pemakaian model (diuji) |
@@ -153,7 +154,7 @@ Otorisasi berlaku di usecase (`RequireRole(Chapter, Operation)` untuk seluruh op
 | --- | --- | --- |
 | **K0 — Verifikasi provider (prasyarat, ±0,5 jam)** | `GET {base}/models` pada endpoint pemilik → enumerasi model, tetapkan `AI_PROVIDER_MODEL` hemat; probe tool calling (`quickstart.md` §A); bila tool calling tidak didukung → lapor ke pemilik beserta dampaknya **sebelum** menulis kode | Open Item 2 |
 | **K1 — Fondasi backend** | Migrasi 2 tabel (termasuk `client_request_id`); domain/usecase/repo chat; **3 baca ber-cakupan (D9)**; resolver + skema + regenerasi gqlgen; config env; gateway OpenAI-compatible; toolset & loop; idempotensi kirim; authz/security/e2e test | US4, US6, FR-02/06/10/11 |
-| **K2 — Frontend** | Codegen; `features/assistant` (panel, bubble, chips, riwayat, guard role); pasang di app shell; Vitest/RTL; e2e Playwright | US1, FR-01/03/05/12 |
+| **K2 — Frontend** | Salin ulang `graph/schema.graphqls` dari backend (prosedur codegen README) → codegen; `features/assistant` (panel, bubble, chips, riwayat, guard role); pasang di app shell; Vitest/RTL; e2e Playwright | US1, FR-01/03/05/12 |
 | **K3 — End-to-end & UAT** | UAT dengan provider organisasi yang sudah diverifikasi di K0; skenario quickstart; pengukuran token & biaya sampel; checklist acceptance | SC-001–SC-004 |
 
 Estimasi: K1 ±2–2,5 hari; K2 ±1,5–2 hari; K3 ±0,5–1 hari. Rincian task menyusul pada `/speckit.tasks`.
@@ -181,3 +182,4 @@ Estimasi: K1 ±2–2,5 hari; K2 ±1,5–2 hari; K3 ±0,5–1 hari. Rincian task 
 | R5 | Kebocoran privasi percakapan (lintas user/peran) | Pelanggaran FR-02 | Kepemilikan di WHERE query + uji Admin/Chapter lain → ditolak; anti-enumerasi `ErrNotFound` |
 | R6 | Biaya meledak dari pemakaian berlebih | FR-10 | Batas panjang & token & putaran; token tercatat per pesan untuk pelaporan; kenaikan batas = persetujuan pemilik; rate limit per user (Open Item 4e) |
 | R7 | Retry setelah kegagalan provider menggandakan pesan user (riwayat & jendela konteks kotor, biaya ganda) | Kualitas riwayat, biaya | Idempotensi `clientRequestId` pada `sendChatMessage` (S2, `contracts/chat.md`); diuji di e2e |
+| R8 | Salinan `graph/schema.graphqls` di frontend tertinggal dari backend, sehingga codegen K2 melewatkan tipe chat — atau sebaliknya, penyalinan ikut membawa drift skema lama dan menghasilkan diff generated tak terkait | Task K2 ambigu/gagal `generate:check` | K2 diawali **salin ulang SDL** (prosedur README) + review diff generated; drift lama yang ikut terbawa dicatat sebagai perubahan terpisah, bukan disembunyikan |
