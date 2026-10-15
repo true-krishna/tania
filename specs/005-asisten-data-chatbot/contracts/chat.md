@@ -119,6 +119,8 @@ Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (N
 - Chip pertanyaan contoh **per peran** (statis di frontend, dipetakan ke toolset yang benar-benar tersedia) — contoh Chapter & Operation berbeda sesuai cakupan.
 - Input: `maxLength` 2.000 + penghitung; kirim dinonaktifkan saat menunggu balasan; state gagal ramah dengan coba ulang yang mengirim ulang `clientRequestId` yang sama (idempoten).
 - Seluruh teks UI Bahasa Indonesia; komponen memakai TANIA Pulse (`Card`, `Button`, `Input`, `DataState`, `Toast`); tombol buka asisten memakai peran aksen merah brand "AI actions" (`--tp-brand-red`).
+- Aksesibilitas (design constitution §VI): panel & bubble sepenuhnya operable via keyboard — membuka panel memindahkan fokus ke input, `Escape` menutup panel kembali ke pemicunya, fokus selalu terlihat (token fokus `--tp-brand-red`), state memakai ARIA/teks bukan warna saja, dan animasi menghormati `prefers-reduced-motion`.
+- Bentuk & responsif: panel = overlay di sisi kanan di atas app shell (bukan halaman terpisah — sesuai FR-01 "tertanam"); pada breakpoint lipat app shell ≤860px (Design §VIII) panel menjadi overlay selebar viewport. Renderer jawaban merender teks React (bold `**…**`, daftar, baris baru) — **tanpa raw HTML** dari keluaran model (keluaran model bukan teks tepercaya).
 
 ## Referensi
 

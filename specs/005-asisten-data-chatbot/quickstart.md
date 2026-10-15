@@ -42,7 +42,7 @@ pnpm generate:check  # codegen sinkron dengan schema.graphqls
 
 Login sebagai **Chapter** (chapter A berisi data seed).
 
-1. **Panel & chip (US1)** — dari dashboard, buka panel asisten. Harapan: panel terbuka, teks UI Bahasa Indonesia, chip contoh sesuai peran Chapter.
+1. **Panel & chip (US1)** — dari dashboard, buka panel asisten (sekali via mouse, sekali via keyboard; tutup dengan `Escape`). Harapan: panel terbuka, teks UI Bahasa Indonesia, chip contoh sesuai peran Chapter, fokus terlihat.
 2. **Pertanyaan pertama (US2)** — kirim "Ringkas kondisi karyawan dan kontrak di cakupan chapter saya". Harapan: ringkasan berisi **angka bold** yang **identik** dengan dashboard/layar modul, menyebut sumber & waktu data (FR-05); selesai < 30 detik (SC-001).
 3. **Data faktual (US3)** — kirim "Siapa saja yang kontraknya berakhir dalam 90 hari?". Harapan: daftar/jumlah **tepat** sesuai modul kontrak; NIK (bila tampil) hanya 4 digit akhir tersamar (FR-07).
 4. **Rekomendasi (US5)** — kirim "Karyawan mana yang perlu diprioritaskan untuk perpanjangan kontrak?". Harapan: saran berlabel eksplisit sebagai rekomendasi, setiap butir merujuk dasar data (tanggal/kelengkapan), mengarahkan ke modul — **tidak ada** perubahan data terjadi.
