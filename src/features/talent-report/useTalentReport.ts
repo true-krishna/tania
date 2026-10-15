@@ -42,15 +42,22 @@ export interface UseTalentReportResult {
 
 /** "Rentang tidak berisi data apa pun" (edge case spek) → empty state, bukan error. */
 export function isEmptyReport(report: TalentReport): boolean {
+  // Kategori tanpa data tetap terkirim dengan count 0 (mis. keempat generasi,
+  // lima jenjang pendidikan), jadi kekosongan diukur dari totalnya — bukan dari
+  // panjang array yang bisa saja terisi kategori bernilai nol.
   const distributionsEmpty =
-    report.roleDistribution.length === 0 &&
-    report.generationDistribution.length === 0 &&
-    report.educationDistribution.length === 0 &&
-    report.workLocationDistribution.length === 0;
+    countTotal(report.roleDistribution) === 0 &&
+    countTotal(report.generationDistribution) === 0 &&
+    countTotal(report.educationDistribution) === 0 &&
+    countTotal(report.workLocationDistribution) === 0;
   const noMovement = report.movementTrend.every(
     (m) => m.newTalent === 0 && m.churn === 0,
   );
   return distributionsEmpty && noMovement;
+}
+
+function countTotal(categories: { count: number }[]): number {
+  return categories.reduce((sum, category) => sum + category.count, 0);
 }
 
 function toStatus(error: ApolloError | undefined, report: TalentReport | undefined): TalentReportStatus {

@@ -108,3 +108,27 @@ export const MOCK_TALENT_REPORT_EMPTY: TalentReport = {
   workLocationDistribution: [],
   movementTrend: [],
 };
+
+/**
+ * Rentang kosong seperti yang benar-benar dikirim API: kategori bernilai nol
+ * tetap hadir (keempat generasi, lima jenjang pendidikan), bukan array kosong.
+ */
+export const MOCK_TALENT_REPORT_EMPTY_API_SHAPE: TalentReport = {
+  snapshotMonth: "2026-10",
+  roleDistribution: [],
+  generationDistribution: [
+    value("Baby Boomer", 0),
+    value("Gen X", 0),
+    value("Milenial", 0),
+    value("Gen Z", 0),
+  ],
+  educationDistribution: [
+    value("SMA/SMK Sederajat", 0),
+    value("D3", 0),
+    value("S1", 0),
+    value("S2", 0),
+    value("S3", 0),
+  ],
+  workLocationDistribution: [],
+  movementTrend: MOCK_MOVEMENT_TREND.map((m) => ({ ...m, newTalent: 0, churn: 0 })),
+};
