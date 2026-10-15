@@ -4,22 +4,16 @@ import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Card } from "@/components/Card";
+import { Chip } from "@/components/Chip";
 import { ToastStack } from "@/components/Toast";
 import { AuthGuard } from "@/lib/auth/guard";
+import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useMyIdp } from "@/features/idp/talent/useMyIdp";
 import { MyIdpDocument, UpdateDevelopmentActionStatusDocument } from "@/generated/graphql";
-import { cn } from "@/lib/cn";
 import type {
   DevelopmentActionStatus,
   DevelopmentMethod,
-  IdpStatus,
 } from "@/generated/graphql/types";
-
-const STATUS_LABEL: Record<IdpStatus, string> = {
-  IN_PROGRESS: "Berjalan",
-  NEEDS_REVIEW: "Perlu review",
-  COMPLETED: "Selesai",
-};
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -99,16 +93,9 @@ export default function MyIdpPage() {
               Rencana pengembangan individu Anda ({idp.id}).
             </p>
           </div>
-          <span
-            className={cn(
-              "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
-              idp.status === "COMPLETED" && "bg-green-100 text-green-700",
-              idp.status === "NEEDS_REVIEW" && "bg-amber-100 text-amber-700",
-              idp.status === "IN_PROGRESS" && "bg-tp-tint-info text-tp-ink-info",
-            )}
-          >
-            {STATUS_LABEL[idp.status]}
-          </span>
+          <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
+            {IDP_STATUS_LABEL[idp.status]}
+          </Chip>
         </div>
 
         <Card className="flex flex-col gap-4">

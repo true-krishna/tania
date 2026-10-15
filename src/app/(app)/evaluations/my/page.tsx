@@ -3,6 +3,7 @@
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Card } from "@/components/Card";
+import { Chip } from "@/components/Chip";
 import { useMyPerformanceEvaluations } from "@/features/evaluations/useMyPerformanceEvaluations";
 import type { EvaluationAnswerType } from "@/generated/graphql/types";
 
@@ -32,9 +33,12 @@ export default function MyEvaluationsPage() {
                 {evaluation.period.startDate} — {evaluation.period.endDate}
               </p>
             </div>
-            <span className="rounded-md bg-tp-tint-info px-2 py-0.5 text-xs font-semibold text-tp-ink-info">
+            <Chip
+              variant={evaluation.status === "SUBMITTED" ? "success" : "warning"}
+              size="small"
+            >
               {evaluation.status === "SUBMITTED" ? "Diserahkan" : "Draf"}
-            </span>
+            </Chip>
           </header>
 
           <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">

@@ -19,7 +19,6 @@ export type {
 } from "./types";
 
 export { ActivitySplitChart } from "./ActivitySplitChart";
-export { Chip, type ChipTone } from "./Chip";
 export {
   DataLamaChip,
   HanyaBacaChip,

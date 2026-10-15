@@ -6,6 +6,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable, type Column } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
@@ -15,6 +16,7 @@ import { Select } from "@/components/Select";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
 import {
   CONTRACT_STATUS_LABEL,
+  CONTRACT_STATUS_VARIANT,
   CONTRACT_TYPE_LABEL,
   CONTRACT_TYPE_ORDER,
 } from "@/features/contracts/labels";
@@ -78,9 +80,9 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
         {contract.startDate} — {contract.endDate ?? "tidak berbatas"}
       </td>
       <td className="px-4 py-2.5">
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+        <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
           {CONTRACT_STATUS_LABEL[contract.status]}
-        </span>
+        </Chip>
       </td>
       <td className="col-action">
         <RowActionsMenu

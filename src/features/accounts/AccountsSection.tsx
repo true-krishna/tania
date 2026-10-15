@@ -3,6 +3,7 @@
 import * as React from "react";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
@@ -40,9 +41,9 @@ type AccountsSectionProps = {
 
 function RoleBadge({ role }: { role: string }) {
   return (
-    <span className="rounded-md bg-tp-tint-info px-2 py-0.5 text-xs font-semibold text-tp-ink-info">
+    <Chip variant="info" size="small">
       {roleLabel[role as AccessRole] ?? role}
-    </span>
+    </Chip>
   );
 }
 
