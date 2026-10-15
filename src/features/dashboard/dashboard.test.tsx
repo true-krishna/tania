@@ -5,13 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import DashboardPage from "@/app/(app)/dashboard/page";
-import {
-  DashboardDocument,
-  EmployeesNeedingFollowUpDocument,
-  ExpiringContractsDocument,
-  PreRetirementCandidatesDocument,
-  RetirementAgeDocument,
-} from "@/generated/graphql";
+import { DashboardDocument } from "@/generated/graphql";
 import {
   TALENT_REPORT_QUERY,
   TALENT_REPORT_RANGE_QUERY,
@@ -105,55 +99,6 @@ function talentReportMocks(): MockedResponse[] {
   ];
 }
 
-// Operation also renders the contract-lifecycle indicators (FR-40); empty
-// results keep the widget assertions focused on the employee summary.
-function operationCycleMocks(): MockedResponse[] {
-  const emptyContracts = {
-    __typename: "EmploymentContractConnection",
-    totalCount: 0,
-    edges: [],
-    pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-  };
-  return [
-    {
-      request: { query: ExpiringContractsDocument, variables: { days: 90, first: 25, after: null } },
-      result: { data: { expiringContracts: emptyContracts } },
-    },
-    {
-      request: { query: ExpiringContractsDocument, variables: { days: 30, first: 25, after: null } },
-      result: { data: { expiringContracts: emptyContracts } },
-    },
-    {
-      request: { query: EmployeesNeedingFollowUpDocument, variables: { first: 25, after: null } },
-      result: {
-        data: {
-          employeesNeedingFollowUp: {
-            __typename: "EmployeeConnection",
-            totalCount: 0,
-            edges: [],
-            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-          },
-        },
-      },
-    },
-    {
-      request: { query: RetirementAgeDocument },
-      result: { data: { retirementAge: 56 } },
-    },
-    {
-      request: { query: PreRetirementCandidatesDocument, variables: { first: 100 } },
-      result: {
-        data: {
-          employees: {
-            __typename: "EmployeeConnection",
-            edges: [],
-          },
-        },
-      },
-    },
-  ];
-}
-
 function renderDashboard(member: Record<string, unknown>, extraMocks: MockedResponse[] = []) {
   render(
     <MockedProvider mocks={[
@@ -188,7 +133,7 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
     expect(screen.getByText("Akun per Peran")).toBeInTheDocument();
     expect(screen.getByText("Data Master Aktif")).toBeInTheDocument();
   });
-  it("renders the employee summary plus the talent report on OperationDashboard (TAN-202)", async () => {
+  it("replaces Operation widgets with the talent report (placement amendment, TAN-154)", async () => {
     renderDashboard(
       {
         __typename: "OperationDashboard",
@@ -199,20 +144,14 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
           { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
         ],
       },
-      [...talentReportMocks(), ...operationCycleMocks()],
+      talentReportMocks(),
     );
-
-    expect(await screen.findByText("Karyawan per Unit")).toBeInTheDocument();
-    expect(screen.getByText("Karyawan aktif")).toBeInTheDocument();
-    expect(screen.getByText("Tidak assignable")).toBeInTheDocument();
-    expect(screen.getByText("Platform")).toBeInTheDocument();
-    expect(screen.getByText("Perubahan Karyawan Terbaru")).toBeInTheDocument();
-    expect(screen.getByText("Andi Pratama")).toBeInTheDocument();
-    expect(screen.getByText("Kontrak segera berakhir")).toBeInTheDocument();
 
     expect(await screen.findByText("Talent per role")).toBeInTheDocument();
     expect(screen.getByText("Tren churn vs new talent")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Terapkan" })).toBeInTheDocument();
+    expect(screen.queryByText("Karyawan per Unit")).toBeNull();
+    expect(screen.queryByText("Perubahan Karyawan Terbaru")).toBeNull();
   });
 
   it("replaces Chapter widgets with the talent report (placement amendment, TAN-154)", async () => {
