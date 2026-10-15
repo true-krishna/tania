@@ -256,6 +256,9 @@ input LocalLoginInput {
 """Unit master data (FR-18)."""
 type Unit {
   id: ID!
+  """Kode unik satuan kerja; pembeda utama antar unit."""
+  code: String!
+  """Label tampilan; tidak unik."""
   name: String!
   isActive: Boolean!
   """Projects owned by this unit, alphabetical."""
@@ -304,8 +307,10 @@ type Employee {
   """NIK tersamar — 4 digit akhir (FR-42); nilai penuh tidak pernah diekspos."""
   nikMasked: String!
   email: String!
-  birthDate: Date!
-  gender: Gender!
+  """Tanggal lahir; null bila tidak diisi (data personal opsional)."""
+  birthDate: Date
+  """Jenis kelamin; null bila tidak diisi (data personal opsional)."""
+  gender: Gender
   phone: String
   address: String
   latestEducation: String
@@ -339,7 +344,8 @@ type Employee {
 type EmploymentContract {
   id: ID!
   employee: Employee!
-  contractNo: String!
+  """Nomor SK/kontrak; opsional — null bila tidak diisi."""
+  contractNo: String
   contractType: ContractType!
   officeEmail: String
   """Employee ID yang berlaku pada kontrak ini (snapshot historis)."""
@@ -415,7 +421,8 @@ input UpdateEmployeeInput {
 
 input CreateEmploymentContractInput {
   employeeId: ID!
-  contractNo: String!
+  """Nomor SK/kontrak; opsional."""
+  contractNo: String
   contractType: ContractType!
   officeEmail: String
   nomorInduk: String!
@@ -444,7 +451,8 @@ input UpdateEmploymentContractInput {
 """Perpanjangan kontrak berbatas waktu — kontrak baru mulai setelah kontrak lama berakhir (FR-36)."""
 input RenewContractInput {
   predecessorContractId: ID!
-  contractNo: String!
+  """Nomor SK/kontrak; opsional."""
+  contractNo: String
   contractType: ContractType! = TKWT_DIGITAL_TALENT
   officeEmail: String
   nomorInduk: String!
@@ -463,7 +471,8 @@ input RenewContractInput {
 input RecordMutationInput {
   employeeId: ID!
   effectiveDate: Date!
-  contractNo: String!
+  """Nomor SK/kontrak; opsional."""
+  contractNo: String
   nomorInduk: String!
   jobRoleId: ID!
   unitId: ID!
@@ -894,6 +903,51 @@ type TalentReport {
   movementTrend: [ReportMonthlyMovement!]!
 }
 
+# ---------------------------- Asisten data (chat) ---------------------------
+# Spek 005-asisten-data-chatbot: asisten grounded read-only untuk Chapter &
+# Operation. Percakapan privat mutlak milik pemanggil (FR-02); seluruh operasi
+# chat ditolak untuk Admin/Talent (FR-01). `sources` (jsonb: tool/params/
+# rowCount/fetchedAt) sengaja TIDAK diekspos — rujukan sumber tampil dari teks
+# jawaban (FR-05), jadi tidak ada permukaan baru bagi klien.
+
+enum ChatMessageRole {
+  USER
+  ASSISTANT
+}
+
+"""Percakapan asisten milik satu pemanggil."""
+type ChatConversation {
+  id: ID!
+  """Waktu percakapan dimulai."""
+  startedAt: Time!
+  """Waktu pesan terakhir — dasar urutan daftar percakapan."""
+  lastMessageAt: Time!
+  """Jumlah pesan dalam percakapan."""
+  messageCount: Int!
+  """Pesan percakapan, terbaru lebih dulu. Hanya milik pemanggil."""
+  messages(first: Int = 50, after: String): ChatMessageConnection!
+}
+
+type ChatMessage {
+  id: ID!
+  role: ChatMessageRole!
+  """Isi pesan. USER ≤ 2.000 karakter; ASSISTANT dihasilkan asisten (Bahasa Indonesia)."""
+  content: String!
+  """Pemakaian token sisi input — laporan biaya (FR-10); null untuk pesan USER."""
+  inputTokens: Int
+  """Pemakaian token sisi keluaran — laporan biaya (FR-10); null untuk pesan USER."""
+  outputTokens: Int
+  """ID kiriman klien (hanya pesan USER) — dipakai UI untuk mengulang kiriman yang gagal
+  secara idempoten, termasuk setelah panel dimuat ulang."""
+  clientRequestId: ID
+  createdAt: Time!
+}
+
+type ChatMessageEdge { node: ChatMessage!, cursor: String! }
+type ChatMessageConnection { edges: [ChatMessageEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
+type ChatConversationEdge { node: ChatConversation!, cursor: String! }
+type ChatConversationConnection { edges: [ChatConversationEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
+
 # -------------------------------- Queries -----------------------------------
 
 type Query {
@@ -963,6 +1017,12 @@ type Query {
 
   # --- Audit (Admin) ---
   auditLogs(filter: AuditLogFilter, first: Int = 25, after: String): AuditLogConnection!
+
+  # --- Asisten data (Chapter & Operation; FR-01/FR-02) ---
+  """Percakapan asisten milik pemanggil (privat mutlak; FR-02)."""
+  chatConversations(first: Int = 20, after: String): ChatConversationConnection!
+  """Pesan satu percakapan milik pemanggil; percakapan orang lain → NOT_FOUND (anti-enumerasi)."""
+  chatMessages(conversationId: ID!, first: Int = 50, after: String): ChatMessageConnection!
 }
 
 # ------------------------------- Mutations ----------------------------------
@@ -978,8 +1038,8 @@ type Mutation {
   logout(refreshToken: String): Boolean!
 
   # --- Master data (Admin) ---
-  createUnit(name: String!): Unit!
-  updateUnit(id: ID!, name: String!): Unit!
+  createUnit(code: String!, name: String!): Unit!
+  updateUnit(id: ID!, code: String!, name: String!): Unit!
   setUnitActive(id: ID!, isActive: Boolean!): Unit!
 
   createChapter(name: String!): Chapter!
@@ -1064,4 +1124,12 @@ Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FA
   updateUserAccessRole(userId: ID!, accessRole: AccessRole!): User!
   setUserAccountStatus(userId: ID!, status: AccountStatus!): User!
   revokeUserSessions(userId: ID!): Boolean!
+
+  # --- Asisten data (Chapter & Operation; FR-01) ---
+  """Mulai percakapan baru milik pemanggil."""
+  createChatConversation: ChatConversation!
+  """Kirim pesan user; sinkron; mengembalikan PESAN ASISTEN hasil grounding.
+Pesan USER tersimpan sebelum pemanggilan model; kirim ulang dengan
+clientRequestId yang sama bersifat idempoten (tidak menggandakan pesan)."""
+  sendChatMessage(conversationId: ID!, content: String!, clientRequestId: ID!): ChatMessage!
 }

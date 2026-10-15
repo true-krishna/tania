@@ -29,7 +29,7 @@ import { orDash } from "@/lib/cell";
 
 type ContractRowData = {
   id: string;
-  contractNo: string;
+  contractNo: string | null;
   contractType: ContractType;
   nomorInduk: string;
   startDate: string;
@@ -61,7 +61,7 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
           href={`/contracts/${contract.id}`}
           className="font-medium text-zinc-900 hover:underline"
         >
-          {contract.contractNo}
+          {orDash(contract.contractNo)}
         </Link>
       </td>
       <td className="px-4 py-2.5">

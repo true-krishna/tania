@@ -240,3 +240,48 @@ test("T028 — Talent tidak melihat laporan; rute lama redirect ke Dashboard (FR
   await expect(chartOf(page, "Talent per role")).toHaveCount(0);
   await expect(page.getByText(/Penugasan aktif|Aktivitas/).first()).toBeVisible();
 });
+
+// ---------------------------------------------------------------------------
+// T029 — Asisten Data (005-asisten-data-chatbot, K2)
+//
+// ⚠ Prasyarat: backend K1 (SDL + `sendChatMessage` + `ChatService`) sudah
+// mendarat dan provider (`AI_PROVIDER_*`) terpasang — keduanya belum ada saat
+// spec ini ditulis, jadi skenario pertama belum dapat dijalankan (lihat laporan
+// issue TAN-211). Skenario kedua (guard peran) hanya butuh app shell.
+// ---------------------------------------------------------------------------
+
+test("T029 — Chapter membuka panel asisten dan menerima balasan", async ({ page }) => {
+  await loginAs(page, SEED_USERS.CHAPTER);
+  await page.goto("/dashboard");
+
+  const bubble = page.getByRole("button", { name: "Buka asisten data" });
+  await expect(bubble).toBeVisible();
+  await bubble.click();
+
+  const dialog = page.getByRole("dialog", { name: "Asisten data Tania" });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByLabel("Pertanyaan untuk asisten")).toBeFocused();
+
+  const question = "Siapa saja yang kontraknya berakhir dalam 90 hari?";
+  await page.getByLabel("Pertanyaan untuk asisten").fill(question);
+  await page.getByRole("button", { name: "Kirim pertanyaan" }).click();
+
+  // Bubble user tampil optimistis — dipilih lewat `data-role`, sebab teks
+  // pertanyaan ini juga muncul sebagai chip contoh statis.
+  await expect(dialog.locator('[data-role="USER"]', { hasText: question })).toBeVisible();
+  await expect(dialog.locator('[data-role="ASSISTANT"]').first()).toBeVisible({ timeout: 30_000 });
+  await expect(dialog.getByText("Belum terjawab")).toHaveCount(0);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(bubble).toBeFocused();
+});
+
+test("T029 — peran non-MVP tidak melihat panel/bubble asisten (FR-01)", async ({ page }) => {
+  const role = process.env.E2E_ROLE ?? process.env.NEXT_PUBLIC_DEFAULT_ACCESS_ROLE ?? "TALENT";
+  await loginAs(page, SEED_USERS[role] ?? SEED_USERS.TALENT);
+  await page.goto("/dashboard");
+
+  await expect(page.getByRole("button", { name: "Buka asisten data" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Asisten data Tania" })).toHaveCount(0);
+});

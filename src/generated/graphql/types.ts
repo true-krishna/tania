@@ -187,6 +187,75 @@ export type ChapterDashboard = {
   unassignedTalents: Array<Employee>;
 };
 
+/** Percakapan asisten milik satu pemanggil. */
+export type ChatConversation = {
+  __typename?: 'ChatConversation';
+  id: Scalars['ID']['output'];
+  /** Waktu pesan terakhir — dasar urutan daftar percakapan. */
+  lastMessageAt: Scalars['Time']['output'];
+  /** Jumlah pesan dalam percakapan. */
+  messageCount: Scalars['Int']['output'];
+  /** Pesan percakapan, terbaru lebih dulu. Hanya milik pemanggil. */
+  messages: ChatMessageConnection;
+  /** Waktu percakapan dimulai. */
+  startedAt: Scalars['Time']['output'];
+};
+
+
+/** Percakapan asisten milik satu pemanggil. */
+export type ChatConversationMessagesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ChatConversationConnection = {
+  __typename?: 'ChatConversationConnection';
+  edges: Array<ChatConversationEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type ChatConversationEdge = {
+  __typename?: 'ChatConversationEdge';
+  cursor: Scalars['String']['output'];
+  node: ChatConversation;
+};
+
+export type ChatMessage = {
+  __typename?: 'ChatMessage';
+  /**
+   * ID kiriman klien (hanya pesan USER) — dipakai UI untuk mengulang kiriman yang gagal
+   * secara idempoten, termasuk setelah panel dimuat ulang.
+   */
+  clientRequestId?: Maybe<Scalars['ID']['output']>;
+  /** Isi pesan. USER ≤ 2.000 karakter; ASSISTANT dihasilkan asisten (Bahasa Indonesia). */
+  content: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  /** Pemakaian token sisi input — laporan biaya (FR-10); null untuk pesan USER. */
+  inputTokens?: Maybe<Scalars['Int']['output']>;
+  /** Pemakaian token sisi keluaran — laporan biaya (FR-10); null untuk pesan USER. */
+  outputTokens?: Maybe<Scalars['Int']['output']>;
+  role: ChatMessageRole;
+};
+
+export type ChatMessageConnection = {
+  __typename?: 'ChatMessageConnection';
+  edges: Array<ChatMessageEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type ChatMessageEdge = {
+  __typename?: 'ChatMessageEdge';
+  cursor: Scalars['String']['output'];
+  node: ChatMessage;
+};
+
+export type ChatMessageRole =
+  | 'ASSISTANT'
+  | 'USER';
+
 export type ContractEndReason =
   | 'EXPIRY'
   | 'MUTATION'
@@ -241,7 +310,8 @@ export type CreateEmployeeInput = {
 
 export type CreateEmploymentContractInput = {
   bandPosition?: InputMaybe<BandPosition>;
-  contractNo: Scalars['String']['input'];
+  /** Nomor SK/kontrak; opsional. */
+  contractNo?: InputMaybe<Scalars['String']['input']>;
   contractType: ContractType;
   employeeId: Scalars['ID']['input'];
   /** Wajib untuk kontrak berbatas waktu; null untuk yang tanpa batas waktu. */
@@ -387,7 +457,8 @@ export type Employee = {
   assignable: Scalars['Boolean']['output'];
   /** Riwayat assignment talent, terbaru lebih dulu (FR-07). */
   assignments: AssignmentConnection;
-  birthDate: Scalars['Date']['output'];
+  /** Tanggal lahir; null bila tidak diisi (data personal opsional). */
+  birthDate?: Maybe<Scalars['Date']['output']>;
   /** Turunan kontrak aktif → jobRole.chapter (FR-23/FR-35); null bila role tanpa chapter. */
   chapter?: Maybe<Chapter>;
   /** Riwayat kontrak kerja, terbaru lebih dulu (FR-34). */
@@ -397,7 +468,8 @@ export type Employee = {
   /** Hasil provisi akun Entra (FR-43–FR-45); null = belum pernah diprovisi. */
   entraProvision?: Maybe<EntraProvision>;
   fullName: Scalars['String']['output'];
-  gender: Gender;
+  /** Jenis kelamin; null bila tidak diisi (data personal opsional). */
+  gender?: Maybe<Gender>;
   id: Scalars['ID']['output'];
   /** IDP talent dalam cakupan pemanggil (FR-11). */
   idps: IdpConnection;
@@ -467,7 +539,8 @@ export type EmployeeStatus =
 export type EmploymentContract = {
   __typename?: 'EmploymentContract';
   bandPosition: BandPosition;
-  contractNo: Scalars['String']['output'];
+  /** Nomor SK/kontrak; opsional — null bila tidak diisi. */
+  contractNo?: Maybe<Scalars['String']['output']>;
   contractType: ContractType;
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
@@ -737,6 +810,8 @@ export type Mutation = {
   closeIdp: Idp;
   createAssignment: Assignment;
   createChapter: Chapter;
+  /** Mulai percakapan baru milik pemanggil. */
+  createChatConversation: ChatConversation;
   createEmployee: Employee;
   createEmploymentContract: EmploymentContract;
   createEvaluationPeriod: EvaluationPeriod;
@@ -771,6 +846,12 @@ export type Mutation = {
   /** Pensiun: akhiri kontrak aktif (end_reason=retirement), status → RETIRED (FR-39). */
   retireEmployee: Employee;
   revokeUserSessions: Scalars['Boolean']['output'];
+  /**
+   * Kirim pesan user; sinkron; mengembalikan PESAN ASISTEN hasil grounding.
+   * Pesan USER tersimpan sebelum pemanggilan model; kirim ulang dengan
+   * clientRequestId yang sama bersifat idempoten (tidak menggandakan pesan).
+   */
+  sendChatMessage: ChatMessage;
   setChapterActive: Chapter;
   setEvaluationPeriodActive: EvaluationPeriod;
   setEvaluationTemplateActive: EvaluationTemplate;
@@ -884,6 +965,7 @@ export type MutationCreateProjectArgs = {
 
 
 export type MutationCreateUnitArgs = {
+  code: Scalars['String']['input'];
   name: Scalars['String']['input'];
 };
 
@@ -975,6 +1057,13 @@ export type MutationRetireEmployeeArgs = {
 
 export type MutationRevokeUserSessionsArgs = {
   userId: Scalars['ID']['input'];
+};
+
+
+export type MutationSendChatMessageArgs = {
+  clientRequestId: Scalars['ID']['input'];
+  content: Scalars['String']['input'];
+  conversationId: Scalars['ID']['input'];
 };
 
 
@@ -1127,6 +1216,7 @@ export type MutationUpdateProjectArgs = {
 
 
 export type MutationUpdateUnitArgs = {
+  code: Scalars['String']['input'];
   id: Scalars['ID']['input'];
   name: Scalars['String']['input'];
 };
@@ -1213,6 +1303,10 @@ export type Query = {
   assignments: AssignmentConnection;
   auditLogs: AuditLogConnection;
   chapters: Array<Chapter>;
+  /** Percakapan asisten milik pemanggil (privat mutlak; FR-02). */
+  chatConversations: ChatConversationConnection;
+  /** Pesan satu percakapan milik pemanggil; percakapan orang lain → NOT_FOUND (anti-enumerasi). */
+  chatMessages: ChatMessageConnection;
   currentEvaluationPeriod?: Maybe<EvaluationPeriod>;
   /** Profil CV untuk pemiliknya atau Chapter dalam cakupan (hanya baca, FR-13). */
   cvProfile?: Maybe<CvProfile>;
@@ -1276,6 +1370,19 @@ export type QueryAuditLogsArgs = {
 
 export type QueryChaptersArgs = {
   includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryChatConversationsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryChatMessagesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  conversationId: Scalars['ID']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1394,7 +1501,8 @@ export type QueryUsersArgs = {
 /** Mutasi di tengah kontrak — akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38). */
 export type RecordMutationInput = {
   bandPosition?: InputMaybe<BandPosition>;
-  contractNo: Scalars['String']['input'];
+  /** Nomor SK/kontrak; opsional. */
+  contractNo?: InputMaybe<Scalars['String']['input']>;
   effectiveDate: Scalars['Date']['input'];
   employeeId: Scalars['ID']['input'];
   endDate?: InputMaybe<Scalars['Date']['input']>;
@@ -1411,7 +1519,8 @@ export type RecordMutationInput = {
 /** Perpanjangan kontrak berbatas waktu — kontrak baru mulai setelah kontrak lama berakhir (FR-36). */
 export type RenewContractInput = {
   bandPosition?: InputMaybe<BandPosition>;
-  contractNo: Scalars['String']['input'];
+  /** Nomor SK/kontrak; opsional. */
+  contractNo?: InputMaybe<Scalars['String']['input']>;
   contractType?: ContractType;
   endDate?: InputMaybe<Scalars['Date']['input']>;
   jobLevel?: InputMaybe<Scalars['String']['input']>;
@@ -1501,9 +1610,12 @@ export type TalentReportRange = {
 /** Unit master data (FR-18). */
 export type Unit = {
   __typename?: 'Unit';
+  /** Kode unik satuan kerja; pembeda utama antar unit. */
+  code: Scalars['String']['output'];
   createdAt: Scalars['Time']['output'];
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
+  /** Label tampilan; tidak unik. */
   name: Scalars['String']['output'];
   /** Projects owned by this unit, alphabetical. */
   projects: Array<Project>;

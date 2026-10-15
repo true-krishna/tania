@@ -1,6 +1,7 @@
-mutation CreateUnit($name: String!) {
-  createUnit(name: $name) {
+mutation CreateUnit($code: String!, $name: String!) {
+  createUnit(code: $code, name: $name) {
     id
+    code
     name
     isActive
     projects {
@@ -10,9 +11,10 @@ mutation CreateUnit($name: String!) {
   }
 }
 
-mutation UpdateUnit($id: ID!, $name: String!) {
-  updateUnit(id: $id, name: $name) {
+mutation UpdateUnit($id: ID!, $code: String!, $name: String!) {
+  updateUnit(id: $id, code: $code, name: $name) {
     id
+    code
     name
     isActive
     projects {
@@ -25,6 +27,7 @@ mutation UpdateUnit($id: ID!, $name: String!) {
 mutation SetUnitActive($id: ID!, $isActive: Boolean!) {
   setUnitActive(id: $id, isActive: $isActive) {
     id
+    code
     name
     isActive
     projects {
