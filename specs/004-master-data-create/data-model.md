@@ -2,18 +2,21 @@
 
 **Feature**: `004-master-data-create` (TAN-187) · **Date**: 2026-10-14
 
-**Tanpa perubahan skema/entitas.** Plan ini hanya menambahkan operasi Create atas model yang sudah ada (Unit, JobRole, Project, AuditEntry). Field di bawah mencerminkan domain existing di `tania-backend/internal/domain/masterdata.go` dan `unit.go`; tidak ada kolom, relasi, atau migrasi baru.
+**Tanpa perubahan skema/entitas oleh plan ini.** Plan ini hanya menambahkan operasi Create atas model yang sudah ada (Unit, JobRole, Project, AuditEntry). Field di bawah mencerminkan domain existing di `tania-backend/internal/domain/masterdata.go` dan `unit.go`; tidak ada kolom, relasi, atau migrasi baru.
+
+**Amandemen 2026-10-15 (TAN-213)**: setelah dokumen ini ditulis, model Unit berubah **di luar plan ini** (backend `4d94c3c` — *bulk import data*): `Unit.code` menjadi field wajib dan pembeda unik unit, menggantikan keunikan nama. Tabel Unit di bawah mencatat bentuk yang dilayani kini.
 
 ## Built-in Create (sudah ada)
 
 Ketiga usecase mengikuti bentuk baku: **authorize → validate → persist → audit** dalam satu transaksi.
 
-### Unit (`createUnit`)
+### Unit (`createUnit`, `updateUnit`)
 
-| Field | Tipe | Aturan Create |
+| Field | Tipe | Aturan Create/Update |
 | --- | --- | --- |
 | `id` | ID | Dibuat server (UUID) |
-| `name` | String | **Wajib**; dinormalisasi (`normalizeName`); **unik** (duplikat → `ErrConflict`) |
+| `code` | String | **Wajib** sejak amandemen TAN-213; dinormalisasi (`normalizeCode`, trim); **unik** case-insensitive — pembeda utama antar unit (duplikat → `ErrConflict`); ≤ 50 karakter |
+| `name` | String | **Wajib**; dinormalisasi (`normalizeName`); **tidak unik** untuk Unit — label tampilan; ≤ 120 karakter |
 | `isActive` | Boolean | Selalu `true` saat dibuat |
 | `projects` | [Project] | Turunan relasi; tidak diisi saat create |
 | `createdAt` / `updatedAt` | Time | Diisi server |
