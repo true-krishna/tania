@@ -110,7 +110,7 @@ Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (N
 | `karyawan_perlu_tindak_lanjut` | — | `EmployeesNeedingFollowUp` + scope chapter untuk Chapter | Kontrak habis tanpa perpanjangan (US10 induk) |
 | `karyawan_data_belum_lengkap` | — | baca baru ber-cakupan (NULL-check field opsional; lihat `data-model.md`) | Penambahan baca bersama dua lainnya |
 
-**Batas yang dijaga (R-11)**: baca ber-cakupan chapter hidup di lapisan usecase/repository dan **tidak** diekspos sebagai query/mutation GraphQL. Bila diekspos, Chapter akan memperoleh permukaan `employmentContracts`/`expiringContracts` milik Operation — itu amandemen matriks RBAC. `ScopeChapterID` hanya diisi server dari identitas pemanggil; resolver `employmentContracts(filter:)` tidak memetakan nilai dari klien ke field ini.
+**Batas yang dijaga (R-11)**: baca ber-cakupan chapter hidup di lapisan usecase/repository dan **tidak** diekspos sebagai query/mutation GraphQL. Bila diekspos, Chapter akan memperoleh permukaan `employmentContracts`/`expiringContracts` milik Operation — itu amandemen matriks RBAC. `ScopeChapterID` hanya diisi server dari identitas pemanggil; resolver `employmentContracts(filter:)` tidak memetakan nilai dari klien ke field ini. Resolver existing juga tetap memanggil repositori dengan scope `nil` (Operation-wide) — perilaku query existing **tidak berubah**; scope hanya diisi pada jalur tool asisten.
 
 **Protokol loop** (diegakkan usecase, bukan harapan prompt): maksimum 5 putaran tool per jawaban; setiap hasil tool diberi label sumber + `fetchedAt` (dasar FR-05); jawaban final wajib memuat sumber & waktu data; tool error → dilaporkan ke model sebagai kegagalan (jawaban jujur, bukan konjektur).
 
