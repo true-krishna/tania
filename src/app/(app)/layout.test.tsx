@@ -1,10 +1,16 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import * as tokenStore from "@/lib/auth/token-store";
 import { notifySessionExpired } from "@/lib/auth/session-expiry";
 import AppLayout from "./layout";
+
+// Guard peran asisten diuji di sisi shell (T027); panel/bubble sendiri diuji di
+// src/features/assistant/assistant.test.tsx.
+vi.mock("@/features/assistant/AssistantBubble", () => ({
+  AssistantBubble: () => <button type="button">Asisten data</button>,
+}));
 
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -57,5 +63,21 @@ describe("AppLayout session expiry redirect", () => {
     notifySessionExpired();
 
     expect(replace).not.toHaveBeenCalled();
+  });
+});
+
+describe("AppLayout asisten data (FR-01)", () => {
+  it("menampilkan bubble asisten untuk CHAPTER", () => {
+    tokenStore.setSession({ ...SESSION, accessRole: "CHAPTER" });
+    render(<AppLayout><main>konten</main></AppLayout>);
+
+    expect(screen.getByRole("button", { name: "Asisten data" })).toBeInTheDocument();
+  });
+
+  it("tidak menampilkan bubble asisten untuk ADMIN", () => {
+    tokenStore.setSession(SESSION);
+    render(<AppLayout><main>konten</main></AppLayout>);
+
+    expect(screen.queryByRole("button", { name: "Asisten data" })).toBeNull();
   });
 });

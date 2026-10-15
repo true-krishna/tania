@@ -7,6 +7,7 @@ import { LogoutDocument } from "@/generated/graphql";
 import { IconChartBar, IconClockHour3, IconUser } from "@tabler/icons-react";
 import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
+import { AssistantBubble } from "@/features/assistant/AssistantBubble";
 import { roleLabel } from "@/features/accounts/roles";
 import { authConfig } from "@/lib/auth/config";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
@@ -73,6 +74,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
+      {/* Asisten data (FR-01): bubble + panel dirender sekali di shell, hanya
+       * untuk CHAPTER/OPERATION. Guard ini kenyamanan UI — otorisasi ada di
+       * server (ChatService). */}
+      {(role === "CHAPTER" || role === "OPERATION") && <AssistantBubble />}
     </AuthGuard>
   );
 }
