@@ -209,11 +209,15 @@ function NewEmployeeForm() {
         </Label>
         <Label error={errors.gender}>
           Jenis kelamin
-          <Select value={values.gender} onChange={(e) => set("gender", e.target.value)}>
-            <option value="">— pilih jenis kelamin —</option>
-            <option value="FEMALE">Perempuan</option>
-            <option value="MALE">Laki-laki</option>
-          </Select>
+          <Select
+            value={values.gender}
+            onChange={(e) => set("gender", e.target.value)}
+            options={[
+              { value: "", label: "— pilih jenis kelamin —" },
+              { value: "FEMALE", label: "Perempuan" },
+              { value: "MALE", label: "Laki-laki" },
+            ]}
+          />
         </Label>
         <Label error={errors.phone}>
           Telepon

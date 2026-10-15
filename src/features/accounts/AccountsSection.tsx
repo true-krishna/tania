@@ -146,16 +146,23 @@ export function AccountsSection({
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
             Karyawan
-            <Select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
-              <option value="">
-                {employees.status === "loading" ? "— Memuat karyawan… —" : "— Pilih karyawan —"}
-              </option>
-              {(employees.employees ?? []).map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.fullName} ({employee.nomorInduk ?? "—"})
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+              options={[
+                {
+                  value: "",
+                  label:
+                    employees.status === "loading"
+                      ? "— Memuat karyawan… —"
+                      : "— Pilih karyawan —",
+                },
+                ...(employees.employees ?? []).map((employee) => ({
+                  value: employee.id,
+                  label: `${employee.fullName} (${employee.nomorInduk ?? "—"})`,
+                })),
+              ]}
+            />
             {fieldErrors.employeeId ? (
               <span className="text-xs text-red-600">{fieldErrors.employeeId}</span>
             ) : null}
@@ -182,14 +189,11 @@ export function AccountsSection({
             <Select
               value={accessRole}
               onChange={(e) => setAccessRole(e.target.value as AccessRole | "")}
-            >
-              <option value="">— Pilih peran —</option>
-              {ROLE_OPTIONS.map((role) => (
-                <option key={role} value={role}>
-                  {roleLabel[role]}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "", label: "— Pilih peran —" },
+                ...ROLE_OPTIONS.map((role) => ({ value: role, label: roleLabel[role] })),
+              ]}
+            />
             {fieldErrors.accessRole ? (
               <span className="text-xs text-red-600">{fieldErrors.accessRole}</span>
             ) : null}
@@ -280,13 +284,8 @@ export function AccountsSection({
                         className="w-auto"
                         value={account.accessRole}
                         onChange={(e) => void onChangeRole(account.id, e.target.value as AccessRole)}
-                      >
-                        {ROLE_OPTIONS.map((role) => (
-                          <option key={role} value={role}>
-                            {roleLabel[role]}
-                          </option>
-                        ))}
-                      </Select>
+                        options={ROLE_OPTIONS.map((role) => ({ value: role, label: roleLabel[role] }))}
+                      />
                     </label>
                   </RowActionsMenu>
                 )}

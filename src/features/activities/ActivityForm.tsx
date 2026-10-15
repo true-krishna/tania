@@ -156,10 +156,11 @@ export function ActivityForm({
             id="activity-type"
             value={values.activityType}
             onChange={(e) => onTypeChange(e.target.value)}
-          >
-            <option value="working">{ACTIVITY_TYPE_LABEL.working}</option>
-            <option value="training">{ACTIVITY_TYPE_LABEL.training}</option>
-          </Select>
+            options={[
+              { value: "working", label: ACTIVITY_TYPE_LABEL.working },
+              { value: "training", label: ACTIVITY_TYPE_LABEL.training },
+            ]}
+          />
         </Field>
 
         <Field label="Prioritas" error={errors.priorityId} htmlFor="activity-priority">
@@ -168,14 +169,11 @@ export function ActivityForm({
             value={values.priorityId}
             onChange={(e) => set("priorityId", e.target.value)}
             aria-invalid={Boolean(errors.priorityId)}
-          >
-            <option value="">— pilih prioritas —</option>
-            {priorities.map((priority) => (
-              <option key={priority.id} value={priority.id}>
-                {priority.name}
-              </option>
-            ))}
-          </Select>
+            options={[
+              { value: "", label: "— pilih prioritas —" },
+              ...priorities.map((priority) => ({ value: priority.id, label: priority.name })),
+            ]}
+          />
         </Field>
 
         <Field label="Tanggal mulai" error={errors.startDate} htmlFor="activity-start">
@@ -210,14 +208,11 @@ export function ActivityForm({
             onChange={(e) => set("projectId", e.target.value)}
             disabled={isTraining}
             aria-invalid={Boolean(errors.projectId)}
-          >
-            <option value="">{isTraining ? "— tidak berlaku —" : "— pilih project —"}</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </Select>
+            options={[
+              { value: "", label: isTraining ? "— tidak berlaku —" : "— pilih project —" },
+              ...projects.map((project) => ({ value: project.id, label: project.name })),
+            ]}
+          />
         </Field>
 
         <Field label="Status" error={errors.statusId} htmlFor="activity-status">
@@ -226,14 +221,11 @@ export function ActivityForm({
             value={values.statusId}
             onChange={(e) => set("statusId", e.target.value)}
             aria-invalid={Boolean(errors.statusId)}
-          >
-            <option value="">— pilih status —</option>
-            {statuses.map((status) => (
-              <option key={status.id} value={status.id}>
-                {status.name}
-              </option>
-            ))}
-          </Select>
+            options={[
+              { value: "", label: "— pilih status —" },
+              ...statuses.map((status) => ({ value: status.id, label: status.name })),
+            ]}
+          />
         </Field>
       </div>
 

@@ -244,14 +244,11 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="">Semua</option>
-              {(units.data ?? []).map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "", label: "Semua" },
+                ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+              ]}
+            />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
@@ -262,16 +259,13 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="ALL">Semua</option>
-              {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
-                (value) => (
-                  <option key={value} value={value}>
-                    {EMPLOYEE_STATUS_LABEL[value]}
-                  </option>
-                )
-              )}
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
+                  keyof typeof EMPLOYEE_STATUS_LABEL
+                >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] })),
+              ]}
+            />
           </label>
         </div>
       ) : null}

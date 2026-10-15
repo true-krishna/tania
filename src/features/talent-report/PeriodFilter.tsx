@@ -93,13 +93,8 @@ export function PeriodFilter({ range, value, onApply }: PeriodFilterProps) {
           onChange={(e) => setStartMonth(e.target.value)}
           disabled={!range}
           aria-label="Bulan mulai"
-        >
-          {months.map((month) => (
-            <option key={month} value={month}>
-              {formatMonthLabel(month)}
-            </option>
-          ))}
-        </Select>
+          options={months.map((month) => ({ value: month, label: formatMonthLabel(month) }))}
+        />
       </label>
       <label className="flex flex-col gap-1 text-sm font-semibold text-tp-text">
         Sampai
@@ -108,13 +103,8 @@ export function PeriodFilter({ range, value, onApply }: PeriodFilterProps) {
           onChange={(e) => setEndMonth(e.target.value)}
           disabled={!range}
           aria-label="Bulan akhir"
-        >
-          {months.map((month) => (
-            <option key={month} value={month}>
-              {formatMonthLabel(month)}
-            </option>
-          ))}
-        </Select>
+          options={months.map((month) => ({ value: month, label: formatMonthLabel(month) }))}
+        />
       </label>
       <Button
         type="button"

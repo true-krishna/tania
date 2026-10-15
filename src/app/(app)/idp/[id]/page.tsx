@@ -234,13 +234,10 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                       addToast("error", err instanceof Error ? err.message : "Gagal memperbarui status aksi.");
                     });
                   }}
-                >
-                  {(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map((s) => (
-                    <option key={s} value={s}>
-                      {ACTION_STATUS_LABEL[s]}
-                    </option>
-                  ))}
-                </Select>
+                  options={(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map(
+                    (s) => ({ value: s, label: ACTION_STATUS_LABEL[s] }),
+                  )}
+                />
               </li>
             ))}
           </ul>
@@ -253,13 +250,14 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Metode">
-              <Select value={actionMethod} onChange={(e) => setActionMethod(e.target.value as DevelopmentMethod)}>
-                {(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => (
-                  <option key={m} value={m}>
-                    {METHOD_LABEL[m]}
-                  </option>
-                ))}
-              </Select>
+              <Select
+                value={actionMethod}
+                onChange={(e) => setActionMethod(e.target.value as DevelopmentMethod)}
+                options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
+                  value: m,
+                  label: METHOD_LABEL[m],
+                }))}
+              />
             </Field>
             <Field label="Tenggat (opsional)">
               <Input type="date" value={actionDue} onChange={(e) => setActionDue(e.target.value)} />

@@ -179,14 +179,14 @@ export function MasterDataSection<T extends MasterDataItem>({
           {select ? (
             <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
               {select.label}
-              <Select value={selectValue} onChange={(e) => setSelectValue(e.target.value)}>
-                <option value="">— {select.placeholder} —</option>
-                {select.options.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
-                  </option>
-                ))}
-              </Select>
+              <Select
+                value={selectValue}
+                onChange={(e) => setSelectValue(e.target.value)}
+                options={[
+                  { value: "", label: `— ${select.placeholder} —` },
+                  ...select.options.map((o) => ({ value: o.id, label: o.name })),
+                ]}
+              />
               {selectError ? <span className="text-xs text-red-600">{selectError}</span> : null}
             </label>
           ) : null}

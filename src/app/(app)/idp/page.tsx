@@ -125,12 +125,13 @@ export default function IdpPage() {
                 setStatus(e.target.value as IdpStatus | "ALL");
                 resetPage();
               }}
-            >
-              <option value="ALL">Semua</option>
-              <option value="IN_PROGRESS">Berjalan</option>
-              <option value="NEEDS_REVIEW">Perlu review</option>
-              <option value="COMPLETED">Selesai</option>
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                { value: "IN_PROGRESS", label: "Berjalan" },
+                { value: "NEEDS_REVIEW", label: "Perlu review" },
+                { value: "COMPLETED", label: "Selesai" },
+              ]}
+            />
           </label>
         </div>
       ) : null}

@@ -181,14 +181,17 @@ export default function NewIdpPage() {
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Label error={errors.employeeId}>
           Talent
-          <Select value={values.employeeId} onChange={(e) => set("employeeId", e.target.value)}>
-            <option value="">— pilih talent (assignable) —</option>
-            {talents.data?.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.fullName} ({emp.nomorInduk ?? "—"})
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.employeeId}
+            onChange={(e) => set("employeeId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih talent (assignable) —" },
+              ...(talents.data ?? []).map((emp) => ({
+                value: emp.id,
+                label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
+              })),
+            ]}
+          />
         </Label>
 
         <Card className="flex flex-col gap-4">
@@ -268,13 +271,11 @@ export default function NewIdpPage() {
                   <Select
                     value={action.method}
                     onChange={(e) => updateAction(index, { method: e.target.value as DevelopmentMethod })}
-                  >
-                    {(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => (
-                      <option key={m} value={m}>
-                        {METHOD_LABEL[m]}
-                      </option>
-                    ))}
-                  </Select>
+                    options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
+                      value: m,
+                      label: METHOD_LABEL[m],
+                    }))}
+                  />
                 </Label>
                 <Label>
                   Tenggat (opsional)
