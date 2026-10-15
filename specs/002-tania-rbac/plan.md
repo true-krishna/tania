@@ -468,3 +468,24 @@ reaktivasi (§4.3).
 
 **Deny-by-default tetap berlaku** (FR-03): baris bertanda \* tetap ditutup untuk semua
 peran, termasuk Admin.
+
+### 14.1 Status implementasi (2026-10-15)
+
+Gelombang R6 sudah diimplementasikan pada branch `agent/diggie/291774dc1b58`:
+`tania-backend` commit **b6571ee**, `tania-dashboard` commit **2392352**.
+
+- **R6.1** selesai — `matrix.ts`: `assignments`/`entra`/`cv` + ADMIN, `MANAGE_ROLES`
+  `employees` & `assignments` + ADMIN; tabel `canManage` ditambahkan di `matrix.test.ts`.
+- **R6.2/R6.3** selesai — gate `internal/usecase/{assignment,contract,entra,employee}.go`
+  menerima `RoleAdmin`; `cv.go` `ProfileFor` menerima Admin.
+  **Penyimpangan yang diminta keputusan**: penulisan CV tetap hanya milik Talent
+  (`Upsert`) karena konten CV personal dan API tulisnya ber-scope pemilik — membuka
+  tulis Admin berarti perubahan SDL/API (lihat catatan tanya di TAN-212).
+- **R6.4** selesai — nav menampilkan Provisi Entra & CV untuk Admin; entri IDP/Evaluasi
+  dibiarkan as is (baseline TAN-178).
+- **R6.5** sebagian — uji matriks per sel (Go + vitest) hijau; berkas e2e Playwright
+  diperbarui untuk baris Admin, tetapi **belum dijalankan** di lingkungan ini (butuh
+  aplikasi + DB ter-seed + browser).
+- **Perkakas asisten internal** `ScopedExpiring`/`ScopedNeedingFollowUp` sengaja tetap
+  `Chapter+Operation` (bukan kelola penuh): keduanya jalur baca ber-cakupan chapter
+  milik asisten data, bukan permukaan RBAC yang diminta clarify 4.
