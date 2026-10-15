@@ -95,6 +95,7 @@ Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER id
 | `AI_PROVIDER_*` belum dikonfigurasi | Kegagalan eksplisit "asisten belum dikonfigurasi" | Pesan gagal ramah di thread (FR-11) |
 | Provider model gagal/timeout/putaran tool habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (FR-11) | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; tidak ada angka yang ditampilkan |
 | `clientRequestId` hilang/bukan UUID | Ditolak sebelum menyentuh model | — |
+| Kuota per user terlampaui (**20 pesan/jam**, konstanta disetujui) | Ditolak **sebelum** pemanggilan model — tidak ada token terpakai | Pesan ramah "batas pesan per jam tercapai"; tombol kirim nonaktif sampai jendela bergeser |
 | Pertanyaan di luar domain Tania (FR-12) | Model diarahkan system prompt menolak sopan + menjelaskan cakupan | Ditampilkan sebagai jawaban biasa |
 
 ## Toolset data (read-only; diekspos ke model, bukan ke klien)
@@ -111,6 +112,8 @@ Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (N
 | `karyawan_data_belum_lengkap` | — | baca baru ber-cakupan (NULL-check field opsional; lihat `data-model.md`) | Penambahan baca bersama dua lainnya |
 
 **Batas yang dijaga (R-11)**: baca ber-cakupan chapter hidup di lapisan usecase/repository dan **tidak** diekspos sebagai query/mutation GraphQL. Bila diekspos, Chapter akan memperoleh permukaan `employmentContracts`/`expiringContracts` milik Operation — itu amandemen matriks RBAC. `ScopeChapterID` hanya diisi server dari identitas pemanggil; resolver `employmentContracts(filter:)` tidak memetakan nilai dari klien ke field ini. Resolver existing juga tetap memanggil repositori dengan scope `nil` (Operation-wide) — perilaku query existing **tidak berubah**; scope hanya diisi pada jalur tool asisten.
+
+**Guardrail biaya (FR-10 — nilai disetujui pemilik 2026-10-14, semuanya konstanta kode, bukan env)**: jendela konteks **12 pesan**; panjang pesan **2.000 karakter**; token keluaran **800**; timeout permintaan **25 s**; rate limit **20 pesan/jam/user** memakai `RateLimiter.Allow` Redis existing. Kenaikan nilai mana pun = perubahan kode + persetujuan pemilik. Pemakaian token per pesan asisten tersimpan untuk laporan bulanan.
 
 **Protokol loop** (diegakkan usecase, bukan harapan prompt): maksimum 5 putaran tool per jawaban; setiap hasil tool diberi label sumber + `fetchedAt` (dasar FR-05); jawaban final wajib memuat sumber & waktu data; tool error → dilaporkan ke model sebagai kegagalan (jawaban jujur, bukan konjektur).
 

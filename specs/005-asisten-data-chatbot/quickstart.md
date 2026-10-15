@@ -7,7 +7,7 @@ Panduan validasi runnable untuk membuktikan asisten bekerja end-to-end — groun
 ## Prasyarat
 
 - `tania-backend` berjalan lokal: `make up` (PostgreSQL + Redis) + `make run` (migrasi `0013` ter-apply otomatis saat startup).
-- **Provider model organisasi** tersedia dan env terisi: `AI_PROVIDER_BASE_URL`, `AI_PROVIDER_API_KEY`, `AI_PROVIDER_MODEL` (opsional: `AI_MAX_OUTPUT_TOKENS`, `AI_REQUEST_TIMEOUT`). API key hanya via env/secret store — jangan pernah menulisnya ke file apa pun.
+- **Provider model organisasi** tersedia dan env terisi: `AI_PROVIDER_BASE_URL`, `AI_PROVIDER_API_KEY`, `AI_PROVIDER_MODEL`. API key hanya via env/secret store — jangan pernah menulisnya ke file apa pun. Batas guardrail (12 pesan konteks, 2.000 karakter, 800 token keluaran, timeout 25 s, 20 pesan/jam/user) adalah **konstanta kode** dengan nilai yang sudah disetujui pemilik produk — bukan env, kenaikannya butuh perubahan kode + persetujuan.
 - Akun uji: **Chapter** (dengan chapter berisi karyawan & kontrak), **Chapter** kedua dari chapter **berbeda**, **Operation**, **Admin**, **Talent** (untuk verifikasi penolakan).
 - Data seed minimal: beberapa karyawan dengan kontrak aktif, sebagian berakhir ≤90 hari, sebagian tanpa tindak lanjut, sebagian dengan data diri belum lengkap.
 - `tania-dashboard`: `pnpm install`, `pnpm codegen` (setelah skema backend berubah), `pnpm dev`.
@@ -72,6 +72,7 @@ Login sebagai **Chapter** (chapter A berisi data seed).
    Harapan: setiap pesan asisten tercatat token-nya; laporan dapat dibuat tanpa alat tambahan.
 2. Periksa log modul chat. Harapan: hanya ID teknis & token — **tidak ada isi pesan**.
 3. **Retensi (disetujui 90 hari)** — jalankan job retensi dengan cutoff tersimulasi. Harapan: percakapan/pesan lebih tua dari 90 hari **terhapus permanen** (hard delete), jumlahnya tercatat di audit trail, dan tidak ada data bisnis lain yang tersentuh.
+4. **Rate limit (disetujui 20 pesan/jam/user)** — kirim pesan beruntun melewati batas. Harapan: pesan ke-21 ditolak ramah **sebelum** memanggil model (tidak ada pemakaian token), dan kembali normal setelah jendela bergeser.
 
 ## Kriteria lulus
 

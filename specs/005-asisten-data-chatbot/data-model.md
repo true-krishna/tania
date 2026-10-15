@@ -23,7 +23,7 @@ Dua entitas baru (**ChatConversation**, **ChatMessage**) + **tiga penambahan bac
 | `id` | UUID / `uuid PK` | Dibuat server |
 | `conversationID` | UUID / `conversation_id FK → chat_conversations` | Kepemilikan diwarisi lewat percakapan induk; akses lintas user ditolak `ErrNotFound` |
 | `role` | enum / `text CHECK` | `USER` atau `ASSISTANT` (enum GraphQL `ChatMessageRole`) |
-| `content` | text | Isi pesan. Pesan `USER` **maks 2.000 karakter** (FR-03/FR-10 — ditolak sebelum menyentuh model); pesan `ASSISTANT` terikat `AI_MAX_OUTPUT_TOKENS` |
+| `content` | text | Isi pesan. Pesan `USER` **maks 2.000 karakter** (FR-03/FR-10 — ditolak sebelum menyentuh model); pesan `ASSISTANT` terikat batas token keluaran (800, konstanta disetujui — bukan env) |
 | `inputTokens` / `outputTokens` | int / `int NOT NULL DEFAULT 0` | Pemakaian token per pesan asisten (FR-10/US6) — bahan laporan biaya; 0 untuk pesan user |
 | `sources` | jsonb / `jsonb` | Rujukan sumber jawaban asisten: daftar `{tool, params, rowCount, fetchedAt}` — audit kualitas jawaban (US5 skenario 4); **internal**, tidak diekspos ke GraphQL (klien melihat rujukan dari teks jawaban, FR-05) |
 | `createdAt` | time / `timestamptz` | Waktu pesan |
