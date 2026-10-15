@@ -489,3 +489,20 @@ Gelombang R6 sudah diimplementasikan pada branch `agent/diggie/291774dc1b58`:
 - **Perkakas asisten internal** `ScopedExpiring`/`ScopedNeedingFollowUp` sengaja tetap
   `Chapter+Operation` (bukan kelola penuh): keduanya jalur baca ber-cakupan chapter
   milik asisten data, bukan permukaan RBAC yang diminta clarify 4.
+
+### 14.2 `/speckit.tasks` dan nav R2.2 (2026-10-15, lanjutan TAN-212)
+
+- **Nav R2.2 selesai** (`tania-dashboard` commit `4fc914f`): `employees` untuk
+  Chapter (cakupan) & Talent (data diri), `assignments` untuk Operation (hanya baca) &
+  Talent (miliknya), `entra`/`cv` untuk Admin. Invarian baru
+  `src/components/Sidebar/nav.test.ts` menegakkan **nav ≡ matriks** per sel sehingga
+  drift `nav.ts` vs `matrix.ts` (R6 §12) tidak bisa kembali diam-diam; entri
+  IDP/Evaluasi dikecualikan karena tetap as is.
+- **`tasks.md` backend diperbarui** (`/speckit.tasks`): gelombang **R6** (T070–T078)
+  ditambahkan beserta status as-built, T030/T031/T033/T034 diselaraskan dengan
+  amandemen clarify 4, dan traceability diberi baris R6. Sisa terbuka: T078 (jalankan
+  e2e Playwright di pipeline), T035/T040 (pangkas query & hapus field dashboard
+  IDP/eval — modul ditunda, di luar iterasi ini), T050–T052 (UAT/gerbang rilis),
+  T061 (putusan O5/O6).
+- **Penulisan CV**: keputusan pemilik produk 2026-10-15 "admin hanya bisa read cv"
+  menutup pertanyaan §14.1 — tidak ada perubahan SDL/API tulis CV.
