@@ -7,12 +7,14 @@ import { Card } from "@/components/Card";
 import { PageHeader } from "@/components/PageHeader";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { useEmployee } from "@/features/employees/useEmployee";
 import { EMPLOYEE_STATUS_LABEL, GENDER_LABEL } from "@/features/employees/labels";
 import {
   BAND_POSITION_LABEL,
   CONTRACT_END_REASON_LABEL,
   CONTRACT_STATUS_LABEL,
+  CONTRACT_STATUS_VARIANT,
   CONTRACT_TYPE_LABEL,
   WORK_LOCATION_LABEL,
 } from "@/features/contracts/labels";
@@ -252,9 +254,9 @@ function ContractHistoryCard({ contract, linked }: { contract: ContractRow; link
         ) : (
           <span className="text-sm font-semibold text-zinc-900">{contract.contractNo}</span>
         )}
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+        <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
           {CONTRACT_STATUS_LABEL[contract.status]}
-        </span>
+        </Chip>
         {contract.endReason ? (
           <span className="text-xs text-zinc-500">
             {CONTRACT_END_REASON_LABEL[contract.endReason]}

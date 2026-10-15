@@ -1,33 +1,29 @@
-import { cn } from "@/lib/cn";
+import { Chip, type ChipVariant } from "@/components/Chip";
 import type { EvaluationFillState } from "@/generated/graphql/types";
 
+const PERIOD_STATE: Record<
+  "SCHEDULED" | "RUNNING" | "CLOSED",
+  { label: string; variant: ChipVariant }
+> = {
+  SCHEDULED: { label: "Terjadwal", variant: "warning" },
+  RUNNING: { label: "Berjalan", variant: "info" },
+  CLOSED: { label: "Berakhir", variant: "neutral" },
+};
+
 export function PeriodStateBadge({ state }: { state: "SCHEDULED" | "RUNNING" | "CLOSED" }) {
-  const label = { SCHEDULED: "Terjadwal", RUNNING: "Berjalan", CLOSED: "Berakhir" }[state];
+  const { label, variant } = PERIOD_STATE[state];
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
-        state === "RUNNING" && "bg-green-100 text-green-700",
-        state === "SCHEDULED" && "bg-amber-100 text-amber-700",
-        state === "CLOSED" && "bg-zinc-100 text-zinc-600",
-      )}
-    >
+    <Chip variant={variant} size="small">
       {label}
-    </span>
+    </Chip>
   );
 }
 
 export function FillStateBadge({ fillState }: { fillState: EvaluationFillState }) {
+  const evaluated = fillState === "EVALUATED";
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
-        fillState === "EVALUATED"
-          ? "bg-green-100 text-green-700"
-          : "bg-amber-100 text-amber-700",
-      )}
-    >
-      {fillState === "EVALUATED" ? "Dinilai" : "Belum dinilai"}
-    </span>
+    <Chip variant={evaluated ? "success" : "warning"} size="small">
+      {evaluated ? "Dinilai" : "Belum dinilai"}
+    </Chip>
   );
 }

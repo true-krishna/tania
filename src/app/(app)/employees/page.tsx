@@ -6,6 +6,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable, type Column } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
@@ -14,7 +15,7 @@ import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
-import { EMPLOYEE_STATUS_LABEL } from "@/features/employees/labels";
+import { EMPLOYEE_STATUS_LABEL, EMPLOYEE_STATUS_VARIANT } from "@/features/employees/labels";
 import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
@@ -61,9 +62,9 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
       <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.unit?.name)}</td>
       <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.jobRole?.name)}</td>
       <td className="px-4 py-2.5">
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+        <Chip variant={EMPLOYEE_STATUS_VARIANT[employee.status]} size="small">
           {EMPLOYEE_STATUS_LABEL[employee.status]}
-        </span>
+        </Chip>
       </td>
       <td className="col-action">
         <RowActionsMenu

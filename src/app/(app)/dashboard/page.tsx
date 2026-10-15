@@ -3,6 +3,7 @@
 import * as React from "react";
 import { BarList } from "@/components/BarList";
 import { Card } from "@/components/Card";
+import { Chip, type ChipVariant } from "@/components/Chip";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -20,6 +21,11 @@ import type { AssignmentStatus } from "@/generated/graphql/types";
 const ASSIGNMENT_STATUS_LABEL: Record<AssignmentStatus, string> = {
   ACTIVE: "Aktif",
   COMPLETED: "Selesai",
+};
+
+const ASSIGNMENT_STATUS_VARIANT: Record<AssignmentStatus, ChipVariant> = {
+  ACTIVE: "success",
+  COMPLETED: "neutral",
 };
 
 function Panel({
@@ -144,9 +150,9 @@ export default function DashboardPage() {
                         {a.jobRole.name} · {a.periodStart} — {a.periodEnd ?? "…"}
                       </p>
                     </div>
-                    <span className="rounded-md bg-tp-tint-info px-2 py-0.5 text-xs font-semibold text-tp-ink-info">
+                    <Chip variant={ASSIGNMENT_STATUS_VARIANT[a.status]} size="small">
                       {ASSIGNMENT_STATUS_LABEL[a.status]}
-                    </span>
+                    </Chip>
                   </li>
                 ))}
               </ul>

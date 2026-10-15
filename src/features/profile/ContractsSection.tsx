@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Card } from "@/components/Card";
+import { Chip } from "@/components/Chip";
 import { EmptyState } from "@/components/DataState";
 import {
   BAND_POSITION_LABEL,
   CONTRACT_END_REASON_LABEL,
   CONTRACT_STATUS_LABEL,
+  CONTRACT_STATUS_VARIANT,
   CONTRACT_TYPE_LABEL,
   WORK_LOCATION_LABEL,
 } from "@/features/contracts/labels";
@@ -56,9 +58,9 @@ function ContractRow({ contract, linked }: { contract: ProfileContract; linked: 
         ) : (
           <span className="text-sm font-semibold text-zinc-900">{contract.contractNo}</span>
         )}
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+        <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
           {CONTRACT_STATUS_LABEL[contract.status]}
-        </span>
+        </Chip>
         {contract.endReason ? (
           <span className="text-xs text-zinc-500">
             {CONTRACT_END_REASON_LABEL[contract.endReason]}

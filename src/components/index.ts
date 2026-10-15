@@ -5,6 +5,7 @@ export { Avatar } from "./Avatar";
 export { UserMenu, type UserMenuItem } from "./UserMenu";
 export { BoardTable } from "./BoardTable";
 export { Button } from "./Button";
+export { Chip, type ChipVariant, type ChipSize } from "./Chip";
 export { RowActionsMenu, type RowAction } from "./RowActionsMenu";
 export { DataTable, type DataTableColumn, type DataTablePagination } from "./DataTable";
 export { FilterButton } from "./FilterButton";

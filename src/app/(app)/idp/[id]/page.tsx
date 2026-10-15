@@ -7,10 +7,12 @@ import { useMutation } from "@apollo/client";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { Chip } from "@/components/Chip";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ToastStack } from "@/components/Toast";
+import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useIdp } from "@/features/idp/useIdp";
 import {
   AddDevelopmentActionDocument,
@@ -23,14 +25,7 @@ import { cn } from "@/lib/cn";
 import type {
   DevelopmentActionStatus,
   DevelopmentMethod,
-  IdpStatus,
 } from "@/generated/graphql/types";
-
-const STATUS_LABEL: Record<IdpStatus, string> = {
-  IN_PROGRESS: "Berjalan",
-  NEEDS_REVIEW: "Perlu review",
-  COMPLETED: "Selesai",
-};
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -190,16 +185,9 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         title={`IDP — ${idp.talent.fullName}`}
         subtitle={`${idp.id} · ${idp.talent.jobRole?.name ?? "—"}`}
         actions={
-          <span
-            className={cn(
-              "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
-              idp.status === "COMPLETED" && "bg-green-100 text-green-700",
-              idp.status === "NEEDS_REVIEW" && "bg-amber-100 text-amber-700",
-              idp.status === "IN_PROGRESS" && "bg-tp-tint-info text-tp-ink-info",
-            )}
-          >
-            {STATUS_LABEL[idp.status]}
-          </span>
+          <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
+            {IDP_STATUS_LABEL[idp.status]}
+          </Chip>
         }
       />
 
@@ -382,7 +370,9 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
           </div>
         </Card>
       ) : (
-        <p className="w-fit rounded-full bg-green-100 px-4 py-1.5 text-sm text-green-700">IDP selesai.</p>
+        <Chip variant="success" size="large">
+          IDP selesai.
+        </Chip>
       )}
     </section>
   );
