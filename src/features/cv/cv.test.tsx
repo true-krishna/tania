@@ -409,4 +409,34 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
     expect(screen.getByText("Go")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
   });
+
+  it("gives Admin the same read-only roster over every talent (TAN-212 clarify 4)", async () => {
+    setRole("ADMIN");
+    render(
+      <ToastProvider>
+        <MockedProvider
+          mocks={[
+            {
+              request: { query: EmployeesDocument, variables: { filter: { assignableOnly: true }, first: 25, after: null } },
+              result: employeesResult,
+            },
+            {
+              request: { query: CvProfileDocument, variables: { employeeId: "emp-1" } },
+              result: cvProfileResult,
+            },
+          ]}
+        >
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    expect(await screen.findByText(/seluruh talent/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "emp-1" } });
+
+    expect(await screen.findByText(/Universitas Indonesia/)).toBeInTheDocument();
+    // A CV is personal content: Admin reads it, never edits it (FR-13).
+    expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
+  });
 });

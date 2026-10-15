@@ -330,17 +330,16 @@ describe("EmployeeDetailPage per role (T034)", () => {
     expect(screen.getByRole("button", { name: /ya, nonaktifkan/i })).toBeInTheDocument();
   });
 
-  it("is read-only for Admin, without assignment history", async () => {
+  it("lets Admin manage the record (TAN-212 clarify 4)", async () => {
     auth.role = "ADMIN";
     await act(async () => {
       renderDetail([employeeMock, auditLogsMock]);
     });
 
     expect(await screen.findByText("************1234")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /tambah kontrak/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
-    expect(screen.queryByText(/riwayat assignment/i)).toBeNull();
+    expect(screen.getByRole("button", { name: /ubah data/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /tambah kontrak/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ya, nonaktifkan/i })).toBeInTheDocument();
   });
 
   for (const role of ["CHAPTER", "TALENT"] as const) {

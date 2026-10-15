@@ -4,7 +4,8 @@ import type { AccessRole } from "@/generated/graphql";
  * UI mirror of the role & module matrix (specs/002-tania-rbac/spec.md). A
  * module opens only for the roles it lists (deny-by-default, FR-03). TAN-178
  * re-opens IDP & Evaluation on this line to follow the feature/design baseline;
- * the backend remains the enforcement point (FR-15/16).
+ * the backend remains the enforcement point (FR-15/16). TAN-212 (clarify 4)
+ * gives Admin full manage on every active module.
  */
 export type Module =
   | "dashboard"
@@ -28,20 +29,20 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   activities: ALL,
   workload: ALL,
   employees: ["OPERATION", "ADMIN", "CHAPTER", "TALENT"],
-  entra: ["OPERATION"],
+  entra: ["OPERATION", "ADMIN"],
   contracts: ["OPERATION", "ADMIN"],
-  assignments: ["CHAPTER", "OPERATION", "TALENT"],
+  assignments: ["CHAPTER", "OPERATION", "TALENT", "ADMIN"],
   idp: ["CHAPTER", "TALENT", "ADMIN"],
   evaluations: ["CHAPTER", "TALENT", "ADMIN"],
-  cv: ["TALENT", "CHAPTER"],
+  cv: ["TALENT", "CHAPTER", "ADMIN"],
   masterData: ["ADMIN"],
   accounts: ["ADMIN"],
   audit: ["ADMIN"],
 };
 
 const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
-  employees: ["OPERATION"],
-  assignments: ["CHAPTER"],
+  employees: ["OPERATION", "ADMIN"],
+  assignments: ["CHAPTER", "ADMIN"],
 };
 
 export function canManage(role: AccessRole | null | undefined, module: Module): boolean {

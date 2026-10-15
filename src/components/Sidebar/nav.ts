@@ -64,9 +64,9 @@ export const NAV: readonly NavEntry[] = [
       { href: "/assignments", label: "Assignments", roles: ["CHAPTER", "ADMIN"] },
     ],
   },
-  { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION"] },
+  { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },
   { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: ["CHAPTER", "TALENT", "ADMIN"] },
-  { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER"] },
+  { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER", "ADMIN"] },
   {
     kind: "group",
     id: "evaluations",

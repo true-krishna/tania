@@ -53,16 +53,20 @@ function formatDegree(degree: string | null | undefined): string {
  * CV profile (FR-12/FR-13) — US4.
  * Talent edits their own structured CV (summary, educations, certifications,
  * skills) one section at a time; work experience is derived from assignment
- * history (never hand-entered). Chapter gets a read-only view of a talent in
- * its scope. Other roles are blocked at the UI layer (server enforces FR-16).
+ * history (never hand-entered). Chapter and Admin get a read-only view —
+ * Chapter for a talent in its scope, Admin for any talent (TAN-212 clarify 4).
+ * Other roles are blocked at the UI layer (server enforces FR-16).
  */
 export default function CvPage() {
   const role = useSessionRole();
   if (role === "TALENT") return <TalentCvEditor />;
-  if (role === "CHAPTER") return <ChapterCvViewer />;
+  if (role === "CHAPTER") return <CvRosterViewer audience="CHAPTER" />;
+  // Admin manages every active module (TAN-212 clarify 4): a read-only roster
+  // view, since a CV is personal content owned by its talent (FR-13).
+  if (role === "ADMIN") return <CvRosterViewer audience="ADMIN" />;
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title="Profil CV" subtitle="Fitur CV hanya untuk peran Talent dan Chapter (FR-13)." />
+      <PageHeader title="Profil CV" subtitle="Fitur CV hanya untuk peran Talent, Chapter, dan Admin (FR-13)." />
     </section>
   );
 }
@@ -523,7 +527,7 @@ function WorkExperienceSection({ cv }: { cv: CvFieldsFragment | undefined }) {
   );
 }
 
-function ChapterCvViewer() {
+function CvRosterViewer({ audience }: { audience: "CHAPTER" | "ADMIN" }) {
   const talents = useEmployees({ assignableOnly: true });
   const [selected, setSelected] = React.useState("");
   const { status, data, error } = useCvProfile(selected || null);
@@ -536,7 +540,11 @@ function ChapterCvViewer() {
     <section className="flex flex-col gap-4">
       <PageHeader
         title="Profil CV Talent"
-        subtitle="Lihat profil CV talent dalam chapter Anda (hanya-baca, FR-13)."
+        subtitle={
+          audience === "ADMIN"
+            ? "Lihat profil CV seluruh talent (hanya-baca; konten CV milik talent, FR-13)."
+            : "Lihat profil CV talent dalam chapter Anda (hanya-baca, FR-13)."
+        }
       />
       <label className={BLOCK}>
         Pilih Talent
