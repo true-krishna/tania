@@ -172,14 +172,14 @@ export default function ContractsPage() {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="ALL">Semua</option>
-              {CONTRACT_TYPE_ORDER.map((type) => (
-                <option key={type} value={type}>
-                  {CONTRACT_TYPE_LABEL[type]}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...CONTRACT_TYPE_ORDER.map((type) => ({
+                  value: type,
+                  label: CONTRACT_TYPE_LABEL[type],
+                })),
+              ]}
+            />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
@@ -190,16 +190,13 @@ export default function ContractsPage() {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="ALL">Semua</option>
-              {(Object.keys(CONTRACT_STATUS_LABEL) as Array<
-                keyof typeof CONTRACT_STATUS_LABEL
-              >).map((value) => (
-                <option key={value} value={value}>
-                  {CONTRACT_STATUS_LABEL[value]}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...(Object.keys(CONTRACT_STATUS_LABEL) as Array<
+                  keyof typeof CONTRACT_STATUS_LABEL
+                >).map((value) => ({ value, label: CONTRACT_STATUS_LABEL[value] })),
+              ]}
+            />
           </label>
         </div>
       ) : null}

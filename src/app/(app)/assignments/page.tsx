@@ -102,14 +102,14 @@ function TalentSelect({
   return (
     <label className="flex items-center gap-2 text-sm text-zinc-700">
       <span>Talent</span>
-      <Select value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">Semua</option>
-        {options.map((emp) => (
-          <option key={emp.id} value={emp.id}>
-            {emp.fullName}
-          </option>
-        ))}
-      </Select>
+      <Select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        options={[
+          { value: "", label: "Semua" },
+          ...options.map((emp) => ({ value: emp.id, label: emp.fullName })),
+        ]}
+      />
     </label>
   );
 }
@@ -173,14 +173,11 @@ export default function AssignmentsPage() {
                 setProjectId(e.target.value);
                 resetPage();
               }}
-            >
-              <option value="">Semua</option>
-              {projects.data?.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "", label: "Semua" },
+                ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+              ]}
+            />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
@@ -190,11 +187,12 @@ export default function AssignmentsPage() {
                 setStatus(e.target.value as AssignmentStatus | "ALL");
                 resetPage();
               }}
-            >
-              <option value="ALL">Semua</option>
-              <option value="ACTIVE">Aktif</option>
-              <option value="COMPLETED">Selesai</option>
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                { value: "ACTIVE", label: "Aktif" },
+                { value: "COMPLETED", label: "Selesai" },
+              ]}
+            />
           </label>
         </div>
       ) : null}

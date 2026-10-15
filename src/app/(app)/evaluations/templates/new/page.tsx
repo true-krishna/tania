@@ -103,12 +103,13 @@ export default function NewEvaluationTemplatePage() {
                 <Select
                   value={criterion.answerType}
                   onChange={(e) => setCriterion(index, { answerType: e.target.value as EvaluationAnswerType })}
-                >
-                  <option value="SCALE_1_5">Skala 1–5</option>
-                  <option value="SCALE_1_10">Skala 1–10</option>
-                  <option value="YES_NO">Ya / Tidak</option>
-                  <option value="FREE_TEXT">Teks bebas</option>
-                </Select>
+                  options={[
+                    { value: "SCALE_1_5", label: "Skala 1–5" },
+                    { value: "SCALE_1_10", label: "Skala 1–10" },
+                    { value: "YES_NO", label: "Ya / Tidak" },
+                    { value: "FREE_TEXT", label: "Teks bebas" },
+                  ]}
+                />
               </div>
               <button
                 type="button"

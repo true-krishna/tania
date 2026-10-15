@@ -216,14 +216,17 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         </Label>
         <Label error={errors.gender}>
           Jenis kelamin
-          <Select value={values.gender} onChange={(e) => set("gender", e.target.value)}>
-            <option value="">— pilih jenis kelamin —</option>
-            {(Object.keys(GENDER_LABEL) as Array<keyof typeof GENDER_LABEL>).map((value) => (
-              <option key={value} value={value}>
-                {GENDER_LABEL[value]}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.gender}
+            onChange={(e) => set("gender", e.target.value)}
+            options={[
+              { value: "", label: "— pilih jenis kelamin —" },
+              ...(Object.keys(GENDER_LABEL) as Array<keyof typeof GENDER_LABEL>).map((value) => ({
+                value,
+                label: GENDER_LABEL[value],
+              })),
+            ]}
+          />
         </Label>
         <Label error={errors.phone}>
           Telepon
@@ -265,15 +268,13 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         </Label>
         <Label>
           Status kepegawaian
-          <Select value={values.status} onChange={(e) => set("status", e.target.value)}>
-            {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
-              (value) => (
-                <option key={value} value={value}>
-                  {EMPLOYEE_STATUS_LABEL[value]}
-                </option>
-              )
-            )}
-          </Select>
+          <Select
+            value={values.status}
+            onChange={(e) => set("status", e.target.value)}
+            options={(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
+              keyof typeof EMPLOYEE_STATUS_LABEL
+            >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] }))}
+          />
         </Label>
 
         <div className="flex gap-2">

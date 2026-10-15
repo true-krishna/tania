@@ -129,36 +129,39 @@ function NewAssignmentForm() {
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Label error={errors.employeeId}>
           Talent
-          <Select value={values.employeeId} onChange={(e) => set("employeeId", e.target.value)}>
-            <option value="">— pilih talent (assignable) —</option>
-            {talents.data?.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.fullName} ({emp.nomorInduk ?? "—"})
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.employeeId}
+            onChange={(e) => set("employeeId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih talent (assignable) —" },
+              ...(talents.data ?? []).map((emp) => ({
+                value: emp.id,
+                label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
+              })),
+            ]}
+          />
         </Label>
         <Label error={errors.projectId}>
           Project
-          <Select value={values.projectId} onChange={(e) => set("projectId", e.target.value)}>
-            <option value="">— pilih project —</option>
-            {projects.data?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.projectId}
+            onChange={(e) => set("projectId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih project —" },
+              ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+            ]}
+          />
         </Label>
         <Label error={errors.jobRoleId}>
           Job Role
-          <Select value={values.jobRoleId} onChange={(e) => set("jobRoleId", e.target.value)}>
-            <option value="">— pilih job role —</option>
-            {jobRoles.data?.map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.jobRoleId}
+            onChange={(e) => set("jobRoleId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih job role —" },
+              ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
+            ]}
+          />
         </Label>
         <Label error={errors.periodStart}>
           Tanggal Mulai

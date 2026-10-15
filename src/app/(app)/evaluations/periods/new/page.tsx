@@ -75,14 +75,14 @@ export default function NewEvaluationPeriodPage() {
         </Label>
         <Label error={errors.templateId}>
           Template Evaluasi
-          <Select value={values.templateId} onChange={(e) => set("templateId", e.target.value)}>
-            <option value="">— pilih template —</option>
-            {(templates.data ?? []).map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.templateId}
+            onChange={(e) => set("templateId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih template —" },
+              ...(templates.data ?? []).map((t) => ({ value: t.id, label: t.name })),
+            ]}
+          />
         </Label>
         <div className="grid grid-cols-2 gap-3">
           <Label error={errors.startDate}>

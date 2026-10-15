@@ -321,51 +321,53 @@ function MutationAction({ contract }: { contract: Contract }) {
         </Label>
         <Label error={errors.unitId}>
           Unit baru
-          <Select value={values.unitId} onChange={(e) => set("unitId", e.target.value)}>
-            <option value="">— pilih unit —</option>
-            {(units.data ?? []).map((unit) => (
-              <option key={unit.id} value={unit.id}>
-                {unit.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.unitId}
+            onChange={(e) => set("unitId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih unit —" },
+              ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+            ]}
+          />
         </Label>
         <Label error={errors.jobRoleId}>
           Posisi / Job Role baru
-          <Select value={values.jobRoleId} onChange={(e) => set("jobRoleId", e.target.value)}>
-            <option value="">— pilih job role —</option>
-            {(jobRoles.data ?? []).map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.jobRoleId}
+            onChange={(e) => set("jobRoleId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih job role —" },
+              ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
+            ]}
+          />
         </Label>
         <Label error={errors.workLocation}>
           Work location
           <Select
             value={values.workLocation}
             onChange={(e) => set("workLocation", e.target.value)}
-          >
-            <option value="">— pilih lokasi kerja —</option>
-            <option value="JAKARTA">Jakarta</option>
-            <option value="BANDUNG">Bandung</option>
-          </Select>
+            options={[
+              { value: "", label: "— pilih lokasi kerja —" },
+              { value: "JAKARTA", label: "Jakarta" },
+              { value: "BANDUNG", label: "Bandung" },
+            ]}
+          />
         </Label>
         <Label error={errors.bandPosition}>
           Band position
           <Select
             value={values.bandPosition}
             onChange={(e) => set("bandPosition", e.target.value)}
-          >
-            <option value="UNDEFINED">Belum ditetapkan</option>
-            <option value="I">I</option>
-            <option value="II">II</option>
-            <option value="III">III</option>
-            <option value="IV">IV</option>
-            <option value="V">V</option>
-            <option value="VI">VI</option>
-          </Select>
+            options={[
+              { value: "UNDEFINED", label: "Belum ditetapkan" },
+              { value: "I", label: "I" },
+              { value: "II", label: "II" },
+              { value: "III", label: "III" },
+              { value: "IV", label: "IV" },
+              { value: "V", label: "V" },
+              { value: "VI", label: "VI" },
+            ]}
+          />
         </Label>
         <Label>
           Job title <span className="text-xs font-normal text-zinc-500">(opsional)</span>

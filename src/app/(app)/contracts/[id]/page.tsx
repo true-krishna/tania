@@ -302,29 +302,30 @@ function ContractEditForm({
         <Select
           value={values.bandPosition}
           onChange={(e) => set("bandPosition", e.target.value)}
-        >
-          <option value="UNDEFINED">Belum ditetapkan</option>
-          <option value="I">I</option>
-          <option value="II">II</option>
-          <option value="III">III</option>
-          <option value="IV">IV</option>
-          <option value="V">V</option>
-          <option value="VI">VI</option>
-        </Select>
+          options={[
+            { value: "UNDEFINED", label: "Belum ditetapkan" },
+            { value: "I", label: "I" },
+            { value: "II", label: "II" },
+            { value: "III", label: "III" },
+            { value: "IV", label: "IV" },
+            { value: "V", label: "V" },
+            { value: "VI", label: "VI" },
+          ]}
+        />
       </Label>
       <Label error={errors.workLocation}>
         Work location
         <Select
           value={values.workLocation}
           onChange={(e) => set("workLocation", e.target.value)}
-        >
-          {/* UNDEFINED is the state of a contract whose location was never
-              recorded (legacy rows); showing it keeps the select honest
-              instead of falling back to the first option. */}
-          <option value="UNDEFINED">Belum ditetapkan</option>
-          <option value="JAKARTA">Jakarta</option>
-          <option value="BANDUNG">Bandung</option>
-        </Select>
+          options={[
+            // UNDEFINED marks legacy rows whose location was never recorded; keeping it
+            // avoids silently falling back to the select's first region.
+            { value: "UNDEFINED", label: "Belum ditetapkan" },
+            { value: "JAKARTA", label: "Jakarta" },
+            { value: "BANDUNG", label: "Bandung" },
+          ]}
+        />
       </Label>
       <Label error={errors.notes}>
         Catatan <span className="text-xs font-normal text-zinc-500">(opsional)</span>

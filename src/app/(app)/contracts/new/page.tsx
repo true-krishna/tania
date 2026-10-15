@@ -211,14 +211,17 @@ export default function NewContractPage({
         {formError ? <ErrorState message={formError} /> : null}
         <Label error={errors.employeeId}>
           Karyawan
-          <Select value={values.employeeId} onChange={(e) => set("employeeId", e.target.value)}>
-            <option value="">— pilih karyawan —</option>
-            {(employees.employees ?? []).map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.fullName} ({emp.nomorInduk ?? "—"})
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.employeeId}
+            onChange={(e) => set("employeeId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih karyawan —" },
+              ...(employees.employees ?? []).map((emp) => ({
+                value: emp.id,
+                label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
+              })),
+            ]}
+          />
         </Label>
         <Label error={errors.contractNo}>
           No. Kontrak
@@ -238,13 +241,11 @@ export default function NewContractPage({
               setValues((v) => ({ ...v, contractType: next, endDate: "" }));
               setErrors((er) => ({ ...er, endDate: undefined }));
             }}
-          >
-            {CONTRACT_TYPE_ORDER.map((type) => (
-              <option key={type} value={type}>
-                {CONTRACT_TYPE_LABEL[type]}
-              </option>
-            ))}
-          </Select>
+            options={CONTRACT_TYPE_ORDER.map((type) => ({
+              value: type,
+              label: CONTRACT_TYPE_LABEL[type],
+            }))}
+          />
         </Label>
         <Label error={errors.nomorInduk}>
           Nomor induk karyawan
@@ -265,25 +266,25 @@ export default function NewContractPage({
         </Label>
         <Label error={errors.unitId}>
           Unit
-          <Select value={values.unitId} onChange={(e) => set("unitId", e.target.value)}>
-            <option value="">— pilih unit —</option>
-            {(units.data ?? []).map((unit) => (
-              <option key={unit.id} value={unit.id}>
-                {unit.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.unitId}
+            onChange={(e) => set("unitId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih unit —" },
+              ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+            ]}
+          />
         </Label>
         <Label error={errors.jobRoleId}>
           Posisi / Job Role
-          <Select value={values.jobRoleId} onChange={(e) => set("jobRoleId", e.target.value)}>
-            <option value="">— pilih job role —</option>
-            {(jobRoles.data ?? []).map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.jobRoleId}
+            onChange={(e) => set("jobRoleId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih job role —" },
+              ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
+            ]}
+          />
         </Label>
         <Label error={errors.jobTitle}>
           Job title <span className="text-xs font-normal text-zinc-500">(opsional)</span>
@@ -306,26 +307,28 @@ export default function NewContractPage({
           <Select
             value={values.bandPosition}
             onChange={(e) => set("bandPosition", e.target.value)}
-          >
-            <option value="UNDEFINED">Belum ditetapkan</option>
-            <option value="I">I</option>
-            <option value="II">II</option>
-            <option value="III">III</option>
-            <option value="IV">IV</option>
-            <option value="V">V</option>
-            <option value="VI">VI</option>
-          </Select>
+            options={[
+              { value: "UNDEFINED", label: "Belum ditetapkan" },
+              { value: "I", label: "I" },
+              { value: "II", label: "II" },
+              { value: "III", label: "III" },
+              { value: "IV", label: "IV" },
+              { value: "V", label: "V" },
+              { value: "VI", label: "VI" },
+            ]}
+          />
         </Label>
         <Label error={errors.workLocation}>
           Work location
           <Select
             value={values.workLocation}
             onChange={(e) => set("workLocation", e.target.value)}
-          >
-            <option value="">— pilih lokasi kerja —</option>
-            <option value="JAKARTA">Jakarta</option>
-            <option value="BANDUNG">Bandung</option>
-          </Select>
+            options={[
+              { value: "", label: "— pilih lokasi kerja —" },
+              { value: "JAKARTA", label: "Jakarta" },
+              { value: "BANDUNG", label: "Bandung" },
+            ]}
+          />
         </Label>
         <Label error={errors.startDate}>
           Tanggal mulai
