@@ -4,7 +4,7 @@
 
 **Prerequisites**: `plan.md` (wajib — D1–D9, R-1–R-11, Organization, roadmap K0–K3) · `spec.md` (wajib — US1–US6, FR-01–FR-12 + FR-29/FR-30/FR-40/FR-42 induk, SC-001–SC-004) · `research.md` (R-1–R-11) · `data-model.md` (2 entitas baru + 3 baca ber-cakupan + klasifikasi data pribadi) · `contracts/chat.md` (SDL final, otorisasi, toolset, guardrail, kontrak UI) · `quickstart.md` (§A gerbang otomatis · §B/§C UAT per peran · §D probe keamanan · §E biaya/retensi)
 
-**Kontrak yang sudah final dan TIDAK dibuka di fase ini**: `spec.md` (milik TAN-203), keputusan plan D1–D9/R-1–R-11, retensi **90 hari hard delete**, seluruh nilai guardrail FR-10 (**12 pesan · 2.000 karakter · 800 token keluaran · 25 s · 20 pesan/jam/user · plafon ≈3.000 pesan/bulan**) sebagai **konstanta kode**, provider **OpenAI-compatible**, kendala pemilik **tanpa perubahan stack & tanpa dependensi baru**.
+**Kontrak yang sudah final dan TIDAK dibuka di fase ini**: `spec.md` (milik TAN-203) — **kecuali penambahan FR-13/FR-14 atas instruksi pemilik 2026-10-15** (mencatat kebutuhan yang sudah terimplementasi agar dapat dilacak; tercatat di bagian Revisi spec.md) — keputusan plan D1–D9/R-1–R-11, retensi **90 hari hard delete**, seluruh nilai guardrail FR-10 (**12 pesan · 2.000 karakter · 800 token keluaran · 25 s · 20 pesan/jam/user · plafon ≈3.000 pesan/bulan**) sebagai **konstanta kode**, provider **OpenAI-compatible**, kendala pemilik **tanpa perubahan stack & tanpa dependensi baru**.
 
 **Repositori**: `tania-backend` (orkestrasi AI, skema GraphQL, migrasi) + `tania-dashboard` (rumah spec & UI asisten). Branch kerja: `agent/diggie/8aff2b1806a1`.
 
@@ -66,9 +66,9 @@
 
 - [ ] T003 [US1] **Migrasi 0013 — dua tabel percakapan** (task migrasi terpisah, tidak digabung ke task domain/repo)
       → `internal/platform/migrations/sql/0013_chat_conversations.sql`
-      Tambah `chat_conversations` (`id uuid PK`, `user_id uuid NOT NULL FK → users ON DELETE CASCADE`, `started_at`, `last_message_at`) dan `chat_messages` (`id uuid PK`, `conversation_id uuid NOT NULL FK → chat_conversations ON DELETE CASCADE`, `role text CHECK IN ('USER','ASSISTANT')`, `content text`, `input_tokens int NOT NULL DEFAULT 0`, `output_tokens int NOT NULL DEFAULT 0`, `sources jsonb`, `client_request_id uuid NULL`, `created_at`). Indeks: `(conversation_id, created_at)`, `(user_id, last_message_at)`, `created_at` (job retensi), dan **unik parsial** `UNIQUE (conversation_id, client_request_id) WHERE client_request_id IS NOT NULL` (S2). Pola penulisan mengikuti `0005_employment_contracts.sql`/`0007_retention_anonymization.sql`; forward-only, tanpa menyentuh tabel existing.
+      Tambah `chat_conversations` (`id uuid PK`, `user_id uuid NOT NULL FK → users ON DELETE CASCADE`, `started_at`, `last_message_at`) dan `chat_messages` (`id uuid PK`, `conversation_id uuid NOT NULL FK → chat_conversations ON DELETE CASCADE`, `role text CHECK IN ('USER','ASSISTANT')`, `content text`, `input_tokens int NOT NULL DEFAULT 0`, `output_tokens int NOT NULL DEFAULT 0`, `sources jsonb`, `client_request_id uuid NULL`, `created_at`). Indeks: `(conversation_id, created_at)`, `(user_id, last_message_at)`, `created_at` (job retensi), dan **unik parsial** `UNIQUE (conversation_id, client_request_id) WHERE client_request_id IS NOT NULL` (FR-14). Pola penulisan mengikuti `0005_employment_contracts.sql`/`0007_retention_anonymization.sql`; forward-only, tanpa menyentuh tabel existing.
       **Verifikasi**: `go build ./...` (embed `migrations.FS` tetap valid) + review SQL (kolom/indeks/constraint cocok `data-model.md`). Uji terapan **hanya** di DB terisolasi dengan `TEST_DATABASE_URL` milik sendiri; **jangan** `make up`/migrasi ke DB bersama.
-      **Menutup**: `data-model.md` §ChatConversation/§ChatMessage · FR-02 · S2 · retensi (Security IV).
+      **Menutup**: `data-model.md` §ChatConversation/§ChatMessage · FR-02 · FR-14 · retensi (Security IV).
 
 - [ ] T004 [US1] **Domain chat — entitas, interface, konstanta guardrail**
       → `internal/domain/chat.go` (baru)
@@ -80,7 +80,7 @@
       → `internal/repository/postgres/chat.go` (baru)
       Implementasi `domain.ChatRepository`: **setiap** baca/tulis ter-filter `WHERE user_id = pemanggil` (FR-02, **tanpa pengecualian Admin**); percakapan bukan milik pemanggil → `ErrNotFound` (anti-enumerasi, pola `internal/repository/postgres/errors.go`); `AppendMessage` memperbarui `last_message_at`; insert pesan USER **idempoten**: bila `(conversation_id, client_request_id)` sudah ada → pakai ulang baris itu (tidak insert baru); `DeleteOlderThan(ctx, cutoff)` menghapus percakapan+pesan lebih tua dari cutoff (hard delete) dan mengembalikan jumlahnya.
       **Verifikasi**: `go build ./...`; `go test ./internal/repository/postgres/...` (kompilasi + test harness existing); perilaku kepemilikan/idempotensi/hard-delete dibuktikan oleh T019 & T021 pada DB terisolasi.
-      **Menutup**: FR-02 · S2 · Security IV (retensi).
+      **Menutup**: FR-02 · FR-14 · Security IV (retensi).
 
 ### Baca ber-cakupan chapter (D9/R-11 — internal, tanpa permukaan GraphQL baru)
 
@@ -126,13 +126,13 @@
       → `internal/usecase/chat.go` (baru)
       Metode `CreateConversation`, `ListConversations`, `Messages`, `Send(ctx, identity, conversationID, content, clientRequestID)`, `RunRetention(ctx)`. Isi `Send`: gate `RequireRole(identity, RoleChapter, RoleOperation)` (Admin/Talent → FORBIDDEN, FR-01); cek kepemilikan percakapan (bukan milik pemanggil → `ErrNotFound`); tolak `content` kosong/>2.000 karakter **sebelum** menyentuh model; rate limit `RateLimiter.Allow(ctx, "chat:"+userID, ChatRateLimitPerHour, time.Hour)` (20/jam/user, Redis existing) **sebelum** model; idempotensi `clientRequestID` (pesan USER dipakai ulang bila sudah ada → lalu jawab); jendela konteks **12 pesan**; loop tool maksimum **5 putaran**; catat `input_tokens`/`output_tokens` + `sources` pada pesan ASSISTANT; kegagalan gateway → pesan USER tetap tersimpan, tidak ada ASSISTANT tersusun, error jujur (FR-11); log hanya ID teknis/putaran/token/durasi/kode error — tanpa isi pesan, tanpa nama, tanpa NIK.
       **Verifikasi**: `go build ./...` + `go test ./internal/usecase/... -run Chat` (T018).
-      **Menutup**: US1 · US4 · US6 · FR-01/02/03/10/11 · S2 · D4/D5/D6 · Security II/III.
+      **Menutup**: US1 · US4 · US6 · FR-01/02/03/10/11/13 · FR-14 · D4/D5/D6 · Security II/III.
 
 - [ ] T013 [US2] [US3] [US5] **Toolset data read-only + loop grounding**
       → `internal/usecase/chat_tools.go` (baru)
-      Definisikan **6 tool** tertutup (`ringkas_data`, `cari_karyawan`, `detail_karyawan`, `kontrak_segera_berakhir`, `karyawan_perlu_tindak_lanjut`, `karyawan_data_belum_lengkap`) dengan **DTO aman** yang hanya memuat field setara tampilan modul (`nikMasked` — NIK penuh tidak pernah keluar dari lapisan domain; tanpa field keamanan/akun; tanpa domain di luar MVP). Eksekutor tool menerima `domain.Identity` penanya dan memanggil usecase: `DashboardService.For(identity)` + agregat kontrak ber-cakupan untuk `ringkas_data` (**S3** — angka dashboard diambil dari sumber yang sama agar FR-29/FR-30 konsisten by construction); T008 untuk karyawan; T009 untuk kontrak; `EmployeeService.Get` untuk `detail_karyawan`. Setiap hasil dibungkus label sumber + `fetchedAt` (dasar FR-05); error tool → kegagalan yang dilaporkan ke model (jawaban jujur, bukan konjektur). System prompt sesuai `contracts/chat.md` §System prompt (Bahasa Indonesia, wajib berdasar hasil tool, rekomendasi berlabel saran + arahkan ke modul, tolak di luar domain).
+      Definisikan **6 tool** tertutup (`ringkas_data`, `cari_karyawan`, `detail_karyawan`, `kontrak_segera_berakhir`, `karyawan_perlu_tindak_lanjut`, `karyawan_data_belum_lengkap`) dengan **DTO aman** yang hanya memuat field setara tampilan modul (`nikMasked` — NIK penuh tidak pernah keluar dari lapisan domain; tanpa field keamanan/akun; tanpa domain di luar MVP). Eksekutor tool menerima `domain.Identity` penanya dan memanggil usecase: `DashboardService.For(identity)` + agregat kontrak ber-cakupan untuk `ringkas_data` (**SC-002** — angka dashboard diambil dari sumber yang sama agar FR-29/FR-30 konsisten by construction); T008 untuk karyawan; T009 untuk kontrak; `EmployeeService.Get` untuk `detail_karyawan`. Setiap hasil dibungkus label sumber + `fetchedAt` (dasar FR-05); error tool → kegagalan yang dilaporkan ke model (jawaban jujur, bukan konjektur). System prompt sesuai `contracts/chat.md` §System prompt (Bahasa Indonesia, wajib berdasar hasil tool, rekomendasi berlabel saran + arahkan ke modul, tolak di luar domain).
       **Verifikasi**: `go build ./...` + `go test ./internal/usecase/... -run Chat` (T018) — termasuk assert DTO tidak pernah memuat NIK penuh.
-      **Menutup**: US2 · US3 · US5 · FR-04/05/07/08/09/12 · D3/D7/D8 · R-5/S3.
+      **Menutup**: US2 · US3 · US5 · FR-04/05/07/08/09/12 · D3/D7/D8 · R-5/SC-002.
 
 - [ ] T014 [P] [US1] **SDL chat + regenerasi gqlgen**
       → `tania-backend/graph/schema.graphqls` (+ hasil generate: `graph/generated.go`, `graph/model/models_gen.go`, `graph/schema.resolvers.go`)
@@ -162,9 +162,9 @@
 
 - [ ] T018 [P] [US1] [US4] [US6] **Unit test ChatService**
       → `internal/usecase/chat_test.go` + `internal/usecase/fakes_chat_test.go` (baru; pola `fakes_*_test.go` existing)
-      `fakeGateway` deterministik (tanpa kredensial, tanpa jaringan) + fake `ChatRepository`. Kasus wajib: gate peran (Admin/Talent ditolak FORBIDDEN); kepemilikan percakapan (user lain → `ErrNotFound`, termasuk Admin); pesan kosong/>2.000 ditolak **sebelum** gateway dipanggil (assert gateway tidak dipanggil); jendela konteks dipotong ke 12; maksimum 5 putaran tool; `sources` + token tercatat pada pesan ASSISTANT; kegagalan gateway → jawaban jujur tanpa pesan ASSISTANT; **idempotensi**: `clientRequestId` sama → jumlah pesan USER tidak bertambah (S2); rate limit pesan ke-21 ditolak sebelum gateway dipanggil; DTO tool tidak memuat NIK penuh.
+      `fakeGateway` deterministik (tanpa kredensial, tanpa jaringan) + fake `ChatRepository`. Kasus wajib: gate peran (Admin/Talent ditolak FORBIDDEN); kepemilikan percakapan (user lain → `ErrNotFound`, termasuk Admin); pesan kosong/>2.000 ditolak **sebelum** gateway dipanggil (assert gateway tidak dipanggil); jendela konteks dipotong ke 12; maksimum 5 putaran tool; `sources` + token tercatat pada pesan ASSISTANT; kegagalan gateway → jawaban jujur tanpa pesan ASSISTANT; **idempotensi**: `clientRequestId` sama → jumlah pesan USER tidak bertambah (FR-14); rate limit pesan ke-21 ditolak sebelum gateway dipanggil; DTO tool tidak memuat NIK penuh.
       **Verifikasi**: `go test ./internal/usecase/... -run Chat -count=1` hijau.
-      **Menutup**: US1/US4/US6 · FR-02/03/06/10/11 · S2.
+      **Menutup**: US1/US4/US6 · FR-02/03/06/10/11/13 · FR-14.
 
 - [ ] T019 [P] [US4] **Baris matriks authz + baca ber-cakupan**
       → `internal/usecase/authz_test.go`
@@ -182,7 +182,7 @@
       → `internal/transport/httpapi/e2e_test.go`
       Perluas harness e2e existing (real PostgreSQL + Redis via `TEST_DATABASE_URL`/`TEST_REDIS_ADDR`, `fakeGateway` deterministik) dengan: alur grounded penuh (login Chapter → `createChatConversation` → `sendChatMessage` → balasan ASSISTANT + token tercatat di DB); penolakan peran non-MVP; penolakan panjang; **retry idempoten** (kirim ulang `clientRequestId` yang sama → jumlah pesan USER tetap 1 dan tidak ada penggandaan konteks); isolasi dua Chapter (data cakupan masing-masing berbeda); job retensi hard delete dengan cutoff tersimulasi.
       **Verifikasi**: `make test-integration` (dengan `TEST_DATABASE_URL`/`TEST_REDIS_ADDR` **milik lingkungan sendiri**, bukan DB bersama) hijau. Bila lingkungan DB terisolasi belum diizinkan pemilik, `go test` tetap hijau dengan suite ini ter-`Skip` secara jujur (`t.Skip`) — statusnya dilaporkan, bukan diklaim lulus.
-      **Menutup**: US1 · US4 · FR-02/10/11 · S2 · SC-003.
+      **Menutup**: US1 · US4 · FR-02/10/11 · FR-14 · SC-003.
 
 **Checkpoint K1**: `make test` + `make vet` hijau; `make lint` hijau (bila `golangci-lint` terpasang); seluruh baris matriks authz baru lulus; SDL chat ada di backend (prasyarat K2).
 
@@ -210,7 +210,7 @@
       → `src/features/assistant/assistant.graphql` (baru)
       Operasi: `ChatConversations` (daftar percakapan pemanggil), `ChatMessages(conversationId)` (riwayat + `clientRequestId` per pesan USER untuk coba ulang lintas reload), `CreateChatConversation`, `SendChatMessage(conversationId, content, clientRequestId)`. Codegen dijalankan ulang (`pnpm run codegen`) agar dokumen bertipe.
       **Verifikasi**: `pnpm run typecheck` + `pnpm run generate:check` hijau.
-      **Menutup**: US1 · FR-01 · S2 (idempotensi lintas reload).
+      **Menutup**: US1 · FR-01 · FR-14 (idempotensi lintas reload).
 
 - [ ] T025 [US1] [US5] **Panel asisten**
       → `src/features/assistant/AssistantPanel.tsx` (baru)
@@ -236,7 +236,7 @@
       → `src/features/assistant/assistant.test.tsx` (baru) · `src/app/(app)/layout.test.tsx`
       Vitest + RTL + `MockedProvider` (pola `master-data.test.tsx`/`dashboard.test.tsx`). Kasus: panel terbuka dari dashboard & dari bubble; chip berbeda per peran (Chapter vs Operation) dan semuanya terpetakan ke toolset; kirim → bubble user optimistis tampil + balasan tampil; riwayat dimuat ulang dari `chatMessages`; pesan USER tanpa balasan ditandai "belum terjawab" + coba ulang mengirim `clientRequestId` **sama**; blokir input > 2.000 karakter tanpa memanggil mutation; guard peran (panel & bubble **tidak** dirender untuk ADMIN/TALENT); state gagal ramah; renderer format (bold/daftar/baris baru; **assert tidak ada raw HTML** di-render); keyboard (fokus berpindah ke input saat dibuka, `Escape` menutup).
       **Verifikasi**: `pnpm test` hijau.
-      **Menutup**: US1/US5/US6 · FR-01/03/05/11 · S2 · Design §VI.
+      **Menutup**: US1/US5/US6 · FR-01/03/05/11 · FR-14 · Design §VI.
 
 - [ ] T029 [P] [US1] **E2E Playwright — invariant panel (tanpa provider)**
       → `e2e/critical-path.spec.ts`
@@ -274,9 +274,9 @@
 
 - [ ] T034 **E2E Playwright — balasan grounded & retry idempoten (butuh API hidup + provider)** — ⏸ menunggu K0.
       → `e2e/critical-path.spec.ts`
-      Skenario: login **Chapter** → buka panel → kirim satu pertanyaan → bubble USER tampil → **balasan ASSISTANT** masuk dan “Belum terjawab” tidak ada → `Escape` menutup; lalu jalur S2: provider dimatikan → kirim → state gagal ramah → provider dinyalakan → “coba ulang” memakai `clientRequestId` **sama** → riwayat tetap **satu** pesan USER. Skenario di-`skip` eksplisit kecuali `E2E_AI_PROVIDER=1`, sebab tanpa provider API menjawab “asisten belum dikonfigurasi” dan assertion balasan tidak mungkin lulus — inilah sebabnya skenario ini **bukan** gate K2.
+      Skenario: login **Chapter** → buka panel → kirim satu pertanyaan → bubble USER tampil → **balasan ASSISTANT** masuk dan “Belum terjawab” tidak ada → `Escape` menutup; lalu jalur FR-14: provider dimatikan → kirim → state gagal ramah → provider dinyalakan → “coba ulang” memakai `clientRequestId` **sama** → riwayat tetap **satu** pesan USER. Skenario di-`skip` eksplisit kecuali `E2E_AI_PROVIDER=1`, sebab tanpa provider API menjawab “asisten belum dikonfigurasi” dan assertion balasan tidak mungkin lulus — inilah sebabnya skenario ini **bukan** gate K2.
       **Verifikasi**: `E2E_AI_PROVIDER=1 pnpm run test:e2e` hijau; tanpa env itu skenario ter-`skip` (bukan gagal, bukan diklaim lulus).
-      **Menutup**: US1 AC2/AC3 · FR-11 · S2 · SC-001.
+      **Menutup**: US1 AC2/AC3 · FR-11 · FR-14 · SC-001.
 
 **Checkpoint K3**: SC-001–SC-004 dinyatakan terpenuhi berdasarkan T030–T034; seluruh probe §D lulus; DAMP pra-rilis dijalankan konkret sebelum rilis.
 
@@ -327,40 +327,40 @@ T004 ───► T014 (SDL + gqlgen) ──────────────
 | --- | --- |
 | T001 | FR-10 (model hemat) · plan Open Item 2 · SC-004 (dasar biaya) |
 | T002 | R-2 · gerbang go/no-go grounding · US2 (kelayakan) |
-| T003 | FR-02 (kepemilikan) · S2 (unik parsial) · Security IV (retensi) |
+| T003 | FR-02 (kepemilikan) · FR-14 (unik parsial) · Security IV (retensi) |
 | T004 | FR-10 (konstanta) · D5/D6 · data-model §Relasi |
-| T005 | FR-02 · S2 · Security IV |
+| T005 | FR-02 · FR-14 · Security IV |
 | T006 | FR-06 · R-11 butir 3 · US3/US4 |
 | T007 | FR-06 · R-11 butir 2 |
 | T008 | US2 AC1 · US4 · FR-06 · D9/R-11 butir 1 & 4 |
 | T009 | US3 AC1 · FR-06 · FR-40 · R-11 |
 | T010 | FR-10 · FR-11 · R-2/R-9 |
 | T011 | R-2 · D2 · Technical V · Security III |
-| T012 | US1 · US4 · US6 · FR-01/02/03/10/11 · S2 · D4/D5/D6 |
-| T013 | US2 · US3 · US5 · FR-04/05/07/08/09/12 · S3 · R-5 |
+| T012 | US1 · US4 · US6 · FR-01/02/03/10/11/13 · FR-14 · D4/D5/D6 |
+| T013 | US2 · US3 · US5 · FR-04/05/07/08/09/12 · SC-002 · R-5 |
 | T014 | FR-01 · kontrak API (konstitusi) |
 | T015 | FR-01 · Technical VII · kontrak error |
 | T016 | FR-11 · Technical VII |
 | T017 | Security IV · plan Open Item 1 (disetujui pemilik) |
-| T018 | US1/US4/US6 · FR-02/03/06/10/11 · S2 |
+| T018 | US1/US4/US6 · FR-02/03/06/10/11/13 · FR-14 |
 | T019 | US4 AC1/AC4 · FR-06 · R-11 (matriks tanpa amandemen) |
 | T020 | US4 AC2/AC3 · FR-01/02 · SC-003 |
-| T021 | US1 · US4 · FR-02/10/11 · S2 · SC-003 |
+| T021 | US1 · US4 · FR-02/10/11 · FR-14 · SC-003 |
 | T022 | R8 · konstitusi API 1.1.1 · US1 |
 | T023 | US1 · Technical III |
-| T024 | US1 · FR-01 · S2 |
+| T024 | US1 · FR-01 · FR-14 |
 | T025 | US1 · US5 · FR-01/03/05/11 · D7/D8 · Design I/III/VI/VIII |
 | T026 | US1 AC1/AC4 · FR-01 · Design I/II/VI |
 | T027 | US1 AC1/AC4 · FR-01 · R-8 · Security III |
-| T028 | US1/US5/US6 · FR-01/03/05 · S2 · Design §VI |
+| T028 | US1/US5/US6 · FR-01/03/05 · FR-14 · Design §VI |
 | T029 | US1 AC1/AC4 · FR-01 · Design §VI |
 | T030 | Technical II/III · SC-003 (otomatis) |
 | T031 | US1/US2/US3/US5/US6 · FR-01/03/04/05/07/08/09/12 · SC-001/SC-002 |
 | T032 | US4 · FR-02/06/07/08/11/12 · SC-003 |
-| T033 | US6 · FR-10 · SC-001/SC-002/SC-004 · Security II/IV · plan Open Item 3 |
-| T034 | US1 AC2/AC3 · FR-11 · S2 · SC-001 |
+| T033 | US6 · FR-10/FR-13 · SC-001/SC-002/SC-004 · Security II/IV · plan Open Item 3 |
+| T034 | US1 AC2/AC3 · FR-11 · FR-14 · SC-001 |
 
-**Disetujui pemilik meski tidak diminta eksplisit oleh FR**: **rate limit 20 pesan/jam/user** (T012, T018, T032, T033 — nilai FR-10 yang disetujui 2026-10-14) dan **job retensi 90 hari hard delete** (T003, T005, T017, T033 — Security IV/data-model, disetujui 2026-10-14). Keduanya task tersendiri, bukan sisipan.
+**Disetujui pemilik meski semula tidak diminta eksplisit oleh FR**: **rate limit 20 pesan/jam/user** (T012, T018, T032, T033 — nilai disetujui pemilik 2026-10-14; sejak 2026-10-15 ber-butir **FR-13** agar dapat dilacak) dan **job retensi 90 hari hard delete** (T003, T005, T017, T033 — Security IV/`data-model.md` §Retensi, disetujui 2026-10-14; tetap tanpa butir FR). Keduanya task tersendiri, bukan sisipan.
 
 ---
 
@@ -391,4 +391,4 @@ T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak C
 - **NIK**: hanya `nikMasked` keluar dari lapisan domain; tidak ada tool "unmask"; DTO tool diuji tidak pernah memuat NIK penuh (T018).
 - **Log**: hanya ID teknis, putaran tool, jumlah token, durasi, kode error — tanpa isi pesan/nama/NIK (T012, T020, T033).
 - **Drift SDL frontend** (T022) dicatat sebagai perubahan terpisah yang disengaja — bukan disembunyikan di diff fitur.
-- **Commit per task atau kelompok logis**; jalankan test sebelum commit. `spec.md` (TAN-203) dan keputusan arsitektur plan **tidak** diubah.
+- **Commit per task atau kelompok logis**; jalankan test sebelum commit. `spec.md` (TAN-203) dan keputusan arsitektur plan **tidak** diubah — kecuali penambahan butir FR-13/FR-14 atas instruksi pemilik (2026-10-15) yang tercatat di bagian Revisi spec.md.

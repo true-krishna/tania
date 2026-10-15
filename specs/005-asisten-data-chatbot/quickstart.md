@@ -48,7 +48,7 @@ Login sebagai **Chapter** (chapter A berisi data seed).
 4. **Rekomendasi (US5)** — kirim "Karyawan mana yang perlu diprioritaskan untuk perpanjangan kontrak?". Harapan: saran berlabel eksplisit sebagai rekomendasi, setiap butir merujuk dasar data (tanggal/kelengkapan), mengarahkan ke modul — **tidak ada** perubahan data terjadi.
 5. **Riwayat (US1)** — tutup panel, logout, login ulang, buka panel. Harapan: percakapan tampil kembali; tombol "Percakapan baru" memulai thread kosong; pertanyaan baru **tidak** membawa konteks thread lama.
 6. **Batas panjang (US6)** — tempel teks > 2.000 karakter. Harapan: ditolak (input terbatas/pesan jelas), **tanpa** bubble asisten dan tanpa pemakaian token.
-7. **Coba ulang setelah gagal (S2)** — matikan provider sebentar, kirim satu pertanyaan (harus gagal ramah), nyalakan provider kembali, tekan "coba ulang". Harapan: balasan muncul dan riwayat memuat **satu** pesan user, bukan dua (idempotensi `clientRequestId`).
+7. **Coba ulang setelah gagal (FR-14)** — matikan provider sebentar, kirim satu pertanyaan (harus gagal ramah), nyalakan provider kembali, tekan "coba ulang". Harapan: balasan muncul dan riwayat memuat **satu** pesan user, bukan dua (idempotensi `clientRequestId`).
 
 ## C. UAT manual — Operation
 

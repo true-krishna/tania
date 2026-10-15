@@ -69,7 +69,7 @@ type Mutation {
 }
 ```
 
-### Idempotensi kirim (S2)
+### Idempotensi kirim (FR-14)
 
 Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER identik** di riwayat (dan di jendela konteks 12 pesan). Kontraknya:
 

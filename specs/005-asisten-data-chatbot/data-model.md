@@ -27,7 +27,7 @@ Dua entitas baru (**ChatConversation**, **ChatMessage**) + **tiga penambahan bac
 | `inputTokens` / `outputTokens` | int / `int NOT NULL DEFAULT 0` | Pemakaian token per pesan asisten (FR-10/US6) — bahan laporan biaya; 0 untuk pesan user |
 | `sources` | jsonb / `jsonb` | Rujukan sumber jawaban asisten: daftar `{tool, params, rowCount, fetchedAt}` — audit kualitas jawaban (US5 skenario 4); **internal**, tidak diekspos ke GraphQL (klien melihat rujukan dari teks jawaban, FR-05) |
 | `createdAt` | time / `timestamptz` | Waktu pesan |
-| `clientRequestId` | UUID / `client_request_id uuid NULL` | **Idempotensi kirim (S2)**: dikirim klien bersama pesan; `UNIQUE (conversation_id, client_request_id) WHERE client_request_id IS NOT NULL`. Kirim ulang dengan id yang sama (retry UI setelah kegagalan provider) **memakai ulang** pesan `USER` yang sudah tersimpan — tidak membuat duplikat dan tidak menggandakan konteks; `NULL` untuk pesan `ASSISTANT` |
+| `clientRequestId` | UUID / `client_request_id uuid NULL` | **Idempotensi kirim (FR-14)**: dikirim klien bersama pesan; `UNIQUE (conversation_id, client_request_id) WHERE client_request_id IS NOT NULL`. Kirim ulang dengan id yang sama (retry UI setelah kegagalan provider) **memakai ulang** pesan `USER` yang sudah tersimpan — tidak membuat duplikat dan tidak menggandakan konteks; `NULL` untuk pesan `ASSISTANT` |
 
 Indeks: `(conversation_id, created_at)` untuk thread; `(user_id, last_message_at)` untuk daftar percakapan; `created_at` untuk job retensi; unik parsial `(conversation_id, client_request_id)` untuk idempotensi kirim.
 

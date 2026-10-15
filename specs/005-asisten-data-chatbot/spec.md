@@ -10,6 +10,8 @@
 
 **Revisi**: 2026-10-14 (remediasi `/speckit.analyze`, TAN-203) — Konsistensi internal: contoh pertanyaan/story diselaraskan ke cakupan MVP karyawan & kontrak (Ringkasan, US2, US5); FR-01 diperlengkapi (chip per peran, teks UI Bahasa Indonesia); FR-03 input bebas tanpa pembatasan bahasa input; FR-06 diperjelas (agregat dalam cakupan setara dashboard FR-29); FR-10 menegaskan API key sebagai secret lingkungan (konstitusi Prinsip III/VIII); Key Entities menambah kewajiban deklarasi retensi, dasar pemrosesan, dan larangan data pribadi pada log (konstitusi Prinsip I–IV); checklist review diperbarui.
 
+**Revisi**: 2026-10-15 (remediasi `/speckit.analyze` lanjutan, TAN-208) — Dua kebutuhan yang **sudah terimplementasi dan teruji tetapi belum punya butir FR** kini eksplisit: **FR-13** (batas pemakaian 20 pertanyaan/jam/user, ditolak sebelum model dipanggil) dan **FR-14** (pengiriman ulang idempoten lewat `clientRequestId`). Penambahan ini **tidak mengenalkan perilaku baru** dan tidak mengubah FR lain; tujuannya menutup rantai keterlacakan FR ↔ plan (D6/R7) ↔ kontrak ↔ task ↔ test/UAT, sekaligus menggantikan label ad-hoc `S2`/`S3` yang tidak pernah didefinisikan di dokumen mana pun.
+
 **Status**: Final — seluruh butir klarifikasi (NC-01..NC-05) ditutup; siap untuk `/speckit.plan`. Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
 
 **Input**: `/speckit.specify` (TAN-203) — "Buat chatbot yang membantu chapter dan operation dalam aplikasi Tania yang tugasnya merangkum data, menunjukkan data, hingga memberikan rekomendasi untuk pengambilan keputusan."
@@ -143,6 +145,8 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 - **FR-10**: Guardrail biaya: model hemat sesuai provider, batas token keluaran per jawaban, riwayat konteks maksimum 12 pesan, pesan maksimum 2.000 karakter, dan **pencatatan pemakaian token per pesan** untuk laporan biaya; menaikkan batas mana pun memerlukan persetujuan pemilik produk. API key provider disimpan sebagai secret lingkungan/platform secret store — tidak pernah di-commit maupun di-log (konstitusi Prinsip III/VIII). *(NC-04 terjawab: organisasi memakai **provider model milik sendiri**, integrasi cukup dengan API key — tanpa dependensi vendor eksternal tertentu; penempatan komponen orkestrasi diputuskan pada fase `/speckit.plan`.)*
 - **FR-11**: Kegagalan layanan model atau kueri ditangani dengan pesan kegagalan yang ramah dan jujur; sistem tidak pernah menampilkan jawaban tersusun saat sumber data tidak tersedia.
 - **FR-12**: Pertanyaan di luar domain data Tania ditolak dengan sopan beserta penjelasan cakupan asisten.
+- **FR-13**: **Batas pemakaian asisten**: maksimum **20 pertanyaan per pengguna per jam**; kelebihan batas ditolak dengan pesan ramah yang menyebutkan kapan pengguna dapat mencoba lagi, dan penolakan terjadi **sebelum** model dipanggil sehingga **tidak ada token terpakai**. Nilai batas adalah konstanta kode (bukan env) dan mengubahnya memerlukan persetujuan pemilik produk — setara FR-10. *(Rantai keterlacakan: plan D6 · `contracts/chat.md` §Kontrak error “Kuota per user terlampaui” · task T012 (implementasi) & T018 (test) · UAT §E butir 4 / T033.)*
+- **FR-14**: **Pengiriman ulang idempoten**: percobaan ulang atas pertanyaan yang gagal memakai **pengenal permintaan dari klien** (`clientRequestId`) yang dibuat sekali per kiriman, sehingga riwayat menyimpan tepat **satu** pesan pengguna per pertanyaan berapa kali pun “coba ulang” ditekan, dan jendela konteks tidak bergeser. *(Rantai keterlacakan: plan R7 · `data-model.md` §ChatMessage `clientRequestId` (indeks unik parsial) · `contracts/chat.md` §Idempotensi kirim (FR-14) · task T003/T005/T024 · test T018 · UAT §B langkah 7 / T034.)*
 
 ### Key Entities *(include if feature involves data)*
 
@@ -206,4 +210,5 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 - [x] Tidak ada requirement yang bertentangan dengan `001` (FR-29/FR-30/FR-40/FR-42) dan `002-tania-rbac`. (Diverifikasi `/speckit.analyze` 2026-10-14.)
 - [x] Prinsip read-only & grounded terverifikasi pada setiap story terkait. (Diverifikasi `/speckit.analyze` 2026-10-14.)
 - [ ] Guardrail biaya (FR-10) disetujui pemilik produk secara eksplisit. (Menunggu konfirmasi bersama persetujuan breakdown.)
+- [x] Kebutuhan yang sudah terimplementasi namun belum ber-butir FR ditutup dengan butir yang dapat dilacak: **FR-13** → T012/T018/T033, **FR-14** → T003/T005/T024/T018/T034 (ditambahkan atas instruksi pemilik, 2026-10-15).
 - [x] Status spesifikasi diubah menjadi Final sebelum `/speckit.plan`.
