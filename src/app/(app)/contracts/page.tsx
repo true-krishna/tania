@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { BoardTable, type Column } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { canManage } from "@/lib/auth/matrix";
@@ -30,79 +30,8 @@ import type {
 import { orDash } from "@/lib/cell";
 import { CONTRACT_NEW, CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
-type ContractRowData = {
-  id: string;
-  contractNo: string | null;
-  contractType: ContractType;
-  nomorInduk: string;
-  startDate: string;
-  endDate: string | null;
-  status: EmploymentContractStatus;
-  employee: { id: string; fullName: string };
-  unit: { name: string };
-  jobRole: { name: string };
-};
-
-const COLUMNS: Column[] = [
-  { key: "contractNo", label: "No Kontrak" },
-  { key: "employee", label: "Karyawan" },
-  { key: "type", label: "Jenis" },
-  { key: "unit", label: "Unit" },
-  { key: "role", label: "Posisi" },
-  { key: "nomorInduk", label: "Nomor Induk" },
-  { key: "period", label: "Periode" },
-  { key: "status", label: "Status" },
-  { key: "actions", label: "Aksi", className: "col-action" },
-];
-
-function ContractRow({ contract }: { contract: ContractRowData }) {
-  const router = useRouter();
-  return (
-    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
-      <td className="px-4 py-2.5">
-        <Link
-          href={CONTRACT_DETAIL(contract.id)}
-          className="font-medium text-zinc-900 hover:underline"
-        >
-          {orDash(contract.contractNo)}
-        </Link>
-      </td>
-      <td className="px-4 py-2.5">
-        <Link
-          href={EMPLOYEE_DETAIL(contract.employee.id)}
-          className="text-zinc-900 hover:underline"
-        >
-          {contract.employee.fullName}
-        </Link>
-      </td>
-      <td className="px-4 py-2.5 text-zinc-600">{CONTRACT_TYPE_LABEL[contract.contractType]}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(contract.unit.name)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(contract.jobRole.name)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(contract.nomorInduk)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">
-        {contract.startDate} — {contract.endDate ?? "tidak berbatas"}
-      </td>
-      <td className="px-4 py-2.5">
-        <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
-          {CONTRACT_STATUS_LABEL[contract.status]}
-        </Chip>
-      </td>
-      <td className="col-action">
-        <RowActionsMenu
-          label={`Aksi ${contract.contractNo}`}
-          actions={[
-            {
-              label: "Lihat detail",
-              onSelect: () => router.push(CONTRACT_DETAIL(contract.id)),
-            },
-          ]}
-        />
-      </td>
-    </tr>
-  );
-}
-
 export default function ContractsPage() {
+  const router = useRouter();
   // Chapter reads the contracts of its own chapter (2026-10-16 clarify 5); only
   // Operation and Admin manage them, so the create action is theirs alone.
   const manage = canManage(useSessionRole(), "contracts");
@@ -220,13 +149,97 @@ export default function ContractsPage() {
       ) : !contracts || contracts.length === 0 ? (
         <EmptyState message="Tidak ada kontrak yang cocok dengan pencarian/filter." />
       ) : (
-        <>
-          <BoardTable caption="Daftar kontrak kerja" columns={COLUMNS} footer={<Pagination {...pagination} />}>
-            {pageRows.map((contract) => (
-              <ContractRow key={contract.id} contract={contract} />
-            ))}
-          </BoardTable>
-        </>
+        <Table
+          caption="Daftar kontrak kerja"
+          rowKey={(contract) => contract.id}
+          dataSource={pageRows}
+          pagination={pagination}
+          columns={[
+            {
+              key: "contractNo",
+              title: "No Kontrak",
+              render: (_value, contract) => (
+                <Link
+                  href={CONTRACT_DETAIL(contract.id)}
+                  className="font-medium text-zinc-900 hover:underline"
+                >
+                  {orDash(contract.contractNo)}
+                </Link>
+              ),
+            },
+            {
+              key: "employee",
+              title: "Karyawan",
+              render: (_value, contract) => (
+                <Link
+                  href={EMPLOYEE_DETAIL(contract.employee.id)}
+                  className="text-zinc-900 hover:underline"
+                >
+                  {contract.employee.fullName}
+                </Link>
+              ),
+            },
+            {
+              key: "type",
+              title: "Jenis",
+              className: "text-zinc-600",
+              render: (_value, contract) => CONTRACT_TYPE_LABEL[contract.contractType],
+            },
+            {
+              key: "unit",
+              title: "Unit",
+              className: "text-zinc-600",
+              render: (_value, contract) => orDash(contract.unit.name),
+            },
+            {
+              key: "role",
+              title: "Posisi",
+              className: "text-zinc-600",
+              render: (_value, contract) => orDash(contract.jobRole.name),
+            },
+            {
+              key: "nomorInduk",
+              title: "Nomor Induk",
+              className: "text-zinc-600",
+              render: (_value, contract) => orDash(contract.nomorInduk),
+            },
+            {
+              key: "period",
+              title: "Periode",
+              className: "text-zinc-600",
+              render: (_value, contract) => (
+                <>
+                  {contract.startDate} — {contract.endDate ?? "tidak berbatas"}
+                </>
+              ),
+            },
+            {
+              key: "status",
+              title: "Status",
+              render: (_value, contract) => (
+                <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
+                  {CONTRACT_STATUS_LABEL[contract.status]}
+                </Chip>
+              ),
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, contract) => (
+                <RowActionsMenu
+                  label={`Aksi ${contract.contractNo}`}
+                  actions={[
+                    {
+                      label: "Lihat detail",
+                      onSelect: () => router.push(CONTRACT_DETAIL(contract.id)),
+                    },
+                  ]}
+                />
+              ),
+            },
+          ]}
+        />
       )}
     </section>
   );

@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { BoardTable } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
@@ -38,59 +38,6 @@ function actionProgress(row: IdpListRow) {
   return { total, done, donePct };
 }
 
-function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
-  const router = useRouter();
-  const { total, done, donePct } = actionProgress(idp);
-  return (
-    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
-      <td className="px-4 py-2.5">
-        <Link href={IDP_DETAIL(idp.id)} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
-          {idp.talent.fullName}
-        </Link>
-        <span className="ml-2 text-xs text-zinc-400">{orDash(idp.talent.nomorInduk)}</span>
-      </td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(idp.developmentObjective)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">
-        {idp.timelineStart} — {idp.timelineEnd}
-      </td>
-      <td className="px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-zinc-600">
-            {done}/{total}
-          </span>
-          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200">
-            <div
-              className="h-full rounded-full bg-tp-neutral"
-              style={{ width: `${donePct}%` }}
-              role="progressbar"
-              aria-valuenow={donePct}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={index === 0 ? "Progres aksi" : undefined}
-            />
-          </div>
-        </div>
-      </td>
-      <td className="px-4 py-2.5">
-        <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
-          {IDP_STATUS_LABEL[idp.status]}
-        </Chip>
-      </td>
-      <td className="col-action">
-        <RowActionsMenu
-          label={`Aksi ${idp.talent.fullName}`}
-          actions={[
-            {
-              label: "Lihat detail",
-              onSelect: () => router.push(IDP_DETAIL(idp.id)),
-            },
-          ]}
-        />
-      </td>
-    </tr>
-  );
-}
-
 /**
  * `/idp` — the IDP menu entry, open for every role since the 2026-10-16
  * activation (klarifikasi 9); only what it opens differs:
@@ -106,6 +53,7 @@ export default function IdpPage() {
 }
 
 function IdpRosterView({ managing }: { managing: boolean }) {
+  const router = useRouter();
   const [status, setStatus] = React.useState<IdpStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const { status: query, data, error } = useIdps({
@@ -167,24 +115,97 @@ function IdpRosterView({ managing }: { managing: boolean }) {
       ) : !data || data.length === 0 ? (
         <EmptyState message="Tidak ada IDP yang cocok dengan filter." />
       ) : (
-        <>
-          <BoardTable
-            caption="Daftar IDP"
-            columns={[
-              { key: "talent", label: "Talent" },
-              { key: "objective", label: "Development Objective" },
-              { key: "timeline", label: "Timeline" },
-              { key: "progress", label: "Progres Aksi" },
-              { key: "status", label: "Status" },
-              { key: "actions", label: "Aksi", className: "col-action" },
-            ]}
-            footer={<Pagination {...pagination} />}
-          >
-            {pageRows.map((idp, index) => (
-              <IdpRow key={idp.id} idp={idp} index={index} />
-            ))}
-          </BoardTable>
-        </>
+        <Table
+          caption="Daftar IDP"
+          rowKey={(idp) => idp.id}
+          dataSource={pageRows}
+          pagination={pagination}
+          columns={[
+            {
+              key: "talent",
+              title: "Talent",
+              render: (_value, idp) => (
+                <>
+                  <Link
+                    href={IDP_DETAIL(idp.id)}
+                    className="text-sm font-medium text-tp-brand-red-deep hover:underline"
+                  >
+                    {idp.talent.fullName}
+                  </Link>
+                  <span className="ml-2 text-xs text-zinc-400">
+                    {orDash(idp.talent.nomorInduk)}
+                  </span>
+                </>
+              ),
+            },
+            {
+              key: "objective",
+              title: "Development Objective",
+              className: "text-zinc-600",
+              render: (_value, idp) => orDash(idp.developmentObjective),
+            },
+            {
+              key: "timeline",
+              title: "Timeline",
+              className: "text-zinc-600",
+              render: (_value, idp) => (
+                <>
+                  {idp.timelineStart} — {idp.timelineEnd}
+                </>
+              ),
+            },
+            {
+              key: "progress",
+              title: "Progres Aksi",
+              render: (_value, idp, index) => {
+                const { total, done, donePct } = actionProgress(idp);
+                return (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-zinc-600">
+                      {done}/{total}
+                    </span>
+                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200">
+                      <div
+                        className="h-full rounded-full bg-tp-neutral"
+                        style={{ width: `${donePct}%` }}
+                        role="progressbar"
+                        aria-valuenow={donePct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={index === 0 ? "Progres aksi" : undefined}
+                      />
+                    </div>
+                  </div>
+                );
+              },
+            },
+            {
+              key: "status",
+              title: "Status",
+              render: (_value, idp) => (
+                <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
+                  {IDP_STATUS_LABEL[idp.status]}
+                </Chip>
+              ),
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, idp) => (
+                <RowActionsMenu
+                  label={`Aksi ${idp.talent.fullName}`}
+                  actions={[
+                    {
+                      label: "Lihat detail",
+                      onSelect: () => router.push(IDP_DETAIL(idp.id)),
+                    },
+                  ]}
+                />
+              ),
+            },
+          ]}
+        />
       )}
     </section>
   );

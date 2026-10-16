@@ -1,5 +1,5 @@
 import { EmptyState, StatusBadge } from "@/components/DataState";
-import { BoardTable } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Card } from "@/components/Card";
 import type { ProfileAssignment } from "./useProfile";
 
@@ -18,28 +18,42 @@ export function AssignmentsSection({
 
   return (
     <Card padded={false} className="max-w-3xl">
-      <BoardTable
+      <Table
         caption="Riwayat assignment saya"
+        rowKey={(assignment) => assignment.id}
+        dataSource={assignments}
         columns={[
-          { key: "project", label: "Project" },
-          { key: "jobRole", label: "Job Role" },
-          { key: "periode", label: "Periode" },
-          { key: "status", label: "Status" },
-        ]}
-      >
-        {assignments.map((assignment) => (
-          <tr key={assignment.id} className="border-b border-board-border last:border-b-0">
-            <td className="px-4 py-2.5 font-medium text-zinc-900">{assignment.project.name}</td>
-            <td className="px-4 py-2.5 text-zinc-600">{assignment.jobRole.name}</td>
-            <td className="px-4 py-2.5 text-zinc-600">
-              {assignment.periodStart} — {assignment.periodEnd ?? "sekarang"}
-            </td>
-            <td className="px-4 py-2.5">
+          {
+            key: "project",
+            title: "Project",
+            className: "font-medium text-zinc-900",
+            render: (_value, assignment) => assignment.project.name,
+          },
+          {
+            key: "jobRole",
+            title: "Job Role",
+            className: "text-zinc-600",
+            render: (_value, assignment) => assignment.jobRole.name,
+          },
+          {
+            key: "periode",
+            title: "Periode",
+            className: "text-zinc-600",
+            render: (_value, assignment) => (
+              <>
+                {assignment.periodStart} — {assignment.periodEnd ?? "sekarang"}
+              </>
+            ),
+          },
+          {
+            key: "status",
+            title: "Status",
+            render: (_value, assignment) => (
               <StatusBadge active={assignment.status === "ACTIVE"} />
-            </td>
-          </tr>
-        ))}
-      </BoardTable>
+            ),
+          },
+        ]}
+      />
     </Card>
   );
 }

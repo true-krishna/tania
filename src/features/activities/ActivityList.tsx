@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { BoardTable } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { orDash } from "@/lib/cell";
 import { ACTIVITY_TYPE_LABEL } from "./mocks";
@@ -60,56 +60,71 @@ export function ActivityList({
   }
 
   return (
-    <>
-      <BoardTable
-        caption="Daftar aktivitas saya"
-        columns={[
-          { key: "title", label: "Aktivitas" },
-          { key: "type", label: "Jenis" },
-          { key: "period", label: "Periode" },
-          { key: "project", label: "Project" },
-          { key: "priority", label: "Prioritas" },
-          { key: "status", label: "Status" },
-          { key: "actions", label: "Aksi", className: "col-action" },
-        ]}
-        footer={<Pagination {...pagination} />}
-      >
-        {pageRows.map((activity) => {
-          const owned = activity.talentId === currentTalentId;
-          return (
-            <tr
-              key={activity.id}
-              className="border-b border-board-border transition-colors hover:bg-zinc-50"
-            >
-              <td className="px-4 py-2.5 font-medium text-zinc-900">{activity.title}</td>
-              <td className="px-4 py-2.5 text-zinc-600">
-                {ACTIVITY_TYPE_LABEL[activity.activityType]}
-              </td>
-              <td className="px-4 py-2.5 text-zinc-600">
-                {activity.startDate} — {activity.endDate ?? "sekarang"}
-              </td>
-              <td className="px-4 py-2.5 text-zinc-600">{orDash(activity.project?.name)}</td>
-              <td className="px-4 py-2.5 text-zinc-600">{activity.priority.name}</td>
-              <td className="px-4 py-2.5">
-                <ActivityStatusBadge status={activity.status} />
-              </td>
-              <td className="col-action">
-                {owned ? (
-                  <RowActionsMenu
-                    label={`Aksi ${activity.title}`}
-                    actions={[
-                      { label: "Ubah", onSelect: () => onEdit(activity), disabled: busy },
-                      { label: "Hapus", onSelect: () => onDelete(activity), danger: true, disabled: busy },
-                    ]}
-                  />
-                ) : (
-                  <RowActionsMenu label={`Aksi ${activity.title}`} disabled />
-                )}
-              </td>
-            </tr>
-          );
-        })}
-      </BoardTable>
-    </>
+    <Table
+      caption="Daftar aktivitas saya"
+      rowKey={(activity) => activity.id}
+      dataSource={pageRows}
+      pagination={pagination}
+      columns={[
+        {
+          key: "title",
+          title: "Aktivitas",
+          className: "font-medium text-zinc-900",
+          render: (_value, activity) => activity.title,
+        },
+        {
+          key: "type",
+          title: "Jenis",
+          className: "text-zinc-600",
+          render: (_value, activity) => ACTIVITY_TYPE_LABEL[activity.activityType],
+        },
+        {
+          key: "period",
+          title: "Periode",
+          className: "text-zinc-600",
+          render: (_value, activity) => (
+            <>
+              {activity.startDate} — {activity.endDate ?? "sekarang"}
+            </>
+          ),
+        },
+        {
+          key: "project",
+          title: "Project",
+          className: "text-zinc-600",
+          render: (_value, activity) => orDash(activity.project?.name),
+        },
+        {
+          key: "priority",
+          title: "Prioritas",
+          className: "text-zinc-600",
+          render: (_value, activity) => activity.priority.name,
+        },
+        {
+          key: "status",
+          title: "Status",
+          render: (_value, activity) => <ActivityStatusBadge status={activity.status} />,
+        },
+        {
+          key: "actions",
+          title: "Aksi",
+          className: "col-action",
+          render: (_value, activity) => {
+            const owned = activity.talentId === currentTalentId;
+            return owned ? (
+              <RowActionsMenu
+                label={`Aksi ${activity.title}`}
+                actions={[
+                  { label: "Ubah", onSelect: () => onEdit(activity), disabled: busy },
+                  { label: "Hapus", onSelect: () => onDelete(activity), danger: true, disabled: busy },
+                ]}
+              />
+            ) : (
+              <RowActionsMenu label={`Aksi ${activity.title}`} disabled />
+            );
+          },
+        },
+      ]}
+    />
   );
 }

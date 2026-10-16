@@ -1,1 +1,0 @@
-export { BoardTable, type Column } from "./BoardTable";

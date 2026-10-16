@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { BoardTable } from "@/components/BoardTable";
+import { Table, type TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { roleLabel } from "@/features/accounts/roles";
@@ -116,6 +116,80 @@ export function AccountsSection({
     }
   }
 
+  const columns: TableColumn<Account>[] = [
+    {
+      key: "name",
+      title: "Nama",
+      className: "font-medium text-zinc-900",
+      render: (_value, account) => account.fullName,
+    },
+    {
+      key: "email",
+      title: "Email",
+      className: "text-zinc-600",
+      render: (_value, account) => orDash(account.email),
+    },
+    {
+      key: "role",
+      title: "Peran",
+      render: (_value, account) => <RoleBadge role={account.accessRole} />,
+    },
+    {
+      key: "status",
+      title: "Status",
+      render: (_value, account) => <StatusBadge active={account.status === "ACTIVE"} />,
+    },
+    {
+      key: "actions",
+      title: "Aksi",
+      className: "col-action",
+      render: (_value, account) =>
+        confirmRevokeId === account.id ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                void onRevokeSessions(account.id).finally(() => setConfirmRevokeId(null));
+              }}
+            >
+              Ya, cabut
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setConfirmRevokeId(null)}>
+              Batal
+            </Button>
+          </div>
+        ) : (
+          <RowActionsMenu
+            label={`Aksi ${account.fullName}`}
+            actions={[
+              {
+                label: account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan",
+                onSelect: () =>
+                  void onSetStatus(
+                    account.id,
+                    account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                  ),
+              },
+              { label: "Cabut Sesi", onSelect: () => setConfirmRevokeId(account.id) },
+            ]}
+          >
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Peran</span>
+              <Select
+                aria-label={`Ubah peran ${account.fullName}`}
+                className="w-auto"
+                value={account.accessRole}
+                onChange={(e) => void onChangeRole(account.id, e.target.value as AccessRole)}
+                options={ROLE_OPTIONS.map((role) => ({ value: role, label: roleLabel[role] }))}
+              />
+            </label>
+          </RowActionsMenu>
+        ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
@@ -221,78 +295,13 @@ export function AccountsSection({
       {!accounts || accounts.length === 0 ? (
         <EmptyState message="Belum ada akun pengguna." />
       ) : (
-        <BoardTable
+        <Table
           caption="Daftar akun pengguna"
-          columns={[
-            { key: "name", label: "Nama" },
-            { key: "email", label: "Email" },
-            { key: "role", label: "Peran" },
-            { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi", className: "col-action" },
-          ]}
-          footer={<Pagination {...pagination} />}
-        >
-          {pageRows.map((account) => (
-            <tr
-              key={account.id}
-              className="border-b border-board-border transition-colors hover:bg-zinc-50"
-            >
-              <td className="px-4 py-2.5 font-medium text-zinc-900">{account.fullName}</td>
-              <td className="px-4 py-2.5 text-zinc-600">{orDash(account.email)}</td>
-              <td className="px-4 py-2.5">
-                <RoleBadge role={account.accessRole} />
-              </td>
-              <td className="px-4 py-2.5">
-                <StatusBadge active={account.status === "ACTIVE"} />
-              </td>
-              <td className="col-action">
-                {confirmRevokeId === account.id ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => {
-                        void onRevokeSessions(account.id).finally(() => setConfirmRevokeId(null));
-                      }}
-                    >
-                      Ya, cabut
-                    </Button>
-                    <Button type="button" variant="ghost" onClick={() => setConfirmRevokeId(null)}>
-                      Batal
-                    </Button>
-                  </div>
-                ) : (
-                  <RowActionsMenu
-                    label={`Aksi ${account.fullName}`}
-                    actions={[
-                      {
-                        label: account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan",
-                        onSelect: () =>
-                          void onSetStatus(
-                            account.id,
-                            account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                          ),
-                      },
-                      { label: "Cabut Sesi", onSelect: () => setConfirmRevokeId(account.id) },
-                    ]}
-                  >
-                    <label className="flex items-center gap-2 text-sm text-zinc-700">
-                      <span>Peran</span>
-                      <Select
-                        aria-label={`Ubah peran ${account.fullName}`}
-                        className="w-auto"
-                        value={account.accessRole}
-                        onChange={(e) => void onChangeRole(account.id, e.target.value as AccessRole)}
-                        options={ROLE_OPTIONS.map((role) => ({ value: role, label: roleLabel[role] }))}
-                      />
-                    </label>
-                  </RowActionsMenu>
-                )}
-            </td>
-          </tr>
-        ))}
-          </BoardTable>
+          columns={columns}
+          dataSource={pageRows}
+          rowKey={(account) => account.id}
+          pagination={pagination}
+        />
       )}
     </div>
   );

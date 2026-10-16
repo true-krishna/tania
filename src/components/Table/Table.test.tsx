@@ -3,13 +3,13 @@
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { DataTable } from "@/components/DataTable";
+import { Table, type TableColumn } from "@/components/Table";
 
 type Row = { id: string; name: string | null; unit: string };
 
-const COLUMNS = [
-  { key: "name", header: "Nama" },
-  { key: "unit", header: "Divisi" },
+const COLUMNS: TableColumn<Row>[] = [
+  { key: "name", title: "Nama", dataIndex: "name" },
+  { key: "unit", title: "Divisi", dataIndex: "unit" },
 ];
 
 const ROWS: Row[] = [
@@ -17,18 +17,13 @@ const ROWS: Row[] = [
   { id: "2", name: null, unit: "Network" },
 ];
 
-function renderTable(overrides?: Partial<React.ComponentProps<typeof DataTable<Row>>>) {
+function renderTable(overrides?: Partial<React.ComponentProps<typeof Table<Row>>>) {
   return render(
-    <DataTable
-      columns={COLUMNS}
-      rows={ROWS}
-      getRowId={(row) => row.id}
-      {...overrides}
-    />,
+    <Table columns={COLUMNS} dataSource={ROWS} rowKey={(row) => row.id} {...overrides} />,
   );
 }
 
-describe("DataTable", () => {
+describe("Table", () => {
   it("renders column headers and plain cell values", () => {
     renderTable();
     expect(screen.getByRole("columnheader", { name: "Nama" })).toBeInTheDocument();
@@ -43,13 +38,22 @@ describe("DataTable", () => {
 
   it("renders custom cell content through render", () => {
     renderTable({
-      columns: [{ key: "name", header: "Nama", render: (row) => `Halo, ${row.id}` }],
+      columns: [
+        { key: "name", title: "Nama", render: (_value, row, index) => `Halo, ${row.id}-${index}` },
+      ],
     });
-    expect(screen.getByRole("cell", { name: "Halo, 1" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Halo, 1-0" })).toBeInTheDocument();
+  });
+
+  it("passes the dataIndex value into render", () => {
+    renderTable({
+      columns: [{ key: "unit", title: "Divisi", dataIndex: "unit", render: (value) => `${value}!` }],
+    });
+    expect(screen.getByRole("cell", { name: "Digital Business!" })).toBeInTheDocument();
   });
 
   it("shows the empty message when there are no rows", () => {
-    renderTable({ rows: [] });
+    renderTable({ dataSource: [] });
     expect(screen.getByText("Tidak ada data.")).toBeInTheDocument();
     expect(screen.queryByText("Budi Santoso")).not.toBeInTheDocument();
   });
@@ -69,7 +73,15 @@ describe("DataTable", () => {
   });
 
   it("shows the visible range and current page", () => {
-    renderTable({ pagination: { page: 2, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange: vi.fn() } });
+    renderTable({
+      pagination: {
+        page: 2,
+        pageSize: 10,
+        totalItems: 57,
+        onPageChange: vi.fn(),
+        onPageSizeChange: vi.fn(),
+      },
+    });
     expect(screen.getByText("11–20")).toBeInTheDocument();
     expect(screen.getByText("57")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
@@ -78,7 +90,13 @@ describe("DataTable", () => {
   it("navigates pages through the prev and next buttons", () => {
     const onPageChange = vi.fn();
     renderTable({
-      pagination: { page: 2, pageSize: 10, totalItems: 57, onPageChange, onPageSizeChange: vi.fn() },
+      pagination: {
+        page: 2,
+        pageSize: 10,
+        totalItems: 57,
+        onPageChange,
+        onPageSizeChange: vi.fn(),
+      },
     });
     fireEvent.click(screen.getByRole("button", { name: "Halaman sebelumnya" }));
     expect(onPageChange).toHaveBeenCalledWith(1);
@@ -88,22 +106,34 @@ describe("DataTable", () => {
 
   it("disables prev on the first page and next on the last page", () => {
     const { rerender } = render(
-      <DataTable
+      <Table
         columns={COLUMNS}
-        rows={ROWS}
-        getRowId={(row) => row.id}
-        pagination={{ page: 1, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange: vi.fn() }}
+        dataSource={ROWS}
+        rowKey={(row) => row.id}
+        pagination={{
+          page: 1,
+          pageSize: 10,
+          totalItems: 57,
+          onPageChange: vi.fn(),
+          onPageSizeChange: vi.fn(),
+        }}
       />,
     );
     expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeEnabled();
 
     rerender(
-      <DataTable
+      <Table
         columns={COLUMNS}
-        rows={ROWS}
-        getRowId={(row) => row.id}
-        pagination={{ page: 6, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange: vi.fn() }}
+        dataSource={ROWS}
+        rowKey={(row) => row.id}
+        pagination={{
+          page: 6,
+          pageSize: 10,
+          totalItems: 57,
+          onPageChange: vi.fn(),
+          onPageSizeChange: vi.fn(),
+        }}
       />,
     );
     expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeEnabled();
@@ -113,7 +143,13 @@ describe("DataTable", () => {
   it("lets the user choose how many rows per page", () => {
     const onPageSizeChange = vi.fn();
     renderTable({
-      pagination: { page: 1, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange },
+      pagination: {
+        page: 1,
+        pageSize: 10,
+        totalItems: 57,
+        onPageChange: vi.fn(),
+        onPageSizeChange,
+      },
     });
     fireEvent.change(screen.getByLabelText("Baris per halaman"), { target: { value: "50" } });
     expect(onPageSizeChange).toHaveBeenCalledWith(50);
@@ -121,7 +157,13 @@ describe("DataTable", () => {
 
   it("disables pagination controls while loading", () => {
     renderTable({
-      pagination: { page: 2, pageSize: 10, totalItems: 57, onPageChange: vi.fn(), onPageSizeChange: vi.fn() },
+      pagination: {
+        page: 2,
+        pageSize: 10,
+        totalItems: 57,
+        onPageChange: vi.fn(),
+        onPageSizeChange: vi.fn(),
+      },
       loading: true,
     });
     expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeDisabled();

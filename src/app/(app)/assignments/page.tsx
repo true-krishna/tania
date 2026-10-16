@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
-import { BoardTable } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { FilterButton } from "@/components/FilterButton";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useAssignments } from "@/features/assignments/useAssignments";
@@ -19,52 +19,6 @@ import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 import { ASSIGNMENT_NEW, ASSIGNMENT_DETAIL } from "@/lib/constants/routes";
-
-type AssignmentRowData = {
-  id: string;
-  status: AssignmentStatus;
-  periodStart: string;
-  periodEnd: string | null;
-  talent: { fullName: string; nomorInduk: string | null };
-  project: { name: string };
-  jobRole: { name: string };
-};
-
-function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
-  const router = useRouter();
-  return (
-    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
-      <td className="px-4 py-2.5">
-        <Link
-          href={ASSIGNMENT_DETAIL(assignment.id)}
-          className="font-medium text-zinc-900 hover:underline"
-        >
-          {assignment.talent.fullName}
-        </Link>
-        <span className="block text-xs text-zinc-500">{orDash(assignment.talent.nomorInduk)}</span>
-      </td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(assignment.project.name)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(assignment.jobRole.name)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">
-        {assignment.periodStart} — {assignment.periodEnd ?? "sekarang"}
-      </td>
-      <td className="px-4 py-2.5">
-        <StatusBadge active={assignment.status === "ACTIVE"} />
-      </td>
-      <td className="col-action">
-        <RowActionsMenu
-          label={`Aksi ${assignment.talent.fullName}`}
-          actions={[
-            {
-              label: "Lihat detail",
-              onSelect: () => router.push(ASSIGNMENT_DETAIL(assignment.id)),
-            },
-          ]}
-        />
-      </td>
-    </tr>
-  );
-}
 
 const SUBTITLE: Partial<Record<AccessRole, string>> = {
   CHAPTER: "Kelola penugasan talent ke project dalam chapter Anda.",
@@ -117,6 +71,7 @@ function TalentSelect({
 }
 
 export default function AssignmentsPage() {
+  const router = useRouter();
   const role = useSessionRole();
   const manage = canManage(role, "assignments");
   const ownOnly = role === "TALENT";
@@ -206,24 +161,76 @@ export default function AssignmentsPage() {
       ) : !data || data.length === 0 ? (
         <EmptyState message="Tidak ada assignment yang cocok dengan filter." />
       ) : (
-        <>
-          <BoardTable
-            caption="Daftar assignment"
-            columns={[
-              { key: "talent", label: "Talent" },
-              { key: "project", label: "Project" },
-              { key: "jobRole", label: "Job Role" },
-              { key: "periode", label: "Periode" },
-              { key: "status", label: "Status" },
-              { key: "actions", label: "Aksi", className: "col-action" },
-            ]}
-            footer={<Pagination {...pagination} />}
-          >
-            {pageRows.map((assignment) => (
-              <AssignmentRow key={assignment.id} assignment={assignment} />
-            ))}
-          </BoardTable>
-        </>
+        <Table
+          caption="Daftar assignment"
+          rowKey={(assignment) => assignment.id}
+          dataSource={pageRows}
+          pagination={pagination}
+          columns={[
+            {
+              key: "talent",
+              title: "Talent",
+              render: (_value, assignment) => (
+                <>
+                  <Link
+                    href={ASSIGNMENT_DETAIL(assignment.id)}
+                    className="font-medium text-zinc-900 hover:underline"
+                  >
+                    {assignment.talent.fullName}
+                  </Link>
+                  <span className="block text-xs text-zinc-500">
+                    {orDash(assignment.talent.nomorInduk)}
+                  </span>
+                </>
+              ),
+            },
+            {
+              key: "project",
+              title: "Project",
+              className: "text-zinc-600",
+              render: (_value, assignment) => orDash(assignment.project.name),
+            },
+            {
+              key: "jobRole",
+              title: "Job Role",
+              className: "text-zinc-600",
+              render: (_value, assignment) => orDash(assignment.jobRole.name),
+            },
+            {
+              key: "periode",
+              title: "Periode",
+              className: "text-zinc-600",
+              render: (_value, assignment) => (
+                <>
+                  {assignment.periodStart} — {assignment.periodEnd ?? "sekarang"}
+                </>
+              ),
+            },
+            {
+              key: "status",
+              title: "Status",
+              render: (_value, assignment) => (
+                <StatusBadge active={assignment.status === "ACTIVE"} />
+              ),
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, assignment) => (
+                <RowActionsMenu
+                  label={`Aksi ${assignment.talent.fullName}`}
+                  actions={[
+                    {
+                      label: "Lihat detail",
+                      onSelect: () => router.push(ASSIGNMENT_DETAIL(assignment.id)),
+                    },
+                  ]}
+                />
+              ),
+            },
+          ]}
+        />
       )}
     </section>
   );
