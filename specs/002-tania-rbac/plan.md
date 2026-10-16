@@ -631,7 +631,8 @@ modul berpindah peran, satu modul tetap tertutup:
 
 Sisa yang **belum** dikerjakan, dengan alasan:
 
-- **Cakupan Master Data untuk Chapter belum ditegakkan di server.** Baca master data masih
+- **Cakupan Master Data untuk Chapter belum ditegakkan di server** (diperjelas clarify 7 → §14.8,
+tugas T086): baca master data masih
   bergantung pada `requireIdentity` (semua peran terautentikasi), karena query yang sama
   menopang filter/dropdown halaman lain — `employees` memakai `units`, `assignments` memakai
   `projects`/`jobRoles` — sehingga melarang Talent atau mempersempit Chapter harus lewat
@@ -647,3 +648,33 @@ Gerbang mutu setelah perubahan: FE `pnpm test` 529/530 (satu uji smoke echarts g
 saat suite paralel, lulus saat dijalankan sendiri), `pnpm typecheck` 0, `pnpm lint` 0; BE
 `go vet` 0 dan `go test ./...` 10 paket ok (`make`/`golangci-lint` tetap tidak tersedia —
 T052).
+
+### 14.8 Amandemen clarify 7 (2026-10-16) — cakupan Master Data, IDP seragam dengan evaluasi
+
+Dua tafsiran yang masih terbuka pada clarify 5/6 dijawab pemilik produk; matriks `spec.md`
+tetap sumber kebenaran.
+
+| Butir | Sebelum (hasil clarify 5/6) | Clarify 7 | Delta teknis |
+| --- | --- | --- | --- |
+| Cakupan Master Data Chapter | `lihat cakupan` (tafsiran TAN-212, "kalau maksudnya penuh, naikkan ke `lihat`") | **`lihat cakupan` dikonfirmasi** — akses penuh tidak diberikan | Tidak ada perubahan label matriks; yang berubah hanya status tafsiran → terkonfirmasi. Penegakan cakupan sisi server tetap bergantung pada relasi chapter (lihat bawah) |
+| IDP | Admin kelola · Operation lihat · Chapter **lihat cakupan** · Talent kelola miliknya | Admin kelola · Operation lihat · Chapter **kelola cakupan** · Talent kelola miliknya | Baris matriks IDP dinaikkan; IDP kini identik dengan modul evaluasi. Tidak ada perubahan kode: modul masih ditutup (`deferredModules`) |
+| Aktivasi IDP & evaluasi | (a) rekam sekarang, aktifkan nanti | tidak berubah | `deferredModules` tetap; entri nav IDP/Evaluasi tetap `roles: []` |
+
+**Batas teknis cakupan Master Data (dasar tugas T086).** Pada model data saat ini hanya
+**Chapter** dan **Role** yang punya relasi chapter (`job_roles.chapter_id`); **Unit** dan
+**Project** tidak merujuk chapter mana pun. Jadi "lihat cakupan" hanya dapat ditegakkan
+tanpa perubahan skema untuk dua entitas pertama:
+
+- `chapters` → Chapter hanya membaca barisnya sendiri;
+- `jobRoles` → Chapter hanya membaca role yang `chapter_id`-nya miliknya (pola yang sama
+  dengan `ContractFilter.ScopeChapterID`, R-11);
+- `units`/`projects` → belum bisa dibatasi per chapter: keduanya dipakai sebagai
+  filter/dropdown lintas halaman (`employees`→`units`, `assignments`→`projects`/`jobRoles`),
+  dan pembatasannya menuntut keputusan produk atas relasi baru (mis. project per chapter)
+  atau penerimaan bahwa keduanya tetap daftar referensi level organisasi. Selama itu belum
+  diputuskan, **bacanya tetap terbuka** dan Talent belum ditolak di server — butir terbuka
+  **O7** (UI sudah mengikuti matriks: Talent tanpa menu Master Data).
+
+Tidak ada divergensi permanen: kedua keputusan clarify 7 hanya menyesuaikan baris matriks &
+tafsiran; modul yang berubah statusnya (IDP) tetap tidak aktif sehingga tidak ada kode yang
+harus menyesuaikan diri lebih dulu.
