@@ -13,7 +13,10 @@ import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
+import { MyIdpView } from "@/features/idp/MyIdpView";
 import { useIdps } from "@/features/idp/useIdps";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 import { orDash } from "@/lib/cell";
 import { IDP_NEW, IDP_DETAIL } from "@/lib/constants/routes";
 import type { IdpStatus } from "@/generated/graphql/types";
@@ -35,7 +38,21 @@ function actionProgress(row: IdpListRow) {
   return { total, done, donePct };
 }
 
+/**
+ * `/idp` — the IDP menu entry, open for every role since the 2026-10-16
+ * activation (klarifikasi 9); only what it opens differs:
+ * - CHAPTER / ADMIN: manage (create, actions, review, close) — Chapter scoped to
+ *   its chapter, Admin company-wide;
+ * - OPERATION: read-only roster;
+ * - TALENT: its own plan (`MyIdpView`), no roster scope.
+ */
 export default function IdpPage() {
+  const role = useSessionRole();
+  if (role === "TALENT") return <MyIdpView />;
+  return <IdpRosterView managing={canManage(role, "idp")} />;
+}
+
+function IdpRosterView({ managing }: { managing: boolean }) {
   const router = useRouter();
   const [status, setStatus] = React.useState<IdpStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
@@ -48,11 +65,17 @@ export default function IdpPage() {
     <section className="flex flex-col gap-4">
       <PageHeader
         title="IDP"
-        subtitle="Kelola Individual Development Plan talent dalam chapter Anda."
+        subtitle={
+          managing
+            ? "Kelola Individual Development Plan talent dalam chapter Anda."
+            : "Individual Development Plan talent (hanya baca)."
+        }
         actions={
-          <Link href={IDP_NEW} className="no-underline">
-            <Button variant="primary">+ Buat IDP</Button>
-          </Link>
+          managing ? (
+            <Link href={IDP_NEW} className="no-underline">
+              <Button variant="primary">+ Buat IDP</Button>
+            </Link>
+          ) : undefined
         }
         filters={
           <FilterButton

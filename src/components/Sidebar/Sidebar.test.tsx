@@ -21,8 +21,29 @@ describe("Sidebar", () => {
   it("hides sections the current role cannot access", () => {
     renderSidebar({ role: "TALENT" });
     expect(desktopNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    // Master data is closed to Talent (matrix: —, 2026-10-16 clarify 6).
     expect(screen.queryByText("Master Data")).toBeNull();
     expect(screen.queryByText("Accounts")).toBeNull();
+  });
+
+  it("shows Master Data read-only to Chapter and Operation only", () => {
+    for (const role of ["CHAPTER", "OPERATION"] as const) {
+      const view = renderSidebar({ role });
+      expect(desktopNav().getByText("Master Data")).toBeInTheDocument();
+      view.unmount();
+    }
+  });
+
+  it("menampilkan IDP & Evaluation untuk semua peran setelah aktivasi (klarifikasi 9)", () => {
+    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
+      const view = renderSidebar({ role });
+      // Entri menunya sama untuk semua peran; yang berbeda hanya isi/akses
+      // halamannya (Talent membuka IDP-nya sendiri, Operation hanya baca).
+      expect(desktopNav().getByRole("link", { name: "IDP" })).toBeInTheDocument();
+      expect(desktopNav().getByRole("button", { name: "Evaluations" })).toBeInTheDocument();
+      expect(compactNav().getByRole("link", { name: "IDP" })).toBeInTheDocument();
+      view.unmount();
+    }
   });
 
   // Placement amendment (TAN-154, commit c5d8443): the Talent Report content
@@ -37,17 +58,19 @@ describe("Sidebar", () => {
     }
   });
 
-  it("keeps the Employee section scoped to Operation and Admin", () => {
+  it("mirrors the module matrix in the Employee section (R2.2)", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().queryByRole("button", { name: "Employee" })).toBeNull();
-    expect(compactNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
+    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
     talent.unmount();
 
     const chapter = renderSidebar({ role: "CHAPTER" });
     fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
     expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
-    expect(desktopNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
-    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
+    // Chapter reads contracts of its own chapter (2026-10-16 clarify 5).
+    expect(desktopNav().getByRole("link", { name: "Kontrak" })).toBeInTheDocument();
     chapter.unmount();
 
     const admin = renderSidebar({ role: "ADMIN" });
@@ -105,20 +128,21 @@ describe("Sidebar", () => {
   });
 
   it("marks the most specific route active", () => {
-    renderSidebar({ pathname: "/evaluations/periods/new" });
-    expect(desktopNav().getByRole("link", { name: "Periode" })).toHaveAttribute("aria-current", "page");
-    expect(desktopNav().getByRole("link", { name: "Roster" })).not.toHaveAttribute("aria-current");
+    renderSidebar({ pathname: "/master-data/projects/new" });
+    expect(desktopNav().getByRole("link", { name: "Project" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("link", { name: "Unit" })).not.toHaveAttribute("aria-current");
   });
 
   it("shows only the role-scoped child of a section", () => {
-    renderSidebar({ role: "TALENT", pathname: "/evaluations/my" });
-    expect(desktopNav().getByRole("link", { name: "Evaluasi Saya" })).toHaveAttribute("aria-current", "page");
-    expect(desktopNav().queryByRole("link", { name: "Roster" })).toBeNull();
+    renderSidebar({ role: "TALENT", pathname: "/employees/emp-1" });
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
+    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
   });
 
   it("marks the active link in the compact strip without expanding anything", () => {
-    renderSidebar({ role: "TALENT", pathname: "/evaluations/my" });
-    expect(compactNav().getByRole("link", { name: "Evaluasi Saya" })).toHaveAttribute("aria-current", "page");
+    renderSidebar({ role: "TALENT", pathname: "/employees" });
+    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("aria-current", "page");
     // The strip is flat: no expandable group buttons.
     expect(compactNav().queryByRole("button")).toBeNull();
   });
@@ -164,9 +188,9 @@ describe("Sidebar", () => {
   });
 
   it("marks the owning section active in the collapsed rail", () => {
-    renderSidebar({ pathname: "/evaluations/periods" });
+    renderSidebar({ pathname: "/master-data/units" });
     fireEvent.click(screen.getByRole("button", { name: "Collapse navigation" }));
-    expect(desktopNav().getByRole("link", { name: "Evaluations" })).toHaveAttribute(
+    expect(desktopNav().getByRole("link", { name: "Master Data" })).toHaveAttribute(
       "aria-current",
       "page",
     );

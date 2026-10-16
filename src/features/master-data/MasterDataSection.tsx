@@ -10,6 +10,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 
 export type MasterDataItem = { id: string; name: string; isActive: boolean };
 
@@ -39,7 +41,10 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
 };
 
-// Shared Admin edit surface for master-data entities (FR-15, FR-20, FR-24).
+// Shared master-data surface. Chapter and Operation read the reference data
+// (Talent has no access, 2026-10-16 clarify 6) and Admin manages it (FR-15,
+// FR-20, FR-24) — so the edit surface only
+// renders for the manage roles and the rest get the same list read-only.
 // One list + create form + inline edit + activate/deactivate per entity.
 // There is deliberately NO delete operation (FR-21): master data is only
 // deactivated, and the server rejects deactivation while the row is still
@@ -63,6 +68,8 @@ export function MasterDataSection<T extends MasterDataItem>({
   onUpdate,
   onToggleActive,
 }: MasterDataSectionProps<T>) {
+  const role = useSessionRole();
+  const manage = canManage(role, "masterData");
   const [creating, setCreating] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [name, setName] = React.useState("");
@@ -173,35 +180,43 @@ export function MasterDataSection<T extends MasterDataItem>({
       title: "Status",
       render: (_value, item) => <StatusBadge active={item.isActive} />,
     },
-    {
-      key: "actions",
-      title: "Aksi",
-      className: "col-action",
-      render: (_value, item) =>
-        editingId === item.id ? (
-          <span className="text-xs text-zinc-400">Mengedit…</span>
-        ) : (
-          <RowActionsMenu
-            label={`Aksi ${item.name}`}
-            actions={[
-              { label: "Ubah", onSelect: () => startEdit(item) },
-              {
-                label: item.isActive ? "Nonaktifkan" : "Aktifkan",
-                onSelect: () => void onToggleActive(item.id, !item.isActive),
-              },
-            ]}
-          />
-        ),
-    },
+    ...(manage
+      ? [
+          {
+            key: "actions",
+            title: "Aksi",
+            className: "col-action",
+            render: (_value: unknown, item: T) =>
+              editingId === item.id ? (
+                <span className="text-xs text-zinc-400">Mengedit…</span>
+              ) : (
+                <RowActionsMenu
+                  label={`Aksi ${item.name}`}
+                  actions={[
+                    { label: "Ubah", onSelect: () => startEdit(item) },
+                    {
+                      label: item.isActive ? "Nonaktifkan" : "Aktifkan",
+                      onSelect: () => void onToggleActive(item.id, !item.isActive),
+                    },
+                  ]}
+                />
+              ),
+          } satisfies TableColumn<T>,
+        ]
+      : []),
   ];
 
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Master Data"
-        subtitle="Reference data for the talent ecosystem, managed by Admin."
+        subtitle={
+          manage
+            ? "Reference data for the talent ecosystem, managed by Admin."
+            : "Reference data for the talent ecosystem (hanya baca)."
+        }
         actions={
-          editing ? undefined : (
+          !manage || editing ? undefined : (
             <Button type="button" onClick={openCreate}>
               {addLabel}
             </Button>
@@ -227,7 +242,7 @@ export function MasterDataSection<T extends MasterDataItem>({
         }
       />
 
-      {editing ? (
+      {manage && editing ? (
         <form
           onSubmit={handleSubmit}
           className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"

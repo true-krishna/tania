@@ -23,6 +23,7 @@ import { ASSIGNMENT_NEW, ASSIGNMENT_DETAIL } from "@/lib/constants/routes";
 const SUBTITLE: Partial<Record<AccessRole, string>> = {
   CHAPTER: "Kelola penugasan talent ke project dalam chapter Anda.",
   OPERATION: "Lihat seluruh penugasan talent (hanya baca).",
+  ADMIN: "Kelola seluruh penugasan talent (TAN-212 clarify 4).",
   TALENT: "Riwayat penugasan Anda.",
 };
 
