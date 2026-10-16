@@ -323,7 +323,11 @@ function groupByDimension(
       id = t.squadId; nama = t.squad;
       scope = { tribeId: t.tribeId, productId: t.productId, squadId: t.squadId, unitcode: null };
     } else if (level === "unitcode") {
-      id = t.unitcode; nama = t.unitcode;
+      // Unit code hidup di bawah satu squad (tribe → product → squad →
+      // unitcode → talent); menggabungkan unitcode lintas squad membuat
+      // agregat tak cocok dengan talent konstituennya saat drill-down.
+      id = `${t.tribeId}/${t.productId}/${t.squadId}/${t.unitcode}`;
+      nama = t.unitcode;
       scope = { tribeId: t.tribeId, productId: t.productId, squadId: t.squadId, unitcode: t.unitcode };
     } else {
       id = t.id; nama = t.name;

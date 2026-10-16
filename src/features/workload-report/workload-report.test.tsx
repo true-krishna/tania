@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 
 const h = vi.hoisted(() => ({
   params: new URLSearchParams(),
@@ -123,6 +123,85 @@ describe("ExecutiveReportView — KPI, chart & distribusi dari data (TAN-229/230
     expect(await screen.findByText("Actual & Estimated Workload")).toBeInTheDocument();
     expect(screen.getAllByText("Grand Total").length).toBeGreaterThan(0);
     expect(screen.getByText("Need Improvement")).toBeInTheDocument();
+  });
+});
+
+describe("DistributionSection — sort, pagination & integritas drill-down (TAN-231)", () => {
+  function firstBodyRowName(table: HTMLElement): string | null {
+    const rows = within(table).getAllByRole("row");
+    const bodyRow = rows.find((row) => within(row).queryAllByRole("columnheader").length === 0);
+    return bodyRow ? (within(bodyRow).getAllByRole("cell")[0]?.textContent ?? null) : null;
+  }
+
+  async function openTalentDimension() {
+    await renderExecutive();
+    fireEvent.change(screen.getByLabelText("Dimensi distribusi"), { target: { value: "talent" } });
+    await screen.findByText("Rani Puspita");
+  }
+
+  it("shows the cost column for an entitled role", async () => {
+    await renderExecutive();
+
+    expect(screen.getByText("Biaya talent")).toBeInTheDocument();
+  });
+
+  it("sorts rows by time spent descending, then ascending", async () => {
+    await openTalentDimension();
+
+    const table = screen.getByRole("table", { name: "Tabel distribusi beban dimensi Talent" });
+    fireEvent.click(within(table).getByRole("button", { name: "Time spent" }));
+
+    expect(firstBodyRowName(table)).toMatch(/^Gita Hapsari/);
+
+    fireEvent.click(within(table).getByRole("button", { name: "Time spent" }));
+
+    expect(firstBodyRowName(table)).toMatch(/^Bayu Prakoso/);
+  });
+
+  it("paginates rows after the page size changes", async () => {
+    await openTalentDimension();
+
+    expect(screen.getByText("1–10")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Baris per halaman"), { target: { value: "5" } });
+
+    expect(screen.getByText("1–5")).toBeInTheDocument();
+    expect(screen.queryByText("Bayu Prakoso")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Halaman berikutnya" }));
+
+    expect(await screen.findByText("Bayu Prakoso")).toBeInTheDocument();
+    expect(screen.getByText("6–10")).toBeInTheDocument();
+    expect(screen.queryByText("Rani Puspita")).toBeNull();
+  });
+
+  it("keeps unitcode rows scoped to one squad so drill-down lists exactly its aggregate", async () => {
+    await renderExecutive();
+    fireEvent.change(screen.getByLabelText("Dimensi distribusi"), { target: { value: "unitcode" } });
+
+    const fesButtons = await screen.findAllByRole("button", { name: "Lihat talent Chapter FES" });
+    expect(fesButtons).toHaveLength(2);
+
+    fireEvent.click(fesButtons[0]);
+    expect(await screen.findByText("Bayu Prakoso")).toBeInTheDocument();
+    expect(screen.getByText("Citra Lestari")).toBeInTheDocument();
+    expect(screen.queryByText("Gita Hapsari")).toBeNull();
+
+    fireEvent.click(fesButtons[1]);
+    expect(await screen.findByText("Fajar Nugroho")).toBeInTheDocument();
+    expect(screen.getByText("Gita Hapsari")).toBeInTheDocument();
+    expect(screen.queryByText("Bayu Prakoso")).toBeNull();
+  });
+
+  it("filters the product dimension by tribe", async () => {
+    await renderExecutive();
+    fireEvent.change(screen.getByLabelText("Dimensi distribusi"), { target: { value: "product" } });
+    await screen.findByText("Tania");
+
+    fireEvent.change(screen.getByLabelText("Filter tribe"), { target: { value: "tr-dc" } });
+
+    expect(screen.getByText("PWA")).toBeInTheDocument();
+    expect(screen.queryByText("LLM Ops")).toBeNull();
   });
 });
 

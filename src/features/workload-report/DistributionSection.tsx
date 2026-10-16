@@ -171,15 +171,29 @@ function uniqueOptions(rows: { id: string; nama: string }[]) {
 function sortRows(rows: DistributionRow[], sort: SortState): DistributionRow[] {
   if (!sort) return rows;
   const accessor = SORT_ACCESSORS[sort.key];
-  const sorted = [...rows].sort((a, b) => {
+  return [...rows].sort((a, b) => {
     const av = accessor(a);
     const bv = accessor(b);
     if (av === null && bv === null) return 0;
     if (av === null) return 1;
     if (bv === null) return -1;
-    return av - bv;
+    const order = av - bv;
+    return sort.dir === "asc" ? order : -order;
   });
-  return sort.dir === "desc" ? sorted.reverse() : sorted;
+}
+
+/** Opsi filter unit code — satu entri per nilai unitcode, bukan per baris. */
+function unitcodeFilterOptions(rows: DistributionRow[], filter: DistributionFilter) {
+  const options = new Map<string, { value: string; label: string }>();
+  for (const row of rows) {
+    const code = row.scope.unitcode;
+    if (!code || options.has(code)) continue;
+    if (filter.tribeId && row.scope.tribeId !== filter.tribeId) continue;
+    if (filter.productId && row.scope.productId !== filter.productId) continue;
+    if (filter.squadId && row.scope.squadId !== filter.squadId) continue;
+    options.set(code, { value: code, label: code });
+  }
+  return [...options.values()];
 }
 
 function TalentDrillDownList({ row, tables }: { row: DistributionRow; tables: DistributionTables }) {
@@ -323,14 +337,7 @@ export function DistributionSection({
         (!filter.productId || row.scope.productId === filter.productId),
     ),
   );
-  const unitcodeOptions = uniqueOptions(
-    tables.rows.unitcode.filter(
-      (row) =>
-        (!filter.tribeId || row.scope.tribeId === filter.tribeId) &&
-        (!filter.productId || row.scope.productId === filter.productId) &&
-        (!filter.squadId || row.scope.squadId === filter.squadId),
-    ),
-  );
+  const unitcodeOptions = unitcodeFilterOptions(tables.rows.unitcode, filter);
 
   const statusOptions = [
     { value: "", label: "Semua status" },
@@ -506,6 +513,7 @@ export function DistributionSection({
                 ) : (
                   (shownRows as DistributionRow[]).map((row) => {
                     const expanded = drillDownEnabled && expandedId === row.id;
+                    const panelId = `drilldown-${row.id}`;
                     return (
                       <React.Fragment key={row.id}>
                         <tr data-expanded={expanded || undefined}>
@@ -514,6 +522,7 @@ export function DistributionSection({
                               <button
                                 type="button"
                                 aria-expanded={expanded}
+                                aria-controls={panelId}
                                 aria-label={`Lihat talent ${row.nama}`}
                                 onClick={() => setExpandedId(expanded ? null : row.id)}
                                 className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-tp-line text-tp-muted hover:text-tp-text"
@@ -533,7 +542,7 @@ export function DistributionSection({
                           ))}
                         </tr>
                         {expanded ? (
-                          <tr>
+                          <tr id={panelId}>
                             <td colSpan={standardCols.length + 1} className="bg-tp-bg">
                               <div className="px-2 py-3">
                                 <TalentDrillDownList row={row} tables={tables} />
@@ -555,6 +564,7 @@ export function DistributionSection({
               page={page}
               pageSize={pageSize}
               totalItems={visibleRows}
+              pageSizeOptions={[5, 10, 25]}
               onPageChange={setPage}
               onPageSizeChange={(size) => {
                 setPageSize(size);
