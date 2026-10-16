@@ -200,7 +200,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         title="Data Karyawan"
         subtitle={
           manage
-            ? "Kelola data karyawan, pencarian, dan filter (Operation)."
+            ? "Kelola data karyawan, pencarian, dan filter."
             : "Data karyawan untuk konteks penautan akun (hanya baca)."
         }
         actions={

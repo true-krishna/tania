@@ -1302,18 +1302,19 @@ export type Query = {
   assignableTalents: EmployeeConnection;
   assignments: AssignmentConnection;
   auditLogs: AuditLogConnection;
+  /** Admin & Operation melihat semua chapter; Chapter hanya barisnya sendiri; Talent ditolak (FR-18, FR-23; clarify 6–8). */
   chapters: Array<Chapter>;
   /** Percakapan asisten milik pemanggil (privat mutlak; FR-02). */
   chatConversations: ChatConversationConnection;
   /** Pesan satu percakapan milik pemanggil; percakapan orang lain → NOT_FOUND (anti-enumerasi). */
   chatMessages: ChatMessageConnection;
   currentEvaluationPeriod?: Maybe<EvaluationPeriod>;
-  /** Profil CV untuk pemiliknya atau Chapter dalam cakupan (hanya baca, FR-13). */
+  /** Profil CV untuk pemiliknya, Chapter dalam cakupan, Operation, atau Admin (hanya baca, FR-13). */
   cvProfile?: Maybe<CvProfile>;
   dashboard: Dashboard;
   employee?: Maybe<Employee>;
   employees: EmployeeConnection;
-  /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation (US10 skenario 4). */
+  /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation/Admin (US10 skenario 4). */
   employeesNeedingFollowUp: EmployeeConnection;
   /** Talent yang belum memiliki akun Entra (FR-44). */
   employeesWithoutEntra: EmployeeConnection;
@@ -1328,6 +1329,7 @@ export type Query = {
   health: Health;
   idp?: Maybe<Idp>;
   idps: IdpConnection;
+  /** Admin & Operation melihat semua role; Chapter hanya role milik chapter-nya; Talent ditolak (FR-20, FR-23; clarify 6–8). */
   jobRoles: Array<JobRole>;
   /** Profil user yang sedang login. */
   me: User;
@@ -1337,11 +1339,13 @@ export type Query = {
   /** Evaluasi milik Talent yang sedang login (FR-27). */
   myPerformanceEvaluations: Array<PerformanceEvaluation>;
   performanceEvaluations: PerformanceEvaluationConnection;
+  /** Referensi Project level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Assignment); 2026-10-16 clarify 8. */
   projects: Array<Project>;
   /** Usia pensiun (tahun) dari setelan aplikasi Admin (FR-40, T042). */
   retirementAge: Scalars['Int']['output'];
   talentReport: TalentReport;
   talentReportRange: TalentReportRange;
+  /** Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8. */
   units: Array<Unit>;
   users: Array<User>;
 };
@@ -1600,7 +1604,7 @@ export type TalentReportPeriodInput = {
   startMonth: Scalars['String']['input'];
 };
 
-/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest s.d. Desember tahun berjalan. */
+/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest (tidak lebih awal dari 2022) s.d. Desember tahun berjalan. */
 export type TalentReportRange = {
   __typename?: 'TalentReportRange';
   endMonth: Scalars['String']['output'];

@@ -184,25 +184,34 @@ describe("ProfilePage (TAN-188)", () => {
     expect(await screen.findByText("Beban kerja periode ini")).toBeInTheDocument();
   });
 
-  it("shows the personal IDP plan on the IDP tab", async () => {
+  it("menampilkan tab IDP untuk semua peran setelah aktivasi (klarifikasi 9)", async () => {
+    renderProfile();
+    await screen.findByRole("heading", { name: "Ilham Fadillah" });
+
+    // Modul IDP aktif: tabnya tersedia untuk semua peran, isinya menyesuaikan
+    // akses (Talent melihat rencananya sendiri).
+    expect(screen.getByRole("tab", { name: "IDP Saya" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Informasi pribadi" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Kontrak" })).toBeInTheDocument();
+  });
+
+  it("menampilkan tab IDP untuk peran lain juga", async () => {
+    h.role.current = "OPERATION";
+    renderProfile();
+    await screen.findByRole("heading", { name: "Ilham Fadillah" });
+
+    expect(screen.getByRole("tab", { name: "IDP Saya" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Informasi pribadi" })).toBeInTheDocument();
+  });
+
+  it("menyajikan ringkasan IDP di dalam tab", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
     fireEvent.click(screen.getByRole("tab", { name: "IDP Saya" }));
 
-    expect(
-      await screen.findByText("Menjadi Go backend engineer yang andal")
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Menjadi Go backend engineer yang andal")).toBeInTheDocument();
     expect(screen.getByText("Training Go lanjutan")).toBeInTheDocument();
     expect(screen.getByText("0/1 aksi selesai")).toBeInTheDocument();
-  });
-
-  it("hides the IDP tab for roles without IDP access", async () => {
-    h.role.current = "OPERATION";
-    renderProfile();
-    await screen.findByRole("heading", { name: "Ilham Fadillah" });
-
-    expect(screen.queryByRole("tab", { name: "IDP Saya" })).toBeNull();
-    expect(screen.getByRole("tab", { name: "Informasi pribadi" })).toBeInTheDocument();
   });
 });

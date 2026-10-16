@@ -1,11 +1,24 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
-import { ToastProvider } from "@/components/Toast";
 import JobRolesPage from "@/app/(app)/master-data/job-roles/page";
 import { ChaptersDocument, JobRolesDocument, SetJobRoleActiveDocument } from "@/generated/graphql";
+import * as React from "react";
+import { ToastProvider } from "@/components/Toast";
+
+// Master-data pages read the session role from the guard; the tests render the
+// page as Admin (the manage role) unless a case sets another role explicitly.
+const auth = vi.hoisted(() => ({ role: "ADMIN" as string | null }));
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+beforeEach(() => {
+  auth.role = "ADMIN";
+});
 
 const mocks = [
   {

@@ -16,6 +16,8 @@ import {
   SubmitPerformanceEvaluationDocument,
   UpsertPerformanceEvaluationDocument,
 } from "@/generated/graphql";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 import type { EvaluationAnswerType, EvaluationPeriodState } from "@/generated/graphql/types";
 import { EVALUATIONS } from "@/lib/constants/routes";
 
@@ -45,11 +47,12 @@ type AnswerLike = {
 };
 
 /**
- * Chapter evaluation form — US7 / FR-26, FR-28.
+ * Evaluation form — US7 / FR-26, FR-28.
  * Scores one talent for one period following the period's pinned template
  * criteria. Upsert saves a draft; Submit finalizes it. While the period is
- * RUNNING the chapter may revise (revision history kept server-side, FR-28);
- * once CLOSED the page is read-only.
+ * RUNNING a managing role (Chapter scoped, Admin company-wide) may revise
+ * (revision history kept server-side, FR-28); Operation reads it, and once
+ * CLOSED the page is read-only.
  *
  * The form is reached from the running-period roster, so a talent may not have
  * a score yet (`performanceEvaluations` returns an empty connection). In that
@@ -138,8 +141,10 @@ function EvaluationForm({
   const [upsert, upsertState] = useMutation(UpsertPerformanceEvaluationDocument);
   const [submit, submitState] = useMutation(SubmitPerformanceEvaluationDocument);
   const { pushToast } = useToast();
+  const role = useSessionRole();
 
-  const readOnly = period.state === "CLOSED";
+  // Only a managing role scores; Operation lands here read-only from the roster.
+  const readOnly = period.state === "CLOSED" || !canManage(role, "evaluations");
 
   // Seed once from the loaded evaluation (empty for a brand-new score).
   const [answersState, setAnswersState] = React.useState<Record<string, string>>(() =>
@@ -269,7 +274,9 @@ function EvaluationForm({
 
       {readOnly ? (
         <p className="text-xs text-zinc-500">
-          Periode telah berakhir — evaluasi hanya-baca (FR-28).
+          {period.state === "CLOSED"
+            ? "Periode telah berakhir — evaluasi hanya-baca (FR-28)."
+            : "Peran Anda hanya-baca untuk evaluasi ini (FR-15)."}
         </p>
       ) : (
         <div className="flex gap-2">
