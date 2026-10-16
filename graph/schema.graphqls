@@ -957,25 +957,29 @@ type Query {
   """Profil user yang sedang login."""
   me: User!
 
-  # --- Master data (Admin tulis; read-only untuk peran lain) ---
+  # --- Master data (Admin tulis; baca mengikuti matriks 002-tania-rbac §Matriks) ---
+  """Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8."""
   units(includeInactive: Boolean = false): [Unit!]!
+  """Admin & Operation melihat semua chapter; Chapter hanya barisnya sendiri; Talent ditolak (FR-18, FR-23; clarify 6–8)."""
   chapters(includeInactive: Boolean = false): [Chapter!]!
+  """Admin & Operation melihat semua role; Chapter hanya role milik chapter-nya; Talent ditolak (FR-20, FR-23; clarify 6–8)."""
   jobRoles(includeInactive: Boolean = false): [JobRole!]!
+  """Referensi Project level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Assignment); 2026-10-16 clarify 8."""
   projects(unitId: ID, includeInactive: Boolean = false): [Project!]!
 
-  # --- Employee (Operation tulis; Chapter/Admin baca) ---
+  # --- Employee (Operation/Admin tulis; Chapter/Admin baca) ---
   employees(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
   employee(id: ID!): Employee
 
   """Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35)."""
   assignableTalents(search: String, first: Int = 25, after: String): EmployeeConnection!
 
-  # --- Kontrak kerja (Operation) ---
+  # --- Kontrak kerja (Operation/Admin tulis; Chapter baca cakupan chapter-nya) ---
   employmentContracts(filter: EmploymentContractFilter, first: Int = 25, after: String): EmploymentContractConnection!
   employmentContract(id: ID!): EmploymentContract
   """Kontrak berakhir dalam jendela hari (default 90) — kandidat perpanjangan (FR-40, US10)."""
   expiringContracts(days: Int = 90, first: Int = 25, after: String): EmploymentContractConnection!
-  """Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation (US10 skenario 4)."""
+  """Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation/Admin (US10 skenario 4)."""
   employeesNeedingFollowUp(first: Int = 25, after: String): EmployeeConnection!
   """Usia pensiun (tahun) dari setelan aplikasi Admin (FR-40, T042)."""
   retirementAge: Int!
@@ -993,7 +997,7 @@ type Query {
 
   # --- CV ---
   myCvProfile: CvProfile
-  """Profil CV untuk pemiliknya atau Chapter dalam cakupan (hanya baca, FR-13)."""
+  """Profil CV untuk pemiliknya, Chapter dalam cakupan, Operation, atau Admin (hanya baca, FR-13)."""
   cvProfile(employeeId: ID!): CvProfile
 
   # --- Dashboard per peran (FR-29/FR-30) ---
@@ -1055,7 +1059,7 @@ type Mutation {
   updateProject(id: ID!, name: String!, unitId: ID!): Project!
   setProjectActive(id: ID!, isActive: Boolean!): Project!
 
-  # --- Employee (Operation) ---
+  # --- Employee (Operation/Admin) ---
   createEmployee(input: CreateEmployeeInput!): Employee!
   updateEmployee(id: ID!, input: UpdateEmployeeInput!): Employee!
   deactivateEmployee(id: ID!, acknowledgeActiveWork: Boolean = false): Employee!
@@ -1064,7 +1068,7 @@ type Mutation {
   """Pensiun: akhiri kontrak aktif (end_reason=retirement), status → RETIRED (FR-39)."""
   retireEmployee(id: ID!, effectiveDate: Date!, acknowledgeActiveWork: Boolean = false): Employee!
 
-  # --- Kontrak kerja (Operation) ---
+  # --- Kontrak kerja (Operation/Admin) ---
   createEmploymentContract(input: CreateEmploymentContractInput!): EmploymentContract!
   updateEmploymentContract(id: ID!, input: UpdateEmploymentContractInput!): EmploymentContract!
   """Perpanjangan kontrak berbatas waktu — kontrak baru terkait predecessor (FR-36)."""
@@ -1074,7 +1078,7 @@ type Mutation {
   """Ubah usia pensiun (tahun); hanya Admin (T042)."""
   setRetirementAge(years: Int!): Int!
 
-  # --- Provisi Entra (Operation, FR-43–FR-46) ---
+  # --- Provisi Entra (Operation/Admin, FR-43–FR-46) ---
   """Provisioning manual/ulang akun Entra untuk talent yang belum punya (FR-44).
 Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FAILED) tanpa menggagalkan mutasi."""
   provisionEntraAccount(employeeId: ID!): Employee!
