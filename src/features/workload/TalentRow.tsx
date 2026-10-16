@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IconChevronRight } from "@tabler/icons-react";
+import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 import { LoadClassificationBadge } from "./LoadClassificationBadge";
 import { LoadPercentageBar } from "./LoadPercentageBar";
 import type { TalentSummary } from "./types";
@@ -33,7 +34,7 @@ export function TalentRow({
 
   return (
     <Link
-      href={`/employees/${talent.id}`}
+      href={EMPLOYEE_DETAIL(talent.id)}
       className="grid grid-cols-[36px_1fr_auto] items-center gap-x-4 gap-y-3 rounded-[14px] border border-tp-line bg-tp-surface px-[18px] py-3.5 text-tp-text shadow-[0_1px_2px_rgba(16,26,71,0.06)] transition-colors hover:bg-tp-bg min-[860px]:grid-cols-[36px_minmax(150px,1.3fr)_minmax(140px,1.6fr)_56px_auto_20px]"
     >
       <span

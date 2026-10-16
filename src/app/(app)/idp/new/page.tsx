@@ -13,6 +13,7 @@ import { ToastStack } from "@/components/Toast";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
 import type { DevelopmentMethod } from "@/generated/graphql/types";
 import { CreateIdpDocument } from "@/generated/graphql";
+import { IDP } from "@/lib/constants/routes";
 
 type ToastItem = { id: number; variant: "error" | "success"; message: string };
 
@@ -181,14 +182,17 @@ export default function NewIdpPage() {
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Label error={errors.employeeId}>
           Talent
-          <Select value={values.employeeId} onChange={(e) => set("employeeId", e.target.value)}>
-            <option value="">— pilih talent (assignable) —</option>
-            {talents.data?.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.fullName} ({emp.nomorInduk ?? "—"})
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.employeeId}
+            onChange={(e) => set("employeeId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih talent (assignable) —" },
+              ...(talents.data ?? []).map((emp) => ({
+                value: emp.id,
+                label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
+              })),
+            ]}
+          />
         </Label>
 
         <Card className="flex flex-col gap-4">
@@ -268,13 +272,11 @@ export default function NewIdpPage() {
                   <Select
                     value={action.method}
                     onChange={(e) => updateAction(index, { method: e.target.value as DevelopmentMethod })}
-                  >
-                    {(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => (
-                      <option key={m} value={m}>
-                        {METHOD_LABEL[m]}
-                      </option>
-                    ))}
-                  </Select>
+                    options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
+                      value: m,
+                      label: METHOD_LABEL[m],
+                    }))}
+                  />
                 </Label>
                 <Label>
                   Tenggat (opsional)
@@ -318,7 +320,7 @@ export default function NewIdpPage() {
             Simpan
           </Button>
           <Link
-            href="/idp"
+            href={IDP}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal

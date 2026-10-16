@@ -29,6 +29,12 @@ import {
   type WorkLocation,
 } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
+import {
+  CONTRACTS,
+  CONTRACT_DETAIL,
+  CONTRACT_RENEW,
+  EMPLOYEE_DETAIL,
+} from "@/lib/constants/routes";
 
 type FormValues = {
   contractNo: string;
@@ -52,15 +58,15 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href="/contracts" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={CONTRACTS} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
         ← Kembali ke daftar kontrak
       </Link>
       <PageHeader
-        title={contract.contractNo}
+        title={contract.contractNo ?? "—"}
         subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
         actions={
           !isOpenEndedContractType(contract.contractType) ? (
-            <Link href={`/contracts/${id}/renew`} className="no-underline">
+            <Link href={CONTRACT_RENEW(id)} className="no-underline">
               <Button variant="primary">Perpanjang kontrak</Button>
             </Link>
           ) : undefined
@@ -74,7 +80,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Karyawan</dt>
             <dd className="text-zinc-900">
               <Link
-                href={`/employees/${contract.employee.id}`}
+                href={EMPLOYEE_DETAIL(contract.employee.id)}
                 className="text-tp-brand-red-deep hover:underline"
               >
                 {contract.employee.fullName}
@@ -144,7 +150,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Kontrak Pendahulu</dt>
             <dd className="text-zinc-900">
               {contract.predecessor ? (
-                <Link href={`/contracts/${contract.predecessor.id}`} className="text-tp-brand-red-deep hover:underline">
+                <Link href={CONTRACT_DETAIL(contract.predecessor.id)} className="text-tp-brand-red-deep hover:underline">
                   {contract.predecessor.contractNo}
                 </Link>
               ) : (
@@ -194,7 +200,7 @@ function ContractEditForm({
     }
   );
   const [values, setValues] = React.useState<FormValues>(() => ({
-    contractNo: contract.contractNo,
+    contractNo: contract.contractNo ?? "",
     officeEmail: contract.officeEmail ?? "",
     bandPosition: contract.bandPosition,
     jobTitle: contract.jobTitle ?? "",
@@ -302,29 +308,30 @@ function ContractEditForm({
         <Select
           value={values.bandPosition}
           onChange={(e) => set("bandPosition", e.target.value)}
-        >
-          <option value="UNDEFINED">Belum ditetapkan</option>
-          <option value="I">I</option>
-          <option value="II">II</option>
-          <option value="III">III</option>
-          <option value="IV">IV</option>
-          <option value="V">V</option>
-          <option value="VI">VI</option>
-        </Select>
+          options={[
+            { value: "UNDEFINED", label: "Belum ditetapkan" },
+            { value: "I", label: "I" },
+            { value: "II", label: "II" },
+            { value: "III", label: "III" },
+            { value: "IV", label: "IV" },
+            { value: "V", label: "V" },
+            { value: "VI", label: "VI" },
+          ]}
+        />
       </Label>
       <Label error={errors.workLocation}>
         Work location
         <Select
           value={values.workLocation}
           onChange={(e) => set("workLocation", e.target.value)}
-        >
-          {/* UNDEFINED is the state of a contract whose location was never
-              recorded (legacy rows); showing it keeps the select honest
-              instead of falling back to the first option. */}
-          <option value="UNDEFINED">Belum ditetapkan</option>
-          <option value="JAKARTA">Jakarta</option>
-          <option value="BANDUNG">Bandung</option>
-        </Select>
+          options={[
+            // UNDEFINED marks legacy rows whose location was never recorded; keeping it
+            // avoids silently falling back to the select's first region.
+            { value: "UNDEFINED", label: "Belum ditetapkan" },
+            { value: "JAKARTA", label: "Jakarta" },
+            { value: "BANDUNG", label: "Bandung" },
+          ]}
+        />
       </Label>
       <Label error={errors.notes}>
         Catatan <span className="text-xs font-normal text-zinc-500">(opsional)</span>

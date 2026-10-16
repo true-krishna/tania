@@ -25,13 +25,17 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   select?: { label: string; placeholder: string; options: { id: string; name: string }[] };
   // Current select value of an item (for pre-filling the edit form), e.g. project.unit.id.
   selectIdOf?: (item: T) => string | undefined;
+  // Optional "Kode" field for entities whose served contract requires it (Unit.code).
+  codeLabel?: string;
+  codePlaceholder?: string;
+  codeOf?: (item: T) => string | undefined;
 
   extraColumn?: { label: string; render: (item: T) => React.ReactNode };
   // Opt-in search over the already-served rows (FR-001). Chapter deliberately
   // does not pass this — see spec Out of Scope.
   searchable?: boolean;
-  onCreate: (values: { name: string; selectValue?: string }) => Promise<void>;
-  onUpdate: (id: string, values: { name: string; selectValue?: string }) => Promise<void>;
+  onCreate: (values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
+  onUpdate: (id: string, values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
 };
 
@@ -50,6 +54,9 @@ export function MasterDataSection<T extends MasterDataItem>({
   error,
   select,
   selectIdOf,
+  codeLabel,
+  codePlaceholder,
+  codeOf,
   extraColumn,
   searchable = false,
   onCreate,
@@ -59,8 +66,10 @@ export function MasterDataSection<T extends MasterDataItem>({
   const [creating, setCreating] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [name, setName] = React.useState("");
+  const [code, setCode] = React.useState("");
   const [selectValue, setSelectValue] = React.useState("");
   const [nameError, setNameError] = React.useState<string | undefined>();
+  const [codeError, setCodeError] = React.useState<string | undefined>();
   const [selectError, setSelectError] = React.useState<string | undefined>();
   const [busy, setBusy] = React.useState(false);
   // Search keyword lives in local component state — never in the URL (D6).
@@ -88,8 +97,10 @@ export function MasterDataSection<T extends MasterDataItem>({
     setCreating(false);
     setEditingId(null);
     setName("");
+    setCode("");
     setSelectValue("");
     setNameError(undefined);
+    setCodeError(undefined);
     setSelectError(undefined);
   }
 
@@ -97,8 +108,10 @@ export function MasterDataSection<T extends MasterDataItem>({
     setCreating(true);
     setEditingId(null);
     setName("");
+    setCode("");
     setSelectValue("");
     setNameError(undefined);
+    setCodeError(undefined);
     setSelectError(undefined);
   }
 
@@ -106,25 +119,29 @@ export function MasterDataSection<T extends MasterDataItem>({
     setEditingId(item.id);
     setCreating(false);
     setName(item.name);
+    setCode(codeOf?.(item) ?? "");
     setSelectValue(selectIdOf?.(item) ?? "");
     setNameError(undefined);
+    setCodeError(undefined);
     setSelectError(undefined);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const nextNameError = name.trim() ? undefined : `${nameLabel} wajib diisi.`;
+    const nextCodeError = codeLabel && !code.trim() ? `${codeLabel} wajib diisi.` : undefined;
     const nextSelectError = select && !selectValue ? `${select.label} wajib dipilih.` : undefined;
     setNameError(nextNameError);
+    setCodeError(nextCodeError);
     setSelectError(nextSelectError);
-    if (nextNameError || nextSelectError) return;
+    if (nextNameError || nextCodeError || nextSelectError) return;
 
     setBusy(true);
     try {
       if (editingId !== null) {
-        await onUpdate(editingId, { name: name.trim(), selectValue });
+        await onUpdate(editingId, { name: name.trim(), selectValue, code: code.trim() });
       } else {
-        await onCreate({ name: name.trim(), selectValue });
+        await onCreate({ name: name.trim(), selectValue, code: code.trim() });
       }
       reset();
     } finally {
@@ -176,17 +193,28 @@ export function MasterDataSection<T extends MasterDataItem>({
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Digital Business" />
             {nameError ? <span className="text-xs text-red-600">{nameError}</span> : null}
           </label>
+          {codeLabel ? (
+            <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+              {codeLabel}
+              <Input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder={codePlaceholder ?? "cth: DBT"}
+              />
+              {codeError ? <span className="text-xs text-red-600">{codeError}</span> : null}
+            </label>
+          ) : null}
           {select ? (
             <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
               {select.label}
-              <Select value={selectValue} onChange={(e) => setSelectValue(e.target.value)}>
-                <option value="">— {select.placeholder} —</option>
-                {select.options.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
-                  </option>
-                ))}
-              </Select>
+              <Select
+                value={selectValue}
+                onChange={(e) => setSelectValue(e.target.value)}
+                options={[
+                  { value: "", label: `— ${select.placeholder} —` },
+                  ...select.options.map((o) => ({ value: o.id, label: o.name })),
+                ]}
+              />
               {selectError ? <span className="text-xs text-red-600">{selectError}</span> : null}
             </label>
           ) : null}

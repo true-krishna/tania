@@ -11,6 +11,7 @@ import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
 import { CreateEvaluationPeriodDocument } from "@/generated/graphql";
+import { EVALUATION_PERIODS } from "@/lib/constants/routes";
 
 type FormValues = { name: string; templateId: string; startDate: string; endDate: string };
 const EMPTY: FormValues = { name: "", templateId: "", startDate: "", endDate: "" };
@@ -75,14 +76,14 @@ export default function NewEvaluationPeriodPage() {
         </Label>
         <Label error={errors.templateId}>
           Template Evaluasi
-          <Select value={values.templateId} onChange={(e) => set("templateId", e.target.value)}>
-            <option value="">— pilih template —</option>
-            {(templates.data ?? []).map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.templateId}
+            onChange={(e) => set("templateId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih template —" },
+              ...(templates.data ?? []).map((t) => ({ value: t.id, label: t.name })),
+            ]}
+          />
         </Label>
         <div className="grid grid-cols-2 gap-3">
           <Label error={errors.startDate}>
@@ -99,7 +100,7 @@ export default function NewEvaluationPeriodPage() {
             Simpan
           </Button>
           <Link
-            href="/evaluations/periods"
+            href={EVALUATION_PERIODS}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal

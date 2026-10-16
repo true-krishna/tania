@@ -242,14 +242,15 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
 
       <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Institusi (wajib)" required />
-        <Select value={degree} onChange={(e) => setDegree(e.target.value as EducationLevel | "")} aria-label="Jenjang pendidikan">
-          <option value="">— pilih jenjang (opsional) —</option>
-          {EDUCATION_LEVELS.map((level) => (
-            <option key={level.value} value={level.value}>
-              {level.label}
-            </option>
-          ))}
-        </Select>
+        <Select
+          value={degree}
+          onChange={(e) => setDegree(e.target.value as EducationLevel | "")}
+          aria-label="Jenjang pendidikan"
+          options={[
+            { value: "", label: "— pilih jenjang (opsional) —" },
+            ...EDUCATION_LEVELS.map((level) => ({ value: level.value, label: level.label })),
+          ]}
+        />
         <Input value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} placeholder="Jurusan" />
         <div className="flex gap-2">
           <Input value={startYear} onChange={(e) => setStartYear(e.target.value)} placeholder="Tahun mulai" inputMode="numeric" />

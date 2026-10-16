@@ -2,21 +2,23 @@
 
 import Link from "next/link";
 import { Card } from "@/components/Card";
+import { Chip, type ChipVariant } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
+import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useMyIdp } from "@/features/idp/talent/useMyIdp";
-import { cn } from "@/lib/cn";
+import { IDP_MY } from "@/lib/constants/routes";
 import type { DevelopmentActionStatus, DevelopmentMethod, IdpStatus } from "@/generated/graphql/types";
-
-const IDP_STATUS_LABEL: Record<IdpStatus, string> = {
-  IN_PROGRESS: "Berjalan",
-  NEEDS_REVIEW: "Perlu review",
-  COMPLETED: "Selesai",
-};
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
   IN_PROGRESS: "In progress",
   COMPLETED: "Completed",
+};
+
+const ACTION_STATUS_VARIANT: Record<DevelopmentActionStatus, ChipVariant> = {
+  TODO: "neutral",
+  IN_PROGRESS: "info",
+  COMPLETED: "success",
 };
 
 const METHOD_LABEL: Record<DevelopmentMethod, string> = {
@@ -80,16 +82,16 @@ export function IdpSection() {
                     {METHOD_LABEL[action.method]} · Tenggat {action.dueDate ?? "—"}
                   </p>
                 </div>
-                <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+                <Chip variant={ACTION_STATUS_VARIANT[action.status]} size="small">
                   {ACTION_STATUS_LABEL[action.status]}
-                </span>
+                </Chip>
               </li>
             ))}
           </ul>
         ) : (
           <p className="text-sm text-zinc-500">Belum ada aksi pengembangan.</p>
         )}
-        <Link href="/idp/my" className="text-sm font-medium text-zinc-900 hover:underline">
+        <Link href={IDP_MY} className="text-sm font-medium text-zinc-900 hover:underline">
           Kelola IDP saya →
         </Link>
       </Card>
@@ -99,16 +101,9 @@ export function IdpSection() {
 
 function IdpStatusChip({ status }: { status: IdpStatus }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
-        status === "COMPLETED" && "bg-green-100 text-green-700",
-        status === "NEEDS_REVIEW" && "bg-amber-100 text-amber-700",
-        status === "IN_PROGRESS" && "bg-tp-tint-info text-tp-ink-info",
-      )}
-    >
+    <Chip variant={IDP_STATUS_VARIANT[status]} size="small">
       {IDP_STATUS_LABEL[status]}
-    </span>
+    </Chip>
   );
 }
 

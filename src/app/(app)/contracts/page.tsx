@@ -6,6 +6,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable, type Column } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
@@ -15,6 +16,7 @@ import { Select } from "@/components/Select";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
 import {
   CONTRACT_STATUS_LABEL,
+  CONTRACT_STATUS_VARIANT,
   CONTRACT_TYPE_LABEL,
   CONTRACT_TYPE_ORDER,
 } from "@/features/contracts/labels";
@@ -24,10 +26,11 @@ import type {
   EmploymentContractStatus,
 } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
+import { CONTRACT_NEW, CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 type ContractRowData = {
   id: string;
-  contractNo: string;
+  contractNo: string | null;
   contractType: ContractType;
   nomorInduk: string;
   startDate: string;
@@ -56,15 +59,15 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
         <Link
-          href={`/contracts/${contract.id}`}
+          href={CONTRACT_DETAIL(contract.id)}
           className="font-medium text-zinc-900 hover:underline"
         >
-          {contract.contractNo}
+          {orDash(contract.contractNo)}
         </Link>
       </td>
       <td className="px-4 py-2.5">
         <Link
-          href={`/employees/${contract.employee.id}`}
+          href={EMPLOYEE_DETAIL(contract.employee.id)}
           className="text-zinc-900 hover:underline"
         >
           {contract.employee.fullName}
@@ -78,9 +81,9 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
         {contract.startDate} — {contract.endDate ?? "tidak berbatas"}
       </td>
       <td className="px-4 py-2.5">
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+        <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
           {CONTRACT_STATUS_LABEL[contract.status]}
-        </span>
+        </Chip>
       </td>
       <td className="col-action">
         <RowActionsMenu
@@ -88,7 +91,7 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
           actions={[
             {
               label: "Lihat detail",
-              onSelect: () => router.push(`/contracts/${contract.id}`),
+              onSelect: () => router.push(CONTRACT_DETAIL(contract.id)),
             },
           ]}
         />
@@ -131,7 +134,7 @@ export default function ContractsPage() {
         title="Kontrak Kerja"
         subtitle="Kelola kontrak kerja karyawan (Operation)."
         actions={
-          <Link href="/contracts/new" className="no-underline">
+          <Link href={CONTRACT_NEW} className="no-underline">
             <Button variant="primary">+ Tambah Kontrak</Button>
           </Link>
         }
@@ -170,14 +173,14 @@ export default function ContractsPage() {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="ALL">Semua</option>
-              {CONTRACT_TYPE_ORDER.map((type) => (
-                <option key={type} value={type}>
-                  {CONTRACT_TYPE_LABEL[type]}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...CONTRACT_TYPE_ORDER.map((type) => ({
+                  value: type,
+                  label: CONTRACT_TYPE_LABEL[type],
+                })),
+              ]}
+            />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
@@ -188,16 +191,13 @@ export default function ContractsPage() {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="ALL">Semua</option>
-              {(Object.keys(CONTRACT_STATUS_LABEL) as Array<
-                keyof typeof CONTRACT_STATUS_LABEL
-              >).map((value) => (
-                <option key={value} value={value}>
-                  {CONTRACT_STATUS_LABEL[value]}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...(Object.keys(CONTRACT_STATUS_LABEL) as Array<
+                  keyof typeof CONTRACT_STATUS_LABEL
+                >).map((value) => ({ value, label: CONTRACT_STATUS_LABEL[value] })),
+              ]}
+            />
           </label>
         </div>
       ) : null}

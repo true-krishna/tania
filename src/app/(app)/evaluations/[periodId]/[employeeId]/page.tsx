@@ -17,6 +17,7 @@ import {
   UpsertPerformanceEvaluationDocument,
 } from "@/generated/graphql";
 import type { EvaluationAnswerType, EvaluationPeriodState } from "@/generated/graphql/types";
+import { EVALUATIONS } from "@/lib/constants/routes";
 
 type CriterionLike = {
   id: string;
@@ -94,7 +95,7 @@ export default function EvaluationFormPage() {
     return (
       <section className="flex flex-col gap-4">
         <ErrorState message="Periode evaluasi tidak ditemukan atau akses ditolak." />
-        <Link href="/evaluations" className="text-sm font-medium text-tp-brand-red-deep hover:underline">
+        <Link href={EVALUATIONS} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
           ← Kembali ke roster
         </Link>
       </section>
@@ -202,7 +203,7 @@ function EvaluationForm({
         subtitle={`${period.name} · ${period.startDate} — ${period.endDate} · status: ${period.state}${readOnly ? " · hanya-baca" : ""}`}
         actions={
           <Link
-            href="/evaluations"
+            href={EVALUATIONS}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             ← Kembali

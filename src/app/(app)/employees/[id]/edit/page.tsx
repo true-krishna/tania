@@ -20,6 +20,7 @@ import {
 } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
 import { AuthGuard } from "@/lib/auth/guard";
+import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 type EmployeeData = NonNullable<EmployeeQuery["employee"]>;
 
@@ -76,8 +77,8 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
     nikBaru: "",
     fullName: employee.fullName,
     email: employee.email,
-    birthDate: employee.birthDate,
-    gender: employee.gender,
+    birthDate: employee.birthDate ?? "",
+    gender: employee.gender ?? "",
     phone: employee.phone ?? "",
     address: employee.address ?? "",
     latestEducation: employee.latestEducation ?? "",
@@ -164,7 +165,7 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           Perubahan data {saved.updateEmployee.fullName} berhasil disimpan.
         </div>
-        <Link href={`/employees/${id}`} className="w-fit">
+        <Link href={EMPLOYEE_DETAIL(id)} className="w-fit">
           <Button type="button" variant="secondary">
             Kembali ke detail karyawan
           </Button>
@@ -216,14 +217,17 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         </Label>
         <Label error={errors.gender}>
           Jenis kelamin
-          <Select value={values.gender} onChange={(e) => set("gender", e.target.value)}>
-            <option value="">— pilih jenis kelamin —</option>
-            {(Object.keys(GENDER_LABEL) as Array<keyof typeof GENDER_LABEL>).map((value) => (
-              <option key={value} value={value}>
-                {GENDER_LABEL[value]}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.gender}
+            onChange={(e) => set("gender", e.target.value)}
+            options={[
+              { value: "", label: "— pilih jenis kelamin —" },
+              ...(Object.keys(GENDER_LABEL) as Array<keyof typeof GENDER_LABEL>).map((value) => ({
+                value,
+                label: GENDER_LABEL[value],
+              })),
+            ]}
+          />
         </Label>
         <Label error={errors.phone}>
           Telepon
@@ -265,22 +269,20 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         </Label>
         <Label>
           Status kepegawaian
-          <Select value={values.status} onChange={(e) => set("status", e.target.value)}>
-            {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
-              (value) => (
-                <option key={value} value={value}>
-                  {EMPLOYEE_STATUS_LABEL[value]}
-                </option>
-              )
-            )}
-          </Select>
+          <Select
+            value={values.status}
+            onChange={(e) => set("status", e.target.value)}
+            options={(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
+              keyof typeof EMPLOYEE_STATUS_LABEL
+            >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] }))}
+          />
         </Label>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={saving}>
             Simpan
           </Button>
-          <Link href={`/employees/${id}`} className="no-underline">
+          <Link href={EMPLOYEE_DETAIL(id)} className="no-underline">
             <Button type="button" variant="secondary">
               Batal
             </Button>

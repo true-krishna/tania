@@ -10,6 +10,7 @@ import {
 } from "@/features/contracts/useContractCycle";
 import { usePreRetirementCandidates } from "@/features/employees/usePreRetirement";
 import { CONTRACT_END_REASON_LABEL } from "@/features/contracts/labels";
+import { CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 import type { PreRetirementCandidatesQuery } from "@/generated/graphql";
 
 type CandidateNode =
@@ -38,7 +39,7 @@ function computePreRetirement(
 ): PreRetirementHit[] {
   return candidates
     .map((node) => {
-      const date = retirementDate(node.birthDate, age);
+      const date = node.birthDate ? retirementDate(node.birthDate, age) : null;
       return date ? { node, daysUntil: daysUntil(date, now) } : null;
     })
     .filter((hit): hit is PreRetirementHit => hit !== null && hit.daysUntil <= 90)
@@ -104,7 +105,7 @@ export function OperationCycleWidgets() {
                 {expiring90List.map((contract) => (
                   <li key={contract.id} className="rounded-lg border border-surface-border px-3 py-2">
                     <Link
-                      href={`/contracts/${contract.id}`}
+                      href={CONTRACT_DETAIL(contract.id)}
                       className="text-sm font-medium text-zinc-900 hover:underline"
                     >
                       {contract.employee.fullName}
@@ -143,7 +144,7 @@ export function OperationCycleWidgets() {
                       className="rounded-lg border border-surface-border px-3 py-2"
                     >
                       <Link
-                        href={`/employees/${employee.id}`}
+                        href={EMPLOYEE_DETAIL(employee.id)}
                         className="text-sm font-medium text-zinc-900 hover:underline"
                       >
                         {employee.fullName}
@@ -181,7 +182,7 @@ export function OperationCycleWidgets() {
                     className="rounded-lg border border-surface-border px-3 py-2"
                   >
                     <Link
-                      href={`/employees/${hit.node.id}`}
+                      href={EMPLOYEE_DETAIL(hit.node.id)}
                       className="text-sm font-medium text-zinc-900 hover:underline"
                     >
                       {hit.node.fullName}

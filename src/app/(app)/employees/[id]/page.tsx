@@ -7,12 +7,14 @@ import { Card } from "@/components/Card";
 import { PageHeader } from "@/components/PageHeader";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { useEmployee } from "@/features/employees/useEmployee";
 import { EMPLOYEE_STATUS_LABEL, GENDER_LABEL } from "@/features/employees/labels";
 import {
   BAND_POSITION_LABEL,
   CONTRACT_END_REASON_LABEL,
   CONTRACT_STATUS_LABEL,
+  CONTRACT_STATUS_VARIANT,
   CONTRACT_TYPE_LABEL,
   WORK_LOCATION_LABEL,
 } from "@/features/contracts/labels";
@@ -26,6 +28,12 @@ import {
 } from "@/generated/graphql";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canAccess, canManage } from "@/lib/auth/matrix";
+import {
+  CONTRACT_NEW,
+  CONTRACT_DETAIL,
+  EMPLOYEES,
+  EMPLOYEE_EDIT,
+} from "@/lib/constants/routes";
 
 type DetailTab = "overview" | "workload";
 
@@ -54,7 +62,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   return (
     <section className="flex flex-col gap-4">
       {role === "TALENT" ? null : (
-        <Link href="/employees" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+        <Link href={EMPLOYEES} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
           ← Kembali ke daftar
         </Link>
       )}
@@ -65,7 +73,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
         }
         actions={
           employee && manage ? (
-            <Link href={`/employees/${id}/edit`} className="no-underline">
+            <Link href={EMPLOYEE_EDIT(id)} className="no-underline">
               <Button variant="secondary">Ubah data</Button>
             </Link>
           ) : undefined
@@ -121,11 +129,13 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-zinc-500">Tanggal Lahir</dt>
-                <dd className="text-zinc-900">{employee.birthDate}</dd>
+                <dd className="text-zinc-900">{employee.birthDate ?? "—"}</dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-zinc-500">Jenis Kelamin</dt>
-                <dd className="text-zinc-900">{GENDER_LABEL[employee.gender]}</dd>
+                <dd className="text-zinc-900">
+                  {employee.gender ? GENDER_LABEL[employee.gender] : "—"}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-zinc-500">Telepon</dt>
@@ -182,7 +192,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 Riwayat kontrak ({employee.contracts.totalCount})
               </h2>
               {manage ? (
-                <Link href={`/contracts/new?employeeId=${id}`} className="no-underline">
+                <Link href={`${CONTRACT_NEW}?employeeId=${id}`} className="no-underline">
                   <Button variant="secondary">+ Tambah kontrak</Button>
                 </Link>
               ) : null}
@@ -244,7 +254,7 @@ function ContractHistoryCard({ contract, linked }: { contract: ContractRow; link
       <div className="flex flex-wrap items-center gap-2">
         {linked ? (
           <Link
-            href={`/contracts/${contract.id}`}
+            href={CONTRACT_DETAIL(contract.id)}
             className="text-sm font-semibold text-zinc-900 hover:underline"
           >
             {contract.contractNo}
@@ -252,9 +262,9 @@ function ContractHistoryCard({ contract, linked }: { contract: ContractRow; link
         ) : (
           <span className="text-sm font-semibold text-zinc-900">{contract.contractNo}</span>
         )}
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+        <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
           {CONTRACT_STATUS_LABEL[contract.status]}
-        </span>
+        </Chip>
         {contract.endReason ? (
           <span className="text-xs text-zinc-500">
             {CONTRACT_END_REASON_LABEL[contract.endReason]}

@@ -12,6 +12,7 @@ import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
 import { CreateAssignmentDocument } from "@/generated/graphql";
 import { AuthGuard } from "@/lib/auth/guard";
+import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
 
 type FormValues = {
   employeeId: string;
@@ -129,36 +130,39 @@ function NewAssignmentForm() {
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Label error={errors.employeeId}>
           Talent
-          <Select value={values.employeeId} onChange={(e) => set("employeeId", e.target.value)}>
-            <option value="">— pilih talent (assignable) —</option>
-            {talents.data?.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.fullName} ({emp.nomorInduk ?? "—"})
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.employeeId}
+            onChange={(e) => set("employeeId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih talent (assignable) —" },
+              ...(talents.data ?? []).map((emp) => ({
+                value: emp.id,
+                label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
+              })),
+            ]}
+          />
         </Label>
         <Label error={errors.projectId}>
           Project
-          <Select value={values.projectId} onChange={(e) => set("projectId", e.target.value)}>
-            <option value="">— pilih project —</option>
-            {projects.data?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.projectId}
+            onChange={(e) => set("projectId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih project —" },
+              ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+            ]}
+          />
         </Label>
         <Label error={errors.jobRoleId}>
           Job Role
-          <Select value={values.jobRoleId} onChange={(e) => set("jobRoleId", e.target.value)}>
-            <option value="">— pilih job role —</option>
-            {jobRoles.data?.map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={values.jobRoleId}
+            onChange={(e) => set("jobRoleId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih job role —" },
+              ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
+            ]}
+          />
         </Label>
         <Label error={errors.periodStart}>
           Tanggal Mulai
@@ -183,7 +187,7 @@ function NewAssignmentForm() {
             Simpan
           </Button>
           <Link
-            href="/assignments"
+            href={TALENT_ASSIGNMENT}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal

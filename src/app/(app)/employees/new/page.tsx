@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/DataState";
 import { CreateEmployeeDocument, type CreateEmployeeInput } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
 import { AuthGuard } from "@/lib/auth/guard";
+import { EMPLOYEES } from "@/lib/constants/routes";
 
 type FormValues = {
   nik: string;
@@ -209,11 +210,15 @@ function NewEmployeeForm() {
         </Label>
         <Label error={errors.gender}>
           Jenis kelamin
-          <Select value={values.gender} onChange={(e) => set("gender", e.target.value)}>
-            <option value="">— pilih jenis kelamin —</option>
-            <option value="FEMALE">Perempuan</option>
-            <option value="MALE">Laki-laki</option>
-          </Select>
+          <Select
+            value={values.gender}
+            onChange={(e) => set("gender", e.target.value)}
+            options={[
+              { value: "", label: "— pilih jenis kelamin —" },
+              { value: "FEMALE", label: "Perempuan" },
+              { value: "MALE", label: "Laki-laki" },
+            ]}
+          />
         </Label>
         <Label error={errors.phone}>
           Telepon
@@ -293,7 +298,7 @@ function NewEmployeeForm() {
           <Button type="submit" disabled={loading}>
             Simpan
           </Button>
-          <Link href="/employees" className="no-underline">
+          <Link href={EMPLOYEES} className="no-underline">
             <Button type="button" variant="secondary">
               Batal
             </Button>

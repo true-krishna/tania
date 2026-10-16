@@ -25,6 +25,7 @@ const UNITS_QUERY = {
       units: [
         {
           id: "u-1",
+          code: "DBT",
           name: "Digital Business & Technology",
           isActive: true,
           projects: [],
@@ -40,10 +41,10 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     const mocks = [
       UNITS_QUERY,
       {
-        request: { query: CreateUnitDocument, variables: { name: "Engineering" } },
+        request: { query: CreateUnitDocument, variables: { code: "ENG", name: "Engineering" } },
         result: {
           data: {
-            createUnit: { id: "u-2", name: "Engineering", isActive: true, projects: [], __typename: "Unit" },
+            createUnit: { id: "u-2", code: "ENG", name: "Engineering", isActive: true, projects: [], __typename: "Unit" },
           },
         },
       },
@@ -59,6 +60,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Tambah Unit" }));
+    fireEvent.change(screen.getByLabelText("Kode Unit"), { target: { value: "ENG" } });
     fireEvent.change(screen.getByLabelText("Nama Unit"), { target: { value: "Engineering" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
@@ -69,10 +71,10 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     const mocks = [
       UNITS_QUERY,
       {
-        request: { query: UpdateUnitDocument, variables: { id: "u-1", name: "Digital" } },
+        request: { query: UpdateUnitDocument, variables: { id: "u-1", code: "DBT", name: "Digital" } },
         result: {
           data: {
-            updateUnit: { id: "u-1", name: "Digital", isActive: true, projects: [], __typename: "Unit" },
+            updateUnit: { id: "u-1", code: "DBT", name: "Digital", isActive: true, projects: [], __typename: "Unit" },
           },
         },
       },
@@ -102,7 +104,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         request: { query: SetUnitActiveDocument, variables: { id: "u-1", isActive: false } },
         result: {
           data: {
-            setUnitActive: { id: "u-1", name: "Digital Business & Technology", isActive: false, projects: [], __typename: "Unit" },
+            setUnitActive: { id: "u-1", code: "DBT", name: "Digital Business & Technology", isActive: false, projects: [], __typename: "Unit" },
           },
         },
       },

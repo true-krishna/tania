@@ -1,4 +1,4 @@
-import { cn } from "@/lib/cn";
+import { Chip } from "@/components/Chip";
 
 /**
  * Shared data states on the shipped canon (constitution design v4.0.0):
@@ -39,9 +39,8 @@ export function EmptyState({ message }: { message: string }) {
 
 export function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span className={cn("tp-chip gap-1.5", active ? "tp-chip--mint" : "bg-tp-bg text-tp-muted")}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
+    <Chip variant={active ? "success" : "neutral"} size="small" dot>
       {active ? "Aktif" : "Nonaktif"}
-    </span>
+    </Chip>
   );
 }

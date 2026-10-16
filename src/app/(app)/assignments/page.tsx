@@ -18,6 +18,7 @@ import type { AccessRole, AssignmentStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
+import { ASSIGNMENT_NEW, ASSIGNMENT_DETAIL } from "@/lib/constants/routes";
 
 type AssignmentRowData = {
   id: string;
@@ -35,7 +36,7 @@ function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
         <Link
-          href={`/assignments/${assignment.id}`}
+          href={ASSIGNMENT_DETAIL(assignment.id)}
           className="font-medium text-zinc-900 hover:underline"
         >
           {assignment.talent.fullName}
@@ -56,7 +57,7 @@ function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
           actions={[
             {
               label: "Lihat detail",
-              onSelect: () => router.push(`/assignments/${assignment.id}`),
+              onSelect: () => router.push(ASSIGNMENT_DETAIL(assignment.id)),
             },
           ]}
         />
@@ -102,14 +103,14 @@ function TalentSelect({
   return (
     <label className="flex items-center gap-2 text-sm text-zinc-700">
       <span>Talent</span>
-      <Select value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">Semua</option>
-        {options.map((emp) => (
-          <option key={emp.id} value={emp.id}>
-            {emp.fullName}
-          </option>
-        ))}
-      </Select>
+      <Select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        options={[
+          { value: "", label: "Semua" },
+          ...options.map((emp) => ({ value: emp.id, label: emp.fullName })),
+        ]}
+      />
     </label>
   );
 }
@@ -139,7 +140,7 @@ export default function AssignmentsPage() {
         subtitle={(role && SUBTITLE[role]) ?? "Penugasan talent ke project."}
         actions={
           manage ? (
-            <Link href="/assignments/new" className="no-underline">
+            <Link href={ASSIGNMENT_NEW} className="no-underline">
               <Button variant="primary">+ Buat Assignment</Button>
             </Link>
           ) : undefined
@@ -173,14 +174,11 @@ export default function AssignmentsPage() {
                 setProjectId(e.target.value);
                 resetPage();
               }}
-            >
-              <option value="">Semua</option>
-              {projects.data?.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "", label: "Semua" },
+                ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+              ]}
+            />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
@@ -190,11 +188,12 @@ export default function AssignmentsPage() {
                 setStatus(e.target.value as AssignmentStatus | "ALL");
                 resetPage();
               }}
-            >
-              <option value="ALL">Semua</option>
-              <option value="ACTIVE">Aktif</option>
-              <option value="COMPLETED">Selesai</option>
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                { value: "ACTIVE", label: "Aktif" },
+                { value: "COMPLETED", label: "Selesai" },
+              ]}
+            />
           </label>
         </div>
       ) : null}

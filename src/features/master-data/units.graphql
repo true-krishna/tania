@@ -1,6 +1,7 @@
 query Units($includeInactive: Boolean = false) {
   units(includeInactive: $includeInactive) {
     id
+    code
     name
     isActive
     projects {

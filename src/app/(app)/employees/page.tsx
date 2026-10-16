@@ -6,6 +6,7 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable, type Column } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
@@ -14,13 +15,14 @@ import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
-import { EMPLOYEE_STATUS_LABEL } from "@/features/employees/labels";
+import { EMPLOYEE_STATUS_LABEL, EMPLOYEE_STATUS_VARIANT } from "@/features/employees/labels";
 import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
+import { EMPLOYEE_NEW, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 type EmployeeRowData = {
   id: string;
@@ -49,7 +51,7 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
         <Link
-          href={`/employees/${employee.id}`}
+          href={EMPLOYEE_DETAIL(employee.id)}
           className="font-medium text-zinc-900 hover:underline"
         >
           {employee.fullName}
@@ -61,9 +63,9 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
       <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.unit?.name)}</td>
       <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.jobRole?.name)}</td>
       <td className="px-4 py-2.5">
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+        <Chip variant={EMPLOYEE_STATUS_VARIANT[employee.status]} size="small">
           {EMPLOYEE_STATUS_LABEL[employee.status]}
-        </span>
+        </Chip>
       </td>
       <td className="col-action">
         <RowActionsMenu
@@ -71,7 +73,7 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
           actions={[
             {
               label: "Lihat detail",
-              onSelect: () => router.push(`/employees/${employee.id}`),
+              onSelect: () => router.push(EMPLOYEE_DETAIL(employee.id)),
             },
           ]}
         />
@@ -92,7 +94,7 @@ function OwnEmployeeRedirect() {
   const { status, data, error } = useMyEmployeeId();
 
   React.useEffect(() => {
-    if (data) router.replace(`/employees/${data}`);
+    if (data) router.replace(EMPLOYEE_DETAIL(data));
   }, [data, router]);
 
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -129,7 +131,7 @@ function ChapterTalentList() {
           {data.map((talent) => (
             <tr key={talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
               <td className="px-4 py-2.5">
-                <Link href={`/employees/${talent.id}`} className="font-medium text-zinc-900 hover:underline">
+                <Link href={EMPLOYEE_DETAIL(talent.id)} className="font-medium text-zinc-900 hover:underline">
                   {talent.fullName}
                 </Link>
               </td>
@@ -140,7 +142,7 @@ function ChapterTalentList() {
                   actions={[
                     {
                       label: "Lihat detail",
-                      onSelect: () => router.push(`/employees/${talent.id}`),
+                      onSelect: () => router.push(EMPLOYEE_DETAIL(talent.id)),
                     },
                   ]}
                 />
@@ -203,7 +205,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         }
         actions={
           manage ? (
-            <Link href="/employees/new" className="no-underline">
+            <Link href={EMPLOYEE_NEW} className="no-underline">
               <Button variant="primary">+ Tambah Karyawan</Button>
             </Link>
           ) : undefined
@@ -243,14 +245,11 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="">Semua</option>
-              {(units.data ?? []).map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "", label: "Semua" },
+                ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+              ]}
+            />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
@@ -261,16 +260,13 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="ALL">Semua</option>
-              {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
-                (value) => (
-                  <option key={value} value={value}>
-                    {EMPLOYEE_STATUS_LABEL[value]}
-                  </option>
-                )
-              )}
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
+                  keyof typeof EMPLOYEE_STATUS_LABEL
+                >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] })),
+              ]}
+            />
           </label>
         </div>
       ) : null}

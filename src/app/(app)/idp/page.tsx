@@ -6,14 +6,16 @@ import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { BoardTable } from "@/components/BoardTable";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useIdps } from "@/features/idp/useIdps";
-import { cn } from "@/lib/cn";
 import { orDash } from "@/lib/cell";
+import { IDP_NEW, IDP_DETAIL } from "@/lib/constants/routes";
 import type { IdpStatus } from "@/generated/graphql/types";
 
 type IdpListRow = {
@@ -24,12 +26,6 @@ type IdpListRow = {
   timelineEnd: string;
   talent: { fullName: string; nomorInduk: string | null };
   actions: Array<{ id: string; status: string }>;
-};
-
-const STATUS_LABEL: Record<IdpStatus, string> = {
-  IN_PROGRESS: "Berjalan",
-  NEEDS_REVIEW: "Perlu review",
-  COMPLETED: "Selesai",
 };
 
 function actionProgress(row: IdpListRow) {
@@ -45,7 +41,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
-        <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
+        <Link href={IDP_DETAIL(idp.id)} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
           {idp.talent.fullName}
         </Link>
         <span className="ml-2 text-xs text-zinc-400">{orDash(idp.talent.nomorInduk)}</span>
@@ -73,16 +69,9 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
         </div>
       </td>
       <td className="px-4 py-2.5">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
-            idp.status === "COMPLETED" && "bg-green-100 text-green-700",
-            idp.status === "NEEDS_REVIEW" && "bg-amber-100 text-amber-700",
-            idp.status === "IN_PROGRESS" && "bg-tp-tint-info text-tp-ink-info",
-          )}
-        >
-          {STATUS_LABEL[idp.status]}
-        </span>
+        <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
+          {IDP_STATUS_LABEL[idp.status]}
+        </Chip>
       </td>
       <td className="col-action">
         <RowActionsMenu
@@ -90,7 +79,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
           actions={[
             {
               label: "Lihat detail",
-              onSelect: () => router.push(`/idp/${idp.id}`),
+              onSelect: () => router.push(IDP_DETAIL(idp.id)),
             },
           ]}
         />
@@ -113,7 +102,7 @@ export default function IdpPage() {
         title="IDP"
         subtitle="Kelola Individual Development Plan talent dalam chapter Anda."
         actions={
-          <Link href="/idp/new" className="no-underline">
+          <Link href={IDP_NEW} className="no-underline">
             <Button variant="primary">+ Buat IDP</Button>
           </Link>
         }
@@ -137,12 +126,13 @@ export default function IdpPage() {
                 setStatus(e.target.value as IdpStatus | "ALL");
                 resetPage();
               }}
-            >
-              <option value="ALL">Semua</option>
-              <option value="IN_PROGRESS">Berjalan</option>
-              <option value="NEEDS_REVIEW">Perlu review</option>
-              <option value="COMPLETED">Selesai</option>
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                { value: "IN_PROGRESS", label: "Berjalan" },
+                { value: "NEEDS_REVIEW", label: "Perlu review" },
+                { value: "COMPLETED", label: "Selesai" },
+              ]}
+            />
           </label>
         </div>
       ) : null}

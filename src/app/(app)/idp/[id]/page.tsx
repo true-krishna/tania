@@ -7,10 +7,12 @@ import { useMutation } from "@apollo/client";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { Chip } from "@/components/Chip";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ToastStack } from "@/components/Toast";
+import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useIdp } from "@/features/idp/useIdp";
 import {
   AddDevelopmentActionDocument,
@@ -20,17 +22,11 @@ import {
   UpdateDevelopmentActionStatusDocument,
 } from "@/generated/graphql";
 import { cn } from "@/lib/cn";
+import { IDP } from "@/lib/constants/routes";
 import type {
   DevelopmentActionStatus,
   DevelopmentMethod,
-  IdpStatus,
 } from "@/generated/graphql/types";
-
-const STATUS_LABEL: Record<IdpStatus, string> = {
-  IN_PROGRESS: "Berjalan",
-  NEEDS_REVIEW: "Perlu review",
-  COMPLETED: "Selesai",
-};
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -183,23 +179,16 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href="/idp" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={IDP} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
         ← Kembali ke daftar
       </Link>
       <PageHeader
         title={`IDP — ${idp.talent.fullName}`}
         subtitle={`${idp.id} · ${idp.talent.jobRole?.name ?? "—"}`}
         actions={
-          <span
-            className={cn(
-              "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
-              idp.status === "COMPLETED" && "bg-green-100 text-green-700",
-              idp.status === "NEEDS_REVIEW" && "bg-amber-100 text-amber-700",
-              idp.status === "IN_PROGRESS" && "bg-tp-tint-info text-tp-ink-info",
-            )}
-          >
-            {STATUS_LABEL[idp.status]}
-          </span>
+          <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
+            {IDP_STATUS_LABEL[idp.status]}
+          </Chip>
         }
       />
 
@@ -246,13 +235,10 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                       addToast("error", err instanceof Error ? err.message : "Gagal memperbarui status aksi.");
                     });
                   }}
-                >
-                  {(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map((s) => (
-                    <option key={s} value={s}>
-                      {ACTION_STATUS_LABEL[s]}
-                    </option>
-                  ))}
-                </Select>
+                  options={(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map(
+                    (s) => ({ value: s, label: ACTION_STATUS_LABEL[s] }),
+                  )}
+                />
               </li>
             ))}
           </ul>
@@ -265,13 +251,14 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Metode">
-              <Select value={actionMethod} onChange={(e) => setActionMethod(e.target.value as DevelopmentMethod)}>
-                {(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => (
-                  <option key={m} value={m}>
-                    {METHOD_LABEL[m]}
-                  </option>
-                ))}
-              </Select>
+              <Select
+                value={actionMethod}
+                onChange={(e) => setActionMethod(e.target.value as DevelopmentMethod)}
+                options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
+                  value: m,
+                  label: METHOD_LABEL[m],
+                }))}
+              />
             </Field>
             <Field label="Tenggat (opsional)">
               <Input type="date" value={actionDue} onChange={(e) => setActionDue(e.target.value)} />
@@ -382,7 +369,9 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
           </div>
         </Card>
       ) : (
-        <p className="w-fit rounded-full bg-green-100 px-4 py-1.5 text-sm text-green-700">IDP selesai.</p>
+        <Chip variant="success" size="large">
+          IDP selesai.
+        </Chip>
       )}
     </section>
   );
