@@ -1,0 +1,16 @@
+mutation UpdateAssignment($id: ID!, $input: UpdateAssignmentInput!) {
+  updateAssignment(id: $id, input: $input) {
+    id
+    status
+    periodStart
+    periodEnd
+    project {
+      id
+      name
+    }
+    jobRole {
+      id
+      name
+    }
+  }
+}

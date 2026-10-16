@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import { MockedProvider } from "@apollo/client/testing";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
 import AssignmentsPage from "@/app/(app)/assignments/page";
 import NewAssignmentPage from "@/app/(app)/assignments/new/page";
@@ -16,6 +16,7 @@ import {
   EndAssignmentDocument,
   JobRolesDocument,
   ProjectsDocument,
+  UpdateAssignmentDocument,
 } from "@/generated/graphql";
 
 const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
@@ -298,48 +299,195 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
 });
 
 describe("AssignmentDetailPage (Apollo, US2)", () => {
-  it("renders the assignment and ends an active one", async () => {
-    const detailMocks = [
-      { request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult },
-      {
-        request: { query: EndAssignmentDocument, variables: { id: "asg-1", periodEnd: "2025-12-31" } },
-        result: { data: { endAssignment: { __typename: "Assignment", id: "asg-1", status: "COMPLETED", periodEnd: "2025-12-31" } } },
-      },
-    ];
+  const detailProjectsResult = {
+    data: {
+      projects: [
+        ...projectsResult.data.projects,
+        { __typename: "Project", id: "prj-2", name: "Aplikasi Mobile", isActive: true, unit },
+        { __typename: "Project", id: "prj-3", name: "Legacy System", isActive: false, unit },
+      ],
+    },
+  };
+  const detailJobRolesResult = {
+    data: {
+      jobRoles: [
+        ...jobRolesResult.data.jobRoles,
+        { __typename: "JobRole", id: "jr-2", name: "Manager", isActive: false, chapter: null },
+      ],
+    },
+  };
+  const baseDetailMocks = [
+    { request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult },
+    { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: detailProjectsResult },
+    { request: { query: JobRolesDocument, variables: { includeInactive: true } }, result: detailJobRolesResult },
+  ];
 
+  const renderDetail = async (mocks: ReadonlyArray<MockedResponse>) => {
     await act(async () => {
       render(
         <React.Suspense fallback={null}>
-          <MockedProvider mocks={detailMocks}>
+          <MockedProvider mocks={mocks}>
             <AssignmentDetailPage params={Promise.resolve({ id: "asg-1" })} />
           </MockedProvider>
         </React.Suspense>
       );
     });
+  };
 
-    fireEvent.click(await screen.findByRole("button", { name: /ya, akhiri assignment/i }));
+  it("sends the update mutation with the edited fields and shows the latest version", async () => {
+    await renderDetail([
+      ...baseDetailMocks,
+      {
+        request: {
+          query: UpdateAssignmentDocument,
+          variables: {
+            id: "asg-1",
+            input: { projectId: "prj-2", jobRoleId: "jr-1", periodStart: "2025-08-01", periodEnd: "2026-01-31" },
+          },
+        },
+        result: {
+          data: {
+            updateAssignment: {
+              __typename: "Assignment",
+              id: "asg-1",
+              status: "ACTIVE",
+              periodStart: "2025-08-01",
+              periodEnd: "2026-01-31",
+              project: { __typename: "Project", id: "prj-2", name: "Aplikasi Mobile" },
+              jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
+            },
+          },
+        },
+      },
+    ]);
+
+    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    // Master data nonaktif tidak lagi jadi pilihan (T002).
+    expect(within(editForm).queryByText("Legacy System")).toBeNull();
+    expect(within(editForm).queryByText("Manager")).toBeNull();
+
+    fireEvent.change(within(editForm).getByRole("combobox", { name: /project/i }), { target: { value: "prj-2" } });
+    fireEvent.change(within(editForm).getByLabelText(/tanggal mulai/i), { target: { value: "2025-08-01" } });
+    fireEvent.change(within(editForm).getByLabelText(/tanggal selesai/i), { target: { value: "2026-01-31" } });
+    fireEvent.submit(editForm);
+
+    expect(await screen.findByText(/perubahan tersimpan/i)).toBeInTheDocument();
+    // Versi terbaru tampil pada detail (cache ternormalisasi dari hasil mutasi).
+    expect(screen.getByText("2025-08-01 — 2026-01-31")).toBeInTheDocument();
+    expect(screen.getAllByText("Aplikasi Mobile").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("rejects an end date earlier than the start date on the edit form without sending the mutation", async () => {
+    await renderDetail(baseDetailMocks);
+
+    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    fireEvent.change(within(editForm).getByLabelText(/tanggal selesai/i), { target: { value: "2025-06-30" } });
+    fireEvent.submit(editForm);
+
+    expect(await screen.findByText(/tidak boleh lebih awal dari tanggal mulai/i)).toBeInTheDocument();
+    expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
+  });
+
+  it("shows the server error from a failed update (T003)", async () => {
+    await renderDetail([
+      ...baseDetailMocks,
+      {
+        request: {
+          query: UpdateAssignmentDocument,
+          variables: {
+            id: "asg-1",
+            input: { projectId: "prj-1", jobRoleId: "jr-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
+          },
+        },
+        result: {
+          errors: [
+            new GraphQLError("periode assignment tidak valid", {
+              extensions: { code: "BAD_USER_INPUT", field: "periodEnd" },
+            }),
+          ],
+        },
+      },
+    ]);
+
+    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    fireEvent.submit(editForm);
+
+    expect(await screen.findByText("periode assignment tidak valid")).toBeInTheDocument();
+    expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
+  });
+
+  it("ends an active assignment with a filled end date (T004/T005)", async () => {
+    await renderDetail([
+      ...baseDetailMocks,
+      {
+        request: { query: EndAssignmentDocument, variables: { id: "asg-1", periodEnd: "2025-12-31" } },
+        result: { data: { endAssignment: { __typename: "Assignment", id: "asg-1", status: "COMPLETED", periodEnd: "2025-12-31" } } },
+      },
+    ]);
+
+    const endForm = await screen.findByRole("button", { name: /akhiri assignment/i }).then((b) => b.closest("form")!);
+    // Tanpa default otomatis: input mulai kosong (T004).
+    expect((within(endForm).getByLabelText(/tanggal selesai/i) as HTMLInputElement).value).toBe("");
+    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), { target: { value: "2025-12-31" } });
+    fireEvent.submit(endForm);
 
     expect(await screen.findByText(/assignment selesai/i)).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /ya, akhiri assignment/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /akhiri assignment/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /simpan/i })).not.toBeInTheDocument();
+  });
+
+  it("rejects an end date earlier than the start date before sending the mutation (T005)", async () => {
+    await renderDetail(baseDetailMocks);
+
+    const endForm = await screen.findByRole("button", { name: /akhiri assignment/i }).then((b) => b.closest("form")!);
+    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), { target: { value: "2025-06-30" } });
+    fireEvent.submit(endForm);
+
+    expect(await screen.findByText(/tidak boleh lebih awal dari tanggal mulai/i)).toBeInTheDocument();
+    expect(screen.queryByText(/assignment selesai/i)).toBeNull();
+  });
+
+  it("requires the end date to be filled before ending (FR-06)", async () => {
+    await renderDetail(baseDetailMocks);
+
+    const endForm = await screen.findByRole("button", { name: /akhiri assignment/i }).then((b) => b.closest("form")!);
+    fireEvent.submit(endForm);
+
+    expect(await screen.findByText(/tanggal selesai wajib diisi/i)).toBeInTheDocument();
+  });
+
+  it("shows a server rejection from the end mutation as a clear message (T005)", async () => {
+    await renderDetail([
+      ...baseDetailMocks,
+      {
+        request: { query: EndAssignmentDocument, variables: { id: "asg-1", periodEnd: "2025-12-31" } },
+        result: {
+          errors: [
+            new GraphQLError("assignment sudah selesai sebelumnya", {
+              extensions: { code: "PRECONDITION_FAILED" },
+            }),
+          ],
+        },
+      },
+    ]);
+
+    const endForm = await screen.findByRole("button", { name: /akhiri assignment/i }).then((b) => b.closest("form")!);
+    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), { target: { value: "2025-12-31" } });
+    fireEvent.submit(endForm);
+
+    expect(await screen.findByText("assignment sudah selesai sebelumnya")).toBeInTheDocument();
+    // Masih berjalan — tombol aksi tetap tersedia.
+    expect(screen.getByRole("button", { name: /akhiri assignment/i })).toBeInTheDocument();
   });
 
   for (const role of ["OPERATION", "TALENT"] as const) {
-    it(`hides the end action for ${role} (T033)`, async () => {
+    it(`hides the edit and end actions for ${role} (T033)`, async () => {
       auth.role = role;
-      await act(async () => {
-        render(
-          <React.Suspense fallback={null}>
-            <MockedProvider mocks={[{ request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult }]}>
-              <AssignmentDetailPage params={Promise.resolve({ id: "asg-1" })} />
-            </MockedProvider>
-          </React.Suspense>
-        );
-      });
+      await renderDetail([{ request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult }]);
 
       expect(await screen.findByText("Talent")).toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /ya, akhiri assignment/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /akhiri assignment/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /simpan/i })).toBeNull();
     });
   }
 });
