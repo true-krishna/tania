@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { proxy } from "@/proxy";
-import { encodeSession, SESSION_COOKIE, type Session } from "@/lib/auth/session-codec";
+import { encodeSession, type Session } from "@/lib/auth/session-codec";
+import { SESSION_COOKIE } from "@/lib/constants/storage";
 
 const validSession: Session = {
   accessToken: "access",

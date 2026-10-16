@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authConfig } from "@/lib/auth/config";
-import { SESSION_COOKIE } from "@/lib/auth/session-codec";
 import { isPublicRoute, requiresSignIn, resolveSession } from "@/lib/auth/route-gate";
 import { LOGIN } from "@/lib/constants/routes";
+import { SESSION_COOKIE } from "@/lib/constants/storage";
 
 /**
  * Server-side session gate (Next.js "Proxy", the Next 16 rename of middleware).

@@ -2,8 +2,8 @@ import type { AccessRole } from "@/generated/graphql";
 
 /**
  * Session codec shared by the browser token-store and the server-side Proxy
- * (src/proxy.ts). Kept free of DOM and Next APIs so the same `tania_session`
- * cookie value encodes/decodes identically on both sides.
+ * (src/proxy.ts). Kept free of DOM and Next APIs so the same session cookie
+ * value encodes/decodes identically on both sides.
  */
 export interface Session {
   accessToken: string;
@@ -15,8 +15,6 @@ export interface Session {
   fullName?: string;
   email?: string;
 }
-
-export const SESSION_COOKIE = "tania_session";
 
 /**
  * Encode a session into a cookie-safe value. `encodeURIComponent` URL-encodes

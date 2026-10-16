@@ -1,9 +1,5 @@
-import {
-  decodeSession,
-  encodeSession,
-  SESSION_COOKIE,
-  type Session,
-} from "@/lib/auth/session-codec";
+import { decodeSession, encodeSession, type Session } from "@/lib/auth/session-codec";
+import { SESSION_COOKIE } from "@/lib/constants/storage";
 
 export type { Session };
 export { decodeSession, encodeSession };
@@ -12,7 +8,7 @@ export { decodeSession, encodeSession };
  * Browser session store, backed by a cookie.
  *
  * The access- and refresh-token session is persisted in a single client-readable
- * cookie (`tania_session`) instead of an in-memory module variable, so a page
+ * cookie (`SESSION_COOKIE`) instead of an in-memory module variable, so a page
  * reload keeps the user signed in. The cookie is `HttpOnly=false` because the
  * Apollo auth link must read the token client-side to build the Authorization
  * header, and the refresh link must read the refresh token to rehydrate an

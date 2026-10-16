@@ -9,6 +9,7 @@ import {
   setSession,
   type Session,
 } from "./token-store";
+import { SESSION_COOKIE } from "@/lib/constants/storage";
 
 const SESSION: Session = {
   accessToken: "token-abc123",
@@ -21,7 +22,7 @@ const SESSION: Session = {
 };
 
 beforeEach(() => {
-  document.cookie = "tania_session=; Path=/; Max-Age=0";
+  document.cookie = `${SESSION_COOKIE}=; Path=/; Max-Age=0`;
 });
 
 describe("token-store codec", () => {

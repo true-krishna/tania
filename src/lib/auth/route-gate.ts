@@ -10,7 +10,7 @@ export function isPublicRoute(pathname: string): boolean {
   );
 }
 
-/** Decode the `tania_session` cookie value; null when absent or malformed. */
+/** Decode the session cookie value; null when absent or malformed. */
 export function resolveSession(rawCookieValue: string | undefined): Session | null {
   return rawCookieValue ? decodeSession(rawCookieValue) : null;
 }
