@@ -74,16 +74,21 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: DASHBOARD, label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
   { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
+  /**
+   * Umpan balik pemilik produk (TAN-227): level user memakai satu menu
+   * Workload tanpa submenu; level executive memakai grup dengan dua submenu
+   * — Overview dan Talent (tabel talent dengan workload).
+   */
+  { kind: "link", href: WORKLOAD, label: "Workload", icon: IconChartBar, roles: ["TALENT"] },
   {
     kind: "group",
     id: "workload",
     label: "Workload",
     icon: IconChartBar,
-    roles: ALL,
+    roles: ["CHAPTER", "OPERATION", "ADMIN"],
     children: [
-      { href: WORKLOAD, label: "Workload saya", roles: ALL },
-      { href: WORKLOAD_EXECUTIVE, label: "Executive", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: WORKLOAD_TALENT, label: "Per Talent", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: WORKLOAD_EXECUTIVE, label: "Overview", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: WORKLOAD_TALENT, label: "Talent", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
     ],
   },
   {

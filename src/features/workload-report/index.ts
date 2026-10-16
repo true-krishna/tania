@@ -41,6 +41,7 @@ export {
 export { ReportChartCard } from "./ReportChartCard";
 export { ReportPeriodSelector } from "./ReportPeriodSelector";
 export { ReportSkeleton } from "./ReportSkeleton";
+export { TalentTable } from "./TalentTable";
 export { TalentWorkloadView } from "./TalentWorkloadView";
 export { useExecutiveReport, type ExecutiveReportState } from "./useExecutiveReport";
 export { useTalentWorkload, type TalentWorkloadState } from "./useTalentWorkload";
