@@ -24,9 +24,10 @@ const MODULE_OF: Record<string, Module> = {
 };
 
 /**
- * Entri IDP & Evaluation sengaja mengikuti baseline desain TAN-178 (modul
- * ditunda; matriks menandainya ✘ untuk semua peran) — bukan cermin matriks,
- * jadi tidak diuji di sini.
+ * Entri IDP & Evaluation disembunyikan untuk semua peran selagi modulnya ditunda
+ * (matriks menandainya ✘ untuk setiap peran) — jadi entri ini memang **tidak**
+ * dicerminkan oleh `canAccess`, yang masih menyisakan baris/route pada baseline
+ * TAN-178 (utang T032: tutup route-nya secara eksplisit).
  */
 const AS_IS_HREFS = ["/idp", "/evaluations", "/evaluations/periods", "/evaluations/templates", "/evaluations/my"];
 

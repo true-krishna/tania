@@ -8,6 +8,7 @@
 **Revisi**: 2026-10-08 (clarify 2, diperjelas clarify 3) — Keputusan pemilik produk (TAN-144): modul IDP dan evaluasi performa (termasuk periode & template evaluasi) **keluar dari prioritas iterasi 2**. Kedua fungsi tetap bagian produk Tania — **bukan digantikan WAD**; saat dibangun kembali, keduanya akan mengonsumsi data aktivitas/beban kerja dari sistem existing **WAD** (project "Tania WAD Integration Module") sebagai input berkorelasi: bukti capaian bagi evaluasi, dasar identifikasi kebutuhan pengembangan bagi IDP. Baris terkait pada Matriks Peran & Modul ditandai ditunda — definisi aksesnya tetap terdokumentasi untuk bila modul diaktifkan kembali; selama ditunda, modul diperlakukan belum tersedia (deny-by-default).
 **Revisi**: 2026-10-12 (amandemen post-analyze, TAN-144/TAN-156) — Catatan matriks: "lihat semua" pada Data karyawan bagi Admin bersifat administratif read-only (konteks penautan akun, tanpa riwayat assignment); proteksi Admin terakhir diperluas mencakup perubahan peran menjauh dari Admin; catatan status FR-18/US4-4 terhadap workstream kontrak kerja; checklist keputusan baru dicentang (keputusan klarifikasi terkonfirmasi).
 **Revisi**: 2026-10-15 (clarify 4, TAN-212) — Keputusan pemilik produk: **Admin = kelola penuh** pada seluruh modul aktif. Baris *Data karyawan & kontrak kerja* Admin berubah dari "lihat semua" menjadi **kelola**; baris *Assignment* dan *Profil CV* dibuka untuk Admin (**kelola**). Ini **membalik clarify 1** (Assignment: Admin "—") dan menggantikan catatan "administratif read-only" (klarifikasi 2026-10-09). Modul bertanda \* (IDP, evaluasi performa, periode & template evaluasi) **tetap ditunda as is** — belum dibuka untuk peran mana pun, termasuk Admin.
+**Revisi**: 2026-10-15 (lanjutan TAN-212, setelah implementasi) — Keputusan pemilik produk: (1) **penulisan CV tetap milik Talent**; baris *Profil CV* Admin menjadi "lihat semua (hanya baca)" menggantikan "kelola" pada revisi sebelumnya; (2) **visibilitas menu diselaraskan per peran** — menu cermin matriks: IDP & Evaluasi disembunyikan untuk semua peran selagi ditunda, dan Master Data tampil hanya-baca untuk peran yang memegang hak *lihat*.
 
 **Status**: Draft
 
@@ -38,7 +39,7 @@ Matriks ini adalah satu-satunya definisi hak akses per modul (FR-03). Makna nila
 | Evaluasi performa (pengisian & revisi) * | — | — | kelola (cakupan chapter, periode berjalan) | lihat miliknya |
 | Periode evaluasi * | kelola | — | lihat | lihat |
 | Template evaluasi * | kelola | — | lihat (template periode yang dinilai) | — |
-| Profil CV | kelola | — | lihat cakupan (hanya baca) | kelola miliknya |
+| Profil CV | lihat semua (hanya baca) | — | lihat cakupan (hanya baca) | kelola miliknya |
 | Master data (Unit, Project, Role, Chapter) | kelola | lihat | lihat | lihat |
 | Akun user & peran akses | kelola | — | — | — |
 | Jejak audit | lihat penuh | — | — | — |
@@ -47,7 +48,8 @@ Catatan matriks:
 
 - Riwayat perubahan per record karyawan/kontrak tetap terlihat Operation pada detail data tersebut — bukan melalui modul jejak audit (FR-41 induk).
 - "lihat cakupan (per talent)" pada Data karyawan berarti Chapter membaca record talent dalam chapter-nya satu per satu (mis. dari daftar IDP/assignment); daftar seluruh karyawan bukan modul Chapter.
-- **Admin = kelola penuh** (keputusan pemilik produk 2026-10-15, TAN-212): pada seluruh modul aktif — termasuk Assignment dan Profil CV — Admin berwenang penuh (membuat, mengubah, menjalankan operasi siklus hidup modul), bukan sekadar membaca. Catatan "administratif read-only" pada baris Data karyawan & kontrak kerja (klarifikasi 2026-10-09) dan baris Assignment "—" (clarify 1) tidak berlaku lagi. Cakupan data Chapter tidak membatasi Admin — Admin melihat dan mengelola semua.
+- **Admin = kelola penuh** (keputusan pemilik produk 2026-10-15, TAN-212): pada seluruh modul aktif — termasuk Assignment — Admin berwenang penuh (membuat, mengubah, menjalankan operasi siklus hidup modul), bukan sekadar membaca. Catatan "administratif read-only" pada baris Data karyawan & kontrak kerja (klarifikasi 2026-10-09) dan baris Assignment "—" (clarify 1) tidak berlaku lagi. Cakupan data Chapter tidak membatasi Admin — Admin melihat dan mengelola semua.
+- **Pengecualian Profil CV** (keputusan pemilik produk 2026-10-15, lanjutan TAN-212): Admin **membaca** profil CV seluruh talent, tetapi **tidak menulisnya** — isi CV adalah konten personal milik talent dan API tulisnya ber-scope pemilik (FR-13). Baris Profil CV Admin karena itu "lihat semua (hanya baca)", bukan "kelola".
 - Modul bertanda \* tetap **ditunda as is** (keputusan yang sama, 2026-10-15): baris IDP, evaluasi performa, periode, dan template evaluasi tidak berubah — aksesnya belum dibuka untuk peran mana pun, termasuk Admin.
 - Angka dashboard mengikuti hak akses peran masing-masing (FR-29 induk); dashboard hanya tampilan agregat turunan.
 - Matriks berlaku deny-by-default: modul atau operasi baru yang belum tercantum ditolak untuk semua peran sampai matriks diperbarui (FR-03).

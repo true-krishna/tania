@@ -57,17 +57,34 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Provisi Entra",
     "Kontrak",
     "Assignments",
+    "Master Data",
   ],
-  CHAPTER: ["Dashboard", "Aktivitas saya", "Workload", "Data Karyawan", "Assignments", "CV"],
-  TALENT: ["Dashboard", "Aktivitas saya", "Workload", "Data Karyawan", "Assignments", "CV"],
+  CHAPTER: [
+    "Dashboard",
+    "Aktivitas saya",
+    "Workload",
+    "Data Karyawan",
+    "Assignments",
+    "CV",
+    "Master Data",
+  ],
+  TALENT: [
+    "Dashboard",
+    "Aktivitas saya",
+    "Workload",
+    "Data Karyawan",
+    "Assignments",
+    "CV",
+    "Master Data",
+  ],
 };
 
 /** Entri sidebar yang wajib tidak tampil — termasuk modul ditunda (IDP/Evaluasi). */
 const NAV_HIDDEN: Record<Role, readonly string[]> = {
-  ADMIN: ["IDP", "Evaluations"],
-  OPERATION: ["Master Data", "Accounts", "Audit", "CV", "IDP", "Evaluations"],
-  CHAPTER: ["Provisi Entra", "Kontrak", "Master Data", "Accounts", "Audit", "IDP", "Evaluations"],
-  TALENT: ["Provisi Entra", "Kontrak", "Master Data", "Accounts", "Audit", "IDP", "Evaluations"],
+  ADMIN: ["IDP", "Evaluations", "Accounts"],
+  OPERATION: ["Accounts", "Audit", "CV", "IDP", "Evaluations"],
+  CHAPTER: ["Provisi Entra", "Kontrak", "Accounts", "Audit", "IDP", "Evaluations"],
+  TALENT: ["Provisi Entra", "Kontrak", "Accounts", "Audit", "IDP", "Evaluations"],
 };
 
 /** Modul yang ditunda untuk semua peran: URL langsung tidak boleh membuka modul. */

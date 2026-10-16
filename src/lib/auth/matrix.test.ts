@@ -15,7 +15,7 @@ const EXPECTED: Record<Module, Record<AccessRole, boolean>> = {
   idp: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: true },
   evaluations: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: true },
   cv: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: true },
-  masterData: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
+  masterData: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
   accounts: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   audit: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
 };
@@ -32,7 +32,7 @@ const EXPECTED_MANAGE: Record<Module, Record<AccessRole, boolean>> = {
   idp: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   evaluations: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   cv: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
-  masterData: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
+  masterData: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   accounts: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   audit: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
 };

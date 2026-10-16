@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from "vitest";
+import * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { ToastProvider } from "@/components/Toast";
@@ -35,6 +36,18 @@ const UNITS_QUERY = {
     },
   },
 };
+
+// Master-data pages read the session role from the guard: Admin manages, every
+// other role gets the same list read-only (matrix: lihat for all roles).
+const auth = vi.hoisted(() => ({ role: "ADMIN" as string | null }));
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+beforeEach(() => {
+  auth.role = "ADMIN";
+});
 
 describe("master-data CRUD (Admin) — T052/T054", () => {
   it("creates a unit and shows the success toast", async () => {
@@ -458,5 +471,51 @@ describe("master-data search per page (US1, US2)", () => {
     expect(screen.getByText("Beta Rollout")).toBeInTheDocument();
     expect(screen.getByText("Human Capital")).toBeInTheDocument();
     expect(screen.queryByText("Alpha Transformation")).not.toBeInTheDocument();
+  });
+});
+
+describe("master-data read-only per role (matrix: lihat untuk semua peran)", () => {
+  it("gives Chapter the units list without any edit surface", async () => {
+    auth.role = "CHAPTER";
+    render(
+      <MockedProvider mocks={[UNITS_QUERY]}>
+        <ToastProvider>
+          <UnitsPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
+    expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Tambah Unit" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Aksi / })).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: "Aksi" })).toBeNull();
+  });
+
+  it("gives Talent the chapters list read-only, without the add action", async () => {
+    auth.role = "TALENT";
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: ChaptersDocument, variables: { includeInactive: true } },
+            result: {
+              data: {
+                chapters: [
+                  { id: "ch-1", name: "Product", isActive: true, jobRoles: [], __typename: "Chapter" },
+                ],
+              },
+            },
+          },
+        ]}
+      >
+        <ToastProvider>
+          <ChaptersPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Product")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Tambah Chapter" })).toBeNull();
   });
 });

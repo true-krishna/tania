@@ -5,7 +5,9 @@ import type { AccessRole } from "@/generated/graphql";
  * module opens only for the roles it lists (deny-by-default, FR-03). TAN-178
  * re-opens IDP & Evaluation on this line to follow the feature/design baseline;
  * the backend remains the enforcement point (FR-15/16). TAN-212 (clarify 4)
- * gives Admin full manage on every active module.
+ * gives Admin full manage on every active module; the 2026-10-15 pass hides the
+ * deferred IDP/Evaluation entries in the sidebar (matrix: denied for everyone)
+ * while their matrix rows/routes stay on the TAN-178 baseline (open item T032).
  */
 export type Module =
   | "dashboard"
@@ -35,7 +37,7 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   idp: ["CHAPTER", "TALENT", "ADMIN"],
   evaluations: ["CHAPTER", "TALENT", "ADMIN"],
   cv: ["TALENT", "CHAPTER", "ADMIN"],
-  masterData: ["ADMIN"],
+  masterData: ALL,
   accounts: ["ADMIN"],
   audit: ["ADMIN"],
 };
@@ -43,6 +45,7 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
 const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
   employees: ["OPERATION", "ADMIN"],
   assignments: ["CHAPTER", "ADMIN"],
+  masterData: ["ADMIN"],
 };
 
 export function canManage(role: AccessRole | null | undefined, module: Module): boolean {

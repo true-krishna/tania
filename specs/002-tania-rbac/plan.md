@@ -122,10 +122,11 @@ ke gate kelola modul-modul ini (§14).
   dikembalikan ke baseline desain, sehingga `nav.ts` dan `matrix.ts` bisa berbeda — R6
   menyelaraskannya. Target clarify 4: Admin tampil di semua menu aktif (termasuk Provisi
   Entra & CV); `assignments` = `["CHAPTER","OPERATION","TALENT","ADMIN"]`;
-  `employees`/`contracts` + Admin (kelola penuh); entri `idp` & `evaluations` **as is**;
-  `master-data: ["ADMIN"]` — **keputusan terbuka O6** (matriks memberi hak *lihat*
-  Operation/Chapter/Talent: buka nav baca read-only, atau pangkas hak lihat di matriks;
-  manajemen tetap Admin). Klaim "sudah sesuai" sebelumnya dicabut (N2).
+  `employees`/`contracts` + Admin (kelola penuh); entri `idp` & `evaluations`
+  disembunyikan untuk semua peran selagi ditunda (keputusan 2026-10-15, §14.3);
+  `master-data` tampil untuk semua peran dengan permukaan kelola hanya Admin —
+  **O6 ditutup 2026-10-15** (§14.3), matriks memberi hak *lihat* ke semua peran.
+  Klaim "sudah sesuai" sebelumnya dicabut (N2).
 - `src/lib/auth/roles.ts` + `guard.tsx` — gating route memakai hierarki `atLeast()`
   (TALENT<CHAPTER<OPERATION<ADMIN) yang **menyimpang dari matriks** (menganggap Admin
   dapat semuanya; nyatanya Admin kehilangan baca Assignment). Perlu set peran eksplisit
@@ -336,7 +337,7 @@ lewat `ProfileFor`/daftar talent, bukan “profil sendiri”.
 | **R3 — Kontrak & integrasi** | R3.1 hapus field dashboard ditunda — **dua fase**: FE berhenti mem-query dulu, lalu hapus field SDL + contract test · `make generate` / `npm run generate` idempoten | R1, R2 |
 | **R4 — UAT & regresi** | Skrip UAT per peran (matriks 12×4; termasuk pengukuran SC-003 buat akun < 2 menit) · regresi lintas-modul §11.3 · gerbang CI penuh | R3 |
 | **R5 — Penutupan** | Runbook reaktivasi modul (ubah matriks → buka gerbang → kembalikan nav) + retro | R4 |
-| **R6 — Admin kelola penuh** (clarify 4, 2026-10-15) | R6.1 `matrix.ts` +Admin (`assignments`/`entra`/`cv` + `MANAGE_ROLES`) · R6.2 backend +Admin di gate Assignment, Kontrak, Entra · R6.3 backend +Admin di gate CV & kelola Data karyawan · R6.4 nav: Provisi Entra & CV untuk Admin · R6.5 test matriks per sel + RTL nav + e2e 4 peran | R1, R2 |
+| **R6 — Admin kelola penuh** (clarify 4, 2026-10-15) | R6.1 `matrix.ts` +Admin (`assignments`/`entra`/`cv` + `MANAGE_ROLES`) · R6.2 backend +Admin di gate Assignment, Kontrak, Entra · R6.3 backend +Admin di gate CV (baca; tulis tetap Talent) & kelola Data karyawan · R6.4 nav: Provisi Entra & CV untuk Admin · R6.5 test matriks per sel + RTL nav + e2e 4 peran · **R6.6 visibilitas menu per peran**: Master Data hanya-baca semua peran (O6) + IDP/Evaluasi disembunyikan (§14.3) | R1, R2 |
 
 Pemetaan user story 002 → gelombang: US1 (R1, R3) · US2 (R1.4, test akun existing) ·
 US3 (R1.1/R1.2, R3) · US4 (scope existing, R3 e2e) · US5 (R1.3) · US6 (audit existing,
@@ -344,8 +345,8 @@ R1 verifikasi cakupan). Keputusan clarify 12: R1.3 (kebaruan), R1.1+R2.2 (baca
 Assignment), R1.2 (defer), R2.5 (dashboard). Amandemen **clarify 4** (Admin kelola
 penuh) → **R6**. Keputusan pemetaan submenu TAN-144
 (2026-10-12): R1.5 (G7), nav Employees utk Chapter/Talent (N1), R2.4 +Talent (R7
-selesai); O5 (baris matriks WAD) & O6 (hak lihat Master Data non-Admin) tetap
-keputusan terbuka (tercatat di plan 001).
+selesai); O5 (baris matriks WAD) tetap keputusan terbuka (tercatat di plan 001),
+**O6 ditutup 2026-10-15** (nav Master Data hanya-baca untuk semua peran — §14.3).
 
 **Dependensi lintas-workstream**: pengelolaan-talent (TAN-140/TAN-145) memindahkan
 sumber `ChapterScope` ke kontrak aktif & menambah provisi Entra — di luar plan ini;
@@ -453,7 +454,7 @@ keputusan "administratif read-only" 2026-10-12, serta menyesuaikan spec.md + che
 | --- | --- | --- | --- |
 | R6.1 | FE gating: +Admin pada `assignments`, `entra`, `cv`; `MANAGE_ROLES` +Admin utk `employees` & `assignments` | `src/lib/auth/matrix.ts` | `matrix.test.ts` per sel |
 | R6.2 | BE: +`RoleAdmin` pada gate Assignment (baca + mutasi), Kontrak (baca + mutasi), Entra | `internal/usecase/assignment.go`, `contract.go`, `entra.go` | tabel matriks per sel |
-| R6.3 | BE: +`RoleAdmin` pada CV (`ProfileFor`/`Upsert`) & operasi kelola Data karyawan (`Create`/`Update`) | `internal/usecase/cv.go`, `employee.go` | tabel matriks per sel |
+| R6.3 | BE: +`RoleAdmin` pada CV (`ProfileFor`; **tulis tetap Talent**) & operasi kelola Data karyawan (`Create`/`Update`) | `internal/usecase/cv.go`, `employee.go` | tabel matriks per sel |
 | R6.4 | FE nav: tampilkan **Provisi Entra** & **CV** untuk Admin; entri `idp`/`evaluations` dibiarkan as is | `src/components/Sidebar/nav.ts` | sidebar render per peran |
 | R6.5 | UAT: matriks per sel + e2e 4 peran (Admin membuka tiap modul aktif) | e2e Playwright | — |
 
@@ -506,3 +507,54 @@ Gelombang R6 sudah diimplementasikan pada branch `agent/diggie/291774dc1b58`:
   T061 (putusan O5/O6).
 - **Penulisan CV**: keputusan pemilik produk 2026-10-15 "admin hanya bisa read cv"
   menutup pertanyaan §14.1 — tidak ada perubahan SDL/API tulis CV.
+
+### 14.3 Visibilitas menu per peran (2026-10-15, implementasi lanjutan)
+
+Permintaan pemilik produk: "sesuaikan visibilitas menu juga untuk masing-masing role".
+Menu kini **cermin penuh matriks per peran** (`dashboard` commit berikutnya) — setiap
+modul yang boleh *dibaca* sebuah peran punya entri, dan modul yang ditutup tidak punya:
+
+| Entri | Admin | Operation | Chapter | Talent | Keputusan |
+| --- | --- | --- | --- | --- | --- |
+| Dashboard, Aktivitas saya, Workload | ✔ | ✔ | ✔ | ✔ | O5 tetap terbuka (baris WAD) |
+| Data Karyawan | ✔ kelola | ✔ kelola | ✔ cakupan | ✔ data diri | R2.2 |
+| Kontrak | ✔ kelola | ✔ kelola | — | — | matriks |
+| Assignments | ✔ kelola | ✔ baca semua | ✔ kelola cakupan | ✔ miliknya | R6 + R2.2 |
+| Provisi Entra | ✔ kelola | ✔ kelola | — | — | R6.4 |
+| CV | ✔ baca semua | — | ✔ baca cakupan | ✔ kelola miliknya | 2026-10-15: Admin hanya baca |
+| Master Data | ✔ kelola | ✔ baca | ✔ baca | ✔ baca | **O6 ditutup 2026-10-15** |
+| Accounts, Audit | ✔ | — | — | — | matriks |
+| IDP, Evaluations | — | — | — | — | **ditunda**: entri disembunyikan (`roles: []`) |
+
+- **O6 ditutup** dengan mengikuti matriks (hak *lihat* untuk semua peran): nav Master Data
+  tampil untuk semua, permukaan kelola (`Tambah`, `Ubah`, `Aktifkan/Nonaktifkan`) hanya
+  Admin (`MANAGE_ROLES.masterData = ["ADMIN"]`); section-nya tidak lagi memblokir non-Admin.
+- **IDP & Evaluation** tetap ditunda: entri menu dikosongkan (`roles: []`) — menyimpang dari
+  baseline desain TAN-178, sesuai matriks (✘ semua peran). Baris/route `idp`/`evaluations`
+  di `matrix.ts` **belum** diubah (T032), jadi invariant `nav.test.ts` mengecualikan kedua
+  entri itu dan mencatatnya sebagai utang: reactivation = kembalikan peran di nav + buka
+  gerbang server + tutup/buka route (runbook R5/T060).
+- **Cakupan uji**: `nav.test.ts` menegakkan nav ≡ matriks per sel untuk seluruh entri
+  aktif; `Sidebar.test.tsx` menguji entri ditunda tidak muncul untuk peran mana pun;
+  `master-data.test.tsx` + 4 `page.test.tsx` menguji permukaan kelola hanya Admin dan
+  tampilan hanya-baca untuk Chapter/Talent.
+- **Sisa**: T032 (tutup route IDP/Evaluasi secara eksplisit — menunggu keputusan reaktivasi)
+  dan T078 (jalankan e2e di pipeline).
+
+### 14.4 Status `/speckit.implement` (lanjutan 2026-10-15)
+
+| Gerbang | Hasil |
+| --- | --- |
+| `go vet ./...` (backend) | 0 temuan |
+| `go test ./...` (backend) | 10 paket ok |
+| `pnpm lint` (dashboard) | 0 temuan |
+| `pnpm typecheck` | 0 error |
+| `pnpm test` | **526/526** hijau |
+| `make lint vet test` | `make`/`golangci-lint` tidak tersedia di lingkungan agent — dijalankan manual (`go vet`/`go test`); `make lint` dijalankan di pipeline |
+| Generate idempoten | tidak dijalankan (butuh toolchain codegen) |
+| Suite e2e (T078) | **belum** — butuh aplikasi + DB ter-seed + browser |
+
+Sisa terbuka: **T032** (tutup route IDP/Evaluasi; menunggu keputusan reaktivasi), **T035/T040**
+(dashboard lepas field IDP/eval — ikut modul ditunda), **T050/T051** (UAT & regresi lintas-modul
+— butuh lingkungan hidup), **T052** sisa (generate idempoten + suite e2e), **T078** e2e di pipeline.
+**O6 ditutup**; **O5 tetap terbuka** (baris matriks WAD).

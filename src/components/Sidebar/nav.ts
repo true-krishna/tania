@@ -51,8 +51,13 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * R2.2 (002-tania-rbac): each entry mirrors the role/module matrix. Every
  * module a role may *read* has a menu entry, even when the page turns out
  * read-only for that role — Data Karyawan for Chapter (scoped) and Talent
- * (own record), Assignments for Operation (read-only) and Talent (own history).
- * IDP & Evaluation entries stay as is (TAN-178 baseline, modules deferred).
+ * (own record), Assignments for Operation (read-only) and Talent (own history),
+ * Master Data (reference data) for every role since the matrix grants `lihat`.
+ *
+ * IDP & Evaluation stay entries with `roles: []` — the matrix denies them for
+ * every role while the modules are deferred (2026-10-15: "tunda dulu"), so the
+ * menu must not offer them. Reactivation = restore the matrix row, re-open the
+ * server gate and put the roles back here (runbook R5/T060).
  */
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
@@ -71,14 +76,14 @@ export const NAV: readonly NavEntry[] = [
     ],
   },
   { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },
-  { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: ["CHAPTER", "TALENT", "ADMIN"] },
+  { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: [] },
   { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER", "ADMIN"] },
   {
     kind: "group",
     id: "evaluations",
     label: "Evaluations",
     icon: IconClipboardCheck,
-    roles: ["CHAPTER", "TALENT", "ADMIN"],
+    roles: [],
     children: [
       { href: "/evaluations", label: "Roster", roles: ["CHAPTER", "ADMIN"] },
       { href: "/evaluations/periods", label: "Periode", roles: ["ADMIN"] },
@@ -92,12 +97,12 @@ export const NAV: readonly NavEntry[] = [
     id: "master-data",
     label: "Master Data",
     icon: IconDatabase,
-    roles: ["ADMIN"],
+    roles: ALL,
     children: [
-      { href: "/master-data/units", label: "Unit", roles: ["ADMIN"] },
-      { href: "/master-data/chapters", label: "Chapter", roles: ["ADMIN"] },
-      { href: "/master-data/job-roles", label: "Job Role", roles: ["ADMIN"] },
-      { href: "/master-data/projects", label: "Project", roles: ["ADMIN"] },
+      { href: "/master-data/units", label: "Unit", roles: ALL },
+      { href: "/master-data/chapters", label: "Chapter", roles: ALL },
+      { href: "/master-data/job-roles", label: "Job Role", roles: ALL },
+      { href: "/master-data/projects", label: "Project", roles: ALL },
     ],
   },
   { kind: "link", href: "/audit", label: "Audit", icon: IconClock, roles: ["ADMIN"] },
