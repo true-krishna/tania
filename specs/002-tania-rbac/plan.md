@@ -589,3 +589,30 @@ Implikasi urutan kerja:
   seluruh entri tanpa kecuali.
 - **Tidak ada divergensi permanen**: seluruh keputusan di atas adalah data matriks; tidak ada
   perubahan arsitektur, skema, atau kontrak API yang diperlukan untuk merekamnya sekarang.
+
+### 14.6 Amandemen clarify 6 (2026-10-16) — CV, Master Data, evaluasi, aktivasi ditunda
+
+Menyempurnakan §14.5 (beberapa butir di §14.5 kini **digantikan**). Matriks `spec.md` tetap
+sumber kebenaran.
+
+| Area | §14.5 (clarify 5) | §14.6 (clarify 6) | Delta teknis |
+| --- | --- | --- | --- |
+| Profil CV | Operation `—` | Operation **lihat semua (hanya baca)** | FE `MODULE_ROLES.cv` +OPERATION; entri nav CV +OPERATION; halaman CV: Operation memakai penampil hanya-baca (`CvRosterViewer`); BE gate baca CV `+Operation` (tulis tetap Talent) |
+| Master Data | Chapter & Talent `—` | Chapter **lihat cakupan**, Talent `—` (**O6** tetap tertutup untuk Talent) | FE `MODULE_ROLES.masterData = ["CHAPTER","OPERATION","ADMIN"]` dengan `MANAGE_ROLES.masterData = ["ADMIN"]`; nav Master Data +CHAPTER; BE: baca master data Chapter dibatasi cakupan (Role/chapter miliknya), Talent tetap ditolak |
+| Evaluasi (performa, periode, template) | Chapter `lihat`, periode/template `†` usulan | **Admin kelola · Operation lihat · Chapter kelola cakupan · Talent kelola cakupan (miliknya)** | Direkam di matriks; penegakan menyusul aktivasi modul |
+| IDP | Admin kelola · Operation lihat · Chapter lihat cakupan · Talent kelola miliknya | tidak berubah | — |
+| Aktivasi IDP & evaluasi | opsi (a)/(b) belum diputuskan | **(a) rekam akses sekarang, aktifkan nanti** | `deferredModules` **tetap**; entri nav IDP/Evaluasi **tetap disembunyikan** sampai aktivasi (agar pengguna tidak menabrak halaman yang ditolak server); T084 menjadi pekerjaan aktivasi terjadwal |
+
+Konsekuensi yang perlu diingat saat implementasi:
+
+- **Menu mengikuti akses *aktif*, bukan akses *tercatat*.** Karena IDP & evaluasi masih
+  ditutup server, entri menunya tetap `roles: []`. Saat aktivasi, satu perubahan: kembalikan
+  peran di nav sesuai matriks + cabut `deferredModules` + hapus pengecualian di `nav.test.ts`.
+- **Master Data Chapter = cakupan**, jadi gate bacanya bukan "boleh membaca master data"
+  polos, melainkan "boleh membaca master data yang relevan bagi cakupannya" — perlu definisi
+  teknis satu kali (mis. Chapter membaca daftar Role yang chapter-nya ia miliki, bukan daftar
+  Unit/Project global) sebelum dikerjakan; kalau ternyata maksudnya akses penuh, matriksnya
+  cukup dinaikkan ke `lihat`.
+- **CV Operation hanya baca** — penulisan tetap Talent; tidak ada perubahan kontrak API.
+- **Tidak ada divergensi permanen** pada butir yang langsung dapat dikerjakan (CV & Master
+  Data): keduanya perubahan data matriks + gate yang sudah ada.
