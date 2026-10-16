@@ -7,16 +7,18 @@ import type { AccessRole } from "@/generated/graphql";
  * the backend remains the enforcement point (FR-15/16). TAN-212 (clarify 4)
  * gives Admin full manage on every active module.
  *
- * 2026-10-16 (clarify 5/6 + "rekam akses sekarang, aktifkan nanti"): the active
- * modules below mirror the amended matrix — Kontrak `+CHAPTER` (scoped read),
- * CV `+OPERATION` (read-only), Master Data `[CHAPTER, OPERATION, ADMIN]`
- * (Talent has no access). The `idp`/`evaluations` rows are `[]` (T032): the
- * modules are deferred, so no role may reach them in the UI either, exactly as
- * the backend refuses them with MODULE_UNAVAILABLE (`internal/usecase/rbac.go`
- * deferredModules). Their recorded mapping — Admin kelola · Operation lihat ·
- * Chapter `kelola cakupan` · Talent kelola miliknya, i.e. all four roles — is
- * kept in the matrix SoT and in the nav entries, which activation restores
- * together with this row and the server flag (T084).
+ * 2026-10-16 (clarify 5/6): the active modules below mirror the
+ * amended matrix — Kontrak `+CHAPTER` (scoped read), CV `+OPERATION`
+ * (read-only), Master Data `[CHAPTER, OPERATION, ADMIN]` (Talent has no
+ * access).
+ *
+ * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation are active, so every role
+ * has an entry (`ALL`): Admin kelola · Operation lihat · Chapter `kelola cakupan`
+ * · Talent kelola miliknya. The menu entry is therefore visible for all roles
+ * while `MANAGE_ROLES` decides what each role may do inside the page — Operation
+ * only reads, Talent only its own records, and the pages mirror that. Period &
+ * template administration stays Admin-only (global config), exactly like the
+ * server's `RequireRole(Admin)` on their writes.
  */
 export type Module =
   | "dashboard"
@@ -43,12 +45,10 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   entra: ["OPERATION", "ADMIN"],
   contracts: ["CHAPTER", "OPERATION", "ADMIN"],
   assignments: ["CHAPTER", "OPERATION", "TALENT", "ADMIN"],
-  // Ditutup untuk semua peran selama modul ditunda (T032): rute `/idp` dan
-  // `/evaluations/*` memakai `isModuleOpen`, tab "IDP Saya" di profil mengikuti
-  // baris ini, dan server menolak modulnya. Aktivasi (T084) mengembalikannya ke
-  // `ALL` bersamaan dengan `deferredModules` di backend.
-  idp: [],
-  evaluations: [],
+  // Aktif sejak 2026-10-16 (klarifikasi 9): Admin kelola · Operation lihat ·
+  // Chapter kelola cakupan · Talent kelola miliknya.
+  idp: ALL,
+  evaluations: ALL,
   cv: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
   masterData: ["CHAPTER", "OPERATION", "ADMIN"],
   accounts: ["ADMIN"],
@@ -60,6 +60,11 @@ const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
   assignments: ["CHAPTER", "ADMIN"],
   contracts: ["OPERATION", "ADMIN"],
   masterData: ["ADMIN"],
+  // IDP & evaluasi: Chapter menilai/mengelola dalam cakupannya, Admin penuh;
+  // Operation hanya membaca dan Talent hanya miliknya (kontrol "miliknya" ada di
+  // halaman masing-masing, bukan di `canManage`).
+  idp: ["CHAPTER", "ADMIN"],
+  evaluations: ["CHAPTER", "ADMIN"],
 };
 
 export function canManage(role: AccessRole | null | undefined, module: Module): boolean {
@@ -72,6 +77,12 @@ export function canAccess(role: AccessRole | null | undefined, module: Module): 
   return MODULE_ROLES[module].includes(role);
 }
 
+/**
+ * A module is open when at least one role may reach it. After the 2026-10-16
+ * activation (klarifikasi 9) no module is closed, but the predicate stays as the
+ * single switch the route layouts (`/idp`, `/evaluations`) use, so a future
+ * deferral only has to empty a `MODULE_ROLES` row again.
+ */
 export function isModuleOpen(module: Module): boolean {
   return MODULE_ROLES[module].length > 0;
 }

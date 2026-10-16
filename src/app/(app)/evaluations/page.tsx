@@ -14,12 +14,15 @@ import {
 } from "@/features/evaluations/EvaluationBadges";
 import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 
 /**
- * Evaluations home (Chapter & Admin) — US7 roster.
- * Rooted on the current/selected evaluation period; shows every talent in the
- * chapter's scope with an NOT_EVALUATED/EVALUATED flag (FR-28). The period must
- * be RUNNING for the chapter to score; a CLOSED period is read-only.
+ * Evaluations home — US7 roster, open to Admin, Operation and Chapter since the
+ * 2026-10-16 activation (klarifikasi 9). Rooted on the current/selected
+ * evaluation period; shows every talent in the chapter's scope with an
+ * NOT_EVALUATED/EVALUATED flag (FR-28). The period must be RUNNING *and* the
+ * role must manage (Chapter scoped, Admin company-wide) to score; Operation
+ * reads the roster, and a CLOSED period is read-only for everyone.
  */
 export default function EvaluationsPage() {
   const role = useSessionRole();
@@ -75,7 +78,7 @@ export default function EvaluationsPage() {
 
   const entries = roster.data ?? [];
   const evaluated = entries.filter((e) => e.fillState === "EVALUATED").length;
-  const readOnly = period.state === "CLOSED";
+  const readOnly = period.state === "CLOSED" || !canManage(role, "evaluations");
 
   return (
     <section className="flex flex-col gap-4">

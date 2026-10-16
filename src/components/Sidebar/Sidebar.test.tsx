@@ -34,12 +34,14 @@ describe("Sidebar", () => {
     }
   });
 
-  it("offers no entry for the deferred IDP & Evaluation modules", () => {
+  it("menampilkan IDP & Evaluation untuk semua peran setelah aktivasi (klarifikasi 9)", () => {
     for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
       const view = renderSidebar({ role });
-      expect(desktopNav().queryByRole("link", { name: "IDP" })).toBeNull();
-      expect(desktopNav().queryByRole("button", { name: "Evaluations" })).toBeNull();
-      expect(compactNav().queryByRole("link", { name: "IDP" })).toBeNull();
+      // Entri menunya sama untuk semua peran; yang berbeda hanya isi/akses
+      // halamannya (Talent membuka IDP-nya sendiri, Operation hanya baca).
+      expect(desktopNav().getByRole("link", { name: "IDP" })).toBeInTheDocument();
+      expect(desktopNav().getByRole("button", { name: "Evaluations" })).toBeInTheDocument();
+      expect(compactNav().getByRole("link", { name: "IDP" })).toBeInTheDocument();
       view.unmount();
     }
   });

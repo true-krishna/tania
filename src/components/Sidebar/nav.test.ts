@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AccessRole } from "@/generated/graphql";
-import { canAccess, type Module } from "@/lib/auth/matrix";
+import { canAccess, MODULE_ROLES, type Module } from "@/lib/auth/matrix";
 import { NAV, sectionForPath } from "./nav";
 
 const ROLES: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
@@ -14,7 +14,12 @@ const MODULE_OF: Record<string, Module> = {
   "/contracts": "contracts",
   "/assignments": "assignments",
   "/entra": "entra",
+  "/idp": "idp",
   "/cv": "cv",
+  "/evaluations": "evaluations",
+  "/evaluations/periods": "evaluations",
+  "/evaluations/templates": "evaluations",
+  "/evaluations/my": "evaluations",
   "/master-data/units": "masterData",
   "/master-data/chapters": "masterData",
   "/master-data/job-roles": "masterData",
@@ -22,16 +27,6 @@ const MODULE_OF: Record<string, Module> = {
   "/accounts": "accounts",
   "/audit": "audit",
 };
-
-/**
- * Entri IDP & Evaluation tidak diuji kesetaraannya: nav masih memuat pemetaan per
- * peran yang direkam untuk aktivasi (klarifikasi 5–7), sementara baris matriksnya
- * kosong karena modul ditunda untuk semua peran (T032) dan servernya menolak dengan
- * MODULE_UNAVAILABLE. Saat aktivasi (T084): buka baris matriks + entri nav
- * bersamaan, lalu hapus daftar ini agar invarian mencakup seluruh entri tanpa
- * kecuali.
- */
-const AS_IS_HREFS = ["/idp", "/evaluations", "/evaluations/periods", "/evaluations/templates", "/evaluations/my"];
 
 interface Leaf {
   href: string;
@@ -43,21 +38,46 @@ const LEAVES: Leaf[] = NAV.flatMap((entry) =>
   entry.kind === "link"
     ? [{ href: entry.href, label: entry.label, roles: entry.roles }]
     : entry.children.map((child) => ({ href: child.href, label: child.label, roles: child.roles }))
-).filter((leaf) => !AS_IS_HREFS.includes(leaf.href));
+);
 
+/**
+ * R2.2 — the sidebar mirrors the role & module matrix. Since the 2026-10-16
+ * activation (klarifikasi 9) a module may hold several pages with different
+ * per-role visibility (Evaluations: Roster vs. Periode/Template vs. Evaluasi
+ * Saya), so the invariant is no longer strict equality per leaf but:
+ *   1. no dead link — a visible leaf's module is open for that role, and
+ *   2. full coverage — every role that may open a module sees at least one of
+ *      its entries, which is what keeps IDP & Evaluation "tampil untuk semua
+ *      peran, aksesnya yang berbeda".
+ */
 describe("NAV mirrors the role & module matrix (R2.2)", () => {
   for (const leaf of LEAVES) {
-    const mod = MODULE_OF[leaf.href];
     it(`${leaf.href} punya modul matriks`, () => {
-      expect(mod, `${leaf.href} tidak dipetakan ke modul`).toBeDefined();
+      expect(MODULE_OF[leaf.href], `${leaf.href} tidak dipetakan ke modul`).toBeDefined();
     });
 
     for (const role of ROLES) {
-      it(`${leaf.label} × ${role} → ${canAccess(role, mod!) ? "tampil" : "tidak tampil"}`, () => {
-        expect(leaf.roles.includes(role)).toBe(canAccess(role, mod!));
+      if (!leaf.roles.includes(role)) continue;
+      it(`${leaf.label} × ${role} → modulnya terbuka`, () => {
+        expect(canAccess(role, MODULE_OF[leaf.href])).toBe(true);
       });
     }
   }
+
+  it("setiap peran yang boleh membuka modul melihat minimal satu entri modul itu", () => {
+    for (const mod of Object.keys(MODULE_ROLES) as Module[]) {
+      const leaves = LEAVES.filter((leaf) => MODULE_OF[leaf.href] === mod);
+      expect(leaves.length, `modul ${mod} tidak punya entri sidebar`).toBeGreaterThan(0);
+      for (const role of ROLES) {
+        if (!canAccess(role, mod)) continue;
+        const visible = leaves.filter((leaf) => leaf.roles.includes(role));
+        expect(
+          visible.length,
+          `${role} boleh membuka ${mod} tetapi tidak melihat entri apa pun`
+        ).toBeGreaterThan(0);
+      }
+    }
+  });
 
   it("menyembunyikan grup bila tidak ada anak yang tampil untuk peran itu", () => {
     for (const entry of NAV) {

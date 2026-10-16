@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import ProfilePage from "@/app/(app)/profile/page";
-import { IdpSection } from "@/features/profile";
 import { MyIdpDocument, ProfileDocument } from "@/generated/graphql";
 
 const h = vi.hoisted(() => ({
@@ -185,34 +184,31 @@ describe("ProfilePage (TAN-188)", () => {
     expect(await screen.findByText("Beban kerja periode ini")).toBeInTheDocument();
   });
 
-  it("menyembunyikan tab IDP selama modulnya ditunda (T032)", async () => {
+  it("menampilkan tab IDP untuk semua peran setelah aktivasi (klarifikasi 9)", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    // Modul IDP ditutup untuk semua peran sampai aktivasi (T084), jadi tabnya
-    // tidak pernah tampil — untuk Talent sekalipun.
-    expect(screen.queryByRole("tab", { name: "IDP Saya" })).toBeNull();
+    // Modul IDP aktif: tabnya tersedia untuk semua peran, isinya menyesuaikan
+    // akses (Talent melihat rencananya sendiri).
+    expect(screen.getByRole("tab", { name: "IDP Saya" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Informasi pribadi" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Kontrak" })).toBeInTheDocument();
   });
 
-  it("menyembunyikan tab IDP untuk peran lain juga", async () => {
+  it("menampilkan tab IDP untuk peran lain juga", async () => {
     h.role.current = "OPERATION";
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    expect(screen.queryByRole("tab", { name: "IDP Saya" })).toBeNull();
+    expect(screen.getByRole("tab", { name: "IDP Saya" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Informasi pribadi" })).toBeInTheDocument();
   });
 
-  it("tetap menyajikan ringkasan IDP saat dirender langsung", async () => {
-    // Isi tab tetap dijaga uji: begitu modulnya diaktifkan (T084), bagian ini
-    // yang kembali tampil di dalam tab.
-    render(
-      <MockedProvider mocks={[{ request: { query: MyIdpDocument }, result: myIdpResult }]}>
-        <IdpSection />
-      </MockedProvider>
-    );
+  it("menyajikan ringkasan IDP di dalam tab", async () => {
+    renderProfile();
+    await screen.findByRole("heading", { name: "Ilham Fadillah" });
+
+    fireEvent.click(screen.getByRole("tab", { name: "IDP Saya" }));
 
     expect(await screen.findByText("Menjadi Go backend engineer yang andal")).toBeInTheDocument();
     expect(screen.getByText("Training Go lanjutan")).toBeInTheDocument();

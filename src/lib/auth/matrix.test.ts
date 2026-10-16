@@ -12,10 +12,10 @@ const EXPECTED: Record<Module, Record<AccessRole, boolean>> = {
   entra: { ADMIN: true, OPERATION: true, CHAPTER: false, TALENT: false },
   contracts: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   assignments: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
-  // Ditunda (T032): tidak ada peran yang boleh masuk sampai modulnya diaktifkan
-  // (T084) — barisnya kosong, sama seperti backend menolaknya untuk semua peran.
-  idp: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
-  evaluations: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
+  // Aktif sejak 2026-10-16 (klarifikasi 9): entri menu ditampilkan untuk semua
+  // peran, yang berbeda hanya aksesnya di dalam halaman (lihat EXPECTED_MANAGE).
+  idp: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
+  evaluations: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
   cv: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
   masterData: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   accounts: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
@@ -31,8 +31,10 @@ const EXPECTED_MANAGE: Record<Module, Record<AccessRole, boolean>> = {
   entra: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   contracts: { ADMIN: true, OPERATION: true, CHAPTER: false, TALENT: false },
   assignments: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: false },
-  idp: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
-  evaluations: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
+  // IDP & evaluasi: Chapter mengelola dalam cakupannya, Admin penuh; Operation
+  // hanya baca dan Talent hanya miliknya (klarifikasi 9).
+  idp: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: false },
+  evaluations: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: false },
   cv: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   masterData: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   accounts: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
@@ -67,9 +69,9 @@ describe("role & module matrix (002-tania-rbac)", () => {
     expect(canManage(undefined, "assignments")).toBe(false);
   });
 
-  it("menutup IDP & Evaluation untuk semua peran selama ditunda (T032)", () => {
-    expect(isModuleOpen("idp")).toBe(false);
-    expect(isModuleOpen("evaluations")).toBe(false);
+  it("membuka IDP & Evaluation setelah aktivasi (klarifikasi 9)", () => {
+    expect(isModuleOpen("idp")).toBe(true);
+    expect(isModuleOpen("evaluations")).toBe(true);
     expect(isModuleOpen("assignments")).toBe(true);
   });
 });

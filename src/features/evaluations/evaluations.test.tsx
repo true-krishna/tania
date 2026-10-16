@@ -17,6 +17,15 @@ import {
 import { ToastProvider } from "@/components/Toast";
 const nav = vi.hoisted(() => ({ push: vi.fn() }));
 
+// Peran datang dari session store di aplikasi; di sini di-drive langsung supaya
+// jalur mengelola (Chapter/Admin) dan hanya-baca (Operation) sama-sama teruji
+// (klarifikasi 9).
+const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
+vi.mock("@/lib/auth/guard", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/auth/guard")>();
+  return { ...actual, useSessionRole: () => auth.role };
+});
+
 vi.mock("next/navigation", () => ({
   useParams: () => ({ periodId: "period-1", employeeId: "emp-1" }),
   useRouter: () => nav,
@@ -140,6 +149,32 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
     );
 
     expect(await screen.findByText(/belum ada periode evaluasi berjalan/i)).toBeInTheDocument();
+  });
+
+  it("menampilkan roster hanya-baca untuk Operation (klarifikasi 9)", async () => {
+    auth.role = "OPERATION";
+    try {
+      render(
+        <MockedProvider
+          mocks={[
+            { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
+            {
+              request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
+              result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+            },
+          ]}
+        >
+          <EvaluationsPage />
+        </MockedProvider>
+      );
+
+      expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+      expect(screen.getByRole("button", { name: /lihat/i })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /^nilai/i })).toBeNull();
+    } finally {
+      auth.role = "CHAPTER";
+    }
   });
 });
 
@@ -326,6 +361,38 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
     expect(await screen.findByText(/periode telah berakhir — evaluasi hanya-baca/i)).toBeInTheDocument();
     const yesNoSelect = screen.getByRole("combobox", { name: /2\. kolaborasi/i });
     expect(yesNoSelect).toBeDisabled();
+  });
+
+  it("menampilkan form penilaian hanya-baca untuk Operation (klarifikasi 9)", async () => {
+    auth.role = "OPERATION";
+    try {
+      render(
+        <MockedProvider
+          mocks={[
+            { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
+            {
+              request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
+              result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+            },
+            {
+              request: { query: PerformanceEvaluationForTalentDocument, variables: { periodId: "period-1", employeeId: "emp-1", first: 1 } },
+              result: detailResult,
+            },
+          ]}
+        >
+          <ToastProvider>
+            <EvaluationFormPage />
+          </ToastProvider>
+        </MockedProvider>
+      );
+
+      expect(await screen.findByText(/peran anda hanya-baca/i)).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /serahkan/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /simpan draf/i })).toBeNull();
+      expect(screen.getByRole("combobox", { name: /2\. kolaborasi/i })).toBeDisabled();
+    } finally {
+      auth.role = "CHAPTER";
+    }
   });
 
   it("renders a blank scoring form for a talent not yet evaluated (criteria from current period)", async () => {

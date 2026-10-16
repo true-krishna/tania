@@ -46,7 +46,7 @@ function mainNav(page: Page) {
   return page.getByRole("navigation", { name: /^Main navigation$/ });
 }
 
-/** Entri sidebar yang wajib tampil (matriks peran & modul, plan §2/R2.2 + §14.7). */
+/** Entri sidebar yang wajib tampil (matriks peran & modul, plan §2/R2.2 + §14.7 + §14.11). */
 const NAV_VISIBLE: Record<Role, readonly string[]> = {
   ADMIN: [
     "Dashboard",
@@ -56,7 +56,9 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Kontrak",
     "Assignments",
     "Provisi Entra",
+    "IDP",
     "CV",
+    "Evaluations",
     "Master Data",
     "Accounts",
     "Audit",
@@ -69,7 +71,9 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Kontrak",
     "Assignments",
     "Provisi Entra",
+    "IDP",
     "CV",
+    "Evaluations",
     "Master Data",
   ],
   CHAPTER: [
@@ -79,34 +83,41 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Data Karyawan",
     "Kontrak",
     "Assignments",
+    "IDP",
     "CV",
+    "Evaluations",
     "Master Data",
   ],
-  TALENT: ["Dashboard", "Aktivitas saya", "Workload", "Data Karyawan", "Assignments", "CV"],
+  TALENT: [
+    "Dashboard",
+    "Aktivitas saya",
+    "Workload",
+    "Data Karyawan",
+    "Assignments",
+    "IDP",
+    "CV",
+    "Evaluations",
+  ],
 };
 
-/** Entri sidebar yang wajib tidak tampil — termasuk modul ditunda (IDP/Evaluasi). */
+/**
+ * Entri sidebar yang wajib tidak tampil. IDP & Evaluations tidak lagi di sini:
+ * sejak aktivasi 2026-10-16 (klarifikasi 9) keduanya tampil untuk semua peran,
+ * hanya aksesnya yang berbeda.
+ */
 const NAV_HIDDEN: Record<Role, readonly string[]> = {
-  ADMIN: ["IDP", "Evaluations"],
-  OPERATION: ["IDP", "Evaluations", "Accounts", "Audit"],
-  CHAPTER: ["Provisi Entra", "IDP", "Evaluations", "Accounts", "Audit"],
-  TALENT: ["Kontrak", "Provisi Entra", "Master Data", "IDP", "Evaluations", "Accounts", "Audit"],
+  ADMIN: [],
+  OPERATION: ["Accounts", "Audit"],
+  CHAPTER: ["Provisi Entra", "Accounts", "Audit"],
+  TALENT: ["Kontrak", "Provisi Entra", "Master Data", "Accounts", "Audit"],
 };
 
-/** Modul yang ditunda untuk semua peran: URL langsung tidak boleh membuka modul. */
-const DEFERRED_ROUTES = [
-  "/idp",
-  "/idp/new",
-  "/idp/my",
-  "/evaluations",
-  "/evaluations/periods",
-  "/evaluations/templates",
-  "/evaluations/my",
-] as const;
+/** Rute modul yang aktif: URL langsung harus membuka halamannya (bukan 404). */
+const ACTIVE_ROUTES = ["/idp", "/evaluations"] as const;
 
 test.describe("RBAC matrix (T041)", () => {
   for (const role of ["ADMIN", "OPERATION", "CHAPTER", "TALENT"] as const) {
-    test(`T041 — ${role}: nav sesuai matriks, modul ditunda 404`, async ({ page }) => {
+    test(`T041 — ${role}: nav sesuai matriks, modul aktif terbuka`, async ({ page }) => {
       await loginAs(page, SEED_USERS[role]);
       await page.goto("/dashboard");
 
@@ -124,10 +135,10 @@ test.describe("RBAC matrix (T041)", () => {
         await expect(nav.getByText(label, { exact: true })).toHaveCount(0);
       }
 
-      // Modul ditunda: kode fitur tetap ada, tetapi URL langsung tidak tersedia.
-      for (const route of DEFERRED_ROUTES) {
+      // Modul aktif (klarifikasi 9): URL langsung membuka halamannya, bukan 404.
+      for (const route of ACTIVE_ROUTES) {
         const response = await page.goto(route);
-        expect(response?.status(), `${route} harus 404 untuk ${role}`).toBe(404);
+        expect(response?.status(), `${route} harus terbuka untuk ${role}`).toBe(200);
       }
     });
   }
@@ -143,6 +154,10 @@ test.describe("RBAC matrix (T041)", () => {
 
     await page.goto("/entra");
     await expect(page.getByRole("heading", { name: /Provisi Entra/ })).toBeVisible();
+
+    // IDP aktif untuk semua peran; Admin mengelolanya penuh (klarifikasi 9).
+    await page.goto("/idp");
+    await expect(page.getByRole("link", { name: /Buat IDP/ })).toBeVisible();
   });
 
   test("T041 — OPERATION: Assignment hanya baca (tanpa aksi), Employees kelola", async ({ page }) => {
@@ -157,6 +172,13 @@ test.describe("RBAC matrix (T041)", () => {
 
     await page.goto("/employees");
     await expect(page.getByRole("link", { name: /Tambah Karyawan/ })).toBeVisible();
+
+    // IDP & Evaluations: Operation hanya membaca (klarifikasi 9).
+    await page.goto("/idp");
+    await expect(page.getByText(/hanya baca/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: /Buat IDP/ })).toHaveCount(0);
+    await page.goto("/evaluations");
+    await expect(page.getByRole("heading", { name: "Evaluasi" })).toBeVisible();
   });
 
   test("T041 — CHAPTER: Assignment kelola, Employees hanya cakupan chapter", async ({ page }) => {
@@ -183,5 +205,10 @@ test.describe("RBAC matrix (T041)", () => {
     await page.goto("/employees");
     await page.waitForURL(/\/employees\/[^/]+$/);
     await expect(page.getByRole("heading", { name: "Data Karyawan" })).toHaveCount(0);
+
+    // Entri IDP yang sama membuka rencana milik Talent sendiri (klarifikasi 9).
+    await page.goto("/idp");
+    await expect(page.getByRole("heading", { name: "IDP Saya" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Buat IDP/ })).toHaveCount(0);
   });
 });

@@ -59,11 +59,14 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * `+OPERATION` (hanya baca), Master Data = `[CHAPTER, OPERATION, ADMIN]`
  * (Talent tanpa akses).
  *
- * IDP & Evaluation stay entries with `roles: []`: the owner decided "rekam
- * akses sekarang, aktifkan nanti" (2026-10-16), so the menu must not offer a
- * module the server still refuses as not-yet-available. Activation = restore the
- * roles here, drop the server's deferred flag and delete the exemption in
- * `nav.test.ts` (runbook R5/T060).
+ * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation tampil untuk **semua**
+ * peran; yang berbeda hanya aksesnya. `/idp` terbuka bagi keempat peran (Talent
+ * melihat IDP-nya sendiri, Operation hanya baca, Chapter/Admin mengelola) dan
+ * grup Evaluations terbuka bagi keempat peran lewat anak yang sesuai — Roster
+ * untuk Admin/Operation/Chapter, Periode & Template tetap Admin (konfigurasi
+ * global), Evaluasi Saya untuk Talent. `nav.test.ts` menjaga invariannya: tidak
+ * ada tautan mati, dan setiap peran yang boleh membuka modul melihat minimal
+ * satu entri modul itu.
  */
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
@@ -82,16 +85,16 @@ export const NAV: readonly NavEntry[] = [
     ],
   },
   { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },
-  { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: [] },
+  { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: ALL },
   { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] },
   {
     kind: "group",
     id: "evaluations",
     label: "Evaluations",
     icon: IconClipboardCheck,
-    roles: [],
+    roles: ALL,
     children: [
-      { href: "/evaluations", label: "Roster", roles: ["CHAPTER", "ADMIN"] },
+      { href: "/evaluations", label: "Roster", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
       { href: "/evaluations/periods", label: "Periode", roles: ["ADMIN"] },
       { href: "/evaluations/templates", label: "Template", roles: ["ADMIN"] },
       { href: "/evaluations/my", label: "Evaluasi Saya", roles: ["TALENT"] },

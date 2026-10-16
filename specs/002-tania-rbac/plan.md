@@ -740,7 +740,9 @@ baris kosong adalah cermin satu-satunya yang setara. Efeknya tanpa kode tambahan
 
 Pengecualian `AS_IS_HREFS` di `nav.test.ts` **tetap** — bukan karena modulnya masih tampil,
 tetapi karena entri nav menyimpan pemetaan per peran untuk aktivasi sementara baris matriksnya
-kini kosong. Aktivasi (T084) membuka keduanya bersamaan lalu menghapus daftar itu.
+kini kosong. Aktivasi (T084) membuka keduanya bersamaan lalu menghapus daftar itu. → **Terjadi
+persis pada §14.11 (klarifikasi 9): `AS_IS_HREFS` dihapus, invarian uji dilonggarkan agar entri
+per peran boleh berbeda selama modulnya boleh dibuka.**
 
 **T035 terverifikasi, tidak perlu perubahan.** `src/features/dashboard/dashboard.graphql`
 tidak lagi memuat satu pun field IDP/eval (`idpStatusDistribution`, `actionProgress`,
@@ -769,5 +771,87 @@ perubahan backend):
 
 Verifikasi: `pnpm test` 531/531 hijau (run ulang; run pertama gagal 4 uji karena batas waktu
 saat beban paralel — pola flaky yang sudah dikenal), `pnpm typecheck` 0, `pnpm eslint` 0.
-T032, T035, T036 ditutup di `tasks.md`; T084 (aktivasi) dan T040 (hapus field SDL — perubahan
-destruktif) tetap menunggu keputusan pemilik produk.
+T032, T035, T036 ditutup di `tasks.md`; ~~T084 (aktivasi) dan T040 (hapus field SDL — perubahan
+destruktif) tetap menunggu keputusan pemilik produk~~ → **keduanya diputuskan pemilik produk
+pada clarify 9 (§14.11): modul diaktifkan dan field SDL dipertahankan (T040 dibatalkan),
+sehingga T032 digantikan dan T084 ditutup.**
+
+### 14.11 Aktivasi IDP & evaluasi (as-built, 2026-10-16, TAN-212) — T084
+
+Pemilik produk mengaktifkan kedua modul dan memutuskan tiga hal sekaligus: (1) modul IDP &
+evaluasi **aktif** — bukan lagi "rekam akses, aktifkan nanti" (klarifikasi 6d); (2) **field IDP
+pada SDL tidak dihapus** — permintaan tegas, sehingga rencana penghapusan field (T040) batal;
+(3) **entri menu IDP & Evaluations tetap tampil untuk semua peran**, yang berbeda hanya
+aksesnya. Matriks `spec.md` tidak berubah (baris clarify 5–7 kini berlaku penuh) — yang
+berubah adalah status aktivasi dan bagaimana UI menyajikannya.
+
+**Server: gerbang modul dikosongkan, bukan dihapus.** `internal/usecase/rbac.go`
+`deferredModules` menjadi himpunan kosong; `moduleGate` karena itu selalu mengembalikan `nil`.
+Mekanisme penolakan (`ErrModuleUnavailable`, `internal/domain/errors.go`) **tetap ada** sebagai
+titik penegakan yang dorman — sengaja dipertahankan supaya penundaan di masa depan cukup
+mengisi satu baris, bukan membangun ulang gerbangnya.
+
+| Modul | Peran | Sebelum (§14.10) | Sesudah (klarifikasi 9) |
+| --- | --- | --- | --- |
+| IDP — baca (`List`, `Get`) | Admin, Chapter | izin (gate modul menolak) | izin |
+| IDP — baca (`List`, `Get`) | Operation | izin (gate modul menolak) | **izin tanpa cakupan** (`List` kini menyertakan Operation) |
+| IDP — kelola (`Create`/`Update`/`Close`/`AddAction`/`AddReview`, aksi & status) | Chapter, Admin | izin | izin; Talent hanya boleh mengubah status aksi pada IDP miliknya |
+| Evaluasi — baca (`ListEvaluations`, `Roster`) | Admin, Operation, Chapter | izin | izin (roster Operation hanya baca) |
+| Evaluasi — tulis (`Upsert`, `Submit`) | Chapter (cakupan), Admin | izin | izin |
+| Periode & Template — **baca** (`ListPeriods`, `CurrentPeriod`, `ListTemplates`) | Admin, Operation, Chapter | izin | izin |
+| Periode & Template — **tulis** (`Create`/`Update`/`SetActive`) | Admin | izin | izin (tetap Admin) |
+
+**Tafsiran yang perlu ditegaskan (periode & template).** Baris matriks menyebut Chapter
+`kelola cakupan` untuk periode/template, padahal **periode & template evaluasi adalah konfigurasi
+global tanpa dimensi chapter** — tidak ada yang bisa "dicakup". Karena itu hak Chapter di sini
+dibaca sebagai **baca**, bukan tulis: `ListPeriods`/`ListTemplates`/`CurrentPeriod` dibuka
+untuk Admin/Operation/Chapter (Talent ikut pada `CurrentPeriod`), sedangkan
+`Create`/`Update`/`SetActive` tetap `RequireRole(Admin)` (FR-25/FR-31). Ini keputusan tafsiran
+TAN-212 yang **flag**; bila pemilik produk bermaksud Chapter boleh mengubah konfigurasi global,
+perubahan cukup satu baris per operasi tulis.
+
+**Frontend: menu sama, tampilan berbeda.**
+
+| Entri | Peran yang melihat | Perilaku |
+| --- | --- | --- |
+| `/idp` | semua | Talent → `MyIdpView` (rencana miliknya); Operation → roster hanya baca; Chapter/Admin → roster kelola (`+ Buat IDP`) |
+| `/idp/[id]` | semua yang boleh membuka | form aksi/review/kartu tutup hanya untuk yang `canManage("idp")`; status aksi berupa chip untuk Operation, tetap bisa diubah Talent pada IDP miliknya |
+| `/evaluations` (Roster) | Admin, Operation, Chapter | Operation `readOnly` (form penilaian dinonaktifkan + pesan FR-15) |
+| `/evaluations/periods`, `/evaluations/templates` | Admin | tidak berubah |
+| `/evaluations/my` | Talent | tidak berubah |
+
+Keputusan bentuk IDP: alih-alih menambah href per peran atau memecah IDP jadi submenu, **satu
+entri `/idp` menyajikan konten menurut peran** — `/idp/my` tetap ada sebagai rute langsung
+(diekstrak ke `src/features/idp/MyIdpView.tsx` agar bisa dirender dua tempat).
+
+**Perubahan kode:**
+
+- Backend: `internal/usecase/rbac.go` (`deferredModules` kosong), `idp.go` (11 blok izin —
+  Operation masuk pada baca; kelola tetap Chapter/Admin; status aksi untuk Talent miliknya),
+  `evaluation.go` (`evalScope`/`ListEvaluations` + Operation; `Roster` Admin/Operation/Chapter),
+  `evaluation_period.go`, `evaluation_template.go` (baca + Operation/Chapter, tulis tetap Admin).
+- Backend uji: `rbac_test.go` — `TestDeferredModulesRejectEveryRole` digantikan
+  `TestModulesAreActive` + `TestIdpAndEvaluationMatrix` (25 operasi × 4 peran, dibangun lewat
+  konstruktor produksi sehingga gerbang modulnya ikut teruji); `evaluation_test.go`,
+  `idp_test.go` disesuaikan pada 7 blok (Admin kini boleh upsert/kelola; Operation boleh baca).
+- Frontend: `src/lib/auth/matrix.ts` (baris `idp`/`evaluations` → `ALL`, `MANAGE_ROLES.idp`/
+  `evaluations` = Chapter+Admin), `src/components/Sidebar/nav.ts` (IDP & grup Evaluations `ALL`,
+  Roster Chapter/Operation/Admin), halaman `/idp`, `/idp/[id]`, `/evaluations`,
+  `/evaluations/[periodId]/[employeeId]`, `EvaluationsShell.tsx`, `MyIdpView.tsx` (baru).
+- Frontend uji: `matrix.test.ts`, `nav.test.ts` (**invarian dilonggarkan**: bukan lagi
+  "nav ≡ `canAccess`", tetapi (a) tidak ada tautan mati — entri tampil ⇒ modulnya boleh dibuka,
+  dan (b) tiap peran yang boleh membuka modul melihat ≥1 entri modul itu; `AS_IS_HREFS`
+  dihapus), `deferred-routes.test.tsx` → `module-routes.test.tsx` (layout menyajikan anak),
+  `Sidebar.test.tsx`, `profile.test.tsx`, `idp.test.tsx`, `evaluations.test.tsx`.
+- `e2e/rbac.spec.ts`: `DEFERRED_ROUTES` (7 rute 404) dihapus, diganti `ACTIVE_ROUTES`
+  (`/idp`, `/evaluations` harus 200 untuk semua peran); IDP & Evaluations masuk `NAV_VISIBLE`
+  semua peran; pemeriksaan hanya-baca ditambahkan pada test OPERATION yang sudah ada (jumlah
+  login tetap 8, di bawah `LOGIN_RATE_MAX=10`).
+
+**T040 dibatalkan.** Field IDP pada SDL (`idpStatusDistribution`, `actionProgress`,
+`idpsNeedingReview`, `idpProgress`) **tetap** — modulnya hidup, jadi tidak ada alasan
+menghapusnya; permintaan pemilik produk juga eksplisit. T032 (rute ditutup) **digantikan** oleh
+aktivasi ini: rute kembali terbuka dan penjagaannya mengikuti matriks per operasi.
+
+Verifikasi: FE `pnpm test` 539/539 hijau, `pnpm typecheck` 0, `pnpm lint` 0; BE `go vet ./...` 0,
+`go test ./...` 10 paket ok. e2e (T078) tetap hanya bisa dijalankan di pipeline.
