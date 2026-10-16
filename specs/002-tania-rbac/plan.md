@@ -1,12 +1,17 @@
 # Implementation Plan — RBAC Tania (Kontrol Akses Berbasis Peran)
 
-**Feature Branch**: `002-tania-rbac` | **Date**: 2026-10-11 (revisi 2026-10-15) | **Spec**:
+**Feature Branch**: `002-tania-rbac` | **Date**: 2026-10-11 (revisi 2026-10-15, **revisi
+2026-10-16**) | **Spec**:
 `specs/002-tania-rbac/spec.md` + `specs/001-employee-digital-talent-management/spec.md`
-(clarify 12, amandemen 2026-10-10; **clarify 4 — Admin kelola penuh**, amandemen 2026-10-15)
+(clarify 12, amandemen 2026-10-10; **clarify 4 — Admin kelola penuh**, amandemen 2026-10-15;
+**clarify 5–9 — cakupan, Master Data, dan aktivasi IDP & evaluasi**, amandemen 2026-10-16)
 
 **Input**: Spesifikasi RBAC dari `/speckit.specify` + `/speckit.clarify` (TAN-144),
 diperintahkan lewat `/speckit.plan` (TAN-156); diperbarui lewat `/speckit.plan` lanjutan
-(TAN-212) untuk amandemen **clarify 4** (Admin = kelola penuh) — lihat §14.
+(TAN-212) untuk amandemen **clarify 4** (Admin = kelola penuh, §14), lalu **clarify 5–8**
+(§14.5–§14.9) dan **clarify 9 — aktivasi IDP & evaluasi** (§14.11), yang dikonfirmasi
+pemilik produk lewat `/speckit.plan` pada 2026-10-16; badan plan (§1–§13) diselaraskan
+dengan keputusan itu.
 
 **Repos**: `codex/backend/tania-backend` + `codex/frontend/tania-dashboard` — plan ini
 mencakup kedua repo (RBAC adalah perubahan lintas-repo yang kecil dan menyatu; pola
@@ -29,10 +34,14 @@ keputusan bentuk yang memandu plan ini:
 
 1. **Matriks = SoT**: keputusan akses hanya boleh merujuk matriks; modul/pembaruan baru
    wajib menambah baris matriks sebelum bisa diakses siapa pun (FR-03).
-2. **Penundaan ≠ penghapusan**: modul IDP & Evaluation **ditunda** — kode yang sudah
-   terimplementasi di backend **tidak dihapus**, cukup "ditutup pintunya" (deny semua
-   peran, termasuk Admin) dan menu/route-nya disembunyikan (selaras deny-by-default,
-   FR-03/FR-15). Template & periode evaluasi (baris bertanda *) ikut ditunda.
+2. **Penundaan ≠ penghapusan** (keputusan 2026-10-08; **modulnya diaktifkan 2026-10-16,
+   clarify 9 — §14.11**): modul IDP & Evaluation pernah ditunda dengan kode yang sudah
+   terimplementasi di backend **tidak dihapus** — cukup "ditutup pintunya" (deny semua
+   peran, termasuk Admin) dan menu/route-nya disembunyikan. ~~Selama ditunda, template &
+   periode evaluasi (baris bertanda \*) ikut ditutup.~~ **Sejak aktivasi 2026-10-16**
+   baris matriks (clarify 5–7) berlaku penuh dengan gate **per operasi**, entri menu
+   tampil untuk semua peran dengan akses berbeda, dan mekanisme `ErrModuleUnavailable`
+   dipertahankan **dorman** untuk penundaan berikutnya.
 3. **Reuse fondasi yang ada**: penegakan memakai primitif yang sudah ada — `RequireRole`,
    `ChapterScope`/`CanAccessEmployee`, audit sinkron in-transaction, rate limiter,
    revokasi sesi — delta-nya hanya penyelarasan baris matriks, bukan konvensi kedua.
@@ -46,8 +55,10 @@ keputusan bentuk yang memandu plan ini:
 - Menyelaraskan baca Assignment untuk Operation: Operation ✔ read-only "lihat semua"
   (sebelumnya ditolak di kode); mutasi tetap untuk peran berwenang (Chapter dalam
   cakupan, Admin).
-- Menutup modul IDP & Evaluation (query + mutation, semua peran) dengan pesan FORBIDDEN
-  yang jelas ("modul ditunda"), bukan menghapus kode.
+- ~~Menutup modul IDP & Evaluation (query + mutation, semua peran) dengan pesan FORBIDDEN
+  yang jelas ("modul ditunda"), bukan menghapus kode.~~ → **Aktivasi (clarify 9, §14.11)**:
+  IDP & Evaluation **dibuka sesuai matriks** lewat gate per operasi (bukan gerbang modul);
+  kode dan field SDL-nya tetap utuh (T040 dibatalkan).
 - Menegakkan **kebaruan data akun per request** (FR-17): perubahan peran/status berlaku
   untuk operasi berikutnya, bukan setelah refresh token (gap nyata — §3.1).
 - Menambah **perlindungan Admin terakhir** (US2): menonaktifkan / mengubah peran
@@ -102,8 +113,8 @@ Yang **sudah ada** dan di-reuse (semua terverifikasi di kode `master`):
 | --- | --- | --- | --- |
 | G1 | **Kebaruan per request belum ada**: identitas (peran) hanya dari klaim JWT — middleware tidak membaca ulang baris akun; perubahan peran/status baru berlaku setelah refresh (≤15 menit), akun nonaktif masih bisa beroperasi sampai access token kadaluarsa | `middleware.go:140-170` — hanya `verifier.Parse` + denylist | Middleware membaca ulang akun (status + peran) per request via sub (R1.3) |
 | G2 | **Gate Assignment belum sesuai matriks**: Operation ditolak padahal berhak "lihat semua" read-only; Admin belum diberi kelola penuh (clarify 4) | `internal/usecase/assignment.go` | Operation baca semua (read-only); Admin kelola penuh; mutasi Chapter dalam cakupan (R1.1/R6.2) |
-| G3 | **IDP & Evaluation masih bisa diakses** (Chapter/Talent/Admin sesuai peran lama) — matriks menunda modul: deny semua peran, termasuk template & periode (*) | `internal/usecase/idp.go`, `evaluation.go` | Gerbang modul: deny dengan FORBIDDEN + pesan "modul ditunda" (R1.2) |
-| G4 | **Widget dashboard IDP/eval** masih ada di `ChapterDashboard`/`TalentDashboard` | `graph/schema.graphqls:580-594` | Hapus field yang ditunda — dua fase, selaras FE (R2/R3) |
+| G3 | **IDP & Evaluation belum sesuai matriks** — modul ditunda sehingga semua peran ditolak, padahal matriks (clarify 5–7) sudah memetakan aksesnya | `internal/usecase/idp.go`, `evaluation.go` | ~~Gerbang modul: deny semua peran (R1.2)~~ → **Aktivasi (klarifikasi 9, §14.11)**: `deferredModules` dikosongkan; gate **per operasi** mengikuti matriks (R1.2/R7.3) |
+| G4 | **Widget dashboard IDP/eval** masih ada di `ChapterDashboard`/`TalentDashboard` | `graph/schema.graphqls:580-594` | FE berhenti mem-query (T035, selesai); ~~hapus field SDL — dua fase (R3.1)~~ → **field dipertahankan** karena modulnya aktif (T040 dibatalkan, klarifikasi 9) |
 | G5 | **Admin terakhir belum dilindungi**: tidak ada guard "satu-satunya Admin aktif" pada SetStatus/UpdateRole | `internal/usecase/account.go` | Guard dalam transaksi yang sama (R1.4) |
 | G6 | Riwayat assignment pada detail karyawan untuk Admin | `AssignmentService.ForEmployee` dipakai FE detail karyawan | Admin boleh melihat (kelola penuh, clarify 4) — gate `ForEmployee` + Admin |
 | G7 | **Cakupan tidak terdefinisi belum punya pesan khusus**: `ChapterScope` menolak dengan `ErrForbidden` generik — FR-20/US4-5 menuntut "penjelasan bahwa cakupan tidak terdefinisi" (berbeda dari anti-enumerasi FR-16) | `internal/usecase/scope.go:15-31` | Sentinel `ErrScopeUndefined` → FORBIDDEN + pesan khusus + test US4-5 (R1.5) |
@@ -122,18 +133,24 @@ ke gate kelola modul-modul ini (§14).
   dikembalikan ke baseline desain, sehingga `nav.ts` dan `matrix.ts` bisa berbeda — R6
   menyelaraskannya. Target clarify 4: Admin tampil di semua menu aktif (termasuk Provisi
   Entra & CV); `assignments` = `["CHAPTER","OPERATION","TALENT","ADMIN"]`;
-  `employees`/`contracts` + Admin (kelola penuh); entri `idp` & `evaluations`
-  disembunyikan untuk semua peran selagi ditunda (keputusan 2026-10-15, §14.3);
-  `master-data` tampil untuk semua peran dengan permukaan kelola hanya Admin —
-  **O6 ditutup 2026-10-15** (§14.3), matriks memberi hak *lihat* ke semua peran.
+  `employees`/`contracts` + Admin (kelola penuh); ~~entri `idp` & `evaluations`
+  disembunyikan untuk semua peran selagi ditunda (keputusan 2026-10-15, §14.3)~~ →
+  **sejak aktivasi (klarifikasi 9, §14.11)** keduanya tampil untuk semua peran dengan
+  akses berbeda (IDP satu entri, konten per peran; grup Evaluations: Roster
+  Admin/Operation/Chapter, Periode & Template Admin, Evaluasi Saya Talent);
+  `master-data` tampil untuk Chapter/Operation/Admin dengan permukaan kelola hanya Admin —
+  **O6 ditutup 2026-10-15** (§14.3), dipersempit clarify 5/6 (§14.5–§14.6).
   Klaim "sudah sesuai" sebelumnya dicabut (N2).
 - `src/lib/auth/roles.ts` + `guard.tsx` — gating route memakai hierarki `atLeast()`
   (TALENT<CHAPTER<OPERATION<ADMIN) yang **menyimpang dari matriks** (menganggap Admin
-  dapat semuanya; nyatanya Admin kehilangan baca Assignment). Perlu set peran eksplisit
-  per modul (G5/R2.1).
-- Route `/idp`, `/evaluations/*` ada — dijaga nonaktif untuk semua peran (kode fitur
-  tetap, tidak dihapus — keputusan bentuk #2).
-- Query dashboard (`DashboardQuery`) masih meminta field IDP/eval — dipangkas.
+  dapat semuanya). Perlu set peran eksplisit per modul (G5/R2.1) — **selesai (R6.1)**:
+  semua gating modul memakai `src/lib/auth/matrix.ts`.
+- Route `/idp`, `/evaluations/*` ada — ~~dijaga nonaktif untuk semua peran (kode fitur
+  tetap, tidak dihapus — keputusan bentuk #2)~~ → **aktif sejak klarifikasi 9**: rute
+  dibuka, penjagaan per operasi mengikuti matriks (§14.11).
+- Query dashboard (`DashboardQuery`) ~~masih meminta field IDP/eval — dipangkas~~ →
+  **sudah dipangkas (T035)**: FE berhenti mem-query field IDP/eval, dan field SDL-nya
+  tetap karena modul aktif (T040 dibatalkan, klarifikasi 9).
 - Halaman Assignment memakai query baca yang sama untuk semua peran — Operation butuh
   tampilan read-only (aksi disembunyikan).
 - `token-store.ts` cookie-backed sinkron + `refresh.ts` rotasi — **tidak diubah**.
@@ -163,7 +180,8 @@ flowchart TD
     D --> E["Identity = peran TERKINI<br/>(bukan klaim JWT)"]
     E --> F{Gate usecase}
     F -->|"RequireRole: modul tidak diberikan<br/>(mis. Operation mengelola akun)"| X2[403 FORBIDDEN + pesan jelas]
-    F -->|"Gerbang modul ditunda<br/>(IDP/Evaluation, semua peran)"| X2
+    F -->|"Gerbang modul: penundaan (dorman;<br/>sejak 2026-10-16 modul aktif)"| X2
+    F -->|"Gate per operasi modul IDP/Evaluasi<br/>(klarifikasi 5–7, §14.11)"| X2
     F -->|"ChapterScope: data di luar cakupan"| X3[404 NOT_FOUND anti-enumerasi]
     F -->|OK| G[Resolver → Repository]
     G --> H["Audit sinkron in-transaction<br/>(mutasi akun & perubahan data)"]
@@ -192,16 +210,20 @@ sequenceDiagram
     Note over API: Admin: SetStatus nonaktif / RevokeSessions →<br/>refresh ditolak; access mati di operasi berikutnya
 ```
 
-### 4.3 Gerbang modul ditunda & jalur reaktivasi
+### 4.3 Aktivasi modul & jalur penundaan kembali
 
 ```mermaid
 flowchart LR
-    title="Defer = gerbang, bukan penghapusan"
-    M["Matriks (SoT)<br/>baris IDP/Evaluation = ✘ semua peran (*)"] --> G["Gerbang modul<br/>usecase: ErrModuleUnavailable → FORBIDDEN"]
+    title="Defer = gerbang, bukan penghapusan; aktivasi = gate per operasi"
+    M["Matriks (SoT)<br/>baris IDP/Evaluation (clarify 5–7)"] --> G["Gate per operasi<br/>RequireRole + ChapterScope (usecase)"]
+    M -.penundaan baru.-> D["Isi deferredModules<br/>ErrModuleUnavailable → FORBIDDEN"]
     G --> B["Backend: kode & SDL modul tetap"]
-    G --> F["FE: nav/route dijaga (baseline desain TAN-178 — as is)"]
-    M -.reaktivasi.-> R["Ubah baris matriks (amandemen spec)<br/>→ buka gerbang + kembalikan nav"]
+    G --> F["FE: entri nav tampil untuk semua peran,<br/>permukaan kelola per peran"]
+    D -.reaktivasi.-> R["Kosongkan deferredModules<br/>(§14.11, 2026-10-16)"]
 ```
+
+Status 2026-10-16: **modul aktif** — `deferredModules` kosong, gerbang penundaan dorman,
+dan akses ditentukan matriks per operasi (§14.11).
 
 ## 5. Module Breakdown
 
@@ -217,9 +239,9 @@ flowchart LR
 | Provisi Entra | ⚠ Admin belum | **R6.2** tambah Admin ke `entra.go` (Operation-only saat ini) |
 | Master data | ✔ selaras | Tanpa perubahan (baca semua peran, kelola Admin) |
 | CV | ⚠ Admin belum | **R6.3** tambah Admin ke gate CV (lewat `ProfileFor`/daftar talent) |
-| IDP | ✘ ditunda | **R1.2** gerbang deny semua peran (G3); kode tetap |
-| Evaluation (+template/periode*) | ✘ ditunda | **R1.2** idem |
-| Dashboard | ⚠ widget IDP/eval | **R3.1** hapus field ditunda dari union (dua fase) |
+| IDP | ✔ aktif (klarifikasi 9) | **R7.3** gate per operasi: baca Admin/Operation/Chapter(cakupan)/Talent(miliknya), kelola Chapter(cakupan)/Admin; kode & SDL tetap |
+| Evaluation (+template/periode) | ✔ aktif (klarifikasi 9) | **R7.3** gate per operasi: `ListEvaluations`/`Roster` Admin/Operation/Chapter, `Upsert`/`Submit` Chapter(cakupan)/Admin; **periode & template — baca** Admin/Operation/Chapter (+Talent pada `CurrentPeriod`), **tulis tetap Admin** (konfigurasi global tanpa dimensi chapter — §14.11) |
+| Dashboard | ✔ | **R2.5/T035** FE berhenti mem-query field IDP/eval; field SDL **tetap** (T040 dibatalkan, klarifikasi 9) |
 | Audit | ✔ Admin-only | Perluas test cakupan; permukaan tetap Admin-only (pin konstitusi v1.2.0) |
 
 ### 5.2 Frontend — delta per modul
@@ -227,8 +249,8 @@ flowchart LR
 | Modul | Delta |
 | --- | --- |
 | Sumber gating | **R2.1** `src/lib/auth/matrix.ts` — set peran eksplisit per modul (cermin matriks); `nav.ts` & `guard.tsx` memakainya; hierarki `atLeast()` dipensiunkan dari gating modul |
-| Sidebar/nav | **R2.2** `assignments → ["CHAPTER","OPERATION","TALENT"]` **+ Admin**; `entra` + Admin, `cv` + Admin (clarify 4); entri `idp`/`evaluations` **as is** (baseline desain TAN-178) |
-| Route terjaga | **R2.3** `/idp`, `/evaluations/*` — status **as is** (baseline desain TAN-178 membukanya di FE; backend tetap menolak — §14) |
+| Sidebar/nav | **R2.2** `assignments → ["CHAPTER","OPERATION","TALENT"]` **+ Admin**; `entra` + Admin, `cv` + Admin (clarify 4); ~~entri `idp`/`evaluations` **as is**~~ → **R7.4 (klarifikasi 9)**: IDP & grup Evaluations `ALL`, dengan anak grup mengikuti akses |
+| Route terjaga | **R2.3** `/idp`, `/evaluations/*` — ~~dijaga nonaktif (baseline TAN-178)~~ → **aktif sejak klarifikasi 9**: rute dibuka, penjagaan per operasi di halaman (§14.11) |
 | Assignment | **R2.4** halaman baca: Operation read-only & Talent lihat miliknya (keputusan F3 plan 001, 2026-10-12); aksi kelola Chapter dan **Admin** (clarify 4) |
 | Employees | Tampil untuk Operation + Admin + Chapter + Talent (keputusan F2 plan 001, 2026-10-12): **Admin kelola penuh** (clarify 4 — menggantikan read-only administratif), Chapter lihat cakupan (per talent), Talent lihat data diri; Operation kelola |
 | Dashboard | **R2.5** pangkas query & widget IDP/eval per peran; ringkasan per peran sesuai matriks |
@@ -244,18 +266,18 @@ tania-backend/
 ├─ internal/usecase/assignment.go             # R1.1/R6.2: peran baca + Admin kelola penuh
 ├─ internal/usecase/contract.go, entra.go     # R6.2: +Admin (baca & mutasi)
 ├─ internal/usecase/cv.go, employee.go        # R6.3: +Admin (kelola)
-├─ internal/usecase/idp.go, evaluation.go     # R1.2: gerbang modul ditunda
-├─ internal/usecase/rbac.go                   # BARU (satu file): gate modul + helper matriks
-├─ internal/domain/errors.go                  # sentinel ErrModuleUnavailable (+ pemetaan FORBIDDEN di resolver)
+├─ internal/usecase/idp.go, evaluation.go     # R1.2/R7.3: gate per operasi (modul aktif)
+├─ internal/usecase/rbac.go                   # BARU: matriks peran + gate modul (dorman)
+├─ internal/domain/errors.go                  # sentinel ErrModuleUnavailable (dorman; FORBIDDEN)
 ├─ internal/usecase/account.go                # R1.4: guard Admin-terakhir
 ├─ internal/usecase/*_test.go                 # test matriks per sel (§10)
-└─ graph/schema.graphqls                      # R3.1: hapus field dashboard yang ditunda
+└─ graph/schema.graphqls                      # R6: komentar peran; field dashboard TETAP (T040 batal)
 
 tania-dashboard/
 ├─ src/lib/auth/matrix.ts                     # BARU: set peran per modul (cermin matriks)
 ├─ src/components/Sidebar/nav.ts              # R2.2/R6.4
 ├─ src/lib/auth/guard.tsx (atau setara)       # R2.1: pakai matrix.ts
-├─ src/app/(protected)/idp/**, evaluations/** # R2.3: dijaga nonaktif (kode tetap)
+├─ src/app/(app)/idp/**, evaluations/**        # R2.3/R7.4: rute aktif, konten per peran
 ├─ src/features/assignments/**                # R2.4
 └─ src/features/dashboard/**                  # R2.5 (+ codegen Apollo)
 ```
@@ -266,6 +288,13 @@ tania-dashboard/
 Semua keputusan akses merujuk matriks di `spec.md`. Penegakan di **server** (usecase
 layer), UI hanya lapisan kenyamanan. Penolakan akses modul → FORBIDDEN dengan pesan
 jelas; tidak ada jalur default-izinkan.
+
+### 7.1a Gate operasi vs gate modul (status 2026-10-16)
+Setelah aktivasi klarifikasi 9 (§14.11), seluruh modul yang punya baris matriks **aktif**,
+jadi penolakan memakai **gate per operasi** (`RequireRole` + `ChapterScope`). Gate modul
+(`deferredModules` → `ErrModuleUnavailable`) **tidak lagi menolak apa pun** dan disimpan
+dorman sebagai satu titik penundaan bila modul perlu ditutup lagi; itu sebabnya
+`ErrModuleUnavailable` tetap ada di `internal/domain/errors.go`.
 
 ### 7.2 Anti-enumerasi (FR-16)
 Baca data di luar cakupan → `ErrNotFound` (NOT_FOUND identik dengan data tak ada) —
@@ -334,10 +363,11 @@ lewat `ProfileFor`/daftar talent, bukan “profil sendiri”.
 | **R0 — Sinkronisasi** | Merge branch spec `agent/cobra/9e2ad56b14ef` (002 + amandemen 001) ke `master` kedua repo; plan.md ikut ter-merge | — |
 | **R1 — Backend enforcement** | R1.1 baca Assignment Operation "lihat semua" read-only (G2/G6) · R1.2 gerbang modul IDP/Evaluation (G3) · R1.3 kebaruan per request (G1) · R1.4 guard Admin-terakhir (G5) · R1.5 pesan khusus cakupan tidak terdefinisi (G7, `ErrScopeUndefined`) · pemetaan error FORBIDDEN/NOT_FOUND · test matriks per sel | R0 |
 | **R2 — Frontend** | R2.1 `matrix.ts` + nav/guard (G5) · R2.2 nav (assignments +Operation/+Talent, employees +Chapter/+Talent — §3.2) · R2.3 route terjaga · R2.4 Assignment baca Operation/Talent · R2.5 pangkas dashboard | R0 |
-| **R3 — Kontrak & integrasi** | R3.1 hapus field dashboard ditunda — **dua fase**: FE berhenti mem-query dulu, lalu hapus field SDL + contract test · `make generate` / `npm run generate` idempoten | R1, R2 |
+| **R3 — Kontrak & integrasi** | ~~R3.1 hapus field dashboard ditunda~~ → **FE berhenti mem-query** (T035, selesai); **field SDL dipertahankan** karena modulnya aktif (T040 dibatalkan, klarifikasi 9) · `make generate` / `npm run generate` idempoten | R1, R2 |
 | **R4 — UAT & regresi** | Skrip UAT per peran (matriks 12×4; termasuk pengukuran SC-003 buat akun < 2 menit) · regresi lintas-modul §11.3 · gerbang CI penuh | R3 |
-| **R5 — Penutupan** | Runbook reaktivasi modul (ubah matriks → buka gerbang → kembalikan nav) + retro | R4 |
+| **R5 — Penutupan** | ~~Runbook reaktivasi modul (ubah matriks → buka gerbang → kembalikan nav)~~ — **dijalankan 2026-10-16** (T060/§14.11): matriks diamandemenkan (clarify 5–9), gerbang dikosongkan, nav dikembalikan; retrospektif tetap bagian penutupan | R4 |
 | **R6 — Admin kelola penuh** (clarify 4, 2026-10-15) | R6.1 `matrix.ts` +Admin (`assignments`/`entra`/`cv` + `MANAGE_ROLES`) · R6.2 backend +Admin di gate Assignment, Kontrak, Entra · R6.3 backend +Admin di gate CV (baca; tulis tetap Talent) & kelola Data karyawan · R6.4 nav: Provisi Entra & CV untuk Admin · R6.5 test matriks per sel + RTL nav + e2e 4 peran · **R6.6 visibilitas menu per peran**: Master Data hanya-baca semua peran (O6) + IDP/Evaluasi disembunyikan (§14.3) | R1, R2 |
+| **R7 — clarify 5–9** (2026-10-16) | R7.1 Kontrak Chapter baca cakupan · R7.2 CV Operation baca + Master Data Chapter cakupan (T086, O7) · **R7.3 aktivasi IDP & evaluasi** — `deferredModules` dikosongkan, gate per operasi (T084) · **R7.4 nav**: IDP & Evaluations tampil semua peran, permukaan per peran · R7.5 docs/e2e diselaraskan | R6 |
 
 Pemetaan user story 002 → gelombang: US1 (R1, R3) · US2 (R1.4, test akun existing) ·
 US3 (R1.1/R1.2, R3) · US4 (scope existing, R3 e2e) · US5 (R1.3) · US6 (audit existing,
@@ -359,8 +389,9 @@ per record utk Operation) tetap di workstream itu.
   NOT_FOUND) di lapisan usecase (fake) — satu tabel eksplisit mencerminkan 12×4.
   Termasuk: baca Assignment (Operation ✔ semua / Chapter cakupan / Talent miliknya /
   **Admin ✔**), mutasi Assignment (Chapter & **Admin** ✔, lainnya ✘), Kontrak/Entra/CV/
-  Data karyawan **Admin ✔ kelola penuh** (R6), modul ditunda (semua peran ✘, termasuk
-  Admin), akun & audit (Admin-only), master data (baca semua, kelola Admin).
+  Data karyawan **Admin ✔ kelola penuh** (R6), **IDP & evaluasi gate per operasi**
+  (klarifikasi 5–7, aktif sejak klarifikasi 9 — §14.11), akun & audit (Admin-only),
+  master data (baca Chapter/Operation/Admin dengan cakupan chapter & role, kelola Admin).
 - **Backend — khusus**: kebaruan per request (ubah peran/status → operasi berikutnya
   memakai nilai baru; akun nonaktif tertolak); guard Admin-terakhir (SetStatus dan
   UpdateRole; kasus multi-Admin); deteksi reuse refresh (existing, dipertahankan);
@@ -368,9 +399,9 @@ per record utk Operation) tetap di workstream itu.
   audit; kaskade deaktivasi; reaktivasi tidak otomatis.
 - **Backend — kontrak & integrasi**: contract test SDL (termasuk penghapusan field
   dashboard), suite integrasi Postgres/Redis yang ada.
-- **Frontend — RTL**: render nav per peran (tanpa IDP/Evaluations; Assignment utk
-  Operation+Chapter), guard route per matriks, halaman Assignment read-only,
-  dashboard tanpa widget IDP/eval.
+- **Frontend — RTL**: render nav per peran (IDP & Evaluations tampil untuk semua peran
+  sejak klarifikasi 9; Assignment utk Operation+Chapter), guard route per matriks,
+  halaman Assignment/idp/evaluasi read-only sesuai peran, dashboard tanpa widget IDP/eval.
 - **Frontend — e2e (Playwright)**: login 4 peran; visibilitas menu & akses route;
   operasi yang ditolak tampil sebagai error jelas (bukan crash).
 - **CI & gerbang**: `make lint vet test` (backend), `npm run lint typecheck test`
@@ -404,12 +435,13 @@ Setiap PR: smoke + test matriks; sebelum rilis: suite penuh + regresi lintas-mod
 | R1 | Baris matriks "Data karyawan & kontrak — Admin: lihat semua" vs clarify 12(c) "Admin hanya RBAC & Master Data" | Sudah tidak ambigu | **Diperbarui 2026-10-15 (clarify 4)**: Admin = **kelola penuh** — menggantikan keputusan "administratif read-only" 2026-10-12; catatan matriks + revisi spec disesuaikan |
 | R2 | Modul WAD (`/activities`, `/workload`) belum ada di matriks — FR-03 mewajibkan baris matriks sebelum akses | Kepatuhan matriks | **Open item O5** (plan 001, 2026-10-12): usulan baris "Aktivitas & workload — semua peran: lihat"; diputuskan bersama project Tania WAD Integration (TAN-96+); tidak memblokir plan ini |
 | R3 | Branch spec `agent/cobra/9e2ad56b14ef` belum ter-merge | Folder spec terbelah | R0 mewajibkan merge lebih dulu |
-| R4 | Penghapusan field dashboard = perubahan kontrak destruktif | Contract test | Dua fase (§9 R3.1): FE berhenti query → hapus field + test |
+| R4 | ~~Penghapusan field dashboard = perubahan kontrak destruktif~~ | Contract test | ~~Dua fase (§9 R3.1): FE berhenti query → hapus field + test~~ → **batal (klarifikasi 9)**: modul IDP/evaluasi aktif sehingga field SDL tetap dipakai; tidak ada perubahan destruktif (T040 dibatalkan) |
 | R5 | Interplay pengelolaan-talent (kontrak aktif sebagai sumber cakupan; FR-09 Entra) | Perubahan antarmuka | Antarmuka `ChapterScope` tidak berubah; **gerbang penerimaan**: US4-4 (kontrak aktif berpindah) dieksekusi setelah workstream ter-merge — iterasi ini FR-18 diterima sampai antarmuka helper + isolasi data (US4-1/2/3/5); catatan status ditambahkan ke FR-18 spec (amandemen 2026-10-12) |
 | R6 | Hierarki `atLeast()` FE menyimpang dari matriks; `nav.ts` tak lagi memakai `MODULE_ROLES` (TAN-178) | Gating UI tak konsisten dgn `matrix.ts`/server | R2.1 set peran eksplisit per modul + **R6.1/R6.4** sinkronkan `nav.ts` dengan matriks Admin-kelola-penuh |
 | R7 | Talent "lihat miliknya" (Assignment) — permukaan UI | Ekspektasi fitur | **Selesai 2026-10-12** (pemetaan submenu TAN-144 + keputusan F3 plan 001): Talent membaca miliknya di halaman Assignment (server `ForEmployee` sudah mendukung); nav Admin dihapus sesuai matriks |
 | R8 | Angka rate limit | Ambang kepatuhan | **Terkunci** (klarifikasi TAN-144): 10 kegagalan / 15 menit / sumber — `LOGIN_RATE_MAX=10`, `LOGIN_RATE_WINDOW=15m` (default existing, env-tunable) |
-| R9 | Clarify 4 (Admin kelola penuh) membalik clarify 1 & keputusan 2026-10-12; modul IDP/Evaluation tetap ditunda **as is** | Perubahan otorisasi permanen; menu IDP/Evaluation masih tampil di FE padahal server menolak | Diputuskan pemilik produk (2026-10-15, TAN-212); spec + plan diamandemen; sel FE/BE diselaraskan via **R6**; gap IDP/Evaluation dicatat sebagai utang yang disengaja (§14) |
+| R9 | Clarify 4 (Admin kelola penuh) membalik clarify 1 & keputusan 2026-10-12; ~~modul IDP/Evaluation tetap ditunda **as is**~~ | Perubahan otorisasi permanen; ~~menu IDP/Evaluation masih tampil di FE padahal server menolak~~ | Diputuskan pemilik produk (2026-10-15, TAN-212); spec + plan diamandemen; sel FE/BE diselaraskan via **R6**; **ditutup clarify 9 (§14.11)**: modul IDP/Evaluation aktif dengan gate per operasi, menu tampil semua peran, dan tafsiran periode/template (baca vs tulis) dikonfirmasi pemilik produk |
+| R10 | Aktivasi IDP & evaluasi (clarify 9) mengubah tiga hal sekaligus: gerbang modul dibuka, field SDL IDP dipertahankan (T040 batal), menu tampil semua peran | Modul yang sebelumnya ditolak kini melayani permintaan per peran; permukaan UI berbeda per peran pada satu entri menu | Diputuskan & **dikonfirmasi pemilik produk** (2026-10-16, `/speckit.plan`); badan plan §1–§13 diselaraskan (as-built §14.11); `ErrModuleUnavailable` dipertahankan dorman sebagai jalur penundaan berikutnya; uji per operasi menegakkan matriks (SC-001) |
 
 ### Constitution Check
 
@@ -422,7 +454,7 @@ mengikat. Pemeriksaan:
 | II. Data minimization & klasifikasi | Tidak ada field baru; snapshot audit tanpa rahasia; tanpa PII di URL/log | **Lulus** |
 | III. Security by design | RBAC ditegakkan server (usecase layer); matriks SoT; audit Admin-only dengan riwayat per record utk Operation tetap diizinkan pin v1.2.0 | **Lulus** |
 | IV. Data subject rights & retention | Tidak berubah oleh plan ini (retensi diatur workstream pengelolaan-talent) | **Lulus** |
-| V. Smallest change | Defer = gerbang (kode tetap); tanpa dependensi baru; tanpa cache spekulatif; delta hanya penegakan | **Lulus** |
+| V. Smallest change | ~~Defer = gerbang (kode tetap)~~ → defer = gerbang **dorman**, aktivasi = gate per operasi; kode & SDL dipertahankan (T040 dibatalkan); tanpa dependensi baru; tanpa cache spekulatif; delta hanya penegakan | **Lulus** |
 | VI. Quality by machines | Gerbang CI tak berubah: `make lint vet test` / `npm run lint typecheck test`; generate idempoten | **Lulus** |
 | VII. Testing non-negotiable | Test matriks per sel + kebaruan + Admin-terakhir + kontrak + RTL + e2e (§10) | **Lulus** |
 | VIII. Boundaries & dependency hygiene | Layering transport → usecase → domain ← repository dipertahankan; gate di usecase, bukan resolver | **Lulus** |
@@ -436,10 +468,12 @@ mengikat. Pemeriksaan:
 
 - `specs/002-tania-rbac/plan.md` — di-mirror byte-identik ke kedua repo (pola TAN-141);
   **revisi 2026-10-15** menambahkan gelombang **R6 — Admin kelola penuh** (clarify 4,
-  TAN-212).
+  TAN-212); **revisi 2026-10-16** menambahkan **R7 + §14.5–§14.11** (clarify 5–8, cakupan
+  Master Data, dan **aktivasi IDP & evaluasi** — klarifikasi 9).
 - Berikutnya: `/speckit.tasks` (project **Tania RBAC**) — urutan task mengikuti §9,
   task UI tetap tercatat di `tasks.md` backend (keputusan "opsi C" plan Foundation).
-- Runbook reaktivasi modul ditunda (R5) — bagian dari penutupan.
+- ~~Runbook reaktivasi modul ditunda (R5)~~ → **dijalankan 2026-10-16** (§14.11); runbooknya
+  tetap berlaku untuk penundaan berikutnya karena `ErrModuleUnavailable` dipertahankan dorman.
 
 ---
 
@@ -778,6 +812,10 @@ sehingga T032 digantikan dan T084 ditutup.**
 
 ### 14.11 Aktivasi IDP & evaluasi (as-built, 2026-10-16, TAN-212) — T084
 
+**Dikonfirmasi pemilik produk lewat `/speckit.plan` (2026-10-16)**: keputusan aktivasi ini —
+beserta tafsiran periode/template di bawah — berlaku sebagai keputusan, dan badan plan
+(§1–§13) diselaraskan mengikutinya.
+
 Pemilik produk mengaktifkan kedua modul dan memutuskan tiga hal sekaligus: (1) modul IDP &
 evaluasi **aktif** — bukan lagi "rekam akses, aktifkan nanti" (klarifikasi 6d); (2) **field IDP
 pada SDL tidak dihapus** — permintaan tegas, sehingga rencana penghapusan field (T040) batal;
@@ -801,14 +839,16 @@ mengisi satu baris, bukan membangun ulang gerbangnya.
 | Periode & Template — **baca** (`ListPeriods`, `CurrentPeriod`, `ListTemplates`) | Admin, Operation, Chapter | izin | izin |
 | Periode & Template — **tulis** (`Create`/`Update`/`SetActive`) | Admin | izin | izin (tetap Admin) |
 
-**Tafsiran yang perlu ditegaskan (periode & template).** Baris matriks menyebut Chapter
-`kelola cakupan` untuk periode/template, padahal **periode & template evaluasi adalah konfigurasi
-global tanpa dimensi chapter** — tidak ada yang bisa "dicakup". Karena itu hak Chapter di sini
-dibaca sebagai **baca**, bukan tulis: `ListPeriods`/`ListTemplates`/`CurrentPeriod` dibuka
-untuk Admin/Operation/Chapter (Talent ikut pada `CurrentPeriod`), sedangkan
-`Create`/`Update`/`SetActive` tetap `RequireRole(Admin)` (FR-25/FR-31). Ini keputusan tafsiran
-TAN-212 yang **flag**; bila pemilik produk bermaksud Chapter boleh mengubah konfigurasi global,
-perubahan cukup satu baris per operasi tulis.
+**Tafsiran periode & template — DIKONFIRMASI pemilik produk** (`/speckit.plan`, 2026-10-16).
+Baris matriks menyebut Chapter `kelola cakupan` untuk periode/template, padahal **periode &
+template evaluasi adalah konfigurasi global tanpa dimensi chapter** — tidak ada yang bisa
+"dicakup". Karena itu hak Chapter di sini dibaca sebagai **baca**, bukan tulis:
+`ListPeriods`/`ListTemplates`/`CurrentPeriod` dibuka untuk Admin/Operation/Chapter (Talent
+ikut pada `CurrentPeriod`), sedangkan `Create`/`Update`/`SetActive` tetap `RequireRole(Admin)`
+(FR-25/FR-31). Pemilik produk mengonfirmasi tafsiran ini pada 2026-10-16 bersama konfirmasi
+plan (klarifikasi 9), jadi bukan lagi tafsiran yang menggantung — berlaku sebagai keputusan.
+Bila kelak Chapter perlu mengubah konfigurasi global, perubahan cukup satu baris per operasi
+tulis.
 
 **Frontend: menu sama, tampilan berbeda.**
 
