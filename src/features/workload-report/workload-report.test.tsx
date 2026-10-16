@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 
 const h = vi.hoisted(() => ({
   params: new URLSearchParams(),
@@ -205,6 +205,88 @@ describe("ExecutiveReportView — period selector & state matrix (TAN-228/235)",
     render(<ExecutiveReportView />);
 
     expect(screen.getByText("Memuat data workload…")).toBeInTheDocument();
+  });
+});
+
+describe("AnalyticsTables — logged vs estimated & TTD compliance (TAN-232)", () => {
+  type AnalyticsRow = { statusLoad: string } & Record<string, number | null>;
+
+  /** Header label → field pada `LoggedVsEstimatedRow` / `TtdComplianceRow`. */
+  const HEADER_TO_KEY: Record<string, string> = {
+    Overload: "overload",
+    Stretch: "stretch",
+    Fit: "fit",
+    Underload: "underload",
+    "Undefined Time Spent": "undefinedTimespent",
+    "Undefined Activity": "undefinedActivity",
+    "Grand Total": "total",
+    Total: "total",
+    "Need Improvement": "notAchieved",
+    Fair: "lowAchieved",
+    Good: "achieved",
+    "Very Good": "highAchieved",
+  };
+
+  /** Setiap sel harus tampil persis seperti datanya — `null` tampil sebagai 0. */
+  function expectCellsFromData(table: HTMLElement, rows: readonly AnalyticsRow[]) {
+    const headers = within(table)
+      .getAllByRole("columnheader")
+      .map((th) => (th.textContent ?? "").trim());
+    const body = table.querySelector("tbody");
+    if (!body) throw new Error("analytics table has no tbody");
+    const bodyRows = within(body).getAllByRole("row");
+    expect(bodyRows).toHaveLength(rows.length);
+
+    rows.forEach((row, rowIndex) => {
+      const tr = bodyRows[rowIndex];
+      expect((within(tr).getByRole("rowheader").textContent ?? "").trim()).toBe(row.statusLoad);
+      const cells = within(tr).getAllByRole("cell");
+      expect(cells).toHaveLength(headers.length - 1);
+      headers.slice(1).forEach((header, columnIndex) => {
+        const key = HEADER_TO_KEY[header];
+        expect(key).toBeDefined();
+        expect(cells[columnIndex].textContent).toBe(String(row[key] ?? 0));
+      });
+    });
+  }
+
+  async function openAnalyticsTab() {
+    await renderExecutive();
+    fireEvent.click(screen.getByRole("tab", { name: "Analytics Insights" }));
+    await screen.findByText("Actual & Estimated Workload");
+  }
+
+  it("renders both tables with every status row and the Grand Total row", async () => {
+    await openAnalyticsTab();
+
+    expect(screen.getAllByText("Grand Total", { selector: "th[scope=row]" })).toHaveLength(2);
+
+    const tables = screen.getAllByRole("table");
+    expect(tables).toHaveLength(2);
+    const analytics = getExecutiveFixture("202609")!.analytics!;
+
+    expectCellsFromData(tables[0], analytics.loggedVsEstimated as unknown as AnalyticsRow[]);
+    expectCellsFromData(tables[1], analytics.ttdCompliance as unknown as AnalyticsRow[]);
+  });
+
+  it("renders rows without data as 0 and follows the period selector", async () => {
+    // Premis uji: pada 202608 tak ada talent Overload — barisnya harus tampil nol, bukan kosong.
+    const analytics = getExecutiveFixture("202608")!.analytics!;
+    expect(analytics.loggedVsEstimated.find((row) => row.statusLoad === "Overload")?.total).toBe(0);
+
+    h.params = new URLSearchParams("period=202608");
+    render(<ExecutiveReportView />);
+    fireEvent.click(await screen.findByRole("tab", { name: "Analytics Insights" }));
+    await screen.findByText("Actual & Estimated Workload");
+
+    const tables = screen.getAllByRole("table");
+    expect(tables).toHaveLength(2);
+    expectCellsFromData(tables[0], analytics.loggedVsEstimated as unknown as AnalyticsRow[]);
+    expectCellsFromData(tables[1], analytics.ttdCompliance as unknown as AnalyticsRow[]);
+
+    const overloadRow = within(tables[0]).getAllByText("Overload", { selector: "th[scope=row]" })[0];
+    const overloadCells = within(overloadRow.closest("tr")!).getAllByRole("cell");
+    expect(overloadCells.map((td) => td.textContent)).toEqual(["0", "0", "0", "0", "0", "0", "0"]);
   });
 });
 
