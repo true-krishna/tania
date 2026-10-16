@@ -979,3 +979,26 @@ tanpa `apk`). Jadi 8 skenario `e2e/rbac.spec.ts` berstatus *failed-to-launch*, b
 Karena matriks RBAC sudah diverifikasi end-to-end **tanpa browser** (suite Go, §14.12), sisa
 pekerjaan T041 benar-benar hanya lapisan DOM/nav. Alasan presisi ini dicatat di runbook
 `e2e/README.md` supaya tidak diulang dari nol.
+
+## 14.14 Integrasi `master` & MR (2026-10-16)
+
+Branch `agent/diggie/291774dc1b58` kini memuat penuh `origin/master`.
+
+- **Backend** — merge bersih (0 konflik). Selain itu cermin kontrak
+  `specs/001-.../contracts/schema.graphql` disalin ulang dari SDL yang dilayani: komentar
+  per-peran (klarifikasi 8) membuatnya tertinggal, dan guard `scripts/check-schema-drift.sh`
+  (TAN-213) menandainya `DRIFT`. Setelah salin ulang, ketiga cermin identik byte-for-byte
+  (selisih sebelumnya hanya komentar — 0 baris struktural).
+- **Frontend** — 6 konflik diselesaikan dengan **mengadopsi pemusatan rute master**
+  (`lib/constants/routes`) **tanpa melepas matriks peran branch ini**: `nav.ts`
+  (konstanta rute + array peran), `idp/page.tsx`, `contracts/page.tsx`,
+  `contracts/[id]/page.tsx`, `evaluations/page.tsx`, `EvaluationsShell.tsx` — tombol aksi
+  tetap kondisional per peran (`managing`/`manage`). `nav.test.ts` diperluas:
+  `/workload/executive` dan `/workload/talent` (TAN-227) dipetakan ke modul `workload`,
+  sehingga invarian "tidak ada tautan mati + setiap peran yang boleh membuka modul melihat
+  minimal satu entri" tetap berlaku pada struktur nav master yang baru.
+- **Gate setelah merge**: FE `typecheck` 0 · `lint` 0 · `test` **596/596** (50 berkas);
+  BE `gofmt` bersih · `go vet` 0 · `go test ./... -count=1 -p 1` dengan Postgres + Redis nyata
+  → semua paket ok; `scripts/check-constitution.sh` hijau.
+- **MR**: frontend `!96`, backend `!44` — `agent/diggie/291774dc1b58` → `master`,
+  `has_conflicts=false`. T001–T004 (R0) tertutup oleh review + merge MR ini.
