@@ -77,10 +77,12 @@ memori ≥4 GiB; harness + runbook di atas adalah kontrak eksekusinya.
 
 ## Skenario RBAC (T041)
 
-Spec kedua: `e2e/rbac.spec.ts` — nav per peran sesuai matriks, entri IDP/Evaluasi
-hilang, route `/idp` & `/evaluations/*` balas 404 untuk semua peran, dan
-penolakan server tampil sebagai pesan jelas (bukan crash). Stack-nya sama dengan
-di atas, kecuali fixture laporan talent tidak diperlukan:
+Spec kedua: `e2e/rbac.spec.ts` — nav per peran sesuai matriks (IDP & grup Evaluations
+**tampil untuk semua peran** sejak aktivasi 2026-10-16; yang berbeda adalah daun di dalamnya:
+Roster Chapter/Operation/Admin, Periode & Template Admin, Evaluasi Saya Talent), route
+`/idp` & `/evaluations/*` balas **200 untuk semua peran** (sebelumnya 404 — lihat
+`specs/002-tania-rbac/plan.md` §14.11), dan penolakan server tampil sebagai pesan jelas
+(bukan crash). Stack-nya sama dengan di atas, kecuali fixture laporan talent tidak diperlukan:
 
 ```sh
 docker compose -f ../tania-backend/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --build
@@ -94,3 +96,16 @@ Suite E2E/UAT yang butuh lebih banyak login (mis. matriks 12×4) harus menaikkan
 `LOGIN_RATE_MAX` pada proses API (suite integrasi backend memakai 50) atau
 menggunakan ulang `storageState` per peran; kalau tidak, suite akan berhenti
 dengan `RATE_LIMITED`.
+
+## Catatan eksekusi: matriks RBAC sudah diverifikasi tanpa browser (2026-10-16)
+
+Lingkungan agent kini memadai untuk menjalankan backend sungguhan (postgres +
+redis via `docker compose`), sehingga **seluruh suite backend dijalankan dengan
+driver nyata** — `TEST_DATABASE_URL=… TEST_REDIS_ADDR=… go test ./... -count=1
+-race -p 1` → 10 paket ok, termasuk `TestGraphQLEndToEnd` yang menguji matriks
+RBAC per operasi di atas HTTP/GraphQL (penolakan lintas-peran, permukaan Talent,
+cakupan Chapter). Temuan dan perbaikannya dicatat di `plan.md` §14.12
+(`tasks.md` T089/T090). Yang masih tertunda hanyalah lapisan browser (T041/T078)
+yang memerlukan bring-up dua stack di atas plus pemasangan browser Playwright;
+catatan "1 GiB / 1 CPU tidak memadai" di atas berlaku untuk sandbox lama, bukan
+untuk lingkungan ini.

@@ -895,3 +895,59 @@ aktivasi ini: rute kembali terbuka dan penjagaannya mengikuti matriks per operas
 
 Verifikasi: FE `pnpm test` 539/539 hijau, `pnpm typecheck` 0, `pnpm lint` 0; BE `go vet ./...` 0,
 `go test ./...` 10 paket ok. e2e (T078) tetap hanya bisa dijalankan di pipeline.
+
+### 14.12 Eksekusi suite end-to-end & temuan (as-built, 2026-10-16, TAN-212) — T089/T090
+
+Percobaan pertama menjalankan suite yang selama ini "hanya pipeline": lingkungan agent ternyata
+memadai (postgres + redis via `docker compose`), sehingga **seluruh suite backend dijalankan
+dengan driver nyata**:
+
+```sh
+TEST_DATABASE_URL=postgres://tania:tania@localhost:5432/tania?sslmode=disable \
+TEST_REDIS_ADDR=localhost:6379 go test ./... -count=1 -race -p 1
+```
+
+Hasil: **10 paket ok**, termasuk `internal/transport/httpapi` (`TestGraphQLEndToEnd`, suite
+matriks end-to-end di atas HTTP/GraphQL) dan `internal/repository/postgres`. Untuk itu tiga hal
+harus dibereskan lebih dulu.
+
+**1. Bug produk: `myIdp` gagal dengan `internal error` untuk Talent tanpa IDP (T089).**
+`internal/repository/postgres/idp.go` — `idpScan` mengembalikan error driver mentah, sehingga
+`FindByID`/`FindActiveByEmployee` melepas `pgx.ErrNoRows` alih-alih `domain.ErrNotFound`;
+`IdpService.MyIdp` yang memeriksa `errors.Is(err, domain.ErrNotFound)` lalu meneruskan error mentah
+ke GraphQL. Sebelum aktivasi jalur ini tidak pernah tersentuh (modul tertutup), jadi aktivasi
+(§14.11) **membuka** keadaan kosong yang tidak pernah diuji. Perbaikan: `idpScan` memetakan error
+lewat `mapError` (pola repo yang sama dengan `assignmentrow.go`/`contract.go`), sehingga Talent
+tanpa IDP mendapat keadaan kosong yang benar. Uji yang mengunci: blok aktivasi di
+`internal/transport/httpapi/e2e_test.go` (`Talent query { myIdp { id } }` → `null`).
+
+**2. Harapan uji e2e yang sudah usang karena amandemen 002 (T090).** Tiga blok di
+`e2e_test.go` masih menggambarkan matriks sebelum klarifikasi 6–9: (a) Assignment — Admin sekarang
+**boleh membaca** semua assignment (§R6), Operation **ditolak** saat menulis, Talent hanya melihat
+miliknya; (b) modul IDP/evaluasi — blok `MODULE_UNAVAILABLE` diganti blok aktivasi (baca
+Admin/Operation/Chapter, permukaan Talent `myIdp`/`currentEvaluationPeriod`/
+`myPerformanceEvaluations`, tulis template tetap Admin, `createIdp` Chapter untuk karyawan
+*cakupannya*); (c) CV — Operation sekarang **boleh membaca** (klarifikasi 6). Ditambahkan pula blok
+T081/T086: Kontrak oleh Chapter (bercakupan), Talent ditolak, `chapters`/`jobRoles` bercakupan,
+`units`/`projects` terbaca semua peran.
+
+**3. Tabrakan data uji yang sudah ada sebelumnya (T090).** `TestGraphQLEndToEnd` memakai NIK
+`3273010101930005` **dua kali** (Rina Kartika dan Eko Prasetyo), dan email `rina@tania.test` dua
+kali (Rina Kartika dan Rina Kusuma — karyawan pensiun). Keduanya unik di DB, jadi suite berhenti
+dengan `CONFLICT` jauh sebelum blok RBAC. NIK karyawan pensiun digeser (`…930006`), kontrak Eko
+diberi nomor induk sendiri (`TAN-0010`/`TAN-C-0010`, pembaruan `TAN-C-0011`), dan email kedua
+menjadi `rina.kusuma@tania.test`.
+
+**Gerbang rilis (§12 T052) setelah eksekusi.** `gofmt -l` bersih, `go vet ./...` 0,
+`golangci-lint` (v2.14.0, dipasang lewat `go install`) **0 temuan pada kode milik RBAC** — sisa 21
+temuan semuanya **prawujud di modul lain** (`internal/usecase/chat.go`, `internal/platform/entra`,
+import unit/jobrole/contract, `security_test.go`, `middleware_test.go`, `assignment_test.go`,
+`fakes_chat_test.go`); satu temuan yang memang berasal dari kode gelombang ini (`allRoles` yatim di
+`rbac_test.go`) sudah dihapus. `go tool gqlgen generate` **idempoten** (tidak ada diff). FE:
+`pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` **539/539**. Mirrors SDL: `graph/schema.graphqls`
+disalin ulang dari backend (perbedaannya hanya komentar per-peran clarify 8; tipe hasil generate
+tidak berubah struktural, hanya doc-comment).
+
+**Masih terbuka**: 21 temuan lint prawujud di atas (di luar lingkup RBAC — usulan: task pembersihan
+terpisah), dan **e2e Playwright** (T041/T078) yang tetap butuh bring-up dua stack sesuai runbook
+`e2e/README.md`.
