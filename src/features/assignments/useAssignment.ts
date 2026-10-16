@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import {
   AssignmentsDocument,
+  UpdateAssignmentDocument,
   type AssignmentsQuery,
 } from "@/generated/graphql";
 import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
@@ -23,4 +24,20 @@ export function useAssignment(id: string): QueryState<AssignmentNode | undefined
   });
   const found = result.data?.assignments?.edges.find((edge) => edge.node.id === id)?.node;
   return toQueryState({ ...result, data: found });
+}
+
+/**
+ * Update hook (Chapter) — US2 / FR-05, gelombang K2 (T001).
+ *
+ * Backed by the served `updateAssignment(id, input)` mutation (SDL
+ * `UpdateAssignmentInput`: projectId/jobRoleId/periodStart/periodEnd, semua
+ * opsional — talent bukan bagian input sehingga tidak dapat diganti). Backend
+ * hanya menerima assignment berstatus ACTIVE (selain itu `PRECONDITION`).
+ *
+ * Hasil mutasi menuliskan entity `Assignment` terbaru ke cache ternormalisasi,
+ * jadi detail dan daftar yang ter-mount otomatis menampilkan versi terbaru
+ * tanpa refetch manual (pola yang sama dengan `endAssignment`).
+ */
+export function useUpdateAssignment() {
+  return useMutation(UpdateAssignmentDocument);
 }
