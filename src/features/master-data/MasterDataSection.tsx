@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import { IconSearch } from "@tabler/icons-react";
-import { BoardTable } from "@/components/BoardTable";
+import { Table, type TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 
@@ -151,6 +151,50 @@ export function MasterDataSection<T extends MasterDataItem>({
 
   const editing = creating || editingId !== null;
 
+  const columns: TableColumn<T>[] = [
+    {
+      key: "name",
+      title: nameLabel,
+      className: "text-zinc-900",
+      render: (_value, item) => item.name,
+    },
+    ...(extraColumn
+      ? [
+          {
+            key: "extra",
+            title: extraColumn.label,
+            className: "text-zinc-600",
+            render: (_value: unknown, item: T) => extraColumn.render(item),
+          } satisfies TableColumn<T>,
+        ]
+      : []),
+    {
+      key: "status",
+      title: "Status",
+      render: (_value, item) => <StatusBadge active={item.isActive} />,
+    },
+    {
+      key: "actions",
+      title: "Aksi",
+      className: "col-action",
+      render: (_value, item) =>
+        editingId === item.id ? (
+          <span className="text-xs text-zinc-400">Mengedit…</span>
+        ) : (
+          <RowActionsMenu
+            label={`Aksi ${item.name}`}
+            actions={[
+              { label: "Ubah", onSelect: () => startEdit(item) },
+              {
+                label: item.isActive ? "Nonaktifkan" : "Aktifkan",
+                onSelect: () => void onToggleActive(item.id, !item.isActive),
+              },
+            ]}
+          />
+        ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
@@ -236,42 +280,13 @@ export function MasterDataSection<T extends MasterDataItem>({
         // empty state (FR-006).
         <p className="text-sm text-tp-muted">Tidak ada hasil yang cocok dengan pencarian.</p>
       ) : (
-        <BoardTable
+        <Table
           caption={caption}
-          columns={[
-            { key: "name", label: nameLabel },
-            ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
-            { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi", className: "col-action" },
-          ]}
-          footer={<Pagination {...pagination} />}
-        >
-          {pageRows.map((item) => (
-            <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-              <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
-              {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
-              <td className="px-4 py-2.5">
-                <StatusBadge active={item.isActive} />
-              </td>
-              <td className="col-action">
-                {editingId === item.id ? (
-                  <span className="text-xs text-zinc-400">Mengedit…</span>
-                ) : (
-                  <RowActionsMenu
-                    label={`Aksi ${item.name}`}
-                    actions={[
-                      { label: "Ubah", onSelect: () => startEdit(item) },
-                      {
-                        label: item.isActive ? "Nonaktifkan" : "Aktifkan",
-                        onSelect: () => void onToggleActive(item.id, !item.isActive),
-                      },
-                    ]}
-                  />
-                )}
-              </td>
-            </tr>
-          ))}
-        </BoardTable>
+          columns={columns}
+          dataSource={pageRows}
+          rowKey={(item) => item.id}
+          pagination={pagination}
+        />
       )}
     </div>
   );

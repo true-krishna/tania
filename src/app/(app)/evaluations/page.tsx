@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { BoardTable } from "@/components/BoardTable";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { Table } from "@/components/Table";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { useCurrentEvaluationPeriod } from "@/features/evaluations/useCurrentEvaluationPeriod";
 import { useEvaluationRoster } from "@/features/evaluations/useEvaluationRoster";
@@ -103,46 +103,59 @@ export default function EvaluationsPage() {
       {entries.length === 0 ? (
         <EmptyState message="Tidak ada talent dalam cakupan chapter untuk periode ini." />
       ) : (
-        <>
-          <BoardTable
-            caption="Roster evaluasi periode"
-            columns={[
-              { key: "talent", label: "Talent" },
-              { key: "jobRole", label: "Job Role" },
-              { key: "status", label: "Status" },
-              { key: "actions", label: "Aksi", className: "col-action" },
-            ]}
-            footer={<Pagination {...pagination} />}
-          >
-            {pageRows.map((entry) => {
-              const already = entry.fillState === "EVALUATED";
-              return (
-                <tr key={entry.talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-                  <td className="px-4 py-2.5">
-                    <span className="text-sm font-medium text-zinc-900">{entry.talent.fullName}</span>
-                    <span className="ml-2 text-xs text-zinc-400">{orDash(entry.talent.nomorInduk)}</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-zinc-600">{orDash(entry.talent.jobRole?.name)}</td>
-                  <td className="px-4 py-2.5">
-                    <FillStateBadge fillState={entry.fillState} />
-                  </td>
-                  <td className="col-action">
-                    <RowActionsMenu
-                      label={`Aksi ${entry.talent.fullName}`}
-                      actions={[
-                        {
-                          label: readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai",
-                          onSelect: () =>
-                            router.push(EVALUATION_DETAIL(period.id, entry.talent.id)),
-                        },
-                      ]}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </BoardTable>
-        </>
+        <Table
+          caption="Roster evaluasi periode"
+          rowKey={(entry) => entry.talent.id}
+          dataSource={pageRows}
+          pagination={pagination}
+          columns={[
+            {
+              key: "talent",
+              title: "Talent",
+              render: (_value, entry) => (
+                <>
+                  <span className="text-sm font-medium text-zinc-900">
+                    {entry.talent.fullName}
+                  </span>
+                  <span className="ml-2 text-xs text-zinc-400">
+                    {orDash(entry.talent.nomorInduk)}
+                  </span>
+                </>
+              ),
+            },
+            {
+              key: "jobRole",
+              title: "Job Role",
+              className: "text-zinc-600",
+              render: (_value, entry) => orDash(entry.talent.jobRole?.name),
+            },
+            {
+              key: "status",
+              title: "Status",
+              render: (_value, entry) => <FillStateBadge fillState={entry.fillState} />,
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, entry) => {
+                const already = entry.fillState === "EVALUATED";
+                return (
+                  <RowActionsMenu
+                    label={`Aksi ${entry.talent.fullName}`}
+                    actions={[
+                      {
+                        label: readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai",
+                        onSelect: () =>
+                          router.push(EVALUATION_DETAIL(period.id, entry.talent.id)),
+                      },
+                    ]}
+                  />
+                );
+              },
+            },
+          ]}
+        />
       )}
     </section>
   );
