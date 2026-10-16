@@ -10,13 +10,13 @@ import type { AccessRole } from "@/generated/graphql";
  * 2026-10-16 (clarify 5/6 + "rekam akses sekarang, aktifkan nanti"): the active
  * modules below mirror the amended matrix — Kontrak `+CHAPTER` (scoped read),
  * CV `+OPERATION` (read-only), Master Data `[CHAPTER, OPERATION, ADMIN]`
- * (Talent has no access). The `idp`/`evaluations` rows keep the TAN-178
- * baseline: clarify 7 records their final mapping as Admin kelola · Operation
- * lihat · Chapter `kelola cakupan` · Talent kelola miliknya — i.e. all four
- * roles once active — but the modules stay unavailable server-side
- * (`deferredModules`), so no menu entry is offered and the rows are not part of
- * the nav invariant: activation flips them to `ALL` together with the nav
- * entries and the server flag (T084).
+ * (Talent has no access). The `idp`/`evaluations` rows are `[]` (T032): the
+ * modules are deferred, so no role may reach them in the UI either, exactly as
+ * the backend refuses them with MODULE_UNAVAILABLE (`internal/usecase/rbac.go`
+ * deferredModules). Their recorded mapping — Admin kelola · Operation lihat ·
+ * Chapter `kelola cakupan` · Talent kelola miliknya, i.e. all four roles — is
+ * kept in the matrix SoT and in the nav entries, which activation restores
+ * together with this row and the server flag (T084).
  */
 export type Module =
   | "dashboard"
@@ -43,8 +43,12 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   entra: ["OPERATION", "ADMIN"],
   contracts: ["CHAPTER", "OPERATION", "ADMIN"],
   assignments: ["CHAPTER", "OPERATION", "TALENT", "ADMIN"],
-  idp: ["CHAPTER", "TALENT", "ADMIN"],
-  evaluations: ["CHAPTER", "TALENT", "ADMIN"],
+  // Ditutup untuk semua peran selama modul ditunda (T032): rute `/idp` dan
+  // `/evaluations/*` memakai `isModuleOpen`, tab "IDP Saya" di profil mengikuti
+  // baris ini, dan server menolak modulnya. Aktivasi (T084) mengembalikannya ke
+  // `ALL` bersamaan dengan `deferredModules` di backend.
+  idp: [],
+  evaluations: [],
   cv: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
   masterData: ["CHAPTER", "OPERATION", "ADMIN"],
   accounts: ["ADMIN"],

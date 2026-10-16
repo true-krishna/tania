@@ -24,11 +24,12 @@ const MODULE_OF: Record<string, Module> = {
 };
 
 /**
- * Entri IDP & Evaluation tidak diuji kesetaraannya: keputusan pemilik produk
- * 2026-10-16 ("rekam akses sekarang, aktifkan nanti") membuat baris matriksnya
- * sudah memuat peran, tetapi modulnya masih ditolak server sehingga menunya
- * sengaja dikosongkan. Saat aktivasi (T084): hapus daftar ini agar invarian
- * mencakup seluruh entri tanpa kecuali.
+ * Entri IDP & Evaluation tidak diuji kesetaraannya: nav masih memuat pemetaan per
+ * peran yang direkam untuk aktivasi (klarifikasi 5–7), sementara baris matriksnya
+ * kosong karena modul ditunda untuk semua peran (T032) dan servernya menolak dengan
+ * MODULE_UNAVAILABLE. Saat aktivasi (T084): buka baris matriks + entri nav
+ * bersamaan, lalu hapus daftar ini agar invarian mencakup seluruh entri tanpa
+ * kecuali.
  */
 const AS_IS_HREFS = ["/idp", "/evaluations", "/evaluations/periods", "/evaluations/templates", "/evaluations/my"];
 

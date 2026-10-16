@@ -46,17 +46,30 @@ function mainNav(page: Page) {
   return page.getByRole("navigation", { name: /^Main navigation$/ });
 }
 
-/** Entri sidebar yang wajib tampil (matriks peran & modul, plan §2/R2.2). */
+/** Entri sidebar yang wajib tampil (matriks peran & modul, plan §2/R2.2 + §14.7). */
 const NAV_VISIBLE: Record<Role, readonly string[]> = {
-  ADMIN: ["Dashboard", "Aktivitas saya", "Workload", "Data Karyawan", "Kontrak", "Assignments", "Provisi Entra", "CV", "Master Data", "Audit"],
+  ADMIN: [
+    "Dashboard",
+    "Aktivitas saya",
+    "Workload",
+    "Data Karyawan",
+    "Kontrak",
+    "Assignments",
+    "Provisi Entra",
+    "CV",
+    "Master Data",
+    "Accounts",
+    "Audit",
+  ],
   OPERATION: [
     "Dashboard",
     "Aktivitas saya",
     "Workload",
     "Data Karyawan",
-    "Provisi Entra",
     "Kontrak",
     "Assignments",
+    "Provisi Entra",
+    "CV",
     "Master Data",
   ],
   CHAPTER: [
@@ -64,31 +77,32 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Aktivitas saya",
     "Workload",
     "Data Karyawan",
+    "Kontrak",
     "Assignments",
     "CV",
     "Master Data",
   ],
-  TALENT: [
-    "Dashboard",
-    "Aktivitas saya",
-    "Workload",
-    "Data Karyawan",
-    "Assignments",
-    "CV",
-    "Master Data",
-  ],
+  TALENT: ["Dashboard", "Aktivitas saya", "Workload", "Data Karyawan", "Assignments", "CV"],
 };
 
 /** Entri sidebar yang wajib tidak tampil — termasuk modul ditunda (IDP/Evaluasi). */
 const NAV_HIDDEN: Record<Role, readonly string[]> = {
-  ADMIN: ["IDP", "Evaluations", "Accounts"],
-  OPERATION: ["Accounts", "Audit", "CV", "IDP", "Evaluations"],
-  CHAPTER: ["Provisi Entra", "Kontrak", "Accounts", "Audit", "IDP", "Evaluations"],
-  TALENT: ["Provisi Entra", "Kontrak", "Accounts", "Audit", "IDP", "Evaluations"],
+  ADMIN: ["IDP", "Evaluations"],
+  OPERATION: ["IDP", "Evaluations", "Accounts", "Audit"],
+  CHAPTER: ["Provisi Entra", "IDP", "Evaluations", "Accounts", "Audit"],
+  TALENT: ["Kontrak", "Provisi Entra", "Master Data", "IDP", "Evaluations", "Accounts", "Audit"],
 };
 
 /** Modul yang ditunda untuk semua peran: URL langsung tidak boleh membuka modul. */
-const DEFERRED_ROUTES = ["/idp", "/idp/my", "/evaluations", "/evaluations/periods"] as const;
+const DEFERRED_ROUTES = [
+  "/idp",
+  "/idp/new",
+  "/idp/my",
+  "/evaluations",
+  "/evaluations/periods",
+  "/evaluations/templates",
+  "/evaluations/my",
+] as const;
 
 test.describe("RBAC matrix (T041)", () => {
   for (const role of ["ADMIN", "OPERATION", "CHAPTER", "TALENT"] as const) {

@@ -717,3 +717,57 @@ ditambah empat baris baru pada `TestAuthorizationMatrix` (`listUnits`, `listProj
 Sisa yang tetap terbuka setelah §14.9: UI Master Data Chapter tidak diubah (halaman sudah
 hanya-baca untuk non-manage sejak §14.7, daftarnya kini otomatis lebih pendek karena server
 yang menyaring); e2e RBAC (T078) belum dijalankan di lingkungan agen.
+
+### 14.10 Sisa R2 dikerjakan (as-built, 2026-10-16, TAN-212) — T032, T035, T036
+
+Keluaran `/speckit.implement` lanjutan. Gelombang R7 (§14.5–§14.9) sudah menutup akses di
+server; yang tersisa dari R2 adalah dua utang yang terlihat di UI dan tidak menunggu
+keputusan pemilik produk: rute modul yang ditunda masih bisa dibuka lewat URL langsung
+(T032), dan baris verifikasi bahwa dashboard tidak lagi mem-query field IDP/eval (T035).
+
+**Keputusan bentuk (T032).** Modul ditunda dinyatakan **di dalam baris matriks FE** itu sendiri —
+`MODULE_ROLES.idp = []`, `MODULE_ROLES.evaluations = []` — bukan lewat daftar pengecualian
+baru. Alasannya: server sudah menyatakan penundaan sebagai "tidak ada peran yang diizinkan"
+(`internal/usecase/rbac.go` `deferredModules` menolak **setiap** peran, termasuk Admin), jadi
+baris kosong adalah cermin satu-satunya yang setara. Efeknya tanpa kode tambahan:
+
+| Permukaan | Sebelum | Sesudah |
+| --- | --- | --- |
+| `/idp/*`, `/evaluations/*` (`layout.tsx` → `isModuleOpen`) | tampil, server menolak tiap query | `notFound()` untuk semua peran |
+| Tab "IDP Saya" di `/profile` (`canAccess(role, "idp")`) | tampil untuk Talent, kartu galat MODULE_UNAVAILABLE | tidak tampil untuk peran mana pun |
+| Menu sidebar | sudah kosong (`roles: []`) | tetap kosong; alasan pengecualian uji diperbarui |
+| Pemetaan yang direkam (Admin kelola · Operation lihat · Chapter `kelola cakupan` · Talent miliknya) | baris matriks | tetap di spec (sumber kebenaran) + entri nav, dipakai lagi saat aktivasi |
+
+Pengecualian `AS_IS_HREFS` di `nav.test.ts` **tetap** — bukan karena modulnya masih tampil,
+tetapi karena entri nav menyimpan pemetaan per peran untuk aktivasi sementara baris matriksnya
+kini kosong. Aktivasi (T084) membuka keduanya bersamaan lalu menghapus daftar itu.
+
+**T035 terverifikasi, tidak perlu perubahan.** `src/features/dashboard/dashboard.graphql`
+tidak lagi memuat satu pun field IDP/eval (`idpStatusDistribution`, `actionProgress`,
+`idpsNeedingReview`, `currentEvaluationPeriod`, `idpProgress`, `latestEvaluation`,
+`upcomingActionDeadlines`); yang tersisa hanyalah dokumen di `src/generated/graphql` dan
+halaman modulnya sendiri. `src/features/dashboard/dashboard.test.tsx` ("renders Talent widgets
+without deferred IDP/Evaluation content (T035)") menjaga invariannya, jadi prasyarat T040
+sudah terpenuhi dari sisi FE.
+
+Perubahan berkas (frontend saja — server sudah menutup modulnya sejak §14.6, tidak ada
+perubahan backend):
+
+- `src/lib/auth/matrix.ts` — baris `idp`/`evaluations` → `[]` + catatan alasan.
+- `src/lib/auth/deferred-routes.test.tsx` — uji TAN-178 "layout disajikan" **dibalik** menjadi
+  "`notFound()` dipanggil"; ini as-built T032, bukan regresi.
+- `src/lib/auth/matrix.test.ts` — `EXPECTED` dua modul → `false` semua peran; uji
+  `isModuleOpen` menjadi "menutup IDP & Evaluation untuk semua peran selama ditunda".
+- `src/features/profile/profile.test.tsx` — tab IDP tersembunyi untuk Talent **dan** peran
+  lain; isi ringkasan IDP tetap dijaga dengan merender `IdpSection` langsung (agar cakupan
+  ujinya tidak hilang selama modul ditutup).
+- `src/components/Sidebar/nav.test.ts` — alasan `AS_IS_HREFS` diperbarui (utang aktivasi T084).
+- `e2e/rbac.spec.ts` — daftar `NAV_VISIBLE`/`NAV_HIDDEN` diselaraskan dengan matriks clarify
+  5–8 (Kontrak `+CHAPTER`, CV semua peran, Master Data CHAPTER/OPERATION/ADMIN, Accounts hanya
+  Admin) dan `DEFERRED_ROUTES` diperluas ke `/idp/new`, `/evaluations/templates`,
+  `/evaluations/my`; tetap dijalankan di pipeline (T078), bukan di lingkungan agen.
+
+Verifikasi: `pnpm test` 531/531 hijau (run ulang; run pertama gagal 4 uji karena batas waktu
+saat beban paralel — pola flaky yang sudah dikenal), `pnpm typecheck` 0, `pnpm eslint` 0.
+T032, T035, T036 ditutup di `tasks.md`; T084 (aktivasi) dan T040 (hapus field SDL — perubahan
+destruktif) tetap menunggu keputusan pemilik produk.
