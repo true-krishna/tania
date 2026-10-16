@@ -68,11 +68,26 @@ Login sebagai **Chapter** (chapter A berisi data seed).
 
 ## E. Biaya (US6/SC-004)
 
-1. Kirim beberapa pertanyaan; lalu agregasi SQL sederhana atas `chat_messages` (`sum(input_tokens)`, `sum(output_tokens)` per hari/user).
-   Harapan: setiap pesan asisten tercatat token-nya; laporan dapat dibuat tanpa alat tambahan.
-2. Periksa log modul chat. Harapan: hanya ID teknis & token — **tidak ada isi pesan**.
-3. **Retensi (disetujui 90 hari)** — jalankan job retensi dengan cutoff tersimulasi. Harapan: percakapan/pesan lebih tua dari 90 hari **terhapus permanen** (hard delete), jumlahnya tercatat di audit trail, dan tidak ada data bisnis lain yang tersentuh.
-4. **Rate limit (disetujui 20 pesan/jam/user — `plan.md` D6)** — kirim pesan beruntun melewati batas. Harapan: pesan ke-21 ditolak ramah **sebelum** memanggil model (tidak ada pemakaian token), dan kembali normal setelah jendela bergeser.
+**Pemantau: Operation.** Plafon bulanan & ambang peringatan mengikuti **`plan.md` D6** (mesin: konstanta `ChatMonthlyMessageCap`/`ChatMonthlyMessageWarnPercent` di `tania-backend/internal/domain/chat.go`) — angkanya sengaja tidak diulang di sini.
+
+1. **Laporan token bulanan (Operation, tiap bulan)** — kirim beberapa pertanyaan, lalu jalankan agregasi SQL baca-saja atas `chat_messages` (per hari & user):
+   ```sql
+   SELECT cm.created_at::date AS day, cc.user_id,
+          sum(cm.input_tokens) AS input_tokens, sum(cm.output_tokens) AS output_tokens
+   FROM chat_messages cm
+   JOIN chat_conversations cc ON cc.id = cm.conversation_id
+   GROUP BY 1, 2
+   ORDER BY 1 DESC;
+   ```
+   Harapan: setiap jawaban asisten menyumbang tokennya; laporan dapat dibuat tanpa alat tambahan, jadi pemantauan tidak bergantung pada orang yang hafal SQL-nya.
+2. **Peringatan 80% plafon bulanan (Operation)** — job terjadwal yang **sudah ada** (retensi; interval default 24 jam) menjalankan pengecekan ini; tidak ada scheduler, env, atau endpoint baru.
+   - Setiap putaran menulis satu baris log `chat monthly usage` (`messages`, `cap`, `inputTokens`, `outputTokens`).
+   - Saat pesan bulan berjalan mencapai ambang (D6), muncul satu baris `chat monthly cost warning` level **warn** (`messages`, `cap`, `warnPercent`).
+   - Verifikasi dengan cutoff tersimulasi: hitung ambang dari konstanta D6 dan bandingkan dengan `messages` pada baris log — **di bawah ambang tidak ada** baris warning, **pada ambang ada** (uji otomatis menutup ambang ini; lihat `internal/domain/chat_cost_test.go` + `internal/usecase/chat_cost_test.go`).
+   - Tindak lanjut: Operation melaporkan ke pemilik produk **sebelum** plafon tercapai. Menaikkan plafon = perubahan kode + persetujuan pemilik (plan D6/R-9), **bukan** setelan env.
+3. Periksa log modul chat. Harapan: hanya ID teknis & token — **tidak ada isi pesan**.
+4. **Retensi (disetujui 90 hari)** — jalankan job retensi dengan cutoff tersimulasi. Harapan: percakapan/pesan lebih tua dari 90 hari **terhapus permanen** (hard delete), jumlahnya tercatat di audit trail, dan tidak ada data bisnis lain yang tersentuh.
+5. **Rate limit (disetujui 20 pesan/jam/user — `plan.md` D6)** — kirim pesan beruntun melewati batas. Harapan: pesan ke-21 ditolak ramah **sebelum** memanggil model (tidak ada pemakaian token), dan kembali normal setelah jendela bergeser.
 
 ## Kriteria lulus
 
