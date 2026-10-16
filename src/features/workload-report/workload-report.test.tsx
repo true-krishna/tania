@@ -51,8 +51,9 @@ vi.mock("echarts/renderers", () => ({ CanvasRenderer: {} }));
 
 vi.stubGlobal("ResizeObserver", echartsMock.ResizeObserverStub);
 
-import { getExecutiveFixture } from "./mocks";
+import { getExecutiveFixture, getTalentWorkloadFixture } from "./mocks";
 import { ExecutiveReportView } from "./ExecutiveReportView";
+import { TalentOwnWorkloadView } from "./TalentOwnWorkloadView";
 import { TalentWorkloadView } from "./TalentWorkloadView";
 
 beforeEach(() => {
@@ -482,5 +483,59 @@ describe("TalentWorkloadView — detail talent workload & tabel talent (TAN-233/
 
     expect(await screen.findByText(/Data lama — terakhir diperbarui/)).toBeInTheDocument();
     expect(screen.queryByText(/Tidak dapat menghubungi sumber data WAD/)).toBeNull();
+  });
+});
+
+describe("TalentOwnWorkloadView — workload milik talent (TAN-227 umpan balik)", () => {
+  it("renders the same detail workload layout for the own talent, without the picker", async () => {
+    h.role.current = "TALENT";
+    render(<TalentOwnWorkloadView />);
+
+    await screen.findByText("Beban (FTE)");
+    expect(screen.getByText("135%")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("img", { name: "Grafik garis tren backlog dan persentase beban" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("TAN-240")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Pilih talent")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tabel talent" })).toBeNull();
+  });
+
+  it("renders nothing for non-TALENT roles", () => {
+    h.role.current = "ADMIN";
+    const { container } = render(<TalentOwnWorkloadView />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("keeps only the period id in the URL", async () => {
+    h.role.current = "TALENT";
+    render(<TalentOwnWorkloadView />);
+    await screen.findByText("Beban (FTE)");
+
+    fireEvent.change(screen.getByLabelText("Pilih periode workload"), {
+      target: { value: "202608" },
+    });
+
+    expect(h.replace).toHaveBeenCalledWith("/workload?period=202608");
+  });
+
+  it("shows the informative empty state for a period without data", async () => {
+    h.role.current = "TALENT";
+    h.params = new URLSearchParams("period=202607");
+    render(<TalentOwnWorkloadView />);
+
+    expect(await screen.findByText(/Belum ada data workload untuk periode Juli 2026/)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("flags the unavailable source and keeps last-known figures visible", async () => {
+    h.role.current = "TALENT";
+    h.params = new URLSearchParams("period=202606");
+    render(<TalentOwnWorkloadView />);
+
+    expect(await screen.findByText(/Tidak dapat menghubungi sumber data WAD/)).toBeInTheDocument();
+    const fixture = getTalentWorkloadFixture("202606", "tal-01");
+    expect(await screen.findByText(String(fixture!.summary!.totalTimespent))).toBeInTheDocument();
   });
 });

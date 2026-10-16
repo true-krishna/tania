@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card } from "@/components/Card";
 import { Select } from "@/components/Select";
 import { EmptyState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
@@ -13,10 +12,8 @@ import {
   WorkloadFreshnessNotice,
   WorkloadReflectionNotice,
 } from "@/features/workload";
-import { IndividualCharts } from "./IndividualCharts";
-import { IndividualLeavesCard, IndividualSummaryCards } from "./IndividualSummaryCards";
-import { BacklogTable } from "./BacklogTable";
 import { TalentTable } from "./TalentTable";
+import { TalentWorkloadDetail } from "./TalentWorkloadDetail";
 import {
   DEFAULT_REPORT_PERIOD,
   DEFAULT_TALENT_ID,
@@ -111,66 +108,7 @@ export function TalentWorkloadView() {
       />
     );
   } else {
-    content = (
-      <div className="flex flex-col gap-4">
-        <IndividualSummaryCards summary={detailFixture.summary} />
-        {detailFixture.assignedProjects ? (
-          <Card className="flex flex-col gap-4">
-            <div>
-              <h2 className="tp-h3">Assignments</h2>
-              <p className="tp-label mt-1">Penempatan project talent pada periode terpilih.</p>
-            </div>
-            <div className="table-panel">
-              <div className="table-scroll">
-                <table className="w-full min-w-[720px]">
-                  <caption className="sr-only">Tabel assignment project talent</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col" className="text-left">Project</th>
-                      <th scope="col" className="text-left">Tribe</th>
-                      <th scope="col" className="text-left">Product</th>
-                      <th scope="col" className="text-left">Squad</th>
-                      <th scope="col" className="text-right">Availability</th>
-                      <th scope="col" className="text-right">Time Spent</th>
-                      <th scope="col" className="text-left">Keterangan</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detailFixture.assignedProjects.map((row) => (
-                      <tr key={`${row.projectKey}-${row.squad}`}>
-                        <td className="font-medium text-tp-text">{row.projectKey}</td>
-                        <td>{row.tribe}</td>
-                        <td>{row.product}</td>
-                        <td>{row.squad}</td>
-                        <td className="text-right">{row.availability}%</td>
-                        <td className="text-right">{row.timespent} jam</td>
-                        <td className="max-w-[320px]">{row.category}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </Card>
-        ) : null}
-        {detailFixture.summary.leaves && detailFixture.summary.leaves.leavesList.length > 0 ? (
-          <Card className="flex flex-col gap-3">
-            <h2 className="tp-h3">Cuti & ketidakhadiran</h2>
-            <IndividualLeavesCard leaves={detailFixture.summary.leaves} />
-          </Card>
-        ) : null}
-        {detailFixture.statusBacklog && detailFixture.timespentPerProject && detailFixture.trendBacklog ? (
-          <IndividualCharts
-            statusBacklog={detailFixture.statusBacklog}
-            timespentPerProject={detailFixture.timespentPerProject}
-            trendBacklog={detailFixture.trendBacklog}
-          />
-        ) : null}
-        {detailFixture.backlog && detailFixture.backlogNormalized ? (
-          <BacklogTable backlog={detailFixture.backlog} backlogNormalized={detailFixture.backlogNormalized} />
-        ) : null}
-      </div>
-    );
+    content = <TalentWorkloadDetail fixture={detailFixture} />;
   }
 
   return (
