@@ -631,13 +631,14 @@ modul berpindah peran, satu modul tetap tertutup:
 
 Sisa yang **belum** dikerjakan, dengan alasan:
 
-- **Cakupan Master Data untuk Chapter belum ditegakkan di server** (diperjelas clarify 7 → §14.8,
-tugas T086): baca master data masih
+- ~~**Cakupan Master Data untuk Chapter belum ditegakkan di server**~~ (**selesai 2026-10-16,
+  clarify 8 → §14.9**; keadaan yang dicatat di sini berlaku sampai keputusan itu): baca master data ketika itu
   bergantung pada `requireIdentity` (semua peran terautentikasi), karena query yang sama
   menopang filter/dropdown halaman lain — `employees` memakai `units`, `assignments` memakai
   `projects`/`jobRoles` — sehingga melarang Talent atau mempersempit Chapter harus lewat
-  definisi cakupan yang eksplisit dulu (butir terbuka **O7**). Di UI, menu dan route-nya sudah
-  mengikuti matriks.
+  definisi cakupan yang eksplisit dulu (butir terbuka **O7**). Keputusan clarify 8 menutup itu:
+  `chapters`/`jobRoles` kini ber-cakupan dan Talent ditolak, sedangkan `units`/`projects` tetap
+  referensi level organisasi. Di UI, menu dan route-nya sudah mengikuti matriks sejak §14.7.
 - **Aktivasi IDP & evaluasi** tetap terjadwal (T084); menunya sengaja kosong agar pengguna
   tidak menabrak halaman yang ditolak server.
 - **Pemeriksaan e2e (Playwright)** belum dapat dijalankan di lingkungan agen (butuh app +
@@ -678,3 +679,41 @@ tanpa perubahan skema untuk dua entitas pertama:
 Tidak ada divergensi permanen: kedua keputusan clarify 7 hanya menyesuaikan baris matriks &
 tafsiran; modul yang berubah statusnya (IDP) tetap tidak aktif sehingga tidak ada kode yang
 harus menyesuaikan diri lebih dulu.
+
+### 14.9 Cakupan Master Data ditegakkan (as-built, 2026-10-16, TAN-212)
+
+Keputusan clarify 8 memilih opsi kedua: **Unit & Project tetap daftar referensi level
+organisasi**, **Chapter & Role ber-cakupan**. Cakupan Master Data karena itu tidak lagi
+menunggu relasi baru — bagian yang bisa ditegakkan dikerjakan sekarang.
+
+| Entitas | Peran Admin/Operation | Peran Chapter | Peran Talent | Alasan |
+| --- | --- | --- | --- | --- |
+| `chapters` | seluruh daftar | **hanya barisnya sendiri** (dari `ChapterScope`) | ditolak (`FORBIDDEN`) | relasi chapter tersedia (user → employee → role → chapter) |
+| `jobRoles` | seluruh daftar | **hanya role milik chapter-nya** (`job_roles.chapter_id`); role tanpa chapter tidak masuk cakupan siapa pun | ditolak (`FORBIDDEN`) | relasi chapter tersedia |
+| `units` | seluruh daftar | seluruh daftar | seluruh daftar | referensi level organisasi; dipakai filter `employees` |
+| `projects` | seluruh daftar | seluruh daftar | seluruh daftar | referensi level organisasi; dipakai filter `assignments` |
+
+Implementasi:
+
+- `internal/usecase/chapter.go` — `ChapterService.List` mengganti `requireIdentity` dengan
+  `RequireRole(Chapter, Operation, Admin)`; untuk peran Chapter scope diambil dari
+  `ChapterScope` (dibaca dari identitas, **bukan** dari klien — R-11) dan hanya baris itu yang
+  dikembalikan; baris own yang nonaktif tetap disembunyikan kecuali `includeInactive`.
+- `internal/usecase/jobrole.go` — `JobRoleService.List` sama, lalu menyaring hasil daftar
+  berdasarkan `role.Chapter.ID == scope` (master data adalah himpunan referensi kecil, jadi
+  penyaringan di lapisan usecase; kontrak repositori & SQL tidak berubah). Role tanpa
+  chapter (`chapter_id` NULL) tidak termasuk cakupan chapter mana pun.
+- Kedua service menerima `domain.EmployeeRepository` baru di konstruktornya (wiring
+  `cmd/api/main.go`); penyelesai GraphQL tidak berubah karena gate berada di usecase (FR-16).
+- Chapter tanpa kepemilikan chapter tetap mendapat `ErrScopeUndefined` — FORBIDDEN yang
+  menjelaskan sebabnya (FR-20 002-tania-rbac), sama seperti modul berkakipan lain.
+
+Verifikasi: `TestChapterListIsChapterScoped`, `TestChapterListInactiveOwnChapter`,
+`TestJobRoleListIsChapterScoped`, `TestMasterDataListsRejectChapterWithoutScope`
+(`masterdata_chapter_test.go`, memakai `chapterEmployee` sebagai fixture kepemilikan chapter),
+ditambah empat baris baru pada `TestAuthorizationMatrix` (`listUnits`, `listProjects`,
+`listChapters`, `listJobRoles`) sehingga matriks peran ikut menegakkan keputusan ini.
+
+Sisa yang tetap terbuka setelah §14.9: UI Master Data Chapter tidak diubah (halaman sudah
+hanya-baca untuk non-manage sejak §14.7, daftarnya kini otomatis lebih pendek karena server
+yang menyaring); e2e RBAC (T078) belum dijalankan di lingkungan agen.
