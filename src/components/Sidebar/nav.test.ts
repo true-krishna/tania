@@ -24,10 +24,11 @@ const MODULE_OF: Record<string, Module> = {
 };
 
 /**
- * Entri IDP & Evaluation disembunyikan untuk semua peran selagi modulnya ditunda
- * (matriks menandainya ✘ untuk setiap peran) — jadi entri ini memang **tidak**
- * dicerminkan oleh `canAccess`, yang masih menyisakan baris/route pada baseline
- * TAN-178 (utang T032: tutup route-nya secara eksplisit).
+ * Entri IDP & Evaluation tidak diuji kesetaraannya: keputusan pemilik produk
+ * 2026-10-16 ("rekam akses sekarang, aktifkan nanti") membuat baris matriksnya
+ * sudah memuat peran, tetapi modulnya masih ditolak server sehingga menunya
+ * sengaja dikosongkan. Saat aktivasi (T084): hapus daftar ini agar invarian
+ * mencakup seluruh entri tanpa kecuali.
  */
 const AS_IS_HREFS = ["/idp", "/evaluations", "/evaluations/periods", "/evaluations/templates", "/evaluations/my"];
 

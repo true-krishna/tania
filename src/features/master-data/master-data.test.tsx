@@ -37,8 +37,8 @@ const UNITS_QUERY = {
   },
 };
 
-// Master-data pages read the session role from the guard: Admin manages, every
-// other role gets the same list read-only (matrix: lihat for all roles).
+// Master-data pages read the session role from the guard: Admin manages, Chapter
+// and Operation get the same list read-only (2026-10-16 clarify 6).
 const auth = vi.hoisted(() => ({ role: "ADMIN" as string | null }));
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,

@@ -5,9 +5,15 @@ import type { AccessRole } from "@/generated/graphql";
  * module opens only for the roles it lists (deny-by-default, FR-03). TAN-178
  * re-opens IDP & Evaluation on this line to follow the feature/design baseline;
  * the backend remains the enforcement point (FR-15/16). TAN-212 (clarify 4)
- * gives Admin full manage on every active module; the 2026-10-15 pass hides the
- * deferred IDP/Evaluation entries in the sidebar (matrix: denied for everyone)
- * while their matrix rows/routes stay on the TAN-178 baseline (open item T032).
+ * gives Admin full manage on every active module.
+ *
+ * 2026-10-16 (clarify 5/6 + "rekam akses sekarang, aktifkan nanti"): the active
+ * modules below mirror the amended matrix — Kontrak `+CHAPTER` (scoped read),
+ * CV `+OPERATION` (read-only), Master Data `[CHAPTER, OPERATION, ADMIN]`
+ * (Talent has no access). The `idp`/`evaluations` rows keep the TAN-178
+ * baseline: their new mapping (clarify 5/6) is recorded but the modules stay
+ * unavailable server-side, so no menu entry is offered and the rows are not
+ * part of the nav invariant (open item T083/T084).
  */
 export type Module =
   | "dashboard"
@@ -32,12 +38,12 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   workload: ALL,
   employees: ["OPERATION", "ADMIN", "CHAPTER", "TALENT"],
   entra: ["OPERATION", "ADMIN"],
-  contracts: ["OPERATION", "ADMIN"],
+  contracts: ["CHAPTER", "OPERATION", "ADMIN"],
   assignments: ["CHAPTER", "OPERATION", "TALENT", "ADMIN"],
   idp: ["CHAPTER", "TALENT", "ADMIN"],
   evaluations: ["CHAPTER", "TALENT", "ADMIN"],
-  cv: ["TALENT", "CHAPTER", "ADMIN"],
-  masterData: ALL,
+  cv: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
+  masterData: ["CHAPTER", "OPERATION", "ADMIN"],
   accounts: ["ADMIN"],
   audit: ["ADMIN"],
 };
@@ -45,6 +51,7 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
 const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
   employees: ["OPERATION", "ADMIN"],
   assignments: ["CHAPTER", "ADMIN"],
+  contracts: ["OPERATION", "ADMIN"],
   masterData: ["ADMIN"],
 };
 

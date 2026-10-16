@@ -13,6 +13,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { canManage } from "@/lib/auth/matrix";
+import { useSessionRole } from "@/lib/auth/guard";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
 import {
   CONTRACT_STATUS_LABEL,
@@ -100,6 +102,9 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
 }
 
 export default function ContractsPage() {
+  // Chapter reads the contracts of its own chapter (2026-10-16 clarify 5); only
+  // Operation and Admin manage them, so the create action is theirs alone.
+  const manage = canManage(useSessionRole(), "contracts");
   const [search, setSearch] = React.useState("");
   const [contractType, setContractType] = React.useState<ContractType | "ALL">("ALL");
   const [status, setStatus] = React.useState<EmploymentContractStatus | "ALL">("ALL");
@@ -131,11 +136,17 @@ export default function ContractsPage() {
     <section className="flex flex-col gap-4">
       <PageHeader
         title="Kontrak Kerja"
-        subtitle="Kelola kontrak kerja karyawan (Operation)."
+        subtitle={
+          manage
+            ? "Kelola kontrak kerja karyawan."
+            : "Daftar kontrak kerja karyawan dalam cakupan chapter Anda (hanya baca)."
+        }
         actions={
-          <Link href="/contracts/new" className="no-underline">
-            <Button variant="primary">+ Tambah Kontrak</Button>
-          </Link>
+          manage ? (
+            <Link href="/contracts/new" className="no-underline">
+              <Button variant="primary">+ Tambah Kontrak</Button>
+            </Link>
+          ) : undefined
         }
         search={
           <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">

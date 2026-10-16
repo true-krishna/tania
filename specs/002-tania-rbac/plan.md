@@ -616,3 +616,34 @@ Konsekuensi yang perlu diingat saat implementasi:
 - **CV Operation hanya baca** — penulisan tetap Talent; tidak ada perubahan kontrak API.
 - **Tidak ada divergensi permanen** pada butir yang langsung dapat dikerjakan (CV & Master
   Data): keduanya perubahan data matriks + gate yang sudah ada.
+
+### 14.7 Visibilitas per peran — status as-built (2026-10-16, TAN-212)
+
+Kode diselaraskan dengan matriks §14.5–§14.6 ("atur ulang visibilitas per peran"). Tiga
+modul berpindah peran, satu modul tetap tertutup:
+
+| Modul | Admin | Operation | Chapter | Talent | Bentuk peran baru |
+| --- | --- | --- | --- | --- | --- |
+| Kontrak kerja | kelola | kelola | **baca cakupan** | — | nav +CHAPTER; `GET /contracts` hanya-baca untuk Chapter (tanpa tambah/ubah/perpanjang/aksi siklus/riwayat); BE `List`/`Get` `+RoleChapter` dengan `ChapterScope` (di luar cakupan → NOT_FOUND) |
+| Master Data | kelola | **baca** | **baca** | **—** | nav +CHAPTER/+OPERATION, Talent dihapus; `MasterDataSection` hanya-baca (`canManage` = ADMIN) dan gate modul di `master-data/layout.tsx` menutup deep-link Talent |
+| Profil CV | **baca semua** | **baca semua** | baca cakupan | kelola miliknya | nav +OPERATION; Operation memakai penampil hanya-baca `CvRosterViewer`; BE gate baca CV `+RoleOperation` (tulis tetap Talent, FR-13) |
+| IDP & Evaluasi | — | — | — | — | **tetap tertutup**: `roles: []`, `deferredModules` server tetap, `AS_IS_HREFS` di `nav.test.ts` tetap dengan alasan yang diperbarui (modul belum aktif, bukan "matriks ✘") |
+
+Sisa yang **belum** dikerjakan, dengan alasan:
+
+- **Cakupan Master Data untuk Chapter belum ditegakkan di server.** Baca master data masih
+  bergantung pada `requireIdentity` (semua peran terautentikasi), karena query yang sama
+  menopang filter/dropdown halaman lain — `employees` memakai `units`, `assignments` memakai
+  `projects`/`jobRoles` — sehingga melarang Talent atau mempersempit Chapter harus lewat
+  definisi cakupan yang eksplisit dulu (butir terbuka **O7**). Di UI, menu dan route-nya sudah
+  mengikuti matriks.
+- **Aktivasi IDP & evaluasi** tetap terjadwal (T084); menunya sengaja kosong agar pengguna
+  tidak menabrak halaman yang ditolak server.
+- **Pemeriksaan e2e (Playwright)** belum dapat dijalankan di lingkungan agen (butuh app +
+  DB ter-seed + browser) — baris RBAC di `e2e/rbac.spec.ts` disiapkan, verifikasi menyusul di
+  pipeline (T078).
+
+Gerbang mutu setelah perubahan: FE `pnpm test` 529/530 (satu uji smoke echarts gagal hanya
+saat suite paralel, lulus saat dijalankan sendiri), `pnpm typecheck` 0, `pnpm lint` 0; BE
+`go vet` 0 dan `go test ./...` 10 paket ok (`make`/`golangci-lint` tetap tidak tersedia —
+T052).

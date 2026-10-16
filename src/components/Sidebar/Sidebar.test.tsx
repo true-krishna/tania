@@ -21,9 +21,17 @@ describe("Sidebar", () => {
   it("hides sections the current role cannot access", () => {
     renderSidebar({ role: "TALENT" });
     expect(desktopNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
-    // Master data is read-only for every role (matrix: lihat), so it is shown.
-    expect(desktopNav().getByText("Master Data")).toBeInTheDocument();
+    // Master data is closed to Talent (matrix: —, 2026-10-16 clarify 6).
+    expect(screen.queryByText("Master Data")).toBeNull();
     expect(screen.queryByText("Accounts")).toBeNull();
+  });
+
+  it("shows Master Data read-only to Chapter and Operation only", () => {
+    for (const role of ["CHAPTER", "OPERATION"] as const) {
+      const view = renderSidebar({ role });
+      expect(desktopNav().getByText("Master Data")).toBeInTheDocument();
+      view.unmount();
+    }
   });
 
   it("offers no entry for the deferred IDP & Evaluation modules", () => {
@@ -59,8 +67,8 @@ describe("Sidebar", () => {
     const chapter = renderSidebar({ role: "CHAPTER" });
     fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
     expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
-    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
-    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
+    // Chapter reads contracts of its own chapter (2026-10-16 clarify 5).
+    expect(desktopNav().getByRole("link", { name: "Kontrak" })).toBeInTheDocument();
     chapter.unmount();
 
     const admin = renderSidebar({ role: "ADMIN" });

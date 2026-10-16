@@ -51,13 +51,19 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * R2.2 (002-tania-rbac): each entry mirrors the role/module matrix. Every
  * module a role may *read* has a menu entry, even when the page turns out
  * read-only for that role — Data Karyawan for Chapter (scoped) and Talent
- * (own record), Assignments for Operation (read-only) and Talent (own history),
- * Master Data (reference data) for every role since the matrix grants `lihat`.
+ * (own record), Kontrak for Chapter (scoped, read-only), CV for Operation,
+ * Assignments for Operation (read-only) and Talent (own history), Master Data
+ * for Operation (read-only) and Chapter (scoped read).
  *
- * IDP & Evaluation stay entries with `roles: []` — the matrix denies them for
- * every role while the modules are deferred (2026-10-15: "tunda dulu"), so the
- * menu must not offer them. Reactivation = restore the matrix row, re-open the
- * server gate and put the roles back here (runbook R5/T060).
+ * 2026-10-16 (clarify 5/6): Kontrak `+CHAPTER` (cakupan, hanya baca), CV
+ * `+OPERATION` (hanya baca), Master Data = `[CHAPTER, OPERATION, ADMIN]`
+ * (Talent tanpa akses).
+ *
+ * IDP & Evaluation stay entries with `roles: []`: the owner decided "rekam
+ * akses sekarang, aktifkan nanti" (2026-10-16), so the menu must not offer a
+ * module the server still refuses as not-yet-available. Activation = restore the
+ * roles here, drop the server's deferred flag and delete the exemption in
+ * `nav.test.ts` (runbook R5/T060).
  */
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
@@ -71,13 +77,13 @@ export const NAV: readonly NavEntry[] = [
     roles: ALL,
     children: [
       { href: "/employees", label: "Data Karyawan", roles: ALL },
-      { href: "/contracts", label: "Kontrak", roles: ["OPERATION", "ADMIN"] },
+      { href: "/contracts", label: "Kontrak", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
       { href: "/assignments", label: "Assignments", roles: ALL },
     ],
   },
   { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },
   { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: [] },
-  { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER", "ADMIN"] },
+  { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] },
   {
     kind: "group",
     id: "evaluations",
@@ -97,12 +103,12 @@ export const NAV: readonly NavEntry[] = [
     id: "master-data",
     label: "Master Data",
     icon: IconDatabase,
-    roles: ALL,
+    roles: ["CHAPTER", "OPERATION", "ADMIN"],
     children: [
-      { href: "/master-data/units", label: "Unit", roles: ALL },
-      { href: "/master-data/chapters", label: "Chapter", roles: ALL },
-      { href: "/master-data/job-roles", label: "Job Role", roles: ALL },
-      { href: "/master-data/projects", label: "Project", roles: ALL },
+      { href: "/master-data/units", label: "Unit", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: "/master-data/chapters", label: "Chapter", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: "/master-data/job-roles", label: "Job Role", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: "/master-data/projects", label: "Project", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
     ],
   },
   { kind: "link", href: "/audit", label: "Audit", icon: IconClock, roles: ["ADMIN"] },

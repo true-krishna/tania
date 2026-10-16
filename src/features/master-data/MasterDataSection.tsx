@@ -41,8 +41,9 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
 };
 
-// Shared master-data surface. Every role may read the reference data (matrix:
-// `lihat`), Admin manages it (FR-15, FR-20, FR-24) — so the edit surface only
+// Shared master-data surface. Chapter and Operation read the reference data
+// (Talent has no access, 2026-10-16 clarify 6) and Admin manages it (FR-15,
+// FR-20, FR-24) — so the edit surface only
 // renders for the manage roles and the rest get the same list read-only.
 // One list + create form + inline edit + activate/deactivate per entity.
 // There is deliberately NO delete operation (FR-21): master data is only

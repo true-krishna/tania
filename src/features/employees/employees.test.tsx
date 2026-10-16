@@ -342,18 +342,31 @@ describe("EmployeeDetailPage per role (T034)", () => {
     expect(screen.getByRole("button", { name: /ya, nonaktifkan/i })).toBeInTheDocument();
   });
 
-  for (const role of ["CHAPTER", "TALENT"] as const) {
-    it(`is read-only for ${role} without the change history`, async () => {
-      auth.role = role;
-      await act(async () => {
-        renderDetail([employeeMock]);
-      });
-
-      expect(await screen.findByText("************1234")).toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
-      expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
-      expect(screen.queryByText(/riwayat perubahan/i)).toBeNull();
-      expect(screen.queryByRole("link", { name: "PKWT/2025/002" })).toBeNull();
+  it("is read-only for CHAPTER, which may still follow the contract link", async () => {
+    // Chapter reads the contracts of its own chapter (2026-10-16 clarify 5), so
+    // the record links through while every manage surface stays hidden.
+    auth.role = "CHAPTER";
+    await act(async () => {
+      renderDetail([employeeMock]);
     });
-  }
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
+    expect(screen.queryByText(/riwayat perubahan/i)).toBeNull();
+    expect(screen.getByRole("link", { name: "PKWT/2025/002" })).toBeInTheDocument();
+  });
+
+  it("is read-only for TALENT without the change history or contract link", async () => {
+    auth.role = "TALENT";
+    await act(async () => {
+      renderDetail([employeeMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
+    expect(screen.queryByText(/riwayat perubahan/i)).toBeNull();
+    expect(screen.queryByRole("link", { name: "PKWT/2025/002" })).toBeNull();
+  });
 });

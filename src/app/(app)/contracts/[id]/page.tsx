@@ -20,6 +20,8 @@ import {
 } from "@/features/contracts/labels";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { ContractCycleActions } from "@/features/contracts/ContractCycleActions";
+import { canManage } from "@/lib/auth/matrix";
+import { useSessionRole } from "@/lib/auth/guard";
 import {
   EmploymentContractDocument,
   UpdateEmploymentContractDocument,
@@ -45,6 +47,10 @@ const CONFLICT_MESSAGE = "Nomor kontrak sudah dipakai. Periksa kembali isian ter
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data: contract, error } = useEmploymentContract(id);
+  // Chapter reads contracts of its own chapter only (2026-10-16 clarify 5):
+  // every manage surface — renew, cycle actions, edit form, per-record history
+  // (Operation/Admin only, FR-41) — stays hidden.
+  const manage = canManage(useSessionRole(), "contracts");
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data kontrak."} />;
@@ -59,7 +65,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         title={contract.contractNo ?? "—"}
         subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
         actions={
-          !isOpenEndedContractType(contract.contractType) ? (
+          manage && !isOpenEndedContractType(contract.contractType) ? (
             <Link href={`/contracts/${id}/renew`} className="no-underline">
               <Button variant="primary">Perpanjang kontrak</Button>
             </Link>
@@ -165,17 +171,21 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         </dl>
       </Card>
 
-      <ContractCycleActions contract={contract} />
+      {manage ? <ContractCycleActions contract={contract} /> : null}
 
-      <Card className="max-w-3xl">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-900">Ubah data kontrak</h2>
-        <ContractEditForm id={id} contract={contract} />
-      </Card>
+      {manage ? (
+        <>
+          <Card className="max-w-3xl">
+            <h2 className="mb-3 text-sm font-semibold text-zinc-900">Ubah data kontrak</h2>
+            <ContractEditForm id={id} contract={contract} />
+          </Card>
 
-      <Card className="max-w-3xl">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-900">Riwayat perubahan</h2>
-        <RecordChangeHistory entityType="employment_contract" entityId={id} />
-      </Card>
+          <Card className="max-w-3xl">
+            <h2 className="mb-3 text-sm font-semibold text-zinc-900">Riwayat perubahan</h2>
+            <RecordChangeHistory entityType="employment_contract" entityId={id} />
+          </Card>
+        </>
+      ) : null}
     </section>
   );
 }
