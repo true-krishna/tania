@@ -19,6 +19,7 @@ import { BacklogTable } from "./BacklogTable";
 import { TalentTable } from "./TalentTable";
 import {
   DEFAULT_REPORT_PERIOD,
+  DEFAULT_TALENT_ID,
   REPORT_TALENT_OPTIONS,
   formatPeriodLabel,
   isReportPeriod,
@@ -29,30 +30,42 @@ import { useExecutiveReport } from "./useExecutiveReport";
 import { useTalentWorkload } from "./useTalentWorkload";
 import { WORKLOAD_REPORT_ROLES } from "./types";
 
+type TalentPageMode = "detail" | "table";
+
+const MODE_BUTTON =
+  "w-fit rounded-full border-[1.5px] border-tp-text px-4 py-2 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg";
+
 /**
  * Halaman workload per talent (TAN-227/233/234 + umpan balik pemilik produk):
- * pintu masuk berupa tabel talent dengan workload; memilih talent membuka
- * laporan individunya. Konteks talent tidak pernah ditaruh di URL atau query
- * string (TAN-233) — hanya `?period=` yang menjelajah URL.
+ * tampilan utamanya adalah detail workload talent terpilih; tabel talent
+ * dengan workload tetap tersedia sebagai mode untuk memilih talent. Konteks
+ * talent tidak pernah ditaruh di URL atau query string (TAN-233) — hanya
+ * `?period=` yang menjelajah URL.
  */
 export function TalentWorkloadView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = useSessionRole();
 
-  const [talentId, setTalentId] = React.useState<string | null>(null);
+  const [talentId, setTalentId] = React.useState<string>(DEFAULT_TALENT_ID);
+  const [mode, setMode] = React.useState<TalentPageMode>("detail");
   const [reloadKey, setReloadKey] = React.useState(0);
   const retry = React.useCallback(() => setReloadKey((k) => k + 1), []);
 
   const periodParam = searchParams.get("period");
   const period = isReportPeriod(periodParam) ? periodParam : DEFAULT_REPORT_PERIOD;
-  // Sumber tabel talent pada mode daftar: baris talent dari tabel distribusi
+  // Sumber tabel talent pada mode tabel: baris talent dari tabel distribusi
   // WAD — stand-in untuk query tabel talent sampai GraphQL tersedia.
   const listState = useExecutiveReport(period, reloadKey);
   const detailState = useTalentWorkload(period, talentId, reloadKey);
 
   function setPeriod(next: string) {
     router.replace(`${WORKLOAD_TALENT}?period=${next}`);
+  }
+
+  function openDetail(nextTalentId: string) {
+    setTalentId(nextTalentId);
+    setMode("detail");
   }
 
   if (!role || !WORKLOAD_REPORT_ROLES.includes(role)) {
@@ -64,7 +77,7 @@ export function TalentWorkloadView() {
   const detailFixture = detailState.status === "ready" ? detailState.fixture : null;
 
   let content: React.ReactNode;
-  if (talentId === null) {
+  if (mode === "table") {
     if (listState.status === "loading") {
       content = <ReportSkeleton variant="talent" />;
     } else if (listState.status === "error" || !listFixture) {
@@ -76,7 +89,14 @@ export function TalentWorkloadView() {
         />
       );
     } else {
-      content = <TalentTable rows={listFixture.distribution.rows.talent} onView={setTalentId} />;
+      content = (
+        <div className="flex flex-col gap-4">
+          <button type="button" onClick={() => setMode("detail")} className={MODE_BUTTON}>
+            Kembali ke detail talent
+          </button>
+          <TalentTable rows={listFixture.distribution.rows.talent} onView={openDetail} />
+        </div>
+      );
     }
   } else if (detailState.status === "loading") {
     content = <ReportSkeleton variant="talent" />;
@@ -86,29 +106,13 @@ export function TalentWorkloadView() {
     content = <EmptyState message="Talent tidak ditemukan pada periode ini." />;
   } else if (detailFixture.state === "empty" || !detailFixture.summary) {
     content = (
-      <div className="flex flex-col gap-4">
-        <button
-          type="button"
-          onClick={() => setTalentId(null)}
-          className="w-fit rounded-full border-[1.5px] border-tp-text px-4 py-2 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg"
-        >
-          Kembali ke daftar talent
-        </button>
-        <EmptyState
-          message={`Belum ada data workload untuk ${selectedTalent.name} pada periode ${formatPeriodLabel(detailFixture.period)}.`}
-        />
-      </div>
+      <EmptyState
+        message={`Belum ada data workload untuk ${selectedTalent.name} pada periode ${formatPeriodLabel(detailFixture.period)}.`}
+      />
     );
   } else {
     content = (
       <div className="flex flex-col gap-4">
-        <button
-          type="button"
-          onClick={() => setTalentId(null)}
-          className="w-fit rounded-full border-[1.5px] border-tp-text px-4 py-2 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg"
-        >
-          Kembali ke daftar talent
-        </button>
         <IndividualSummaryCards summary={detailFixture.summary} />
         {detailFixture.assignedProjects ? (
           <Card className="flex flex-col gap-4">
@@ -174,7 +178,7 @@ export function TalentWorkloadView() {
       <PageHeader
         title="Workload Talent"
         subtitle={
-          talentId === null
+          mode === "table"
             ? `Tabel talent dengan workload — periode ${formatPeriodLabel(period)}.`
             : selectedTalent
               ? `Laporan per talent — ${selectedTalent.name} · ${selectedTalent.tribe} · ${selectedTalent.squad} · periode ${formatPeriodLabel(period)}.`
@@ -183,26 +187,33 @@ export function TalentWorkloadView() {
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {talentId === null ? <span /> : (
-          <label className="flex items-center gap-2 text-[13px] font-semibold text-tp-muted">
-            Talent
-            <Select
-              aria-label="Pilih talent"
-              className="h-11 w-64"
-              value={talentId}
-              onChange={(e) => setTalentId(e.target.value)}
-              options={REPORT_TALENT_OPTIONS.map((t) => ({ value: t.talentId, label: t.name }))}
-            />
-          </label>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {mode === "detail" ? (
+            <label className="flex items-center gap-2 text-[13px] font-semibold text-tp-muted">
+              Talent
+              <Select
+                aria-label="Pilih talent"
+                className="h-11 w-64"
+                value={talentId}
+                onChange={(e) => setTalentId(e.target.value)}
+                options={REPORT_TALENT_OPTIONS.map((t) => ({ value: t.talentId, label: t.name }))}
+              />
+            </label>
+          ) : null}
+          {mode === "detail" ? (
+            <button type="button" onClick={() => setMode("table")} className={MODE_BUTTON}>
+              Tabel talent
+            </button>
+          ) : null}
+        </div>
         <ReportPeriodSelector
           value={period}
           onChange={setPeriod}
-          ariaLabel={talentId === null ? "Pilih periode tabel talent" : "Pilih periode laporan talent"}
+          ariaLabel={mode === "table" ? "Pilih periode tabel talent" : "Pilih periode laporan talent"}
         />
       </div>
 
-      {talentId === null && listFixture ? (
+      {mode === "table" && listFixture ? (
         <>
           <WorkloadFreshnessNotice freshness={listFixture.freshness} onRetry={retry} />
           {listFixture.freshness.expectedReflectionHours !== null ? (
@@ -210,7 +221,7 @@ export function TalentWorkloadView() {
           ) : null}
         </>
       ) : null}
-      {talentId !== null && detailFixture ? (
+      {mode === "detail" && detailFixture ? (
         <>
           <WorkloadFreshnessNotice freshness={detailFixture.freshness} onRetry={retry} />
           {detailFixture.freshness.expectedReflectionHours !== null ? (
