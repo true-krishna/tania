@@ -488,9 +488,11 @@ T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak C
 
 **Hasil**: seluruh temuan Phase K4 yang ditandai selesai memang ada di kode (`FindExchange` + replay jawaban, `NewChatRateLimited` + `RetryAfter`, `answerBudget` = satu anggaran jawaban, `checklists/security.md`, perbaikan dokumen, `CHIP_VARIANTS.neutral`), dan Phase K4 yang masih terbuka tetap memiliki task-nya — tidak digandakan di sini. **Satu temuan baru** muncul dari kode yang berubah setelah salinan terakhir; ID dilanjutkan dari maksimum (T047) → T048.
 
-- [ ] T048 Salin ulang SDL yang dilayani ke **ketiga** salinan konsumen dan jadikan `pnpm run schema:drift` hijau per Konstitusi API 1.1.1/T022/R8 (partial)
+- [x] T048 Salin ulang SDL yang dilayani ke **ketiga** salinan konsumen dan jadikan `pnpm run schema:drift` hijau per Konstitusi API 1.1.1/T022/R8 (partial)
       → `tania-dashboard`: `graph/schema.graphqls` (sumber codegen) + `specs/001-employee-digital-talent-management/contracts/schema.graphql` + `src/generated/graphql/` (`pnpm run codegen`); salinan cermin di repo `tania-backend`.
       **Bukti gap**: SDL yang dilayani `tania-backend` `master` kini `d35e0988…` (commit `762906a fix(report): floor dashboard time filter start at 2022` mengubah docstring `TalentReportRange`), sedangkan ketiga salinan masih `da1510ce…` (hash sebelum TAN-209) — jadi pengaman `scripts/check-schema-drift.sh` (`pnpm run schema:drift`, ditambahkan `7d29e19`) **merah pada keadaan sekarang**. Invarian byte-for-byte T022 beserta mode kegagalan R8 bocor lagi karena tidak ada yang menjalankan pengaman setelah SDL bergerak.
       **Verifikasi**: `pnpm run schema:drift` hijau (ketiga salinan identik dengan SDL yang dilayani) + `pnpm run codegen` + `pnpm run generate:check` hijau; salinan ulang tetap menjadi commit terpisah yang terlihat (bukan disembunyikan di diff fitur); jalankan juga `pnpm run schema:drift` pada gerbang K3 (T030) dan catat hasilnya.
 
 **Checkpoint K5**: `pnpm run schema:drift` hijau, atau perbedaannya dicatat eksplisit sebagai pengecualian yang disetujui — bukan dibiarkan merah tanpa catatan.
+
+**Status per 2026-10-16**: T048 selesai — ketiga salinan kini `d35e0988…` (byte-for-byte dengan SDL yang dilayani); `pnpm run schema:drift` + `pnpm run codegen` + `pnpm run generate:check` + `lint`/`typecheck`/`test` hijau. Bukti lengkap ada di komentar issue TAN-218.
