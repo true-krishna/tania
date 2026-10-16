@@ -10,7 +10,11 @@ export const UNAUTHORIZED = "/403";
 // DASHBOARD
 export const DASHBOARD = "/dashboard";
 export const ACTIVITIES = "/activities";
+
+// WORKLOAD
 export const WORKLOAD = "/workload";
+export const WORKLOAD_EXECUTIVE = "/workload/executive";
+export const WORKLOAD_TALENT = "/workload/talent";
 export const PROFILE = "/profile";
 
 // EMPLOYEES

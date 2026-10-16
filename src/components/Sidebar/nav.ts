@@ -33,6 +33,8 @@ import {
   MASTER_DATA_UNITS,
   TALENT_ASSIGNMENT,
   WORKLOAD,
+  WORKLOAD_EXECUTIVE,
+  WORKLOAD_TALENT,
 } from "@/lib/constants/routes";
 
 export interface NavLink {
@@ -72,7 +74,18 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
 export const NAV: readonly NavEntry[] = [
   { kind: "link", href: DASHBOARD, label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
   { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
-  { kind: "link", href: WORKLOAD, label: "Workload", icon: IconChartBar, roles: ALL },
+  {
+    kind: "group",
+    id: "workload",
+    label: "Workload",
+    icon: IconChartBar,
+    roles: ALL,
+    children: [
+      { href: WORKLOAD, label: "Workload saya", roles: ALL },
+      { href: WORKLOAD_EXECUTIVE, label: "Executive", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: WORKLOAD_TALENT, label: "Per Talent", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+    ],
+  },
   {
     kind: "group",
     id: "employee",
