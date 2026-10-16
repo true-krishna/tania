@@ -191,6 +191,16 @@ describe("ExecutiveReportView — period selector & state matrix (TAN-228/235)",
     expect(await screen.findByText(fixture!.summary!.totalTimespent)).toBeInTheDocument();
   });
 
+  it("shows the stale marker when the stamp passes the threshold while the source is up", async () => {
+    h.params = new URLSearchParams("period=202608");
+    render(<ExecutiveReportView />);
+
+    expect(await screen.findByText(/Data lama — terakhir diperbarui/)).toBeInTheDocument();
+    expect(screen.queryByText(/Tidak dapat menghubungi sumber data WAD/)).toBeNull();
+    const fixture = getExecutiveFixture("202608");
+    expect(screen.getByText(fixture!.summary!.totalTimespent)).toBeInTheDocument();
+  });
+
   it("shows the loading skeleton before the period resolves", () => {
     render(<ExecutiveReportView />);
 
@@ -255,5 +265,13 @@ describe("TalentWorkloadView — summary, charts & backlog (TAN-233/234)", () =>
     });
 
     expect(h.replace).toHaveBeenCalledWith("/workload/talent?period=202608");
+  });
+
+  it("shows the stale marker for the stale period while the source is up", async () => {
+    h.params = new URLSearchParams("period=202608");
+    render(<TalentWorkloadView />);
+
+    expect(await screen.findByText(/Data lama — terakhir diperbarui/)).toBeInTheDocument();
+    expect(screen.queryByText(/Tidak dapat menghubungi sumber data WAD/)).toBeNull();
   });
 });

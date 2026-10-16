@@ -714,17 +714,27 @@ const BASE_FRESHNESS: Omit<WorkloadFreshness, "sourceStatus" | "lastUpdatedAt" |
   expectedReflectionHours: 24,
 };
 
+/**
+ * Matriks skenario state per periode (TAN-235): 202609 siap & fresh, 202608
+ * stale (sumber OK, stempel pembaruan sudah lewat ambang 72 jam), 202607
+ * kosong, 202606 sumber tak tersedia dengan data terakhir sebagai data lama.
+ */
+function freshnessFor(periode: string): WorkloadFreshness {
+  if (periode === "202608") {
+    return { ...BASE_FRESHNESS, sourceStatus: "OK", lastUpdatedAt: "2026-10-12T09:00:00+07:00", isStale: true };
+  }
+  if (periode === "202606") {
+    return { ...BASE_FRESHNESS, sourceStatus: "UNAVAILABLE", lastUpdatedAt: "2026-10-09T09:00:00+07:00", isStale: true };
+  }
+  return { ...BASE_FRESHNESS, sourceStatus: "OK", lastUpdatedAt: "2026-10-16T02:15:00+07:00", isStale: false };
+}
+
 function executiveFixtureFor(periode: string): ExecutiveReportFixture {
   if (periode === "202607") {
     return {
       period: periode,
       state: "empty",
-      freshness: {
-        ...BASE_FRESHNESS,
-        sourceStatus: "OK",
-        lastUpdatedAt: "2026-10-16T02:15:00+07:00",
-        isStale: false,
-      },
+      freshness: freshnessFor(periode),
       summary: null,
       charts: null,
       distribution: null,
@@ -747,12 +757,7 @@ function executiveFixtureFor(periode: string): ExecutiveReportFixture {
   return {
     period: periode,
     state: unavailable ? "unavailable" : "ready",
-    freshness: {
-      ...BASE_FRESHNESS,
-      sourceStatus: unavailable ? "UNAVAILABLE" : "OK",
-      lastUpdatedAt: unavailable ? "2026-10-09T09:00:00+07:00" : "2026-10-16T02:15:00+07:00",
-      isStale: unavailable,
-    },
+    freshness: freshnessFor(periode),
     summary: buildSummary(ms, periodFactor),
     charts,
     distribution: buildDistribution(ms),
@@ -769,12 +774,7 @@ function talentFixtureFor(periode: string, talentId: string): TalentWorkloadFixt
       talentId,
       period: periode,
       state: "empty",
-      freshness: {
-        ...BASE_FRESHNESS,
-        sourceStatus: "OK",
-        lastUpdatedAt: "2026-10-16T02:15:00+07:00",
-        isStale: false,
-      },
+      freshness: freshnessFor(periode),
       summary: null,
       assignedProjects: null,
       statusBacklog: null,
@@ -795,12 +795,7 @@ function talentFixtureFor(periode: string, talentId: string): TalentWorkloadFixt
     talentId,
     period: periode,
     state: unavailable ? "unavailable" : "ready",
-    freshness: {
-      ...BASE_FRESHNESS,
-      sourceStatus: unavailable ? "UNAVAILABLE" : "OK",
-      lastUpdatedAt: unavailable ? "2026-10-09T09:00:00+07:00" : "2026-10-16T02:15:00+07:00",
-      isStale: unavailable,
-    },
+    freshness: freshnessFor(periode),
     summary: buildIndividualSummary(talent, PERIOD_FACTOR[periode] ?? 1),
     assignedProjects: buildAssignedProjects(talent),
     statusBacklog: buildStatusBacklog(backlogRows),
