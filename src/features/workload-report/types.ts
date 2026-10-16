@@ -139,6 +139,12 @@ export interface DistributionRow {
   /** Nama entitas pada dimensi aktif (`nama` di WAD). */
   nama: string;
   scope: DistributionScope;
+  /**
+   * Nama tampilan tribe/squad — hanya terisi pada baris dimensi `talent`
+   * (baris `tribe_name` WAD); `null` pada dimensi lain.
+   */
+  tribe: string | null;
+  squad: string | null;
   /** Identitas talent — hanya untuk dimensi `talent`; tidak pernah ke URL. */
   talentId: string | null;
   talentName: string | null;

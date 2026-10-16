@@ -358,6 +358,8 @@ function buildDistributionRow(group: Group): DistributionRow {
     id: group.id,
     nama: group.nama,
     scope: group.scope,
+    tribe: single ? single.tribe : null,
+    squad: single ? single.squad : null,
     talentId: single ? single.id : null,
     talentName: single ? single.name : null,
     jumlahTalent: n,
