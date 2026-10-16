@@ -23,7 +23,7 @@ Dua entitas baru (**ChatConversation**, **ChatMessage**) + **tiga penambahan bac
 | `id` | UUID / `uuid PK` | Dibuat server |
 | `conversationID` | UUID / `conversation_id FK → chat_conversations` | Kepemilikan diwarisi lewat percakapan induk; akses lintas user ditolak `ErrNotFound` |
 | `role` | enum / `text CHECK` | `USER` atau `ASSISTANT` (enum GraphQL `ChatMessageRole`) |
-| `content` | text | Isi pesan. Pesan `USER` **maks 2.000 karakter** (FR-03/FR-10 — ditolak sebelum menyentuh model); pesan `ASSISTANT` terikat batas token keluaran (800, konstanta disetujui — bukan env) |
+| `content` | text | Isi pesan. Pesan `USER` **maks 2.000 karakter** (FR-03/FR-10 — ditolak sebelum menyentuh model; batas yang tampil di UI); pesan `ASSISTANT` terikat batas token keluaran (konstanta disetujui — bukan env; nilainya satu sumber di `plan.md` D6) |
 | `inputTokens` / `outputTokens` | int / `int NOT NULL DEFAULT 0` | Pemakaian token per pesan asisten (FR-10/US6) — bahan laporan biaya; 0 untuk pesan user |
 | `sources` | jsonb / `jsonb` | Rujukan sumber jawaban asisten: daftar `{tool, params, rowCount, fetchedAt}` — audit kualitas jawaban (US5 skenario 4); **internal**, tidak diekspos ke GraphQL (klien melihat rujukan dari teks jawaban, FR-05) |
 | `createdAt` | time / `timestamptz` | Waktu pesan |
@@ -67,7 +67,7 @@ domain.LLMGateway ◄── platform/llm/openai.go   (OpenAI-compatible endpoint
 ```
 
 - `domain.ChatRepository` (interface baru): `CreateConversation`, `ListConversations(userID, page)`, `GetConversation(userID, id)` → `ErrNotFound` bila bukan milik pemanggil, `AppendMessage`, `ListMessages(conversationID, page)`, `DeleteOlderThan(ctx, cutoff) → count` (untuk retensi).
-- `domain.LLMGateway` (interface baru): `Complete(ctx, ChatRequest) (ChatResponse, error)` — request memuat system prompt, riwayat terpotong 12 pesan, definisi toolset, dan hasil tool; response memuat teks jawaban, pemakaian token, dan tool-calls bila ada.
+- `domain.LLMGateway` (interface baru): `Complete(ctx, ChatRequest) (ChatResponse, error)` — request memuat system prompt, riwayat terpotong sesuai jendela konteks (satu sumber: `plan.md` D6), definisi toolset, dan hasil tool; response memuat teks jawaban, pemakaian token, dan tool-calls bila ada.
 - Baca ber-cakupan (R-11, semuanya read-only dan **internal** — bukan permukaan GraphQL): daftar/pencarian karyawan dalam cakupan (reuse `EmployeeRepository.Search` + `scopeChapterID`), `EmployeesNeedingFollowUp` + scope, kontrak ber-cakupan via `domain.ContractFilter.ScopeChapterID`, dan daftar karyawan dengan data diri belum lengkap.
 - `domain.ContractFilter` (existing, diperluas **internal**): `+ ScopeChapterID *string` — diisi server dari identitas pemanggil, tidak pernah dari input klien.
 - Transisi status: tidak ada (lihat di atas). Validasi: panjang pesan, kepemilikan, peran — rinci di `contracts/chat.md`.

@@ -4,7 +4,7 @@
 
 **Prerequisites**: `plan.md` (wajib — D1–D9, R-1–R-11, Organization, roadmap K0–K3) · `spec.md` (wajib — US1–US6, FR-01–FR-12 + FR-29/FR-30/FR-40/FR-42 induk, SC-001–SC-004) · `research.md` (R-1–R-11) · `data-model.md` (2 entitas baru + 3 baca ber-cakupan + klasifikasi data pribadi) · `contracts/chat.md` (SDL final, otorisasi, toolset, guardrail, kontrak UI) · `quickstart.md` (§A gerbang otomatis · §B/§C UAT per peran · §D probe keamanan · §E biaya/retensi)
 
-**Kontrak yang sudah final dan TIDAK dibuka di fase ini**: `spec.md` (milik TAN-203) — **kecuali penambahan FR-13/FR-14 atas instruksi pemilik 2026-10-15** (mencatat kebutuhan yang sudah terimplementasi agar dapat dilacak; tercatat di bagian Revisi spec.md) — keputusan plan D1–D9/R-1–R-11, retensi **90 hari hard delete**, seluruh nilai guardrail FR-10 (**12 pesan · 2.000 karakter · 800 token keluaran · 25 s · 20 pesan/jam/user · plafon ≈3.000 pesan/bulan**) sebagai **konstanta kode**, provider **OpenAI-compatible**, kendala pemilik **tanpa perubahan stack & tanpa dependensi baru**.
+**Kontrak yang sudah final dan TIDAK dibuka di fase ini**: `spec.md` (milik TAN-203) — **kecuali penambahan FR-13/FR-14 atas instruksi pemilik 2026-10-15** (mencatat kebutuhan yang sudah terimplementasi agar dapat dilacak; tercatat di bagian Revisi spec.md) — keputusan plan D1–D9/R-1–R-11, retensi **90 hari hard delete**, seluruh nilai guardrail FR-10 (satu sumber: `plan.md` **D6** — mesin: konstanta `tania-backend/internal/domain/chat.go`; plafon ≈3.000 pesan/bulan di plan Open Item 4(a)) sebagai **konstanta kode**, provider **OpenAI-compatible**, kendala pemilik **tanpa perubahan stack & tanpa dependensi baru**.
 
 **Repositori**: `tania-backend` (orkestrasi AI, skema GraphQL, migrasi) + `tania-dashboard` (rumah spec & UI asisten). Branch kerja: `agent/diggie/8aff2b1806a1`.
 
@@ -72,7 +72,7 @@
 
 - [ ] T004 [US1] **Domain chat — entitas, interface, konstanta guardrail**
       → `internal/domain/chat.go` (baru)
-      `ChatConversation`, `ChatMessage` (+ `ChatMessageRole`), `ChatSource` (jsonb `{tool,params,rowCount,fetchedAt}`); interface `ChatRepository` (`CreateConversation`, `ListConversations(userID, page)`, `GetConversation(userID, id)` → `ErrNotFound`, `AppendMessage`, `ListMessages(conversationID, page)`, `DeleteOlderThan(ctx, cutoff) (int, error)`) dan `LLMGateway` (`Complete(ctx, ChatRequest) (ChatResponse, error)`); konstanta guardrail **satu tempat** (dasar FR-10 — kenaikan = perubahan kode + persetujuan): `ChatContextMessages = 12`, `ChatMaxMessageLength = 2000`, `ChatMaxOutputTokens = 800`, `ChatRequestTimeout = 25 * time.Second`, `ChatMaxToolRounds = 5`, `ChatRateLimitPerHour = 20`, `ChatRetentionDays = 90`.
+      `ChatConversation`, `ChatMessage` (+ `ChatMessageRole`), `ChatSource` (jsonb `{tool,params,rowCount,fetchedAt}`); interface `ChatRepository` (`CreateConversation`, `ListConversations(userID, page)`, `GetConversation(userID, id)` → `ErrNotFound`, `AppendMessage`, `ListMessages(conversationID, page)`, `DeleteOlderThan(ctx, cutoff) (int, error)`) dan `LLMGateway` (`Complete(ctx, ChatRequest) (ChatResponse, error)`); konstanta guardrail **satu tempat** di `internal/domain/chat.go` (dasar FR-10 — kenaikan = perubahan kode + persetujuan; **nilainya hanya ditulis di `plan.md` D6**, jangan diulang di dokumen): `ChatContextMessages`, `ChatMaxMessageLength`, `ChatMaxOutputTokens`, `ChatRequestTimeout`, `ChatMaxToolRounds`, `ChatRateLimitPerHour`, `ChatRetentionDays`.
       **Verifikasi**: `go build ./... && go vet ./...`; konstanta ditelusuri ulang ke `plan.md` D5/D6 & `contracts/chat.md` §Guardrail.
       **Menutup**: data-model §Relasi & antarmuka · FR-10 · D5/D6.
 
@@ -124,7 +124,7 @@
 
 - [ ] T012 [US1] [US4] [US6] **ChatService — gate peran, privasi, guardrail, idempotensi, loop tool**
       → `internal/usecase/chat.go` (baru)
-      Metode `CreateConversation`, `ListConversations`, `Messages`, `Send(ctx, identity, conversationID, content, clientRequestID)`, `RunRetention(ctx)`. Isi `Send`: gate `RequireRole(identity, RoleChapter, RoleOperation)` (Admin/Talent → FORBIDDEN, FR-01); cek kepemilikan percakapan (bukan milik pemanggil → `ErrNotFound`); tolak `content` kosong/>2.000 karakter **sebelum** menyentuh model; rate limit `RateLimiter.Allow(ctx, "chat:"+userID, ChatRateLimitPerHour, time.Hour)` (20/jam/user, Redis existing) **sebelum** model; idempotensi `clientRequestID` (pesan USER dipakai ulang bila sudah ada → lalu jawab); jendela konteks **12 pesan**; loop tool maksimum **5 putaran**; catat `input_tokens`/`output_tokens` + `sources` pada pesan ASSISTANT; kegagalan gateway → pesan USER tetap tersimpan, tidak ada ASSISTANT tersusun, error jujur (FR-11); log hanya ID teknis/putaran/token/durasi/kode error — tanpa isi pesan, tanpa nama, tanpa NIK.
+      Metode `CreateConversation`, `ListConversations`, `Messages`, `Send(ctx, identity, conversationID, content, clientRequestID)`, `RunRetention(ctx)`. Isi `Send`: gate `RequireRole(identity, RoleChapter, RoleOperation)` (Admin/Talent → FORBIDDEN, FR-01); cek kepemilikan percakapan (bukan milik pemanggil → `ErrNotFound`); tolak `content` kosong/melebihi `ChatMaxMessageLength` **sebelum** menyentuh model; rate limit `RateLimiter.Allow(ctx, "chat:"+userID, ChatRateLimitPerHour, time.Hour)` (Redis existing) **sebelum** model; idempotensi `clientRequestID` (pesan USER dipakai ulang bila sudah ada → lalu jawab); jendela konteks `ChatContextMessages`; loop tool maksimum `ChatMaxToolRounds` putaran; catat `input_tokens`/`output_tokens` + `sources` pada pesan ASSISTANT; kegagalan gateway → pesan USER tetap tersimpan, tidak ada ASSISTANT tersusun, error jujur (FR-11); log hanya ID teknis/putaran/token/durasi/kode error — tanpa isi pesan, tanpa nama, tanpa NIK.
       **Verifikasi**: `go build ./...` + `go test ./internal/usecase/... -run Chat` (T018).
       **Menutup**: US1 · US4 · US6 · FR-01/02/03/10/11/13 · FR-14 · D4/D5/D6 · Security II/III.
 
@@ -234,13 +234,13 @@
 
 - [ ] T028 [P] [US1] [US5] [US6] **Test komponen frontend**
       → `src/features/assistant/assistant.test.tsx` (baru) · `src/app/(app)/layout.test.tsx`
-      Vitest + RTL + `MockedProvider` (pola `master-data.test.tsx`/`dashboard.test.tsx`). Kasus: panel terbuka dari dashboard & dari bubble; chip berbeda per peran (Chapter vs Operation) dan semuanya terpetakan ke toolset; kirim → bubble user optimistis tampil + balasan tampil; riwayat dimuat ulang dari `chatMessages`; pesan USER tanpa balasan ditandai "belum terjawab" + coba ulang mengirim `clientRequestId` **sama**; blokir input > 2.000 karakter tanpa memanggil mutation; guard peran (panel & bubble **tidak** dirender untuk ADMIN/TALENT); state gagal ramah; renderer format (bold/daftar/baris baru; **assert tidak ada raw HTML** di-render); keyboard (fokus berpindah ke input saat dibuka, `Escape` menutup).
+      Vitest + RTL + `MockedProvider` (pola `master-data.test.tsx`/`dashboard.test.tsx`). Kasus: panel terbuka dari dashboard & dari bubble; chip berbeda per peran (Chapter vs Operation) dan semuanya terpetakan ke toolset; kirim → bubble user optimistis tampil + balasan tampil; riwayat dimuat ulang dari `chatMessages`; pesan USER tanpa balasan ditandai "belum terjawab" + coba ulang mengirim `clientRequestId` **sama**; blokir input > 2.000 karakter (batas UI — `plan.md` D6) tanpa memanggil mutation; guard peran (panel & bubble **tidak** dirender untuk ADMIN/TALENT); state gagal ramah; renderer format (bold/daftar/baris baru; **assert tidak ada raw HTML** di-render); keyboard (fokus berpindah ke input saat dibuka, `Escape` menutup).
       **Verifikasi**: `pnpm test` hijau.
       **Menutup**: US1/US5/US6 · FR-01/03/05/11 · FR-14 · Design §VI.
 
 - [ ] T029 [P] [US1] **E2E Playwright — invariant panel (tanpa provider)**
       → `e2e/critical-path.spec.ts`
-      Skenario: login **Chapter** → bubble terlihat → panel terbuka (mouse dan keyboard) → fokus pindah ke input → chip contoh Chapter mengisi draft + penghitung karakter → input dibatasi 2.000 karakter → `Escape` menutup dan fokus kembali ke pemicu; **Talent/Admin** → panel/bubble tidak tersedia. Seluruh langkah di sini tidak memanggil model, jadi lulus tanpa provider (mode `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1`). Tanpa mengubah skenario critical-path existing.
+      Skenario: login **Chapter** → bubble terlihat → panel terbuka (mouse dan keyboard) → fokus pindah ke input → chip contoh Chapter mengisi draft + penghitung karakter → input dibatasi 2.000 karakter (batas UI — `plan.md` D6) → `Escape` menutup dan fokus kembali ke pemicu; **Talent/Admin** → panel/bubble tidak tersedia. Seluruh langkah di sini tidak memanggil model, jadi lulus tanpa provider (mode `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1`). Tanpa mengubah skenario critical-path existing.
       **Verifikasi**: `pnpm run test:e2e` — skenario invariant lulus; skenario existing tidak regresi. Jalur yang butuh balasan nyata ada di T034 (K3).
       **Menutup**: US1 AC1/AC4 · FR-01 · Design §VI.
 
@@ -258,7 +258,7 @@
       **Menutup**: Technical II/III · SC-003 (bagian otomatis).
 
 - [ ] T031 **UAT Chapter + Operation (quickstart §B & §C)** — butuh provider terverifikasi (T001–T002) untuk langkah yang memanggil model.
-      Chapter: panel & chip (keyboard + mouse, tutup `Escape`) → "Ringkas kondisi karyawan dan kontrak di cakupan chapter saya" (angka **identik** dengan dashboard/modul + sumber & waktu data, <30 detik) → "Siapa saja yang kontraknya berakhir dalam 90 hari?" (tepat; NIK tersamar) → minta rekomendasi perpanjangan (berlabel saran, merujuk dasar data, mengarahkan ke modul) → riwayat bertahan setelah login ulang + "Percakapan baru" tidak membawa konteks lama → batas 2.000 karakter → coba ulang setelah provider gagal (riwayat tetap **satu** pesan user). Operation: ringkasan mencakup seluruh karyawan + indikator kontrak segera berakhir; chip berbeda dan semuanya dapat dijawab.
+      Chapter: panel & chip (keyboard + mouse, tutup `Escape`) → "Ringkas kondisi karyawan dan kontrak di cakupan chapter saya" (angka **identik** dengan dashboard/modul + sumber & waktu data, <30 detik) → "Siapa saja yang kontraknya berakhir dalam 90 hari?" (tepat; NIK tersamar) → minta rekomendasi perpanjangan (berlabel saran, merujuk dasar data, mengarahkan ke modul) → riwayat bertahan setelah login ulang + "Percakapan baru" tidak membawa konteks lama → batas 2.000 karakter (batas UI — `plan.md` D6) → coba ulang setelah provider gagal (riwayat tetap **satu** pesan user). Operation: ringkasan mencakup seluruh karyawan + indikator kontrak segera berakhir; chip berbeda dan semuanya dapat dijawab.
       **Verifikasi**: checklist `quickstart.md` §B (7 langkah) & §C (2 langkah) terisi; temuan dilaporkan.
       **Menutup**: US1/US2/US3/US5/US6 · FR-01/03/04/05/07/08/09/12 · SC-001/SC-002.
 
@@ -360,7 +360,7 @@ T004 ───► T014 (SDL + gqlgen) ──────────────
 | T033 | US6 · FR-10/FR-13 · SC-001/SC-002/SC-004 · Security II/IV · plan Open Item 3 |
 | T034 | US1 AC2/AC3 · FR-11 · FR-14 · SC-001 |
 
-**Disetujui pemilik meski semula tidak diminta eksplisit oleh FR**: **rate limit 20 pesan/jam/user** (T012, T018, T032, T033 — nilai disetujui pemilik 2026-10-14; sejak 2026-10-15 ber-butir **FR-13** agar dapat dilacak) dan **job retensi 90 hari hard delete** (T003, T005, T017, T033 — Security IV/`data-model.md` §Retensi, disetujui 2026-10-14; tetap tanpa butir FR). Keduanya task tersendiri, bukan sisipan.
+**Disetujui pemilik meski semula tidak diminta eksplisit oleh FR**: **rate limit 20 pesan/jam/user** (T012, T018, T032, T033 — nilai disetujui pemilik 2026-10-14, satu sumber `plan.md` D6; sejak 2026-10-15 ber-butir **FR-13** agar dapat dilacak) dan **job retensi 90 hari hard delete** (T003, T005, T017, T033 — Security IV/`data-model.md` §Retensi, disetujui 2026-10-14; tetap tanpa butir FR). Keduanya task tersendiri, bukan sisipan.
 
 ---
 
@@ -461,11 +461,11 @@ T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak C
       **Verifikasi**: checklist ada dan setiap butir merujuk `data-model.md` §Klasifikasi + retensi 90 hari + penundaan DAMP; ditandatangani sebelum gerbang rilis.
       **Selesai 2026-10-15**: `specs/005-asisten-data-chatbot/checklists/security.md` dibuat (klasifikasi, dasar pemrosesan, otorisasi, retensi & hak subjek, log, rahasia, jalur breach) dan dirujukkan ke `data-model.md` §Klasifikasi + retensi 90 hari. Tiga butir **sengaja masih terbuka** dan ditandai: DAMP, uji kuota pada stack hidup, dan tanda tangan pemilik — butir terbuka tidak dibaca sebagai lulus.
 
-- [ ] T045 Jadikan satu sumber nilai guardrail dan rujukkan dokumen ke sana (buang duplikasi yang mulai berbeda) per plan D6/Technical I (partial)
-      → rujukan tunggal: `internal/domain/chat.go` (konstanta, sudah satu-satunya sumber mesin) + plan D6; yang perlu dirapikan: `spec.md` FR-10 (belum memuat timeout 25 s & kuota), `data-model.md` (belum memuat keduanya), `contracts/chat.md` §Guardrail, `tasks.md`, `quickstart.md` §E4.
+- [x] T045 Jadikan satu sumber nilai guardrail dan rujukkan dokumen ke sana (buang duplikasi yang mulai berbeda) per plan D6/Technical I (partial)
+      → rujukan tunggal: `internal/domain/chat.go` (konstanta, sudah satu-satunya sumber mesin) + plan D6; yang dirapikan: `spec.md` FR-10/FR-13, `data-model.md`, `contracts/chat.md` §Guardrail, `tasks.md`, `quickstart.md` §Prasyarat/§E4.
       **Bukti gap**: satu nilai yang disetujui tersebar di 6 dokumen dengan isi yang sudah tidak seragam — satu perubahan nilai = banyak suntingan yang mudah tertinggal.
       **Verifikasi**: setiap dokumen menunjuk plan D6/konstanta, tidak ada angka guardrail yang ditulis ulang tanpa rujukan; `grep` angka guardrail menunjukkan satu sumber.
-      **Belum dikerjakan 2026-10-15** — masih tersebar dan belum diseragamkan. Sengaja tidak dikerjakan setengah jalan: butir ini menuntut penyuntingan `spec.md` FR-10/`data-model.md`/`contracts/chat.md`/`quickstart.md` menjadi rujukan, jadi nilainya baru ada bila seluruh rujukan berubah sekaligus.
+      **Selesai 2026-10-16**: plan D6 ditetapkan sebagai **rujukan nilai tunggal** (mesin: konstanta `tania-backend/internal/domain/chat.go`, ditambah nama berkasnya di D6 + catatan “Satu sumber nilai guardrail (T045)”). Daftar angka yang diulang dibuang dari `spec.md` FR-10, `data-model.md`, `contracts/chat.md` §Guardrail, `tasks.md` (prasyarat + T004 + T012), `research.md` R-9, dan `quickstart.md` §Prasyarat — semuanya menunjuk D6. Angka yang memang tampil di kontrak/UX (2.000 karakter, 20 pesan/jam/user, 25 s) tetap ada dengan rujukan `plan D6` dan **nilainya tidak berubah**. `spec.md` hanya disentuh untuk penyeragaman rujukan ini dan dicatat di bagian **Revisi**. Tidak ada perubahan kode aplikasi.
 
 - [x] T046 Selaraskan sisa inkonsistensi dokumen: "status" pada §Key Entities vs data-model, kalimat rusak `quickstart.md` §Kriteria lulus, dan rujukan salah pada T033 per temuan analyze F-11/F-13 (contradicts)
       → `specs/005-asisten-data-chatbot/spec.md:153` ("waktu mulai, dan **status**" — data-model menegaskan tidak ada status alur kerja), `quickstart.md:79` ("satu saja gagal = pem blockers rilis"), `tasks.md` T033 ("checklists §E terisi" untuk laten <30 s & sampling SC-002 — keduanya hidup di §B.2/T031).
@@ -480,7 +480,7 @@ T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak C
 
 **Checkpoint K4**: seluruh task di atas tercentang atau terblokir dengan alasan jujur; gerbang rilis K3 (T030–T034) baru dapat ditutup setelah T035–T041 selesai, sebab keempatnya mengubah perilaku yang diuji UAT/probe.
 
-**Status per 2026-10-15**: selesai — T035, T036 (backend + frontend; sisa butir UAT pada stack hidup), T037, T044, T046, T047. Dialihkan ke gelombang master-data sebagai TAN-213 — T042, T043. Ditahan sebagai tindakan tata kelola kanon (sudah dirutekan pemilik ke agen khusus) — T041. Belum dikerjakan — T038 (fitur baru, butuh keputusan bentuk), T040 (butuh DB terisolasi), T045 (penyeragaman rujukan guardrail). Sisa T039: skenario coba-ulang ber-provider belum ditulis.
+**Status per 2026-10-16**: selesai — T035, T036 (backend + frontend; sisa butir UAT pada stack hidup), T037, T044, T045, T046, T047. Dialihkan ke gelombang master-data sebagai TAN-213 — T042, T043. Ditahan sebagai tindakan tata kelola kanon (sudah dirutekan pemilik ke agen khusus) — T041. Belum dikerjakan — T038 (fitur baru, butuh keputusan bentuk), T040 (butuh DB terisolasi). Sisa T039: skenario coba-ulang ber-provider belum ditulis.
 
 ## Phase K5: Convergence (2026-10-15)
 

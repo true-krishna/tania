@@ -71,7 +71,7 @@ type Mutation {
 
 ### Idempotensi kirim (FR-14)
 
-Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER identik** di riwayat (dan di jendela konteks 12 pesan). Kontraknya:
+Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER identik** di riwayat (dan di jendela konteks — `plan.md` D6). Kontraknya:
 
 - Klien membuat `clientRequestId` (UUID) **sekali per kiriman user** dan memakai id yang sama saat "coba ulang" (bukan id baru per percobaan).
 - Server: bila di percakapan itu **sudah ada** pesan USER dengan `clientRequestId` sama → pesan itu **dipakai ulang** (tidak insert baru), lalu pemrosesan jawaban dijalankan; bila belum ada → insert pesan USER baru, lalu proses. Unik parsial `(conversation_id, client_request_id)` menjaga ini di level DB.
@@ -90,12 +90,12 @@ Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER id
 | Kondisi | Perilaku server | Perilaku UI |
 | --- | --- | --- |
 | Peran Admin/Talent memanggil operasi chat | `FORBIDDEN` | Panel/bubble tidak dirender; akses langsung tetap ditolak server |
-| `content` kosong / > 2.000 karakter | Ditolak **sebelum** pemanggilan model (tidak memicu pemakaian token) | `maxLength` input + pesan "Maksimal 2.000 karakter."; tidak ada bubble baru |
+| `content` kosong / > 2.000 karakter (batas UI — `plan.md` D6) | Ditolak **sebelum** pemanggilan model (tidak memicu pemakaian token) | `maxLength` input + pesan "Maksimal 2.000 karakter."; tidak ada bubble baru |
 | `conversationId` bukan milik pemanggil / tidak ada | `NOT_FOUND` | Toast error; panel tetap pada daftar percakapan miliknya |
 | `AI_PROVIDER_*` belum dikonfigurasi | Kegagalan eksplisit "asisten belum dikonfigurasi" (`CHAT_NOT_CONFIGURED`) | Pesan gagal ramah di thread (FR-11) |
-| Provider model gagal/timeout/anggaran jawaban habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (`CHAT_FAILED`; anggaran satu jawaban 25 s, plan D5/R2) | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; tidak ada angka yang ditampilkan |
+| Provider model gagal/timeout/anggaran jawaban habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (`CHAT_FAILED`; anggaran satu jawaban — `plan.md` D6/R2) | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; tidak ada angka yang ditampilkan |
 | `clientRequestId` hilang/bukan UUID | Ditolak sebelum menyentuh model | — |
-| Kuota per user terlampaui (**20 pesan/jam**, konstanta disetujui) | Ditolak **sebelum** pemanggilan model — tidak ada token terpakai; kode `CHAT_RATE_LIMITED` + `extensions.retryAfterSeconds` (sisa jendela) | Pesan ramah "kuota asisten tercapai … Coba lagi dalam N menit." (pesan server ditampilkan apa adanya); tombol kirim nonaktif **dan** tombol "coba ulang" disembunyikan sampai jendela bergeser |
+| Kuota per user terlampaui (**20 pesan/jam**, konstanta disetujui — `plan.md` D6) | Ditolak **sebelum** pemanggilan model — tidak ada token terpakai; kode `CHAT_RATE_LIMITED` + `extensions.retryAfterSeconds` (sisa jendela) | Pesan ramah "kuota asisten tercapai … Coba lagi dalam N menit." (pesan server ditampilkan apa adanya); tombol kirim nonaktif **dan** tombol "coba ulang" disembunyikan sampai jendela bergeser |
 | Pertanyaan di luar domain Tania (FR-12) | Model diarahkan system prompt menolak sopan + menjelaskan cakupan | Ditampilkan sebagai jawaban biasa |
 
 ## Toolset data (read-only; diekspos ke model, bukan ke klien)
@@ -113,7 +113,7 @@ Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (N
 
 **Batas yang dijaga (R-11)**: baca ber-cakupan chapter hidup di lapisan usecase/repository dan **tidak** diekspos sebagai query/mutation GraphQL. Bila diekspos, Chapter akan memperoleh permukaan `employmentContracts`/`expiringContracts` milik Operation — itu amandemen matriks RBAC. `ScopeChapterID` hanya diisi server dari identitas pemanggil; resolver `employmentContracts(filter:)` tidak memetakan nilai dari klien ke field ini. Resolver existing juga tetap memanggil repositori dengan scope `nil` (Operation-wide) — perilaku query existing **tidak berubah**; scope hanya diisi pada jalur tool asisten.
 
-**Guardrail biaya (FR-10 — nilai disetujui pemilik 2026-10-14, semuanya konstanta kode, bukan env)**: jendela konteks **12 pesan**; panjang pesan **2.000 karakter**; token keluaran **800**; timeout permintaan **25 s**; rate limit **20 pesan/jam/user** memakai `RateLimiter.Allow` Redis existing. Kenaikan nilai mana pun = perubahan kode + persetujuan pemilik. Pemakaian token per pesan asisten tersimpan untuk laporan bulanan.
+**Guardrail biaya (FR-10 — nilai disetujui pemilik 2026-10-14)**: seluruh batas adalah **konstanta kode, bukan env**, dan **nilainya satu sumber**: `plan.md` D6 (mesin: konstanta `tania-backend/internal/domain/chat.go`). Kontrak ini tidak mengulang daftar angkanya; nilai yang tampil pada tabel §Kontrak error (batas panjang pesan, kuota per jam, anggaran satu jawaban) menunjuk rujukan yang sama dan **tidak boleh berbeda nilai**. Kenaikan nilai mana pun = perubahan kode + persetujuan pemilik. Pemakaian token per pesan asisten tersimpan untuk laporan bulanan.
 
 **Protokol loop** (diegakkan usecase, bukan harapan prompt): maksimum 5 putaran tool per jawaban; setiap hasil tool diberi label sumber + `fetchedAt` (dasar FR-05); jawaban final wajib memuat sumber & waktu data; tool error → dilaporkan ke model sebagai kegagalan (jawaban jujur, bukan konjektur).
 
