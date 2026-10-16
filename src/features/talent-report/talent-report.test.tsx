@@ -72,7 +72,7 @@ const echartsMock = vi.hoisted(() => {
 });
 
 vi.mock("echarts/core", () => ({ use: echartsMock.use, init: echartsMock.init }));
-vi.mock("echarts/charts", () => ({ BarChart: {}, LineChart: {} }));
+vi.mock("echarts/charts", () => ({ BarChart: {}, LineChart: {}, PieChart: {} }));
 vi.mock("echarts/components", () => ({
   GridComponent: {},
   TitleComponent: {},
