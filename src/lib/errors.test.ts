@@ -4,6 +4,7 @@ import {
   ERROR_LABEL,
   errorField,
   errorMessage,
+  errorRetryAfterSeconds,
   graphQLErrorCode,
   mapErrorBehavior,
   type ErrorBehavior,
@@ -34,6 +35,9 @@ describe("mapErrorBehavior", () => {
     ["BAD_USER_INPUT", "field"],
     ["CONFLICT", "action"],
     ["RATE_LIMITED", "action"],
+    ["CHAT_RATE_LIMITED", "action"],
+    ["CHAT_FAILED", "action"],
+    ["CHAT_NOT_CONFIGURED", "action"],
     ["INTERNAL", "action"],
   ])("%s → %s", (code, kind) => {
     expect(mapErrorBehavior(code).kind).toBe(kind);
@@ -66,6 +70,28 @@ describe("errorField", () => {
 
   it("returns null when no field is attached", () => {
     expect(errorField(gqlError("BAD_USER_INPUT"))).toBeNull();
+  });
+});
+
+describe("errorRetryAfterSeconds", () => {
+  it("reads the assistant quota wait time off the refusal (FR-13)", () => {
+    const err = new ApolloError({
+      graphQLErrors: [
+        {
+          message: "kuota asisten tercapai. Coba lagi dalam 12 menit.",
+          path: ["sendChatMessage"],
+          extensions: { code: "CHAT_RATE_LIMITED", retryAfterSeconds: 720 },
+        },
+      ],
+    });
+    expect(graphQLErrorCode(err)).toBe("CHAT_RATE_LIMITED");
+    expect(errorMessage(err, "bawah")).toBe("kuota asisten tercapai. Coba lagi dalam 12 menit.");
+    expect(errorRetryAfterSeconds(err)).toBe(720);
+  });
+
+  it("returns null when no wait time is attached", () => {
+    expect(errorRetryAfterSeconds(gqlError("CHAT_RATE_LIMITED"))).toBeNull();
+    expect(errorRetryAfterSeconds(null)).toBeNull();
   });
 });
 

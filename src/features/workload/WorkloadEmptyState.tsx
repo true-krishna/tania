@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IconClockHour3 } from "@tabler/icons-react";
+import { ACTIVITIES } from "@/lib/constants/routes";
 
 export type EmptyStateVariant = "no-data" | "tms-null-self" | "tms-null-other";
 
@@ -48,7 +49,7 @@ export function WorkloadEmptyState({ variant }: { variant: EmptyStateVariant }) 
         {variant === "no-data" ? (
           <>
             <Link
-              href="/activities"
+              href={ACTIVITIES}
               className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-brand-navy bg-tp-brand-navy px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-brand-navy-deep"
             >
               <IconClockHour3 className="h-5 w-5" aria-hidden />

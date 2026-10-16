@@ -31,6 +31,12 @@ import {
   type WorkLocation,
 } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
+import {
+  CONTRACTS,
+  CONTRACT_DETAIL,
+  CONTRACT_RENEW,
+  EMPLOYEE_DETAIL,
+} from "@/lib/constants/routes";
 
 type FormValues = {
   contractNo: string;
@@ -58,7 +64,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href="/contracts" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={CONTRACTS} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
         ← Kembali ke daftar kontrak
       </Link>
       <PageHeader
@@ -66,7 +72,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
         actions={
           manage && !isOpenEndedContractType(contract.contractType) ? (
-            <Link href={`/contracts/${id}/renew`} className="no-underline">
+            <Link href={CONTRACT_RENEW(id)} className="no-underline">
               <Button variant="primary">Perpanjang kontrak</Button>
             </Link>
           ) : undefined
@@ -80,7 +86,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Karyawan</dt>
             <dd className="text-zinc-900">
               <Link
-                href={`/employees/${contract.employee.id}`}
+                href={EMPLOYEE_DETAIL(contract.employee.id)}
                 className="text-tp-brand-red-deep hover:underline"
               >
                 {contract.employee.fullName}
@@ -150,7 +156,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Kontrak Pendahulu</dt>
             <dd className="text-zinc-900">
               {contract.predecessor ? (
-                <Link href={`/contracts/${contract.predecessor.id}`} className="text-tp-brand-red-deep hover:underline">
+                <Link href={CONTRACT_DETAIL(contract.predecessor.id)} className="text-tp-brand-red-deep hover:underline">
                   {contract.predecessor.contractNo}
                 </Link>
               ) : (

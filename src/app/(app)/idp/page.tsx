@@ -18,6 +18,7 @@ import { useIdps } from "@/features/idp/useIdps";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 import { orDash } from "@/lib/cell";
+import { IDP_NEW, IDP_DETAIL } from "@/lib/constants/routes";
 import type { IdpStatus } from "@/generated/graphql/types";
 
 type IdpListRow = {
@@ -43,7 +44,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
   return (
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
-        <Link href={`/idp/${idp.id}`} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
+        <Link href={IDP_DETAIL(idp.id)} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
           {idp.talent.fullName}
         </Link>
         <span className="ml-2 text-xs text-zinc-400">{orDash(idp.talent.nomorInduk)}</span>
@@ -81,7 +82,7 @@ function IdpRow({ idp, index }: { idp: IdpListRow; index: number }) {
           actions={[
             {
               label: "Lihat detail",
-              onSelect: () => router.push(`/idp/${idp.id}`),
+              onSelect: () => router.push(IDP_DETAIL(idp.id)),
             },
           ]}
         />
@@ -123,7 +124,7 @@ function IdpRosterView({ managing }: { managing: boolean }) {
         }
         actions={
           managing ? (
-            <Link href="/idp/new" className="no-underline">
+            <Link href={IDP_NEW} className="no-underline">
               <Button variant="primary">+ Buat IDP</Button>
             </Link>
           ) : undefined

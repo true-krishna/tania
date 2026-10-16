@@ -15,6 +15,11 @@ import {
 import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
+import {
+  EVALUATIONS_MY,
+  EVALUATION_PERIODS,
+  EVALUATION_DETAIL,
+} from "@/lib/constants/routes";
 
 /**
  * Evaluations home — US7 roster, open to Admin, Operation and Chapter since the
@@ -43,7 +48,7 @@ export default function EvaluationsPage() {
         </p>
         <p className="text-sm text-zinc-600">Gunakan menu Evaluations untuk membuka daftar evaluasi Anda.</p>
         <Link
-          href="/evaluations/my"
+          href={EVALUATIONS_MY}
           className="inline-flex w-fit items-center rounded-md bg-tp-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-tp-brand-navy-deep active:bg-tp-brand-navy-deep"
         >
           Lihat evaluasi saya
@@ -66,7 +71,7 @@ export default function EvaluationsPage() {
         {role === "ADMIN" ? (
           <p className="text-sm text-zinc-600">
             Buat periode di tab{" "}
-            <Link href="/evaluations/periods" className="font-medium text-tp-brand-red-deep hover:underline">
+            <Link href={EVALUATION_PERIODS} className="font-medium text-tp-brand-red-deep hover:underline">
               Periode
             </Link>
             .
@@ -131,7 +136,7 @@ export default function EvaluationsPage() {
                         {
                           label: readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai",
                           onSelect: () =>
-                            router.push(`/evaluations/${period.id}/${entry.talent.id}`),
+                            router.push(EVALUATION_DETAIL(period.id, entry.talent.id)),
                         },
                       ]}
                     />

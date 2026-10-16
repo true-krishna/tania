@@ -12,6 +12,7 @@ import { useAssignment } from "@/features/assignments/useAssignment";
 import { EndAssignmentDocument } from "@/generated/graphql";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
+import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
 
 export default function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -28,7 +29,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href="/assignments" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={TALENT_ASSIGNMENT} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
         ← Kembali ke daftar
       </Link>
       <PageHeader

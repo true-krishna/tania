@@ -28,7 +28,7 @@ make test          # unit + contract tests (usecase/create, authz, e2e httpapi)
 
 Jalankan `pnpm dev` lalu login sebagai Admin.
 
-1. **Unit (US1)** — buka `/master-data/units`, klik **Tambah Unit**, isi nama valid (mis. `Digital Business`), Simpan.
+1. **Unit (US1)** — buka `/master-data/units`, klik **Tambah Unit**, isi **Kode Unit** (mis. `DBT`) dan nama valid (mis. `Digital Business`), Simpan.
    - Harapan: toast sukses; Unit baru muncul di daftar; kolom Proyek = 0.
 2. **Job Role tanpa chapter (US2, FR-22)** — buka `/master-data/job-roles`, **Tambah Job Role**, isi nama, biarkan **Chapter kosong**, Simpan.
    - Harapan: **berhasil** tersimpan; baris menampilkan "Tanpa chapter" (regresi G1 — sebelumnya diblokir).
@@ -39,7 +39,7 @@ Jalankan `pnpm dev` lalu login sebagai Admin.
    - Harapan: ditolak dengan pesan "Unit wajib dipilih."; tidak ada data baru.
 6. **Nama kosong (FR-004)** — pada form mana pun, kosongkan Nama lalu Simpan.
    - Harapan: ditolak dengan pesan "… wajib diisi."; tidak ada data baru.
-7. **Nama duplikat (FR-005)** — tambah entitas dengan nama yang sudah ada.
+7. **Nilai unik duplikat (FR-005)** — tambah entitas dengan nilai unik yang sudah ada: Unit → **Kode Unit** yang sudah terpakai (amandemen TAN-213: keunikan Unit pada kode); Job Role → nama yang sudah ada; Initiative → nama yang sudah ada dalam Unit yang sama.
    - Harapan: ditolak dengan pesan dari server; tidak ada data baru.
 8. **Unit baru terpakai modul lain (FR-009)** — setelah langkah 1, buka form Initiative; harapan: Unit baru tersedia sebagai pilihan.
 
@@ -49,7 +49,7 @@ Jalankan `pnpm dev` lalu login sebagai Admin.
    - Harapan UI: menu Master Data tidak tampil; membuka `/master-data/units` langsung → halaman tidak dirender.
 2. Kirim request create langsung (Postman/`curl` ke GraphQL) dengan token Operation:
    ```graphql
-   mutation { createUnit(name: "X") { id } }        # → FORBIDDEN
+   mutation { createUnit(code: "X", name: "X") { id } }        # → FORBIDDEN
    mutation { createJobRole(name: "X") { id } }     # → FORBIDDEN
    mutation { createProject(name: "X", unitId: "<uuid>") { id } }  # → FORBIDDEN
    ```

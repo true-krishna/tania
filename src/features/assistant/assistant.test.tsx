@@ -284,6 +284,42 @@ describe("T028 — panel & bubble asisten", () => {
     expect(screen.getByText("Belum terkirim")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Coba ulang" })).toBeInTheDocument();
   });
+
+  it("menampilkan state kuota tercapai: pesan server, kirim nonaktif, coba ulang disembunyikan", async () => {
+    const question = "Ping";
+    const refusal =
+      "kuota asisten tercapai (maksimum 20 pertanyaan per jam). Coba lagi dalam 12 menit.";
+    renderAssistant([
+      CONVERSATIONS_MOCK,
+      messagesMock([]),
+      {
+        request: {
+          query: SendChatMessageDocument,
+          variables: { conversationId: "conv-1", content: question, clientRequestId: FIXED_UUID },
+        },
+        result: {
+          errors: [
+            new GraphQLError(refusal, {
+              extensions: { code: "CHAT_RATE_LIMITED", retryAfterSeconds: 720 },
+            }),
+          ],
+        },
+      },
+    ]);
+
+    await openPanelWithConversation();
+    submit(question);
+
+    // Pesan Indonesia dari server ditampilkan apa adanya (bukan kode/label).
+    expect(await screen.findByText(refusal)).toBeInTheDocument();
+    expect(screen.getByText("Belum terkirim")).toBeInTheDocument();
+    // Mengulang sekarang hanya akan ditolak lagi: tombolnya disembunyikan.
+    expect(screen.queryByRole("button", { name: "Coba ulang" })).toBeNull();
+    fireEvent.change(screen.getByLabelText("Pertanyaan untuk asisten"), {
+      target: { value: "Pertanyaan lain" },
+    });
+    expect(screen.getByRole("button", { name: "Kirim pertanyaan" })).toBeDisabled();
+  });
 });
 
 describe("T028 — renderer jawaban (tanpa raw HTML)", () => {

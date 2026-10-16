@@ -13,6 +13,7 @@ import { ToastStack } from "@/components/Toast";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
 import type { DevelopmentMethod } from "@/generated/graphql/types";
 import { CreateIdpDocument } from "@/generated/graphql";
+import { IDP } from "@/lib/constants/routes";
 
 type ToastItem = { id: number; variant: "error" | "success"; message: string };
 
@@ -319,7 +320,7 @@ export default function NewIdpPage() {
             Simpan
           </Button>
           <Link
-            href="/idp"
+            href={IDP}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal

@@ -28,6 +28,7 @@ import type {
   EmploymentContractStatus,
 } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
+import { CONTRACT_NEW, CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 type ContractRowData = {
   id: string;
@@ -60,7 +61,7 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
         <Link
-          href={`/contracts/${contract.id}`}
+          href={CONTRACT_DETAIL(contract.id)}
           className="font-medium text-zinc-900 hover:underline"
         >
           {orDash(contract.contractNo)}
@@ -68,7 +69,7 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
       </td>
       <td className="px-4 py-2.5">
         <Link
-          href={`/employees/${contract.employee.id}`}
+          href={EMPLOYEE_DETAIL(contract.employee.id)}
           className="text-zinc-900 hover:underline"
         >
           {contract.employee.fullName}
@@ -92,7 +93,7 @@ function ContractRow({ contract }: { contract: ContractRowData }) {
           actions={[
             {
               label: "Lihat detail",
-              onSelect: () => router.push(`/contracts/${contract.id}`),
+              onSelect: () => router.push(CONTRACT_DETAIL(contract.id)),
             },
           ]}
         />
@@ -143,7 +144,7 @@ export default function ContractsPage() {
         }
         actions={
           manage ? (
-            <Link href="/contracts/new" className="no-underline">
+            <Link href={CONTRACT_NEW} className="no-underline">
               <Button variant="primary">+ Tambah Kontrak</Button>
             </Link>
           ) : undefined

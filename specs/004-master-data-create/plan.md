@@ -10,6 +10,25 @@
 
 ---
 
+## Amandemen 2026-10-15 — Unit.code tayang di SDL yang dilayani (TAN-213)
+
+Sumber: TAN-208 (gelombang 005-asisten-data-chatbot, MR !83 / commit `8ac6e22`). Plan ini ditulis sebelum perubahan berikut mendarat; pernyataan "tanpa perubahan skema/API" di bawah **tidak lagi menggambarkan yang dilayani**. Plan ini tidak mengubah kode apa pun — amandemen ini hanya mengoreksi catatan agar tetap rujukan yang benar:
+
+| Yang dilayani kini | Detail |
+| --- | --- |
+| SDL backend (`tania-backend` `4d94c3c` — "bulk import data", 2026-10-14) | `Unit.code: String!` baru — kode unik satuan kerja, wajib, ≤ 50 karakter; keunikan Unit pindah dari nama ke kode (`FindByCode` → `ErrConflict`); `Unit.name` kini label tampilan non-unik |
+| Mutasi | `createUnit(code: String!, name: String!)` dan `updateUnit(id: ID!, code: String!, name: String!)` — kode Unit juga dapat diubah lewat edit |
+| Frontend (`8ac6e22`, MR !83) | Form Unit punya field **Kode Unit** (wajib, placeholder "cth: DBT"); query `units` mengambil `code` untuk prefill edit; tabel tetap Nama/Proyek/Status/Aksi (tanpa kolom kode terpisah); codegen dijalankan ulang pada commit tersebut |
+
+Konsekuensi pada dokumen di bawah:
+
+- Baris **Scale/Scope** (Technical Context), keputusan **D6**, dan butir pertama **Data & API** — klaim "tanpa perubahan skema/API" dan "codegen tidak dijalankan ulang" digantikan oleh amandemen ini (ditandai in-place).
+- Baris audit backend `createUnit(name: String!)` pada §Kondisi Repositori adalah snapshot audit 2026-10-14 (b446fe2) — bentuk mutasi yang berlaku kini ada di [`contracts/master-data-create.md`](./contracts/master-data-create.md).
+- FR-005: untuk Unit, keunikan ditegakkan pada **kode** — FR-005 tetap terpenuhi dalam rumus kondisionalnya ("bila aturan existing menetapkan keunikan").
+- FR-015 ("tidak menambah field baru"): premisnya berubah **di luar plan ini** — `Unit.code` masuk bersama fitur backend lain (*bulk import data*); plan 004 sendiri tidak menambahkan field.
+
+---
+
 ## Summary
 
 Menambahkan operasi **Create** untuk Unit, Job Role, dan Initiative (Master Data Project) dengan otorisasi **hanya Admin**. **Temuan audit: operasi Create sudah terimplementasi** — halaman master data memakai satu komponen bersama `MasterDataSection` yang sudah menyediakan tombol tambah + form, dan `tania-backend` sudah menyediakan `createUnit`/`createJobRole`/`createProject` yang dibatasi `RequireRole(Admin)`. Karena itu pekerjaan nyata plan ini menyusut menjadi **menutup dua gap terhadap spec**: (G1) form Job Role salah mewajibkan pemilihan Chapter padahal chapter bersifat opsional (FR-22 induk; placeholder form sendiri berbunyi "boleh kosong"), dan (G2) test create baru menutup Unit — Job Role & Initiative belum diuji. Selebihnya adalah verifikasi (kontrak server Admin-only, guard UI, jejak audit) dan UAT.
@@ -21,17 +40,19 @@ Stack dipin dari konstitusi & plan induk; **tidak ada dependensi baru**.
 | Aspek | Keputusan |
 | --- | --- |
 | Bahasa frontend | TypeScript 5, Next.js 16.3.4 (App Router), React 19, TailwindCSS 4 |
-| Lapisan data frontend | Apollo Client + GraphQL codegen (`src/generated/graphql/`) — mutasi create sudah ter-generate; **tidak ada codegen baru** |
+| Lapisan data frontend | Apollo Client + GraphQL codegen (`src/generated/graphql/`) — mutasi create sudah ter-generate; ~~tidak ada codegen baru~~ → codegen dijalankan ulang pada `8ac6e22` (**amandemen TAN-213**) |
 | UI system | TANIA Pulse (`MasterDataSection`, `BoardTable`, `PageHeader`, `Input`, `Select`, `Button`, `RowActionsMenu`, `Toast`) |
 | Backend | Go clean architecture + PostgreSQL 16 + GraphQL (gqlgen); `internal/usecase/{masterdata,jobrole,project}.go` — operasi create sudah ada & Admin-only |
 | Testing frontend | Vitest + React Testing Library + Apollo `MockedProvider` |
 | Testing backend | Go unit/contract tests (`internal/usecase/masterdata_test.go`, `authz_test.go`, `internal/transport/httpapi/e2e_test.go`) |
 | Constraints | Otorisasi ditegakkan server-side (Security III); label UI berbahasa Indonesia; tanpa PII di URL/log |
-| Scale/Scope | 1 komponen bersama (`MasterDataSection`) + 3 halaman (unit/job-roles/projects) + test; 1 perbaikan validasi; tanpa perubahan skema/API |
+| Scale/Scope | 1 komponen bersama (`MasterDataSection`) + 3 halaman (unit/job-roles/projects) + test; 1 perbaikan validasi; ~~tanpa perubahan skema/API~~ → skema berubah pasca-audit: `Unit.code` + `createUnit`/`updateUnit(code, name)` (**amandemen TAN-213**, lihat atas) |
 
 ---
 
 ## Kondisi Repositori (audit 2026-10-14)
+
+> Snapshot audit per 2026-10-14 terhadap `b446fe2`. SDL yang dilayani berubah setelahnya — lihat **Amandemen 2026-10-15** di atas; tanda tangan mutasi lama di bagian ini tidak berlaku lagi.
 
 ### Frontend (`tania-dashboard`, `origin/master` @ `b446fe2`)
 
@@ -65,7 +86,7 @@ Stack dipin dari konstitusi & plan induk; **tidak ada dependensi baru**.
 | D3 | Validasi nama & referensi tetap **otoritatif di server**; UI hanya cek cepat (nama kosong, referensi wajib) | Security III (enforcement server-side); pesan validasi server tetap disurfacekan lewat toast (pola T054) |
 | D4 | Test create **per halaman** (Job Role, Initiative/Project) ditambahkan ke `master-data.test.tsx` | Tech III (testing non-negotiable); menutup G2 dan acceptance scenario US2/US3 |
 | D5 | Label submenu "Project" → "Initiative" **tidak** diubah di plan ini | Di luar scope spec 004 (perluasan field/penamaan); pemetaan Initiative = Project sudah disepakati — kandidat follow-up terpisah |
-| D6 | Tanpa perubahan skema/API/codegen | Mutasi create & otorisasinya sudah ada; tidak ada kontrak baru |
+| D6 | ~~Tanpa perubahan skema/API/codegen~~ → **digantikan amandemen TAN-213**: skema berubah di luar plan (`Unit.code`); codegen dijalankan ulang pada `8ac6e22` | Mutasi create & otorisasinya sudah ada saat plan ditulis; perubahan `Unit.code` datang dari fitur backend lain (bulk import) |
 
 ---
 
@@ -79,14 +100,14 @@ Stack dipin dari konstitusi & plan induk; **tidak ada dependensi baru**.
 | US4 (Hanya Admin) | **Terpenuhi** | `RequireRole(Admin)` di ketiga usecase (authz_test) + e2e FORBIDDEN untuk Operation/Chapter; guard UI `layout.tsx` |
 | FR-001–FR-003 | **Sudah ada** | Tombol tambah + form di ketiga halaman; entitas tersimpan aktif dan muncul lewat `refetchQueries` |
 | FR-004 (nama wajib) | **Terpenuhi** | Cek klien (nama kosong) + `normalizeName` server |
-| FR-005 (nama unik) | **Terpenuhi** | `FindByName` → `ErrConflict` server; pesan disurfacekan lewat toast |
+| FR-005 (nilai unik) | **Terpenuhi** | Server menolak duplikat (`ErrConflict`) — amandemen TAN-213: untuk Unit nilainya kini **kode** (`FindByCode`); JobRole nama, Project nama per Unit |
 | FR-006 (Initiative wajib Unit) | **Terpenuhi** | `createProject(unitId)` wajib; UI memvalidasi pilihan Unit |
 | FR-007 (umpan balik sukses/gagal) | **Terpenuhi** | `detectError` + `pushToast` di tiap halaman |
 | FR-008 (cegah submit ganda) | **Terpenuhi** | State `busy` menonaktifkan tombol Simpan |
 | FR-009 (entitas terpakai modul lain) | **Terpenuhi** | `refetchQueries` memperbarui daftar; picker (Unit/Chapter) membaca query yang sama |
 | FR-010–FR-013 (otorisasi Admin) | **Terpenuhi** | Matriks RBAC berlaku; guard UI + `RequireRole(Admin)` server; tanpa amandemen matriks |
 | FR-014 (tanpa hapus; penonaktifan ditolak bila direferensikan) | **Terpenuhi** | Tidak ada mutasi delete; test T054 menutup penolakan penonaktifan |
-| FR-015 (tanpa field baru) | **Terpenuhi** | Tidak ada perubahan model/form field |
+| FR-015 (tanpa field baru) | **Digantikan amandemen TAN-213** | Tidak ada field baru oleh plan ini; `Unit.code` masuk dari fitur backend lain dan diadopsi frontend (`8ac6e22`) |
 | FR-016 (jejak audit) | **Terpenuhi** | `recordChange` dalam transaksi di ketiga usecase (FR-17 induk) |
 | SC-001–SC-005 | **Diuji di K2** | Checklist acceptance scenario + verifikasi otorisasi server |
 
@@ -149,8 +170,8 @@ tania-backend/                    # TIDAK diubah — hanya diverifikasi (authz +
 
 ## Data & API
 
-- **Tanpa perubahan skema/API**: `createUnit`/`createJobRole`/`createProject` sudah ada pada SDL dan sudah dipakai halaman; tidak ada tipe/mutasi baru; codegen tidak dijalankan ulang.
-- Validasi server yang sudah berlaku: nama wajib & dinormalisasi; nama unik (`ErrConflict`); `chapterId` opsional & harus chapter aktif; `unitId` wajib & harus ada; seluruh create mencatat jejak audit dalam satu transaksi.
+- ~~**Tanpa perubahan skema/API**~~ (**digantikan amandemen TAN-213**): `createUnit`/`updateUnit` yang dilayani kini memakai `code: String!` dan `Unit.code: String!` ada pada SDL; `createJobRole`/`createProject` tidak berubah; codegen dijalankan ulang pada `8ac6e22`. Tidak ada tipe/mutasi baru oleh plan ini.
+- Validasi server yang sudah berlaku: nama & kode wajib dan dinormalisasi (trim; nama ≤ 120, kode ≤ 50 karakter); kode Unit unik (`ErrConflict`, case-insensitive); `chapterId` opsional & harus chapter aktif; `unitId` wajib & harus ada; seluruh create/update mencatat jejak audit dalam satu transaksi.
 
 ## Security (rekap slice)
 

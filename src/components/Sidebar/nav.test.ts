@@ -10,6 +10,8 @@ const MODULE_OF: Record<string, Module> = {
   "/dashboard": "dashboard",
   "/activities": "activities",
   "/workload": "workload",
+  "/workload/executive": "workload",
+  "/workload/talent": "workload",
   "/employees": "employees",
   "/contracts": "contracts",
   "/assignments": "assignments",

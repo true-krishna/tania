@@ -51,6 +51,25 @@ Varian peran (`audit route is only reachable for ADMIN`): `E2E_ROLE=ADMIN`
 (default `TALENT`). Smoke shell lama tetap jalan di mode
 `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` tanpa backend — `loginAs` otomatis menjadi no-op.
 
+## Skenario T029 / T034 (asisten data)
+
+- **T029** — invariant panel (buka/tutup, fokus, chip, batas 2.000 karakter,
+guard peran) tidak memanggil model, jadi jalannya tanpa provider:
+
+  ```sh
+  NEXT_PUBLIC_AUTH_LOCAL_ONLY=1 NEXT_PUBLIC_DEFAULT_ACCESS_ROLE=CHAPTER \
+    npx playwright test -g "T029"
+  ```
+
+- **T034** — balasan grounded + retry idempoten butuh stack hidup **dan**
+provider (`AI_PROVIDER_*`). Skenario di-`skip` kecuali `E2E_AI_PROVIDER=1`:
+
+  ```sh
+  E2E_AI_PROVIDER=1 E2E_BASE_URL=http://localhost:3000 npm run test:e2e
+  ```
+
+  Ter-`skip` **bukan** lulus — tanpa provider, jalur balasan belum diverifikasi.
+
 ## Skenario T028
 
 1. Operation login → `/reports/talent` → 5 grafik (V-1…V-5) tampil.

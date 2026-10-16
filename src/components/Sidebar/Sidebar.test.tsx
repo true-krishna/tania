@@ -105,6 +105,22 @@ describe("Sidebar", () => {
     expect(desktopNav().getByRole("link", { name: "Unit" })).toBeInTheDocument();
   });
 
+  // Umpan balik pemilik produk (TAN-227): level user memakai satu menu
+  // Workload tanpa submenu; level executive memakai grup dengan dua submenu
+  // — Overview dan Talent.
+  it("renders Workload as a plain link for TALENT and a two-item group for leadership", () => {
+    const talent = renderSidebar({ role: "TALENT" });
+    expect(desktopNav().getByRole("link", { name: "Workload" })).toHaveAttribute("href", "/workload");
+    expect(desktopNav().queryByRole("button", { name: "Workload" })).toBeNull();
+    talent.unmount();
+
+    renderSidebar({ role: "OPERATION" });
+    fireEvent.click(desktopNav().getByRole("button", { name: "Workload" }));
+    expect(desktopNav().getByRole("link", { name: "Overview" })).toHaveAttribute("href", "/workload/executive");
+    expect(desktopNav().getByRole("link", { name: "Talent" })).toHaveAttribute("href", "/workload/talent");
+    expect(desktopNav().queryByRole("link", { name: "Workload saya" })).toBeNull();
+  });
+
   it("opens the section that owns the current route and marks the child active", () => {
     renderSidebar({ pathname: "/master-data/units" });
     expect(desktopNav().getByRole("button", { name: /Master Data/ })).toHaveAttribute("aria-expanded", "true");

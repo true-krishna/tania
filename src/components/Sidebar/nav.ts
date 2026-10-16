@@ -13,6 +13,29 @@ import {
   type TablerIcon,
 } from "@tabler/icons-react";
 import type { AccessRole } from "@/generated/graphql";
+import {
+  ACCOUNTS,
+  ACTIVITIES,
+  AUDIT,
+  CONTRACTS,
+  CV,
+  DASHBOARD,
+  EMPLOYEES,
+  ENTRA,
+  EVALUATIONS,
+  EVALUATIONS_MY,
+  EVALUATION_PERIODS,
+  EVALUATION_TEMPLATES,
+  IDP,
+  MASTER_DATA_CHAPTERS,
+  MASTER_DATA_JOB_ROLES,
+  MASTER_DATA_PROJECTS,
+  MASTER_DATA_UNITS,
+  TALENT_ASSIGNMENT,
+  WORKLOAD,
+  WORKLOAD_EXECUTIVE,
+  WORKLOAD_TALENT,
+} from "@/lib/constants/routes";
 
 export interface NavLink {
   href: string;
@@ -69,9 +92,25 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * satu entri modul itu.
  */
 export const NAV: readonly NavEntry[] = [
-  { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
-  { kind: "link", href: "/activities", label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
-  { kind: "link", href: "/workload", label: "Workload", icon: IconChartBar, roles: ALL },
+  { kind: "link", href: DASHBOARD, label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
+  { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
+  /**
+   * Umpan balik pemilik produk (TAN-227): level user memakai satu menu
+   * Workload tanpa submenu; level executive memakai grup dengan dua submenu
+   * — Overview dan Talent (tabel talent dengan workload).
+   */
+  { kind: "link", href: WORKLOAD, label: "Workload", icon: IconChartBar, roles: ["TALENT"] },
+  {
+    kind: "group",
+    id: "workload",
+    label: "Workload",
+    icon: IconChartBar,
+    roles: ["CHAPTER", "OPERATION", "ADMIN"],
+    children: [
+      { href: WORKLOAD_EXECUTIVE, label: "Overview", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: WORKLOAD_TALENT, label: "Talent", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+    ],
+  },
   {
     kind: "group",
     id: "employee",
@@ -79,14 +118,14 @@ export const NAV: readonly NavEntry[] = [
     icon: IconUsers,
     roles: ALL,
     children: [
-      { href: "/employees", label: "Data Karyawan", roles: ALL },
-      { href: "/contracts", label: "Kontrak", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: "/assignments", label: "Assignments", roles: ALL },
+      { href: EMPLOYEES, label: "Data Karyawan", roles: ALL },
+      { href: CONTRACTS, label: "Kontrak", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: TALENT_ASSIGNMENT, label: "Assignments", roles: ALL },
     ],
   },
-  { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },
-  { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: ALL },
-  { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] },
+  { kind: "link", href: ENTRA, label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },
+  { kind: "link", href: IDP, label: "IDP", icon: IconTarget, roles: ALL },
+  { kind: "link", href: CV, label: "CV", icon: IconFileCv, roles: ALL },
   {
     kind: "group",
     id: "evaluations",
@@ -94,13 +133,13 @@ export const NAV: readonly NavEntry[] = [
     icon: IconClipboardCheck,
     roles: ALL,
     children: [
-      { href: "/evaluations", label: "Roster", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: "/evaluations/periods", label: "Periode", roles: ["ADMIN"] },
-      { href: "/evaluations/templates", label: "Template", roles: ["ADMIN"] },
-      { href: "/evaluations/my", label: "Evaluasi Saya", roles: ["TALENT"] },
+      { href: EVALUATIONS, label: "Roster", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: EVALUATION_PERIODS, label: "Periode", roles: ["ADMIN"] },
+      { href: EVALUATION_TEMPLATES, label: "Template", roles: ["ADMIN"] },
+      { href: EVALUATIONS_MY, label: "Evaluasi Saya", roles: ["TALENT"] },
     ],
   },
-  { kind: "link", href: "/accounts", label: "Accounts", icon: IconUserShield, roles: ["ADMIN"] },
+  { kind: "link", href: ACCOUNTS, label: "Accounts", icon: IconUserShield, roles: ["ADMIN"] },
   {
     kind: "group",
     id: "master-data",
@@ -108,13 +147,13 @@ export const NAV: readonly NavEntry[] = [
     icon: IconDatabase,
     roles: ["CHAPTER", "OPERATION", "ADMIN"],
     children: [
-      { href: "/master-data/units", label: "Unit", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: "/master-data/chapters", label: "Chapter", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: "/master-data/job-roles", label: "Job Role", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: "/master-data/projects", label: "Project", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: MASTER_DATA_UNITS, label: "Unit", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: MASTER_DATA_CHAPTERS, label: "Chapter", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: MASTER_DATA_JOB_ROLES, label: "Job Role", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: MASTER_DATA_PROJECTS, label: "Project", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
     ],
   },
-  { kind: "link", href: "/audit", label: "Audit", icon: IconClock, roles: ["ADMIN"] },
+  { kind: "link", href: AUDIT, label: "Audit", icon: IconClock, roles: ["ADMIN"] },
 ];
 
 /** Sidebar section label for the current route, shown in the top bar. */

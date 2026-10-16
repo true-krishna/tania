@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { useEvaluationPeriods } from "@/features/evaluations/useEvaluationPeriods";
 import { PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
+import { EVALUATION_PERIOD_NEW } from "@/lib/constants/routes";
 
 /**
  * Evaluation periods (Admin) — US7 / FR-25.
@@ -27,7 +28,7 @@ export default function EvaluationPeriodsPage() {
           title="Periode Evaluasi"
           subtitle="Kelola periode evaluasi performa (Admin)."
           actions={
-            <Link href="/evaluations/periods/new" className="no-underline">
+            <Link href={EVALUATION_PERIOD_NEW} className="no-underline">
             <Button variant="primary">+ Buat Periode</Button>
           </Link>
           }
@@ -42,7 +43,7 @@ export default function EvaluationPeriodsPage() {
         title="Periode Evaluasi"
         subtitle="Kelola periode evaluasi performa (Admin)."
         actions={
-          <Link href="/evaluations/periods/new" className="no-underline">
+          <Link href={EVALUATION_PERIOD_NEW} className="no-underline">
             <Button variant="primary">+ Buat Periode</Button>
           </Link>
         }
