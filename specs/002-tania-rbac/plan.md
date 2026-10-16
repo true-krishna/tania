@@ -529,6 +529,7 @@ modul yang boleh *dibaca* sebuah peran punya entri, dan modul yang ditutup tidak
 - **O6 ditutup** dengan mengikuti matriks (hak *lihat* untuk semua peran): nav Master Data
   tampil untuk semua, permukaan kelola (`Tambah`, `Ubah`, `Aktifkan/Nonaktifkan`) hanya
   Admin (`MANAGE_ROLES.masterData = ["ADMIN"]`); section-nya tidak lagi memblokir non-Admin.
+  **Digantikan 2026-10-16 oleh §14.5** (clarify 5: Chapter & Talent tanpa akses Master Data).
 - **IDP & Evaluation** tetap ditunda: entri menu dikosongkan (`roles: []`) — menyimpang dari
   baseline desain TAN-178, sesuai matriks (✘ semua peran). Baris/route `idp`/`evaluations`
   di `matrix.ts` **belum** diubah (T032), jadi invariant `nav.test.ts` mengecualikan kedua
@@ -558,3 +559,33 @@ Sisa terbuka: **T032** (tutup route IDP/Evaluasi; menunggu keputusan reaktivasi)
 (dashboard lepas field IDP/eval — ikut modul ditunda), **T050/T051** (UAT & regresi lintas-modul
 — butuh lingkungan hidup), **T052** sisa (generate idempoten + suite e2e), **T078** e2e di pipeline.
 **O6 ditutup**; **O5 tetap terbuka** (baris matriks WAD).
+
+### 14.5 Amandemen clarify 5 (2026-10-16) — Kontrak, Master Data, IDP & Evaluasi
+
+Keputusan pemilik produk pada `/speckit.clarify` (TAN-212 lanjutan) mengubah **tiga** area
+matriks dan **membatalkan** dua keputusan sebelumnya. Matriks di `spec.md` adalah
+sumber kebenarannya; berikut delta teknis yang harus menyusul (belum dikerjakan — bagian ini
+merekam apa yang berubah, bukan klaim selesai).
+
+| Area | Sebelum (2026-10-15) | Sesudah (clarify 5) | Delta teknis |
+| --- | --- | --- | --- |
+| Kontrak | Chapter `—` | Chapter **baca** cakupan chapter (row terpisah) | BE: gate baca kontrak (`contract.go` `List`/`Get`/`Scoped*`) +Chapter; FE: entri nav "Kontrak" +CHAPTER (hanya baca), tabel kontrak tanpa aksi kelola |
+| Master Data | semua peran baca (O6 "ditutup") | Admin `kelola`, Operation `lihat`, **Chapter & Talent `—`** | BE: gate master data `+Operation` baca, `−Chapter/−Talent`; FE: `MODULE_ROLES.masterData = ["OPERATION","ADMIN"]`, nav Master Data `[OPERATION, ADMIN]`, `MasterDataSection` hanya-baca untuk Operation; **keputusan O6 pada §14.3 dibatalkan** |
+| IDP | semua peran ✘ (ditunda) | Admin `kelola` · Operation `lihat` · Chapter `lihat` cakupan · Talent `kelola miliknya` | BE: `deferredModules` `−IDP/−EVALUATION` **hanya setelah modul dibangun**; gate per operasi sesuai pemetaan; FE: entri nav IDP per peran (bukan `roles: []`) |
+| Evaluasi performa | semua peran ✘ (ditunda) | sama dengan IDP | BE/FE: sama; periode & template evaluasi ditandai `†` (usulan: Admin `kelola`, Operation & Chapter `lihat`) — menunggu konfirmasi |
+
+Implikasi urutan kerja:
+
+- **Menutup akses lebih dulu, membuka kemudian**: Master Data & Kontrak adalah perubahan
+  pada modul yang **sudah aktif** — bisa dikerjakan lebih dulu bersama penyesuaian nav.
+- **Membuka IDP & Evaluasi** menyentuh modul yang **belum dibangun** (penundaan clarify 2/3).
+  Mencabut penanda `deferredModules` tanpa modulnya siap hanya memindahkan penolakan dari
+  `ErrModuleUnavailable` ke gate peran — jadi buka bersamaan dengan pekerjaan modulnya
+  (aktivasi fitur + konsumsi data WAD), bukan sebagai perubahan RBAC murni.
+- **Visibilitas menu** (T079/§14.3) ikut digantikan: entri IDP/Evaluasi kembali muncul sesuai
+  pemetaan di atas, Master Data kembali `[OPERATION, ADMIN]`.
+- Invarian `nav.test.ts` (`AS_IS_HREFS`) menjadi **tidak berlaku** untuk IDP/Evaluasi begitu
+  baris matriksnya memuat peran — saat itu pengecualiannya dihapus dan invarian mencakup
+  seluruh entri tanpa kecuali.
+- **Tidak ada divergensi permanen**: seluruh keputusan di atas adalah data matriks; tidak ada
+  perubahan arsitektur, skema, atau kontrak API yang diperlukan untuk merekamnya sekarang.

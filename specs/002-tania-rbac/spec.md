@@ -9,6 +9,7 @@
 **Revisi**: 2026-10-12 (amandemen post-analyze, TAN-144/TAN-156) — Catatan matriks: "lihat semua" pada Data karyawan bagi Admin bersifat administratif read-only (konteks penautan akun, tanpa riwayat assignment); proteksi Admin terakhir diperluas mencakup perubahan peran menjauh dari Admin; catatan status FR-18/US4-4 terhadap workstream kontrak kerja; checklist keputusan baru dicentang (keputusan klarifikasi terkonfirmasi).
 **Revisi**: 2026-10-15 (clarify 4, TAN-212) — Keputusan pemilik produk: **Admin = kelola penuh** pada seluruh modul aktif. Baris *Data karyawan & kontrak kerja* Admin berubah dari "lihat semua" menjadi **kelola**; baris *Assignment* dan *Profil CV* dibuka untuk Admin (**kelola**). Ini **membalik clarify 1** (Assignment: Admin "—") dan menggantikan catatan "administratif read-only" (klarifikasi 2026-10-09). Modul bertanda \* (IDP, evaluasi performa, periode & template evaluasi) **tetap ditunda as is** — belum dibuka untuk peran mana pun, termasuk Admin.
 **Revisi**: 2026-10-15 (lanjutan TAN-212, setelah implementasi) — Keputusan pemilik produk: (1) **penulisan CV tetap milik Talent**; baris *Profil CV* Admin menjadi "lihat semua (hanya baca)" menggantikan "kelola" pada revisi sebelumnya; (2) **visibilitas menu diselaraskan per peran** — menu cermin matriks: IDP & Evaluasi disembunyikan untuk semua peran selagi ditunda, dan Master Data tampil hanya-baca untuk peran yang memegang hak *lihat*.
+**Revisi**: 2026-10-16 (clarify 5, TAN-212) — Keputusan pemilik produk: (1) **Chapter boleh membaca Kontrak kerja** (cakupan chapter, hanya baca) — baris kontrak dipisahkan dari baris Data karyawan agar hak ini eksplisit; (2) **Chapter dan Talent tidak punya akses Master Data** — membatalkan pemberian hak *lihat* Master Data ke semua peran pada revisi 2026-10-15 lanjutan (keputusan terbuka **O6**); Master Data kembali `kelola` Admin + `lihat` Operation; (3) **IDP dan evaluasi performa dibuka** dengan pemetaan **Admin kelola · Operation lihat · Chapter lihat (cakupan chapter) · Talent kelola miliknya** — menggantikan status "ditunda" pada peran (riwayat penundaan tetap tercatat); hak *periode* & *template* evaluasi ditandai `†` (usulan TAN-212, menunggu konfirmasi); (4) baris matriks IDP/evaluasi & menu terkait **tidak lagi ditandai ✘ untuk semua peran**, sehingga penyesuaian visibilitas menu 2026-10-15 (entri disembunyikan) ikut digantikan.
 
 **Status**: Draft
 
@@ -33,14 +34,15 @@ Matriks ini adalah satu-satunya definisi hak akses per modul (FR-03). Makna nila
 | --- | --- | --- | --- | --- |
 | Autentikasi & sesi (login, logout, perpanjangan sesi, profil sendiri) | ✔ | ✔ | ✔ | ✔ |
 | Dashboard | ringkasan administrasi & master data | ringkasan data karyawan | ringkasan cakupan chapter | ringkasan miliknya |
-| Data karyawan & kontrak kerja (termasuk provisi akun Entra) | kelola | kelola | lihat cakupan (per talent) | lihat data diri |
+| Data karyawan (termasuk provisi akun Entra) | kelola | kelola | lihat cakupan (per talent) | lihat data diri |
+| Kontrak kerja | kelola | kelola | lihat cakupan (hanya baca) | lihat data diri |
 | Assignment | kelola | lihat semua | kelola (cakupan chapter) | lihat miliknya |
-| IDP * | — | — | kelola (cakupan chapter) | lihat & perbarui progres miliknya |
-| Evaluasi performa (pengisian & revisi) * | — | — | kelola (cakupan chapter, periode berjalan) | lihat miliknya |
-| Periode evaluasi * | kelola | — | lihat | lihat |
-| Template evaluasi * | kelola | — | lihat (template periode yang dinilai) | — |
+| IDP | kelola | lihat | lihat cakupan | kelola miliknya |
+| Evaluasi performa (pengisian & revisi) | kelola | lihat | lihat cakupan | kelola miliknya |
+| Periode evaluasi † | kelola | lihat | lihat | lihat |
+| Template evaluasi † | kelola | lihat | lihat | — |
 | Profil CV | lihat semua (hanya baca) | — | lihat cakupan (hanya baca) | kelola miliknya |
-| Master data (Unit, Project, Role, Chapter) | kelola | lihat | lihat | lihat |
+| Master data (Unit, Project, Role, Chapter) | kelola | lihat | — | — |
 | Akun user & peran akses | kelola | — | — | — |
 | Jejak audit | lihat penuh | — | — | — |
 
@@ -48,12 +50,16 @@ Catatan matriks:
 
 - Riwayat perubahan per record karyawan/kontrak tetap terlihat Operation pada detail data tersebut — bukan melalui modul jejak audit (FR-41 induk).
 - "lihat cakupan (per talent)" pada Data karyawan berarti Chapter membaca record talent dalam chapter-nya satu per satu (mis. dari daftar IDP/assignment); daftar seluruh karyawan bukan modul Chapter.
+- **Chapter boleh membaca Kontrak kerja** (keputusan pemilik produk 2026-10-16, TAN-212): hanya membaca, dan hanya kontrak karyawan dalam cakupan chapter-nya — memisahkan baris kontrak dari baris Data karyawan memudahkan penegakan gate kontrak yang berdiri sendiri di kode. Talent tetap melihat kontraknya sendiri sebagai bagian data dirinya.
+- **Master Data: Chapter & Talent tidak punya akses** (keputusan pemilik produk 2026-10-16, TAN-212): membatalkan pemberian hak *lihat* ke semua peran pada revisi 2026-10-15 lanjutan (**O6**). Master Data kembali `kelola` Admin dan `lihat` Operation — menu, halaman, dan route-nya mengikuti.
+- **IDP & evaluasi performa dibuka** (keputusan pemilik produk 2026-10-16, TAN-212): pemetaan akses adalah **Admin kelola · Operation lihat · Chapter lihat cakupan chapter · Talent kelola miliknya**. Makna "kelola miliknya" bagi Talent mengikuti makna yang sudah berlaku pada baris IDP sebelumnya ("lihat & perbarui progres miliknya"): Talent tidak dapat membuat, menilai, atau mengubah IDP/evaluasi talent lain. Hak *Kelola* Admin pada kedua modul mencakup seluruh data (tidak dibatasi cakupan chapter).
+- † **Periode & template evaluasi** (usulan TAN-212, **menunggu konfirmasi** pemilik produk): karena Operation & Chapter kini membaca evaluasi, keduanya juga membaca periode evaluasi agar dapat melihat evaluasi periode berjalan; template tetap konfigurasi Admin dan hanya dibaca Chapter (template periode yang dinilai) — Talent tidak melihat konfigurasi template. Bila pemilik produk hanya ingin memetakan modul IDP & evaluasi *pengisian*, baris ini kembali ke nilai sebelumnya (Operation `—`).
 - **Admin = kelola penuh** (keputusan pemilik produk 2026-10-15, TAN-212): pada seluruh modul aktif — termasuk Assignment — Admin berwenang penuh (membuat, mengubah, menjalankan operasi siklus hidup modul), bukan sekadar membaca. Catatan "administratif read-only" pada baris Data karyawan & kontrak kerja (klarifikasi 2026-10-09) dan baris Assignment "—" (clarify 1) tidak berlaku lagi. Cakupan data Chapter tidak membatasi Admin — Admin melihat dan mengelola semua.
 - **Pengecualian Profil CV** (keputusan pemilik produk 2026-10-15, lanjutan TAN-212): Admin **membaca** profil CV seluruh talent, tetapi **tidak menulisnya** — isi CV adalah konten personal milik talent dan API tulisnya ber-scope pemilik (FR-13). Baris Profil CV Admin karena itu "lihat semua (hanya baca)", bukan "kelola".
-- Modul bertanda \* tetap **ditunda as is** (keputusan yang sama, 2026-10-15): baris IDP, evaluasi performa, periode, dan template evaluasi tidak berubah — aksesnya belum dibuka untuk peran mana pun, termasuk Admin.
+- Modul **IDP & evaluasi performa tidak lagi ditunda untuk peran** (clarify 5, 2026-10-16): barisnya memakai pemetaan pada catatan di atas. Penundaan sebelumnya (clarify 2/3, 2026-10-08) berlanjut hanya sebagai **riwayat keputusan**: aktivasi teknis modul (membangun/mengaktifkan fiturnya, termasuk konsumsi data aktivitas/beban kerja dari WAD) adalah pekerjaan terpisah dan sampai modul benar-benar tersedia penegakan server tetap menolak-untuk-semua (deny-by-default) — bukan karena matriks, melainkan karena modul belum ada.
 - Angka dashboard mengikuti hak akses peran masing-masing (FR-29 induk); dashboard hanya tampilan agregat turunan.
 - Matriks berlaku deny-by-default: modul atau operasi baru yang belum tercantum ditolak untuk semua peran sampai matriks diperbarui (FR-03).
-- \* **Ditunda dari iterasi 2** (keputusan 2026-10-08, TAN-144): fungsi IDP dan evaluasi performa tidak dibangun pada iterasi ini. Keduanya tetap fungsi Tania dan **berkorelasi — bukan substitusi — dengan WAD**: data aktivitas/beban kerja dari WAD menjadi bukti capaian bagi evaluasi dan dasar identifikasi kebutuhan pengembangan bagi IDP saat modul dibangun kembali. Selama ditunda, modul diperlakukan belum tersedia — akses ditolak untuk semua peran; definisi akses pada matriks tetap berlaku bila modul diaktifkan kembali.
+- \* **Riwayat penundaan** (keputusan 2026-10-08, TAN-144; **dicabut aksesnya oleh clarify 5, 2026-10-16**): modul IDP dan evaluasi performa pernah keluar dari prioritas iterasi 2 dan diperlakukan belum tersedia. Keduanya tetap fungsi Tania dan **berkorelasi — bukan substitusi — dengan WAD**: data aktivitas/beban kerja dari WAD menjadi bukti capaian bagi evaluasi dan dasar identifikasi kebutuhan pengembangan bagi IDP. Definisi akses pada matriks (clarify 5) berlaku begitu modul diaktifkan; selama modul belum dibangun, permintaan ke modulnya tetap ditolak.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -123,7 +129,7 @@ Sebagai **Chapter**, saya hanya bekerja dengan talent dalam tanggung jawab chapt
 
 **Acceptance Scenarios**:
 
-1. **Given** Chapter sudah login, **When** membuka daftar modul berkakipan chapter yang aktif (saat ini assignment; IDP dan evaluasi performa mengikuti status penundaan pada catatan matriks), **Then** hanya talent dalam tanggung jawab chapter-nya yang tampil.
+1. **Given** Chapter sudah login, **When** membuka daftar modul berkakipan chapter yang aktif (assignment, IDP, evaluasi performa, serta baca kontrak & CV), **Then** hanya talent dalam tanggung jawab chapter-nya yang tampil.
 2. **Given** Chapter membuka detail seorang talent, **When** talent tersebut berada di luar chapter-nya, **Then** data dinyatakan tidak ditemukan (anti-enumerasi).
 3. **Given** Admin mengubah kepemilikan chapter pada sebuah Master Data Role, **When** operasi selesai, **Then** seluruh talent pemakai Role tersebut — dan cakupan Chapter terkait — otomatis mengikuti chapter baru tanpa migrasi data.
 4. **Given** kontrak aktif seorang talent berpindah ke Role milik chapter lain (mutasi/perpanjangan), **When** Chapter lama membuka datanya, **Then** talent tersebut tidak lagi berada dalam cakupannya; Chapter baru yang melihatnya. *(Eksekusi skenario ini menunggu ketersediaan rantai kontrak aktif — lihat catatan FR-18.)*
@@ -209,7 +215,7 @@ Sebagai **Admin**, saya dapat menelusuri seluruh perubahan akun user — pembuat
 
 - **FR-18**: Cakupan Chapter diturunkan otomatis dari rantai tunggal: akun → karyawan → kontrak aktif → posisi (Master Data Role) → chapter pemilik; tidak ada atribut chapter tersimpan pada akun. *(FR-22, FR-23, FR-35 induk)*
   Catatan iterasi 2 (2026-10-12): rantai *kontrak aktif* berlaku penuh bersama workstream kontrak kerja (TAN-140/TAN-145). Sampai itu, cakupan diturunkan dari posisi karyawan saat ini (jobRole → chapter pemilik) melalui antarmuka helper cakupan yang sama; isolasi antar chapter tetap diuji (US4-1/2/3/5).
-- **FR-19**: Bagi peran Chapter, modul berkakipan chapter — saat ini assignment, baca CV, dan detail talent; IDP serta evaluasi performa mengikuti status penundaan pada catatan matriks — hanya memuat talent dalam cakupan; kandidat pada form hanya karyawan aktif dan assignable dalam cakupan tersebut.
+- **FR-19**: Bagi peran Chapter, modul berkakipan chapter — assignment, IDP, evaluasi performa, baca kontrak, baca CV, dan detail talent — hanya memuat talent dalam cakupan; kandidat pada form hanya karyawan aktif dan assignable dalam cakupan tersebut.
 - **FR-20**: Akun ber-peran Chapter yang cakupannya tidak terdefinisi (posisinya merujuk Role tanpa chapter pemilik, atau tanpa kontrak aktif) ditolak pada modul berkakipan chapter dengan penjelasan yang jelas; penetapannya dicegah sejak pengelolaan akun (FR-05).
 - **FR-21**: Perubahan kepemilikan chapter pada sebuah Master Data Role otomatis memindahkan seluruh talent pemakainya — dan cakupan Chapter terkait — tanpa migrasi data karyawan maupun peran akses. *(FR-23 induk)*
 
