@@ -376,6 +376,27 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
     // Derived section: no manual input controls are offered for work experience.
     expect(screen.queryByPlaceholderText(/pengalaman kerja/i)).not.toBeInTheDocument();
   });
+
+  it("shows a clear empty state — not an error — for a talent without assignments (US5 skenario 2)", async () => {
+    render(
+      <ToastProvider>
+        <MockedProvider
+          mocks={[
+            {
+              request: { query: MyCvProfileDocument },
+              result: { data: { myCvProfile: { ...cv, workExperience: [] } } },
+            },
+          ]}
+        >
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    expect(await screen.findByText("Belum ada riwayat assignment.")).toBeInTheDocument();
+    // Empty state bukan error: tidak ada pesan kegagalan yang tampil.
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });
 
 describe("CvPage — Chapter read-only (US4 / FR-13)", () => {

@@ -173,6 +173,8 @@ describe("ProfilePage (TAN-188)", () => {
 
     expect(await screen.findByText("Migrasi Billing Core")).toBeInTheDocument();
     expect(screen.getByText("2025-02-01 — sekarang")).toBeInTheDocument();
+    // O4 — label status assignment seragam juga di tab Assignment profil.
+    expect(screen.getByText("Berjalan")).toBeInTheDocument();
   });
 
   it("shows the own workload view on the Workload tab", async () => {

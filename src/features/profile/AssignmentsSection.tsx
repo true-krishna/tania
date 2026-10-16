@@ -1,4 +1,5 @@
-import { EmptyState, StatusBadge } from "@/components/DataState";
+import { EmptyState } from "@/components/DataState";
+import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
 import { Table } from "@/components/Table";
 import { Card } from "@/components/Card";
 import type { ProfileAssignment } from "./useProfile";
@@ -49,7 +50,7 @@ export function AssignmentsSection({
             key: "status",
             title: "Status",
             render: (_value, assignment) => (
-              <StatusBadge active={assignment.status === "ACTIVE"} />
+              <AssignmentStatusBadge status={assignment.status} />
             ),
           },
         ]}

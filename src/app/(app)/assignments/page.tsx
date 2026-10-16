@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
+import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { FilterButton } from "@/components/FilterButton";
@@ -146,7 +147,7 @@ export default function AssignmentsPage() {
               }}
               options={[
                 { value: "ALL", label: "Semua" },
-                { value: "ACTIVE", label: "Aktif" },
+                { value: "ACTIVE", label: "Berjalan" },
                 { value: "COMPLETED", label: "Selesai" },
               ]}
             />
@@ -210,7 +211,7 @@ export default function AssignmentsPage() {
               key: "status",
               title: "Status",
               render: (_value, assignment) => (
-                <StatusBadge active={assignment.status === "ACTIVE"} />
+                <AssignmentStatusBadge status={assignment.status} />
               ),
             },
             {
