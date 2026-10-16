@@ -109,3 +109,24 @@ cakupan Chapter). Temuan dan perbaikannya dicatat di `plan.md` §14.12
 yang memerlukan bring-up dua stack di atas plus pemasangan browser Playwright;
 catatan "1 GiB / 1 CPU tidak memadai" di atas berlaku untuk sandbox lama, bukan
 untuk lingkungan ini.
+
+## Percobaan pertama browser (2026-10-16): stack jalan, browser tidak
+
+API + web + DB ter-seed **terbukti** hidup di sandbox agent (POST `/graphql`
+`login` mengembalikan token untuk akun seed; `GET /login` → 200), tetapi
+`pnpm exec playwright install chromium` berhasil mengunduh browser lalu gagal
+meluncurkannya:
+
+```
+Error relocating …/chrome-headless-shell: snd_ctl_card_info: symbol not found
+exitCode=127
+```
+
+Sandbox agent adalah **Alpine Linux (musl)**, sedangkan build Chromium Playwright
+butuh **glibc**; `playwright install-deps` memerlukan `apt`/root yang tidak
+tersedia. Jadi 8 skenario `rbac.spec.ts` gagal pada tahap *launch*, bukan pada
+asersi matriks — jalankan spec ini di runner glibc (CI/pipeline). Dua catatan
+operasional lain: `0004_seed.sql` hanya bisa diterapkan pada **database fresh**
+(`units.code` NOT NULL baru ada di migrasi `0011`), dan suite Go e2e mem-`TRUNCATE`
+seluruh tabel, jadi siapkan database fresh lagi sebelum menjalankan spec ini.
+Rincian: `specs/002-tania-rbac/plan.md` §14.13.

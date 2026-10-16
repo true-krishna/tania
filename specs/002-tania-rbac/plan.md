@@ -951,3 +951,31 @@ tidak berubah struktural, hanya doc-comment).
 **Masih terbuka**: 21 temuan lint prawujud di atas (di luar lingkup RBAC — usulan: task pembersihan
 terpisah), dan **e2e Playwright** (T041/T078) yang tetap butuh bring-up dua stack sesuai runbook
 `e2e/README.md`.
+
+### 14.13 Percobaan e2e browser (as-built, 2026-10-16, TAN-212) — stack jalan, browser tidak
+
+T041/T078 selama ini dicatat "tidak bisa dijalankan di lingkungan agent". Iterasi ini membuktikan
+bagian mana yang benar dan bagian mana yang ternyata bisa:
+
+**Stack-nya terbukti jalan.** `docker compose up -d postgres redis` (stack backend), lalu API
+dijalankan sebagai binary lokal (`go build -o … ./cmd/api`, `:8080`) dengan database yang
+di-*drop/create* lebih dulu supaya migrasi + `0004_seed.sql` berjalan berurutan; aplikasi Next
+via `pnpm dev` (`:3000`, `NEXT_PUBLIC_GRAPHQL_URL=http://localhost:8080/graphql`,
+`CORS_ALLOWED_ORIGINS=http://localhost:3000`). Bukti: `/login` → 200, dan mutasi `login` GraphQL
+mengembalikan `accessToken` untuk akun seed (`talent@tania.test`, sandi quickstart). Database
+ter-seed bersih: 4 user (satu per peran), 4 karyawan, 3 unit, 4 job role, 3 project, 3 chapter.
+Catatan operasional: `0004_seed.sql` **tidak** bisa diterapkan manual setelah semua migrasi
+(`units.code` NOT NULL baru ada di `0011`) — seed hanya jalan di database fresh, sesuai runbook;
+dan suite Go e2e mem-`TRUNCATE` seluruh tabel, jadi jalankan dari database fresh lagi.
+
+**Browser Playwright tidak bisa jalan di sandbox ini.** `pnpm exec playwright install chromium`
+berhasil mengunduh browser, tetapi prosesnya gagal diluncurkan:
+`Error relocating … chrome-headless-shell: snd_ctl_card_info: symbol not found`, `exitCode=127`.
+Sebabnya: sandbox agent adalah **Alpine Linux (musl)**, sementara build Chromium Playwright
+memerlukan **glibc**; `playwright install-deps` butuh `apt`/root yang tidak tersedia (uid non-root
+tanpa `apk`). Jadi 8 skenario `e2e/rbac.spec.ts` berstatus *failed-to-launch*, bukan gagal asersi.
+
+**Konsekuensi**: T041/T078 tetap milik runner glibc (CI/pipeline atau image dengan deps browser).
+Karena matriks RBAC sudah diverifikasi end-to-end **tanpa browser** (suite Go, §14.12), sisa
+pekerjaan T041 benar-benar hanya lapisan DOM/nav. Alasan presisi ini dicatat di runbook
+`e2e/README.md` supaya tidak diulang dari nol.
