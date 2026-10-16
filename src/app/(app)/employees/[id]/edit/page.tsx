@@ -20,6 +20,7 @@ import {
 } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
 import { AuthGuard } from "@/lib/auth/guard";
+import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 type EmployeeData = NonNullable<EmployeeQuery["employee"]>;
 
@@ -164,7 +165,7 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           Perubahan data {saved.updateEmployee.fullName} berhasil disimpan.
         </div>
-        <Link href={`/employees/${id}`} className="w-fit">
+        <Link href={EMPLOYEE_DETAIL(id)} className="w-fit">
           <Button type="button" variant="secondary">
             Kembali ke detail karyawan
           </Button>
@@ -281,7 +282,7 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
           <Button type="submit" disabled={saving}>
             Simpan
           </Button>
-          <Link href={`/employees/${id}`} className="no-underline">
+          <Link href={EMPLOYEE_DETAIL(id)} className="no-underline">
             <Button type="button" variant="secondary">
               Batal
             </Button>

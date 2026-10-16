@@ -1,6 +1,7 @@
+import { LOGIN } from "@/lib/constants/routes";
 import { decodeSession, isSessionExpired, type Session } from "@/lib/auth/session-codec";
 
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = [LOGIN];
 
 /** Routes the gate must never block: the sign-in page and its subpaths. */
 export function isPublicRoute(pathname: string): boolean {

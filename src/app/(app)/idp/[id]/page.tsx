@@ -22,6 +22,7 @@ import {
   UpdateDevelopmentActionStatusDocument,
 } from "@/generated/graphql";
 import { cn } from "@/lib/cn";
+import { IDP } from "@/lib/constants/routes";
 import type {
   DevelopmentActionStatus,
   DevelopmentMethod,
@@ -178,7 +179,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href="/idp" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={IDP} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
         ← Kembali ke daftar
       </Link>
       <PageHeader

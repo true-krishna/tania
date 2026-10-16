@@ -10,6 +10,7 @@ import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { CreateEvaluationTemplateDocument } from "@/generated/graphql";
 import type { EvaluationAnswerType } from "@/generated/graphql/types";
+import { EVALUATION_TEMPLATES } from "@/lib/constants/routes";
 
 type CriterionRow = { label: string; answerType: EvaluationAnswerType };
 
@@ -135,7 +136,7 @@ export default function NewEvaluationTemplatePage() {
             Simpan
           </Button>
           <Link
-            href="/evaluations/templates"
+            href={EVALUATION_TEMPLATES}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal

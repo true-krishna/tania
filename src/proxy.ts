@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { authConfig } from "@/lib/auth/config";
 import { SESSION_COOKIE } from "@/lib/auth/session-codec";
 import { isPublicRoute, requiresSignIn, resolveSession } from "@/lib/auth/route-gate";
+import { LOGIN } from "@/lib/constants/routes";
 
 /**
  * Server-side session gate (Next.js "Proxy", the Next 16 rename of middleware).
@@ -21,7 +22,7 @@ export function proxy(request: NextRequest) {
 
   const session = resolveSession(request.cookies.get(SESSION_COOKIE)?.value);
   if (requiresSignIn(session)) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL(LOGIN, request.url));
   }
 
   return NextResponse.next();

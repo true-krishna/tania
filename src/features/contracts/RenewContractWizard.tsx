@@ -24,6 +24,7 @@ import {
   workLocationFormValue,
 } from "@/features/contracts/labels";
 import { mapSubmitError } from "@/lib/errors";
+import { CONTRACT_DETAIL } from "@/lib/constants/routes";
 
 type SourceContract = NonNullable<EmploymentContractQuery["employmentContract"]>;
 
@@ -198,12 +199,12 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
           {created.startDate}. Kontrak lama {contract.contractNo} tetap tersimpan sebagai riwayat.
         </div>
         <div className="flex gap-2">
-          <Link href={`/contracts/${created.id}`} className="no-underline">
+          <Link href={CONTRACT_DETAIL(created.id)} className="no-underline">
             <Button type="button" variant="primary">
               Buka kontrak baru
             </Button>
           </Link>
-          <Link href={`/contracts/${contract.id}`} className="no-underline">
+            <Link href={CONTRACT_DETAIL(contract.id)} className="no-underline">
             <Button type="button" variant="secondary">
               Kembali ke kontrak lama
             </Button>
@@ -267,7 +268,7 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
           ) : null}
           <div className="flex gap-2">
             <Button type="submit">Lanjut</Button>
-            <Link href={`/contracts/${contract.id}`} className="no-underline">
+          <Link href={CONTRACT_DETAIL(contract.id)} className="no-underline">
               <Button type="button" variant="secondary">
                 Batal
               </Button>

@@ -22,6 +22,7 @@ import { orDash } from "@/lib/cell";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
+import { EMPLOYEE_NEW, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 type EmployeeRowData = {
   id: string;
@@ -50,7 +51,7 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
         <Link
-          href={`/employees/${employee.id}`}
+          href={EMPLOYEE_DETAIL(employee.id)}
           className="font-medium text-zinc-900 hover:underline"
         >
           {employee.fullName}
@@ -72,7 +73,7 @@ function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
           actions={[
             {
               label: "Lihat detail",
-              onSelect: () => router.push(`/employees/${employee.id}`),
+              onSelect: () => router.push(EMPLOYEE_DETAIL(employee.id)),
             },
           ]}
         />
@@ -93,7 +94,7 @@ function OwnEmployeeRedirect() {
   const { status, data, error } = useMyEmployeeId();
 
   React.useEffect(() => {
-    if (data) router.replace(`/employees/${data}`);
+    if (data) router.replace(EMPLOYEE_DETAIL(data));
   }, [data, router]);
 
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -130,7 +131,7 @@ function ChapterTalentList() {
           {data.map((talent) => (
             <tr key={talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
               <td className="px-4 py-2.5">
-                <Link href={`/employees/${talent.id}`} className="font-medium text-zinc-900 hover:underline">
+                <Link href={EMPLOYEE_DETAIL(talent.id)} className="font-medium text-zinc-900 hover:underline">
                   {talent.fullName}
                 </Link>
               </td>
@@ -141,7 +142,7 @@ function ChapterTalentList() {
                   actions={[
                     {
                       label: "Lihat detail",
-                      onSelect: () => router.push(`/employees/${talent.id}`),
+                      onSelect: () => router.push(EMPLOYEE_DETAIL(talent.id)),
                     },
                   ]}
                 />
@@ -204,7 +205,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         }
         actions={
           manage ? (
-            <Link href="/employees/new" className="no-underline">
+            <Link href={EMPLOYEE_NEW} className="no-underline">
               <Button variant="primary">+ Tambah Karyawan</Button>
             </Link>
           ) : undefined

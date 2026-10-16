@@ -18,6 +18,7 @@ import type { AccessRole, AssignmentStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
+import { ASSIGNMENT_NEW, ASSIGNMENT_DETAIL } from "@/lib/constants/routes";
 
 type AssignmentRowData = {
   id: string;
@@ -35,7 +36,7 @@ function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
     <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
       <td className="px-4 py-2.5">
         <Link
-          href={`/assignments/${assignment.id}`}
+          href={ASSIGNMENT_DETAIL(assignment.id)}
           className="font-medium text-zinc-900 hover:underline"
         >
           {assignment.talent.fullName}
@@ -56,7 +57,7 @@ function AssignmentRow({ assignment }: { assignment: AssignmentRowData }) {
           actions={[
             {
               label: "Lihat detail",
-              onSelect: () => router.push(`/assignments/${assignment.id}`),
+              onSelect: () => router.push(ASSIGNMENT_DETAIL(assignment.id)),
             },
           ]}
         />
@@ -139,7 +140,7 @@ export default function AssignmentsPage() {
         subtitle={(role && SUBTITLE[role]) ?? "Penugasan talent ke project."}
         actions={
           manage ? (
-            <Link href="/assignments/new" className="no-underline">
+            <Link href={ASSIGNMENT_NEW} className="no-underline">
               <Button variant="primary">+ Buat Assignment</Button>
             </Link>
           ) : undefined

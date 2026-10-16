@@ -12,6 +12,7 @@ import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
 import { CreateAssignmentDocument } from "@/generated/graphql";
 import { AuthGuard } from "@/lib/auth/guard";
+import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
 
 type FormValues = {
   employeeId: string;
@@ -186,7 +187,7 @@ function NewAssignmentForm() {
             Simpan
           </Button>
           <Link
-            href="/assignments"
+            href={TALENT_ASSIGNMENT}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal

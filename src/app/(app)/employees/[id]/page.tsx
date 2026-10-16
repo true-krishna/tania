@@ -28,6 +28,12 @@ import {
 } from "@/generated/graphql";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canAccess, canManage } from "@/lib/auth/matrix";
+import {
+  CONTRACT_NEW,
+  CONTRACT_DETAIL,
+  EMPLOYEES,
+  EMPLOYEE_EDIT,
+} from "@/lib/constants/routes";
 
 type DetailTab = "overview" | "workload";
 
@@ -56,7 +62,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   return (
     <section className="flex flex-col gap-4">
       {role === "TALENT" ? null : (
-        <Link href="/employees" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+        <Link href={EMPLOYEES} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
           ← Kembali ke daftar
         </Link>
       )}
@@ -67,7 +73,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
         }
         actions={
           employee && manage ? (
-            <Link href={`/employees/${id}/edit`} className="no-underline">
+            <Link href={EMPLOYEE_EDIT(id)} className="no-underline">
               <Button variant="secondary">Ubah data</Button>
             </Link>
           ) : undefined
@@ -186,7 +192,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 Riwayat kontrak ({employee.contracts.totalCount})
               </h2>
               {manage ? (
-                <Link href={`/contracts/new?employeeId=${id}`} className="no-underline">
+                <Link href={`${CONTRACT_NEW}?employeeId=${id}`} className="no-underline">
                   <Button variant="secondary">+ Tambah kontrak</Button>
                 </Link>
               ) : null}
@@ -248,7 +254,7 @@ function ContractHistoryCard({ contract, linked }: { contract: ContractRow; link
       <div className="flex flex-wrap items-center gap-2">
         {linked ? (
           <Link
-            href={`/contracts/${contract.id}`}
+            href={CONTRACT_DETAIL(contract.id)}
             className="text-sm font-semibold text-zinc-900 hover:underline"
           >
             {contract.contractNo}
