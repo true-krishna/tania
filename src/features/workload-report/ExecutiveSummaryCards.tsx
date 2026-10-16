@@ -17,6 +17,7 @@ export function ExecutiveWorkloadKpis({ summary }: { summary: WorkloadReportSumm
         hint={`FTE ${summary.fte}%`}
       />
       <StatCard label="Total talent" value={summary.totalTalent} />
+      <StatCard label="Total backlog" value={summary.totalBacklog} />
       <StatCard label="Total aktivitas" value={summary.totalTaskSubtask} />
       <StatCard label="Aktivitas dengan time spent" value={summary.totalTaskSubtaskWithTimespent} />
       <StatCard label="Jam kerja tersedia" value={summary.totalAvailableTime} hint="jam" />

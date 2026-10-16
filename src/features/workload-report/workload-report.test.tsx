@@ -81,6 +81,17 @@ describe("ExecutiveReportView — KPI, chart & distribusi dari data (TAN-229/230
     expect(screen.getByRole("button", { name: "Lihat talent Digital Core" })).toBeInTheDocument();
   });
 
+  it("renders the total backlog KPI straight from the period fixture (TAN-229)", async () => {
+    await renderExecutive();
+
+    const backlogCard = screen.getByText("Total backlog").parentElement!;
+    expect(
+      within(backlogCard).getByText(
+        String(getExecutiveFixture("202609")!.summary!.totalBacklog),
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("drills a tribe row down to its constituent talents", async () => {
     await renderExecutive();
 
@@ -257,6 +268,7 @@ describe("ExecutiveReportView — period selector & state matrix (TAN-228/235)",
 
     expect(await screen.findByText(/Belum ada data workload untuk periode Juli 2026/)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.queryByText("Total backlog")).toBeNull();
   });
 
   it("flags the unavailable source and keeps last-known figures visible", async () => {
