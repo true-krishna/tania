@@ -13,6 +13,7 @@ import { authConfig } from "@/lib/auth/config";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
 import { onSessionExpired } from "@/lib/auth/session-expiry";
 import { clearSession, getSession } from "@/lib/auth/token-store";
+import { ACTIVITIES, LOGIN, PROFILE, WORKLOAD } from "@/lib/constants/routes";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // session) routes back to sign-in; AuthGuard only covers the initial mount.
   React.useEffect(() => {
     if (authConfig.localOnly) return;
-    return onSessionExpired(() => router.replace("/login"));
+    return onSessionExpired(() => router.replace(LOGIN));
   }, [router]);
 
   // Profile shown in the top-bar avatar; read once at mount, like `useSessionRole`.
@@ -40,7 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (refreshToken) await logout({ variables: { refreshToken } });
     } finally {
       clearSession();
-      router.replace("/login");
+      router.replace(LOGIN);
     }
   }
 
@@ -61,9 +62,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 email={session?.email}
                 roleLabel={role ? roleLabel[role] : null}
                 items={[
-                  { href: "/profile", label: "Profil saya", icon: IconUser },
-                  { href: "/activities", label: "Aktivitas saya", icon: IconClockHour3 },
-                  { href: "/workload", label: "Workload", icon: IconChartBar },
+                  { href: PROFILE, label: "Profil saya", icon: IconUser },
+                  { href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3 },
+                  { href: WORKLOAD, label: "Workload", icon: IconChartBar },
                 ]}
                 onLogout={handleLogout}
               />

@@ -6,6 +6,7 @@ import { Chip, type ChipVariant } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useMyIdp } from "@/features/idp/talent/useMyIdp";
+import { IDP_MY } from "@/lib/constants/routes";
 import type { DevelopmentActionStatus, DevelopmentMethod, IdpStatus } from "@/generated/graphql/types";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
@@ -90,7 +91,7 @@ export function IdpSection() {
         ) : (
           <p className="text-sm text-zinc-500">Belum ada aksi pengembangan.</p>
         )}
-        <Link href="/idp/my" className="text-sm font-medium text-zinc-900 hover:underline">
+        <Link href={IDP_MY} className="text-sm font-medium text-zinc-900 hover:underline">
           Kelola IDP saya →
         </Link>
       </Card>

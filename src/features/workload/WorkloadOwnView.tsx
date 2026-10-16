@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ACTIVITIES } from "@/lib/constants/routes";
 import { ActivitySplitChart } from "./ActivitySplitChart";
 import { DataLamaChip } from "./LoadClassificationBadge";
 import { ProjectContextCard } from "./ProjectContextCard";
@@ -79,7 +80,7 @@ export function WorkloadOwnView({
               Aktivitas kerja dan pelatihan yang Anda catat adalah sumber angka workload.
             </p>
             <Link
-              href="/activities"
+              href={ACTIVITIES}
               className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-brand-navy bg-tp-brand-navy px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-brand-navy-deep"
             >
               Buka aktivitas

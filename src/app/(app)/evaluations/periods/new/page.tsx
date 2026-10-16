@@ -11,6 +11,7 @@ import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
 import { CreateEvaluationPeriodDocument } from "@/generated/graphql";
+import { EVALUATION_PERIODS } from "@/lib/constants/routes";
 
 type FormValues = { name: string; templateId: string; startDate: string; endDate: string };
 const EMPTY: FormValues = { name: "", templateId: "", startDate: "", endDate: "" };
@@ -99,7 +100,7 @@ export default function NewEvaluationPeriodPage() {
             Simpan
           </Button>
           <Link
-            href="/evaluations/periods"
+            href={EVALUATION_PERIODS}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal

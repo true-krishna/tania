@@ -22,6 +22,7 @@ import {
 } from "@/generated/graphql";
 import { workLocationFormValue } from "@/features/contracts/labels";
 import { graphQLErrorCode, mapSubmitError } from "@/lib/errors";
+import { CONTRACT_DETAIL } from "@/lib/constants/routes";
 
 type Contract = NonNullable<EmploymentContractQuery["employmentContract"]>;
 
@@ -277,7 +278,7 @@ function MutationAction({ contract }: { contract: Contract }) {
           Mutasi tercatat. Kontrak baru <strong>{created.contractNo}</strong> efektif{" "}
           {created.startDate}; kontrak lama tetap tersimpan sebagai riwayat.
         </p>
-        <Link href={`/contracts/${created.id}`} className="w-fit no-underline">
+        <Link href={CONTRACT_DETAIL(created.id)} className="w-fit no-underline">
           <Button type="button" variant="secondary">
             Buka kontrak baru
           </Button>

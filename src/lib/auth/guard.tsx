@@ -6,6 +6,7 @@ import type { AccessRole } from "@/generated/graphql";
 import { getSession } from "@/lib/auth/token-store";
 import { authConfig } from "@/lib/auth/config";
 import { canAccess, canManage, type Module } from "@/lib/auth/matrix";
+import { LOGIN } from "@/lib/constants/routes";
 
 export function useSessionRole(): AccessRole | null {
   // Session store is synchronous (cookie-backed, src/lib/auth/token-store) —
@@ -38,7 +39,7 @@ export function AuthGuard({
   // (UI layer). Final authorization is enforced server-side (FR-15/16).
   React.useEffect(() => {
     if (!authConfig.localOnly && role === null) {
-      router.replace("/login");
+      router.replace(LOGIN);
     }
   }, [role, router]);
 

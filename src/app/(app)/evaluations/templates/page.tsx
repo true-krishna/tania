@@ -7,6 +7,7 @@ import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination, useTablePagination } from "@/components/Pagination";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
+import { EVALUATION_TEMPLATE_NEW } from "@/lib/constants/routes";
 
 /**
  * Evaluation templates (Admin) — US7 / FR-31.
@@ -26,7 +27,7 @@ export default function EvaluationTemplatesPage() {
           title="Template Evaluasi"
           subtitle="Framework penilaian yang dikelola Admin (FR-31)."
           actions={
-            <Link href="/evaluations/templates/new" className="no-underline">
+            <Link href={EVALUATION_TEMPLATE_NEW} className="no-underline">
             <Button variant="primary">+ Buat Template</Button>
           </Link>
           }
@@ -41,7 +42,7 @@ export default function EvaluationTemplatesPage() {
         title="Template Evaluasi"
         subtitle="Framework penilaian yang dikelola Admin (FR-31)."
         actions={
-          <Link href="/evaluations/templates/new" className="no-underline">
+          <Link href={EVALUATION_TEMPLATE_NEW} className="no-underline">
             <Button variant="primary">+ Buat Template</Button>
           </Link>
         }

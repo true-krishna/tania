@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import type { AccessRole } from "@/generated/graphql";
 import { useSessionRole } from "@/lib/auth/guard";
+import { WORKLOAD } from "@/lib/constants/routes";
 import { DataLamaChip } from "./LoadClassificationBadge";
 import { DEFAULT_PERIOD_ID, isWorkloadPeriod } from "./mocks";
 import { DistributionBlock } from "./DistributionBlock";
@@ -72,7 +73,7 @@ export function WorkloadPageView() {
   const selectedTab: TabId = tabs.some((t) => t.id === activeTab) ? activeTab : (tabs[0].id as TabId);
 
   function setPeriod(nextPeriodId: string) {
-    router.replace(`/workload?period=${nextPeriodId}`);
+    router.replace(`${WORKLOAD}?period=${nextPeriodId}`);
   }
 
   const fixture = fixtureState.status === "ready" ? fixtureState.fixture : null;

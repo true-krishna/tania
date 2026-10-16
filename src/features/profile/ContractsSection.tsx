@@ -12,6 +12,7 @@ import {
 } from "@/features/contracts/labels";
 import { canAccess } from "@/lib/auth/matrix";
 import { useSessionRole } from "@/lib/auth/guard";
+import { CONTRACT_DETAIL } from "@/lib/constants/routes";
 import type { ProfileContract } from "./useProfile";
 
 /**
@@ -50,7 +51,7 @@ function ContractRow({ contract, linked }: { contract: ProfileContract; linked: 
       <div className="flex flex-wrap items-center gap-2">
         {linked ? (
           <Link
-            href={`/contracts/${contract.id}`}
+            href={CONTRACT_DETAIL(contract.id)}
             className="text-sm font-semibold text-zinc-900 hover:underline"
           >
             {contract.contractNo}

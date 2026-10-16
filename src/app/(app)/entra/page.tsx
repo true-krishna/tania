@@ -22,6 +22,7 @@ import {
 } from "@/features/entra/useEmployeesWithoutEntra";
 import { mapSubmitError } from "@/lib/errors";
 import { orDash } from "@/lib/cell";
+import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 const COLUMNS: Column[] = [
   { key: "name", label: "Nama" },
@@ -115,7 +116,7 @@ export default function EntraProvisioningPage() {
                 >
                   <td className="px-4 py-2.5">
                     <Link
-                      href={`/employees/${employee.id}`}
+                      href={EMPLOYEE_DETAIL(employee.id)}
                       className="font-medium text-zinc-900 hover:underline"
                     >
                       {employee.fullName}

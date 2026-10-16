@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/DataState";
 import { CreateEmployeeDocument, type CreateEmployeeInput } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
 import { AuthGuard } from "@/lib/auth/guard";
+import { EMPLOYEES } from "@/lib/constants/routes";
 
 type FormValues = {
   nik: string;
@@ -297,7 +298,7 @@ function NewEmployeeForm() {
           <Button type="submit" disabled={loading}>
             Simpan
           </Button>
-          <Link href="/employees" className="no-underline">
+          <Link href={EMPLOYEES} className="no-underline">
             <Button type="button" variant="secondary">
               Batal
             </Button>

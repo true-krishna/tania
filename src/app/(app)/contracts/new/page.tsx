@@ -23,6 +23,7 @@ import {
   isOpenEndedContractType,
 } from "@/features/contracts/labels";
 import { mapSubmitError } from "@/lib/errors";
+import { CONTRACTS } from "@/lib/constants/routes";
 
 type FormValues = {
   employeeId: string;
@@ -190,7 +191,7 @@ export default function NewContractPage({
           >
             Tambah kontrak lain
           </button>
-          <Link href="/contracts" className="no-underline">
+          <Link href={CONTRACTS} className="no-underline">
             <Button type="button" variant="secondary">
               Ke daftar kontrak
             </Button>
@@ -357,7 +358,7 @@ export default function NewContractPage({
           <Button type="submit" disabled={loading}>
             Simpan
           </Button>
-          <Link href="/contracts" className="no-underline">
+          <Link href={CONTRACTS} className="no-underline">
             <Button type="button" variant="secondary">
               Batal
             </Button>
