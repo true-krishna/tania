@@ -316,7 +316,8 @@ test("T034 — Chapter menerima balasan grounded dari asisten (butuh provider)",
   await expect(dialog).toBeVisible();
 
   const question = "Siapa saja yang kontraknya berakhir dalam 90 hari?";
-  await page.getByLabel("Pertanyaan untuk asisten").fill(question);
+  const input = page.getByLabel("Pertanyaan untuk asisten");
+  await input.fill(question);
   await page.getByRole("button", { name: "Kirim pertanyaan" }).click();
 
   // Bubble user tampil optimistis — dipilih lewat `data-role`, sebab teks
@@ -325,6 +326,14 @@ test("T034 — Chapter menerima balasan grounded dari asisten (butuh provider)",
   await expect(dialog.locator('[data-role="ASSISTANT"]').first()).toBeVisible({ timeout: 30_000 });
   await expect(dialog.getByText("Belum terjawab")).toHaveCount(0);
 
+  // T052: selama `busy` tombol kirim (yang baru saja diklik, jadi pemegang fokus)
+  // di-`disable`, dan browser memindahkan fokus ke `body`; `Escape` dari sana
+  // tidak melewati dialog yang handler-nya ada di elemen dialog. Tunggu kiriman
+  // selesai (input kembali aktif ⇔ tidak `busy`) lalu kembalikan fokus ke dalam
+  // panel sebelum `Escape`, agar hasilnya tidak bergantung kecepatan backend.
+  // Assertion panel-tertutup di bawah tidak dilonggarkan.
+  await expect(input).toBeEnabled();
+  await input.focus();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(bubble).toBeFocused();
