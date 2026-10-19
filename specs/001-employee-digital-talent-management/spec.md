@@ -18,6 +18,7 @@
 **Revisi**: 2026-10-08 — Keputusan pemilik produk: employee ID (`employee_code`) hanya disimpan pada kontrak kerja (`employment_contracts.nomor_induk`) — tabel `employees` khusus data diri. FR-01/FR-03/FR-33/FR-34 disesuaikan; pencarian employee ID melalui kontrak aktif.
 **Revisi**: 2026-10-09 (clarify 12, TAN-144) — Penundaan modul & keputusan RBAC disepakati pemilik produk: **(a)** Modul IDP & Evaluasi performa **ditunda** dari iterasi ini (korelasi WAD — WAD memasok data aktivitas & beban kerja sebagai bukti capaian untuk evaluasi dan dasar identifikasi kebutuhan pengembangan untuk IDP; bukan substitusi). Item ditunda: US3, US5, US7, US6 skenario 10–11, US8 (widget terkait), FR-08–FR-11, FR-14, FR-25–FR-28, FR-31, FR-32; entitas IDP, DevelopmentAction, ReviewLog, EvaluationPeriod, EvaluationTemplate, PerformanceEvaluation; SC-003/SC-005/SC-006. **(b)** Hak baca assignment berpindah dari Admin ke Operation (clarify 1 TAN-144; matriks RBAC `002-tania-rbac`). **(c)** Admin diperjelas sebagai **admin sistem** — kebutuhan hanya RBAC & Master Data, bukan data proses bisnis (data karyawan); riwayat assignment pada detail karyawan tidak tersedia bagi Admin. **(d)** Perlindungan akun Admin aktif terakhir diterapkan — satu-satunya akun Admin aktif tidak dapat dinonaktifkan. **(e)** Rate limiting login gagal berulang diterapkan. **(f)** Kredensial dikelola Microsoft Entra — perubahan kata sandi mandiri di luar cakupan aplikasi.
 **Revisi**: 2026-10-19 (amandemen remediasi dashboard — keputusan pemilik produk) — Dashboard Operation diperjelas menjadi **org-wide tanpa dimensi chapter**: seluruh karyawan (ber-chapter maupun tidak) dalam satu query; **tanpa grouping "non-assignable"/"Tanpa chapter" di UI** — istilah internal tidak ditampilkan, role tanpa chapter tampil sebagai baris biasa pada distribusi role; field `nonAssignableEmployees` tetap tersedia di kontrak namun tidak dirender. Widget indikator kontrak segera berakhir (H-90/H-30) & pra-pensiun (FR-40) **ikut dirender** di dashboard Operation; **default usia pensiun dikoreksi 56 → 55** dan jendela pra-pensiun didefinisikan usia ≥ `retirement_age` − 1 (keputusan pemilik produk, 2026-10-19). Dashboard Chapter tetap scoped ke chapter-nya. Keputusan terkait: tribe diakomodasi sebagai tipe **Unit** pada Master Data (tanpa entitas tribe baru); populasi Laporan Talent mengikuti amandemen spec-003 (2026-10-19). Sumber: diskusi PM 2026-10-19 + prototype dashboard v2 (terlampir pada issue remediasi).
+**Revisi**: 2026-10-19 (keputusan pemilik produk pada TAN-133) — **Peran dihapus dari assignment.** Assignment berisi talent, project, dan periode; `job_role` bukan lagi bagian dari model data, kontrak GraphQL, maupun UI. US2 skenario 1 & 4, US5 skenario 5, dan FR-05 diselaraskan; spesifikasi slice `specs/001-us2-talent-assignment/spec.md` direvisi pada tanggal yang sama. Master Data Role tetap menjadi dasar penurunan cakupan chapter dan penentuan kandidat talent.
 **Status**: Draft
 **Input**: /speckit-specify Buat aplikasi employee (digital talent) management dengan target user Chapter sebagai pengelola data assignment dan data talent competency, Operation sebagai pengelola yang memasukkan data karyawan, dan Talent yang dapat membangun profil dengan input data CV dan melihat competency matrix.
 
@@ -46,10 +47,10 @@ Sebagai **Chapter**, saya dapat membuat dan mengelola assignment talent sehingga
 
 **Acceptance Scenarios:**
 
-1. **Given** Chapter sudah login dan talent aktif dalam chapter-nya tersedia, **When** membuat assignment (talent, project dari Master Data Project, peran, periode), **Then** assignment tersimpan dan muncul pada riwayat talent.
+1. **Given** Chapter sudah login dan talent aktif dalam chapter-nya tersedia, **When** membuat assignment (talent, project dari Master Data Project, periode), **Then** assignment tersimpan dan muncul pada riwayat talent.
 2. **Given** assignment aktif berjalan, **When** Chapter mengubah atau mengakhirinya (isi tanggal selesai), **Then** riwayat assignment memperlihatkan versi terbaru tanpa menghapus history.
 3. **Given** Chapter membuka detail seorang talent, **When** melihat daftar assignment, **Then** terlihat semua assignment talent tersebut beserta periodenya.
-4. **Given** Chapter membuka daftar assignment per project, **When** memilih project, **Then** terlihat semua talent dalam cakupan chapter-nya yang ter-assign pada project tersebut beserta perannya.
+4. **Given** Chapter membuka daftar assignment per project, **When** memilih project, **Then** terlihat semua talent dalam cakupan chapter-nya yang ter-assign pada project tersebut.
 
 ### User Story 3 — Chapter mengelola IDP talent (Priority: P1)
 
@@ -72,7 +73,7 @@ Sebagai **Talent**, saya dapat mengisi data CV milik saya sehingga profil saya l
 2. **Given** Talent mengisi satu atau lebih bagian CV, **When** menyimpan, **Then** data bagian tersebut tersimpan dan tampil pada profil Talent tersebut.
 3. **Given** Talent memiliki data CV tersimpan, **When** mengedit dan menyimpan kembali, **Then** hanya profil miliknya yang berubah.
 4. **Given** Talent lain mencoba mengakses profil Talent A, **When** permintaan dikirim, **Then** sistem menolak (hanya pemiliknya dan Chapter talent dalam chapter yang sama — hanya baca — yang boleh).
-5. **Given** Talent memiliki riwayat assignment, **When** membuka profilnya, **Then** bagian pengalaman kerja menampilkan riwayat assignment (project, peran, periode) secara otomatis, termasuk assignment yang sudah diakhiri.
+5. **Given** Talent memiliki riwayat assignment, **When** membuka profilnya, **Then** bagian pengalaman kerja menampilkan riwayat assignment (project, periode) secara otomatis, termasuk assignment yang sudah diakhiri.
 
 ### User Story 5 — Talent mengikuti IDP miliknya (Priority: P2)
 
@@ -221,7 +222,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 
 **Assignment (Chapter)**
 
-- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), peran (wajib merujuk Master Data Role), periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project. Status assignment: berjalan / selesai. Chapter hanya dapat meng-assign talent yang berada dalam tanggung jawab chapter-nya (FR-23); kandidat talent pada form assignment hanya talent aktif dan assignable dalam chapter-nya.
+- **FR-05**: Chapter harus dapat membuat assignment berisi: talent, project (pilihan merujuk Master Data Project), periode (mulai–selesai), status. Pilihan project pada assignment hanya berasal dari Master Data Project. Status assignment: berjalan / selesai. Chapter hanya dapat meng-assign talent yang berada dalam tanggung jawab chapter-nya (FR-23); kandidat talent pada form assignment hanya talent aktif dan assignable dalam chapter-nya.
 - **FR-06**: Chapter harus dapat mengubah dan mengakhiri assignment; mengakhiri berarti mengisi tanggal selesai dan mengubah status menjadi selesai. Riwayat assignment talent tetap tersimpan.
 - **FR-07**: Chapter harus dapat melihat daftar assignment per talent dan per project — keduanya terbatas pada talent dalam tanggung jawab chapter-nya. Talent dapat melihat riwayat assignment miliknya sendiri (hanya baca); riwayat ini menjadi sumber data pengalaman kerja pada CV-nya.
 
@@ -235,7 +236,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 
 **Profil & CV (Talent)**
 
-- **FR-12**: Talent harus dapat mengisi profil CV berbentuk form terstruktur: ringkasan profil, pendidikan (banyak entri), sertifikasi (banyak entri), keahlian (banyak entri). Bagian pengalaman kerja tidak diinput manual — terisi otomatis dari riwayat assignment talent (project, peran, periode). Amandemen D11 (spek 003, disahkan pemilik produk 2026-10-10): input **jenjang pendidikan (`degree`) dibatasi dropdown terkontrol lima nilai** — `SMA/SMK Sederajat`, `D3`, `S1`, `S2`, `S3` (enum SDL `EducationLevel`, divalidasi juga di use case); nilai teks bebas yang sudah tersimpan dari data lama tetap dibaca apa adanya tanpa migrasi.
+- **FR-12**: Talent harus dapat mengisi profil CV berbentuk form terstruktur: ringkasan profil, pendidikan (banyak entri), sertifikasi (banyak entri), keahlian (banyak entri). Bagian pengalaman kerja tidak diinput manual — terisi otomatis dari riwayat assignment talent (project, periode). Amandemen D11 (spek 003, disahkan pemilik produk 2026-10-10): input **jenjang pendidikan (`degree`) dibatasi dropdown terkontrol lima nilai** — `SMA/SMK Sederajat`, `D3`, `S1`, `S2`, `S3` (enum SDL `EducationLevel`, divalidasi juga di use case); nilai teks bebas yang sudah tersimpan dari data lama tetap dibaca apa adanya tanpa migrasi.
 - **FR-13**: Talent hanya dapat melihat dan mengedit CV miliknya sendiri. Chapter dapat melihat CV (hanya baca) talent dalam chapter yang sama dengannya; peran lain tidak dapat mengakses CV.
 
 **Akses & keamanan**
@@ -303,7 +304,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 - **Chapter (master data)**: daftar chapter organisasi (nama saja), dikelola Admin (FR-24); nilai awal Product, Engineer, Design — jumlah bebas dan dapat dikonsolidasi lewat operasi data.
 - **Project (master data)**: master data project yang wajib merujuk satu Unit, dikelola Admin; menjadi satu-satunya sumber pilihan project pada assignment.
 - **Role (master data)**: master data peran jabatan/fungsional talent mengikuti standar role perusahaan, dikelola Admin; dirujuk oleh posisi karyawan. Setiap Role dimiliki tepat satu chapter terdaftar (Master Data Chapter) atau tanpa chapter — dasar penentuan tanggung jawab chapter dan keter-assign-an (FR-22–FR-23).
-- **Assignment**: penempatan seorang talent pada sebuah project (dari Master Data Project) untuk periode tertentu dengan peran tertentu. Riwayat assignment menjadi sumber data pengalaman kerja pada CV talent.
+- **Assignment**: penempatan seorang talent pada sebuah project (dari Master Data Project) untuk periode tertentu. Riwayat assignment menjadi sumber data pengalaman kerja pada CV talent.
 - **IndividualDevelopmentPlan (IDP)**: rencana pengembangan individual milik satu talent, dibuat dan dikelola Chapter; memuat development objective, penilaian kondisi saat ini, identifikasi gap, timeline & milestones, dan success indicators.
 - **DevelopmentAction**: aksi pengembangan dalam sebuah IDP (deskripsi, metode — penugasan project, mentoring, training, exposure lintas fungsi, atau belajar mandiri — status to do/in progress/completed, tenggat).
 - **ReviewLog**: catatan check-in review & monitoring antara Chapter dan talent (tanggal, ringkasan hasil, tindak lanjut).

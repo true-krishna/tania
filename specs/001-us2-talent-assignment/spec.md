@@ -8,6 +8,8 @@
 
 **Revisi**: 2026-10-08 — Out of Scope dikonfirmasi oleh pemilik produk (keputusan pada TAN-133); butir terakhir Review & Acceptance Checklist tertutup.
 
+**Revisi**: 2026-10-19 (keputusan pemilik produk pada TAN-133) — **Peran dihapus dari assignment.** `job_role` bukan lagi bagian dari model data, kontrak GraphQL, maupun UI: assignment berisi talent, project, dan periode. US1, US2, US4, US5, FR-01, FR-02, FR-05, FR-07, Key Entities, Edge Cases, dan Dependencies diselaraskan; spesifikasi induk (`001-employee-digital-talent-management`, US2/FR-05 dan turunannya) diselaraskan pada revisi yang sama. Master Data Role tetap dipakai sebagai dasar penurunan cakupan chapter dan kandidat talent (FR-03, FR-04).
+
 **Status**: Draft
 
 **Input**: User description: "speckit.specify create plan spec.md for feature talent assignment based on specs/001-employee-digital-talent-management"
@@ -18,7 +20,7 @@
 
 ### User Story 1 - Chapter membuat assignment talent (Priority: P1)
 
-Sebagai **Chapter**, saya dapat membuat assignment dengan meng-assign satu talent spesifik — memilihnya dari daftar kandidat karyawan aktif dan assignable dalam tanggung jawab chapter-nya (FR-03) — lalu mengisi project dari Master Data Project, peran dari Master Data Role, dan periode, sehingga penempatan setiap talent dalam tanggung jawab chapter-nya terdokumentasi sejak hari pertama.
+Sebagai **Chapter**, saya dapat membuat assignment dengan meng-assign satu talent spesifik — memilihnya dari daftar kandidat karyawan aktif dan assignable dalam tanggung jawab chapter-nya (FR-03) — lalu mengisi project dari Master Data Project dan periode, sehingga penempatan setiap talent dalam tanggung jawab chapter-nya terdokumentasi sejak hari pertama.
 
 **Why this priority**: Pencatatan assignment adalah inti nilai fitur — tanpa pembuatan assignment, tidak ada riwayat penempatan yang dapat dikelola, dilihat, maupun dipakai fitur lain (CV, evaluasi, dashboard pada spesifikasi induk).
 
@@ -26,9 +28,9 @@ Sebagai **Chapter**, saya dapat membuat assignment dengan meng-assign satu talen
 
 **Acceptance Scenarios**:
 
-1. **Given** Chapter sudah login dan talent aktif dalam chapter-nya tersedia, **When** membuat assignment dengan memilih satu talent spesifik dari daftar kandidat (karyawan aktif dan assignable), project dari Master Data Project, peran dari Master Data Role, dan periode, **Then** assignment tersimpan untuk talent tersebut dan muncul pada riwayat talent.
+1. **Given** Chapter sudah login dan talent aktif dalam chapter-nya tersedia, **When** membuat assignment dengan memilih satu talent spesifik dari daftar kandidat (karyawan aktif dan assignable), project dari Master Data Project, dan periode, **Then** assignment tersimpan untuk talent tersebut dan muncul pada riwayat talent.
 2. **Given** Chapter membuka form assignment, **When** memilih talent, **Then** pilihan talent hanya memuat karyawan aktif dan assignable dalam tanggung jawab chapter-nya (diturunkan dari posisi → Role → chapter pemilik).
-3. **Given** Chapter mengisi form assignment, **When** memilih project dan peran, **Then** pilihan hanya berasal dari Master Data Project dan Master Data Role yang aktif — tidak ada isian bebas.
+3. **Given** Chapter mengisi form assignment, **When** memilih project, **Then** pilihan hanya berasal dari Master Data Project yang aktif — tidak ada isian bebas.
 4. **Given** Chapter mengisi tanggal mulai dan (opsional) tanggal selesai rencana, **When** tanggal selesai lebih awal dari tanggal mulai, **Then** sistem menolak dengan pesan validasi yang jelas.
 5. **Given** Chapter mencoba membuat assignment untuk talent di luar tanggung jawab chapter-nya, **When** permintaan dikirim, **Then** sistem menolak di sisi server dengan penjelasan.
 
@@ -45,7 +47,7 @@ Sebagai **Chapter**, saya dapat mengubah detail assignment yang sedang berjalan 
 **Acceptance Scenarios**:
 
 1. **Given** assignment aktif berjalan, **When** Chapter mengubah atau mengakhirinya (isi tanggal selesai), **Then** riwayat assignment memperlihatkan versi terbaru tanpa menghapus history.
-2. **Given** Chapter mengubah detail assignment (project, peran, atau periode), **When** menyimpan, **Then** perubahan tersimpan dan tampil pada riwayat per talent maupun daftar per project.
+2. **Given** Chapter mengubah detail assignment (project atau periode), **When** menyimpan, **Then** perubahan tersimpan dan tampil pada riwayat per talent maupun daftar per project.
 3. **Given** Chapter mengakhiri assignment dengan mengisi tanggal selesai, **When** disimpan, **Then** status assignment menjadi selesai dan assignment tersebut tetap tampil pada riwayat (termasuk riwayat talent dan sumber pengalaman kerja CV pada spesifikasi induk).
 4. **Given** Chapter mengisi tanggal selesai yang lebih awal dari tanggal mulai assignment, **When** menyimpan, **Then** sistem menolak dengan pesan validasi yang jelas.
 
@@ -69,15 +71,15 @@ Sebagai **Chapter**, saya dapat melihat seluruh assignment seorang talent dalam 
 
 ### User Story 4 - Chapter melihat daftar assignment per project (Priority: P1)
 
-Sebagai **Chapter**, saya dapat melihat daftar talent yang ter-assign pada sebuah project beserta perannya, sehingga komposisi tim pada tiap project dalam cakupan chapter-nya terpantau.
+Sebagai **Chapter**, saya dapat melihat daftar talent yang ter-assign pada sebuah project, sehingga komposisi tim pada tiap project dalam cakupan chapter-nya terpantau.
 
 **Why this priority**: Sudut pandang per project melengkapi sudut pandang per talent untuk keputusan penempatan dan rotasi; keduanya dibutuhkan agar dokumentasi assignment berguna bagi Chapter.
 
-**Independent Test**: Dapat diuji penuh dengan memilih satu project dari Master Data Project dan memverifikasi daftar talent dalam cakupan chapter-nya yang ter-assign pada project itu beserta perannya.
+**Independent Test**: Dapat diuji penuh dengan memilih satu project dari Master Data Project dan memverifikasi daftar talent dalam cakupan chapter-nya yang ter-assign pada project itu.
 
 **Acceptance Scenarios**:
 
-1. **Given** Chapter membuka daftar assignment per project, **When** memilih project, **Then** terlihat semua talent dalam cakupan chapter-nya yang ter-assign pada project tersebut beserta perannya.
+1. **Given** Chapter membuka daftar assignment per project, **When** memilih project, **Then** terlihat semua talent dalam cakupan chapter-nya yang ter-assign pada project tersebut.
 2. **Given** project yang dipilih tidak memiliki assignment talent dari cakupan chapter-nya, **When** daftar dibuka, **Then** tampil keadaan kosong yang jelas (bukan error).
 3. **Given** terdapat assignment pada project tersebut untuk talent di luar cakupan chapter Chapter yang login, **When** daftar dibuka, **Then** talent tersebut tidak tampil — daftar terbatas pada talent dalam tanggung jawab chapter-nya.
 
@@ -93,7 +95,7 @@ Sebagai **Talent**, saya dapat melihat riwayat assignment milik saya sendiri (ha
 
 **Acceptance Scenarios**:
 
-1. **Given** Talent memiliki riwayat assignment, **When** membuka riwayatnya, **Then** seluruh assignment miliknya (project, peran, periode) tampil secara hanya-baca, termasuk assignment yang sudah diakhiri.
+1. **Given** Talent memiliki riwayat assignment, **When** membuka riwayatnya, **Then** seluruh assignment miliknya (project, periode) tampil secara hanya-baca, termasuk assignment yang sudah diakhiri.
 2. **Given** Talent belum memiliki assignment, **When** membuka riwayatnya, **Then** tampil keadaan kosong dengan penjelasan singkat (bukan error).
 3. **Given** Talent lain mencoba mengakses riwayat assignment milik Talent A, **When** permintaan dikirim, **Then** sistem menolak di sisi server.
 
@@ -103,7 +105,7 @@ Sebagai **Talent**, saya dapat melihat riwayat assignment milik saya sendiri (ha
 
 - Tanggal selesai lebih awal dari tanggal mulai (saat membuat maupun saat mengakhiri) → ditolak dengan pesan validasi yang jelas.
 - Assignment yang sudah berstatus selesai diakhiri kembali → tidak tersedia; pengakhiran hanya berlaku untuk assignment berstatus berjalan.
-- Master Data Project atau Master Data Role dinonaktifkan Admin → assignment yang sudah ada tetap tampil utuh pada riwayat; data master yang nonaktif tidak lagi menjadi pilihan pada assignment baru.
+- Master Data Project dinonaktifkan Admin → assignment yang sudah ada tetap tampil utuh pada riwayat; project nonaktif tidak lagi menjadi pilihan pada assignment baru. Master Data Role dinonaktifkan → memengaruhi kandidat talent (FR-03), bukan isi assignment.
 - Talent (karyawan) dinonaktifkan sementara masih memiliki assignment aktif → pada fitur data karyawan (spesifikasi induk) sistem memberi peringatan sebelum penonaktifan; pada sisi assignment, riwayat assignment aktif tersebut tetap tampil sebagai data historis dan talent nonaktif tidak menjadi kandidat assignment baru.
 - Admin mengubah kepemilikan chapter pada sebuah Master Data Role → seluruh talent pemakai Role tersebut (beserta assignment berjalannya) otomatis berpindah tanggung jawab chapter: Chapter lama tidak lagi melihat talent itu, Chapter baru mulai melihatnya — tanpa migrasi data manual.
 - Chapter mencoba mengakses atau membuat assignment untuk talent di luar cakupan chapter-nya → ditolak di sisi server (bukan hanya disembunyikan di UI).
@@ -113,23 +115,23 @@ Sebagai **Talent**, saya dapat melihat riwayat assignment milik saya sendiri (ha
 
 ### Functional Requirements
 
-- **FR-01**: Chapter harus dapat membuat assignment berisi: talent, project, peran, periode (mulai–selesai), dan status (berjalan/selesai). Tanggal selesai boleh kosong saat pembuatan; mengisi tanggal selesai dan mengubah status menjadi selesai adalah cara mengakhiri assignment.
-- **FR-02**: Pilihan project pada assignment hanya berasal dari Master Data Project; pilihan peran wajib merujuk Master Data Role — tidak ada isian bebas untuk keduanya.
+- **FR-01**: Chapter harus dapat membuat assignment berisi: talent, project, periode (mulai–selesai), dan status (berjalan/selesai). Tanggal selesai boleh kosong saat pembuatan; mengisi tanggal selesai dan mengubah status menjadi selesai adalah cara mengakhiri assignment.
+- **FR-02**: Pilihan project pada assignment hanya berasal dari Master Data Project — tidak ada isian bebas.
 - **FR-03**: Kandidat talent pada form assignment hanya karyawan aktif dan assignable (posisinya merujuk Role yang dimiliki sebuah chapter) dalam tanggung jawab chapter Chapter yang login; karyawan dengan Role tanpa chapter tidak dapat di-assign.
 - **FR-04**: Chapter hanya dapat membuat, mengubah, dan melihat assignment untuk talent dalam tanggung jawab chapter-nya; cakupan diturunkan otomatis dari posisi → Role → chapter pemilik dan penegakannya dilakukan di sisi server.
-- **FR-05**: Chapter harus dapat mengubah detail assignment yang berjalan (project, peran, periode); penyimpanan memperlihatkan versi terbaru tanpa menghapus entri mana pun dari riwayat assignment.
+- **FR-05**: Chapter harus dapat mengubah detail assignment yang berjalan (project atau periode); penyimpanan memperlihatkan versi terbaru tanpa menghapus entri mana pun dari riwayat assignment.
 - **FR-06**: Chapter harus dapat mengakhiri assignment berjalan dengan mengisi tanggal selesai sehingga statusnya menjadi selesai; assignment yang sudah diakhiri tetap tersimpan dan tampil pada seluruh tampilan riwayat.
-- **FR-07**: Sistem harus menyediakan daftar assignment per talent (semua assignment talent tersebut beserta periodenya) dan daftar assignment per project (seluruh talent dalam cakupan chapter yang ter-assign pada project itu beserta perannya) — keduanya hanya untuk Chapter dan terbatas pada talent dalam tanggung jawab chapter-nya.
+- **FR-07**: Sistem harus menyediakan daftar assignment per talent (semua assignment talent tersebut beserta periodenya) dan daftar assignment per project (seluruh talent dalam cakupan chapter yang ter-assign pada project itu) — keduanya hanya untuk Chapter dan terbatas pada talent dalam tanggung jawab chapter-nya.
 - **FR-08**: Talent harus dapat melihat riwayat assignment miliknya sendiri (hanya baca), termasuk assignment yang sudah diakhiri; Talent lain tidak dapat melihatnya. Riwayat ini menjadi sumber data pengalaman kerja pada CV talent (integrasi CV di luar cakupan fitur ini).
 - **FR-09**: Tanggal selesai assignment, bila diisi (saat membuat, mengubah, atau mengakhiri), harus tidak lebih awal dari tanggal mulai.
 - **FR-10**: Setiap perubahan assignment (membuat, mengubah, mengakhiri) harus tercatat jejak auditnya; jejak audit hanya dapat dilihat Admin.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Assignment**: penempatan seorang talent pada sebuah project untuk periode tertentu dengan peran tertentu — talent (karyawan aktif), project (dari Master Data Project), peran (dari Master Data Role), periode (mulai–selesai; selesai kosong selama berjalan), status (berjalan/selesai). Riwayat assignment tidak pernah dihapus — hanya diubah atau diakhiri.
+- **Assignment**: penempatan seorang talent pada sebuah project untuk periode tertentu — talent (karyawan aktif), project (dari Master Data Project), periode (mulai–selesai; selesai kosong selama berjalan), status (berjalan/selesai). Riwayat assignment tidak pernah dihapus — hanya diubah atau diakhiri.
 - **Talent (Employee)**: karyawan aktif yang menjadi subjek assignment; keter-assign-an dan chapter tanggung jawabnya diturunkan dari posisi → Role → chapter pemilik (spesifikasi induk FR-22–FR-23).
 - **Project (master data)**: satu-satunya sumber pilihan project pada assignment; wajib merujuk satu Unit (dikelola Admin pada spesifikasi induk).
-- **Role (master data)**: sumber pilihan peran pada assignment — peran jabatan/fungsional standar perusahaan, bukan peran akses aplikasi (dikelola Admin pada spesifikasi induk).
+- **Role (master data)**: peran jabatan/fungsional standar perusahaan, bukan peran akses aplikasi; dipakai untuk menurunkan cakupan chapter dan menentukan kandidat talent (FR-03, FR-04), bukan sebagai isi assignment (dikelola Admin pada spesifikasi induk).
 
 ## Success Criteria *(mandatory)*
 
@@ -162,7 +164,7 @@ Sebagai **Talent**, saya dapat melihat riwayat assignment milik saya sendiri (ha
 ## Dependencies
 
 - **Master Data Project** tersedia dan terisi (dikelola Admin — spesifikasi induk US6/FR-19): satu-satunya sumber pilihan project pada assignment.
-- **Master Data Role** dengan kepemilikan chapter tersedia (dikelola Admin — spesifikasi induk US6/FR-20, FR-22): sumber pilihan peran dan dasar penurunan cakupan chapter.
+- **Master Data Role** dengan kepemilikan chapter tersedia (dikelola Admin — spesifikasi induk US6/FR-20, FR-22): dasar penurunan cakupan chapter dan penentuan kandidat talent (FR-03, FR-04).
 - **Data karyawan aktif dan assignable** tersedia (dikelola Operation — spesifikasi induk US1/FR-01, FR-23): menentukan kandidat talent pada form assignment.
 - **Akun user ber-peran Chapter dengan cakupan chapter terdefinisi** (dikelola Admin — spesifikasi induk US6/FR-15, FR-16): posisi Employee yang terhubung ke akun harus merujuk Role yang dimiliki sebuah chapter.
 
