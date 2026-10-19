@@ -113,7 +113,7 @@ Sebagai pengguna laporan, saya dapat mengunduh setiap grafik sebagai gambar PNG 
 - Resign/pensiun dengan tanggal efektif mundur (backdated) → kejadian dihitung pada bulan tanggal efektif kontrak berakhir, bukan bulan pencatatan.
 - Tahun lahir di luar batas generasi yang lazim (mis. lahir sebelum 1946) → tetap terklasifikasi karena Baby Boomer menampung ≤ 1964 dan Generasi Z menampung ≥ 1997; tidak ada talent yang gugur dari klasifikasi.
 - Talent tanpa data pendidikan pada CV atau tanpa `work_location` pada kontraknya → masuk kategori "belum diisi" pada grafik terkait, tetap terhitung dalam total.
-- Karyawan dengan Role tanpa chapter (pencatatan) atau tanpa kontrak berjalan → tidak masuk seluruh visual laporan (FR-03).
+- Karyawan tanpa kontrak berjalan atau berstatus `resigned/retired/inactive` → tidak masuk seluruh visual laporan (FR-03). Karyawan dengan Role tanpa chapter: pada cakupan **Operation** tetap dihitung dan tampil sebagai baris role biasa — tanpa bucket/kategori "Tanpa chapter" maupun label "non-assignable"; pada cakupan **Chapter** tidak dihitung karena syarat kepemilikan chapter tetap berlaku (FR-03, amandemen 2026-10-19).
 - Seluruh data kosong pada periode terpilih → tampil keadaan kosong yang jelas dengan petunjuk memilih rentang lain, bukan error.
 - Chapter dengan talent sangat sedikit (1–2 orang) → grafik tetap tampil; catatan privasi agregat lihat NFR.
 - Kontrak PKWTT tanpa tanggal akhir → berjalan terus sampai diakhiri melalui resign/pensiun/mutasi; tidak pernah dihitung churn karena `expiry`.
@@ -220,6 +220,7 @@ Sebagai pengguna laporan, saya dapat mengunduh setiap grafik sebagai gambar PNG 
 - [x] CL-3 (distribusi generasi usia) terselesaikan (2026-10-09).
 - [x] Bentuk visual (rekomendasi grafik) disahkan pemilik produk (2026-10-09).
 - [x] Semua butir NEEDS CLARIFICATION tuntas — tidak ada butir terbuka.
+- [x] Amandemen populasi Operation 2026-10-19 tercermin konsisten pada FR-01/FR-03, Asumsi "Talent", dan Edge Cases (Role tanpa chapter = baris role biasa untuk Operation, tetap tidak dihitung untuk Chapter); mirror `specs/003` (spec.md) byte-identik di kedua repo (TAN-241).
 - [ ] Setiap requirement spesifik dan dapat diuji. *(diverifikasi pada fase `/speckit.plan`)*
 - [ ] Success criteria terukur. *(diverifikasi pada fase `/speckit.plan`)*
 - [ ] Out of scope disepakati bersama stakeholder.

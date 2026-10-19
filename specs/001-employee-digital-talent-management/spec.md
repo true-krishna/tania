@@ -179,7 +179,7 @@ Sebagai **Operation**, saya dapat mencatat pensiun karyawan sehingga berakhirnya
 **Acceptance Scenarios:**
 
 1. **Given** karyawan aktif, **When** Operation mencatat pensiun (tanggal efektif), **Then** kontrak aktif diakhiri (`end_reason = retirement`), status karyawan → `retired`, akun (termasuk Entra — FR-46) dinonaktifkan.
-2. **Given** karyawan mendekati usia pensiun, **When** dashboard Operation dibuka, **Then** tampil indikator karyawan yang memasuki jendela pra-pensiun (usia pensiun dari setelan aplikasi Admin — default 56 tahun, hanya Admin boleh mengubah; jendela peringatan H-90/H-30).
+2. **Given** karyawan mendekati usia pensiun, **When** dashboard Operation dibuka, **Then** tampil indikator karyawan yang memasuki jendela pra-pensiun (usia pensiun dari setelan aplikasi Admin — default **55 tahun**, hanya Admin boleh mengubah; jendela pra-pensiun = usia ≥ `retirement_age` − 1 — FR-40, amandemen 2026-10-19). Indikator kontrak segera berakhir (H-90/H-30) tampil terpisah.
 
 ### User Story 14 — Operation memprovision akun Entra talent (Priority: P1)
 
@@ -341,7 +341,7 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 - Atribut kontrak kerja mengikuti daftar atribut talent & kontrak TMS yang diberikan pemilik produk (2026-10-07); bila TMS memiliki atribut lain, melengkapi sebelum implementasi.
 - "Delete" karyawan dipetakan ke pengakhiran/nonaktif yang tetap berlog — aplikasi tidak menyediakan hard delete karyawan (selaras semantik FR-21).
 - `work_location` adalah enum `Jakarta`/`Bandung` pada kontrak (keputusan 2026-10-10), bukan master data baru.
-- Usia pensiun 56 tahun (setelan aplikasi yang dikelola Admin — hanya Admin boleh mengubah, keputusan 2026-10-10) dan jendela peringatan kontrak H-90/H-30 (keputusan 2026-10-07).
+- Usia pensiun **55 tahun** (setelan aplikasi yang dikelola Admin — hanya Admin boleh mengubah; default dikoreksi 56 → 55 pada 2026-10-19, FR-40) dan jendela peringatan kontrak H-90/H-30 (keputusan 2026-10-07).
 - Kontrak habis tanpa perpanjangan: karyawan otomatis non-assignable dengan status kepegawaian tetap `active` menunggu aksi Operation.
 - Mutasi di tengah kontrak: kontrak lama diakhiri (`end_reason = mutation`) + kontrak baru efektif tanggal mutasi (bukan revisi kontrak aktif).
 - Seluruh alur kontrak & siklus kerja milik Operation; jejak audit penuh tetap milik Admin.
@@ -369,4 +369,5 @@ Sebagai **Operation**, saya dapat memilih pembuatan otomatis akun Microsoft Entr
 - [x] Semua item NEEDS CLARIFICATION sudah terselesaikan (pada fase `/speckit.clarify`) — klarifikasi 1–11 ditutup; penyebutan "NEEDS CLARIFICATION" yang tersisa adalah riwayat revisi, bukan item terbuka.
 - [x] Setiap requirement spesifik dan dapat diuji — FR-21/FR-24/FR-25 diperbaiki 2026-10-01 agar skenario penerimaannya dapat dieksekusi (tidak menuntut operasi hapus yang tidak ada).
 - [x] Success criteria terukur — SC-001…SC-007 berangka; anggaran performa operasional (p95) didefinisikan di `plan.md` §8.
+- [x] Amandemen remediasi dashboard 2026-10-19 (FR-29, FR-40) tercermin konsisten pada US8/US13, FR-29/FR-40, dan Asumsi — dashboard Operation org-wide tanpa grouping "non-assignable"/"Tanpa chapter", default usia pensiun 55, pra-pensiun = `retirement_age` − 1; mirror `specs/001` (spec.md) dan kontrak SDL byte-identik di kedua repo (TAN-241).
 - [x] Out of scope disepakati bersama stakeholder — disepakati 2026-10-09 (clarify 12, TAN-144): IDP & evaluasi performa ditunda (korelasi WAD, bukan substitusi); Admin = admin sistem (RBAC & Master Data saja, tanpa data proses bisnis); hak baca assignment ke Operation; perlindungan akun Admin aktif terakhir; rate limiting login gagal; kredensial dikelola Entra (tanpa perubahan kata sandi mandiri).
