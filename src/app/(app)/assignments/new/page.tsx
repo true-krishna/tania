@@ -71,6 +71,15 @@ function NewAssignmentForm() {
     if (!valuesToCheck.projectId) next.projectId = "Project wajib dipilih.";
     if (!valuesToCheck.jobRoleId) next.jobRoleId = "Job role wajib dipilih.";
     if (!valuesToCheck.periodStart) next.periodStart = "Tanggal mulai wajib diisi.";
+    // US1-4/FR-09 — perbandingan string ISO (YYYY-MM-DD), tanpa konversi Date
+    // yang rawan geser zona waktu; aturan yang sama dengan form ubah & akhiri.
+    if (
+      valuesToCheck.periodEnd &&
+      valuesToCheck.periodStart &&
+      valuesToCheck.periodEnd < valuesToCheck.periodStart
+    ) {
+      next.periodEnd = "Tanggal selesai tidak boleh lebih awal dari tanggal mulai.";
+    }
     return next;
   }
 
@@ -171,7 +180,8 @@ function NewAssignmentForm() {
             onChange={(e) => set("projectId", e.target.value)}
             options={[
               { value: "", label: "— pilih project —" },
-              ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+              // US1-3 — pilihan hanya Master Data Project aktif.
+              ...(projects.data ?? []).filter((p) => p.isActive).map((p) => ({ value: p.id, label: p.name })),
             ]}
           />
         </InputControl>
@@ -181,7 +191,8 @@ function NewAssignmentForm() {
             onChange={(e) => set("jobRoleId", e.target.value)}
             options={[
               { value: "", label: "— pilih job role —" },
-              ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
+              // US1-3 — pilihan hanya Master Data Role aktif.
+              ...(jobRoles.data ?? []).filter((role) => role.isActive).map((role) => ({ value: role.id, label: role.name })),
             ]}
           />
         </InputControl>
