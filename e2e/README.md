@@ -61,8 +61,14 @@ guard peran) tidak memanggil model, jadi jalannya tanpa provider:
     npx playwright test -g "T029"
   ```
 
-- **T034** — balasan grounded + retry idempoten butuh stack hidup **dan**
-provider (`AI_PROVIDER_*`). Skenario di-`skip` kecuali `E2E_AI_PROVIDER=1`:
+- **T034** — dua skenario butuh stack hidup **dan** provider (`AI_PROVIDER_*`):
+  1. balasan grounded (pertanyaan contoh dijawab model); dan
+  2. gagal ramah → coba ulang idempoten — POST `SendChatMessage` pertama
+     di-`abort` di sisi klien lewat `page.route(...)` (tanpa mematikan provider
+     nyata), state gagal + tombol "Coba ulang" di-assert, lalu coba ulang harus
+     memakai `clientRequestId` yang **sama** dan menyisakan **satu** pesan USER.
+
+  Keduanya di-`skip` kecuali `E2E_AI_PROVIDER=1`:
 
   ```sh
   E2E_AI_PROVIDER=1 E2E_BASE_URL=http://localhost:3000 npm run test:e2e
