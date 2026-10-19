@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { IconChevronDown, IconChevronRight, IconChevronUp } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { Card } from "@/components/Card";
-import { Pagination } from "@/components/Pagination";
+import { Table, type TableColumn, type TableExpandable } from "@/components/Table";
 import { Select } from "@/components/Select";
 import { LoadStatusBadge, TtdLevelBadge } from "./LoadStatusBadge";
 import type {
@@ -14,7 +14,6 @@ import type {
   DistributionTables,
 } from "./types";
 import { DIMENSION_LABELS, DISTRIBUTION_DIMENSIONS, WORKLOAD_STATUSES } from "./types";
-import { cn } from "@/lib/cn";
 
 type SortDir = "asc" | "desc";
 type SortKey =
@@ -344,6 +343,52 @@ export function DistributionSection({
     ...WORKLOAD_STATUSES.map((status) => ({ value: status as string, label: status })),
   ];
 
+  const normalizedTableColumns: TableColumn<DistributionNormalizedRow>[] = NORMALIZED_COLUMNS.map(
+    (col) => ({
+      key: col.key,
+      title: col.header,
+      align: col.alignRight ? ("right" as const) : undefined,
+      render: (_value, row) => col.render(row),
+    }),
+  );
+
+  const standardTableColumns: TableColumn<DistributionRow>[] = standardCols.map((col) => ({
+    key: col.key,
+    title: <SortHeader column={col} sort={sort} onToggle={toggleSort} />,
+    headerProps: {
+      "aria-sort":
+        sort && col.sortKey === sort.key
+          ? sort.dir === "asc"
+            ? "ascending"
+            : "descending"
+          : undefined,
+    },
+    align: col.alignRight ? ("right" as const) : undefined,
+    render: (_value, row) => col.render(row),
+  }));
+
+  const expandable: TableExpandable<DistributionRow> = {
+    expandedRowKeys: expandedId ? [expandedId] : [],
+    onExpand: (row) => setExpandedId(expandedId === row.id ? null : row.id),
+    expandedRowRender: (row) => <TalentDrillDownList row={row} tables={tables} />,
+    toggleLabel: (row) => `Lihat talent ${row.nama}`,
+    expandedRowId: (row) => `drilldown-${row.id}`,
+    columnAriaLabel: "Ekspand baris",
+    columnClassName: "w-10",
+  };
+
+  const pagination = {
+    page,
+    pageSize,
+    totalItems: visibleRows,
+    pageSizeOptions: [5, 10, 25],
+    onPageChange: setPage,
+    onPageSizeChange: (size: number) => {
+      setPageSize(size);
+      setPage(1);
+    },
+  };
+
   return (
     <Card className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -443,137 +488,28 @@ export function DistributionSection({
         ) : null}
       </div>
 
-      <div className="table-panel">
-        <div className="table-scroll">
-          {normalized ? (
-            <table className="w-full min-w-[640px]">
-              <caption className="sr-only">
-                Tabel distribusi beban ternormalisasi dimensi {DIMENSION_LABELS[dimension]}
-              </caption>
-              <thead>
-                <tr>
-                  {NORMALIZED_COLUMNS.map((col) => (
-                    <th key={col.key} scope="col" className={cn(col.alignRight && "text-right")}>
-                      {col.header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {shownRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={NORMALIZED_COLUMNS.length} className="empty-row">
-                      Tidak ada baris yang cocok dengan filter atau dimensi ini.
-                    </td>
-                  </tr>
-                ) : (
-                  (shownRows as DistributionNormalizedRow[]).map((row) => (
-                    <tr key={row.id}>
-                      {NORMALIZED_COLUMNS.map((col) => (
-                        <td key={col.key} className={cn(col.alignRight && "text-right")}>
-                          {col.render(row)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          ) : (
-            <table className="w-full min-w-[1400px]">
-              <caption className="sr-only">Tabel distribusi beban dimensi {DIMENSION_LABELS[dimension]}</caption>
-              <thead>
-                <tr>
-                  {drillDownEnabled ? <th scope="col" className="w-10" aria-label="Ekspand baris" /> : null}
-                  {standardCols.map((col) => (
-                    <th
-                      key={col.key}
-                      scope="col"
-                      aria-sort={
-                        sort && col.sortKey === sort.key
-                          ? sort.dir === "asc"
-                            ? "ascending"
-                            : "descending"
-                          : undefined
-                      }
-                      className={cn(col.alignRight && "text-right")}
-                    >
-                      <SortHeader column={col} sort={sort} onToggle={toggleSort} />
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {shownRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={standardCols.length + (drillDownEnabled ? 1 : 0)} className="empty-row">
-                      Tidak ada baris yang cocok dengan filter atau dimensi ini.
-                    </td>
-                  </tr>
-                ) : (
-                  (shownRows as DistributionRow[]).map((row) => {
-                    const expanded = drillDownEnabled && expandedId === row.id;
-                    const panelId = `drilldown-${row.id}`;
-                    return (
-                      <React.Fragment key={row.id}>
-                        <tr data-expanded={expanded || undefined}>
-                          {drillDownEnabled ? (
-                            <td>
-                              <button
-                                type="button"
-                                aria-expanded={expanded}
-                                aria-controls={panelId}
-                                aria-label={`Lihat talent ${row.nama}`}
-                                onClick={() => setExpandedId(expanded ? null : row.id)}
-                                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-tp-line text-tp-muted hover:text-tp-text"
-                              >
-                                {expanded ? (
-                                  <IconChevronDown aria-hidden size={16} stroke={2} />
-                                ) : (
-                                  <IconChevronRight aria-hidden size={16} stroke={2} />
-                                )}
-                              </button>
-                            </td>
-                          ) : null}
-                          {standardCols.map((col) => (
-                            <td key={col.key} className={cn(col.alignRight && "text-right")}>
-                              {col.render(row)}
-                            </td>
-                          ))}
-                        </tr>
-                        {expanded ? (
-                          <tr id={panelId}>
-                            <td colSpan={standardCols.length + 1} className="bg-tp-bg">
-                              <div className="px-2 py-3">
-                                <TalentDrillDownList row={row} tables={tables} />
-                              </div>
-                            </td>
-                          </tr>
-                        ) : null}
-                      </React.Fragment>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-        {visibleRows > 0 ? (
-          <footer className="table-footer">
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              totalItems={visibleRows}
-              pageSizeOptions={[5, 10, 25]}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-            />
-          </footer>
-        ) : null}
-      </div>
+      {normalized ? (
+        <Table
+          caption={`Tabel distribusi beban ternormalisasi dimensi ${DIMENSION_LABELS[dimension]}`}
+          rowKey={(row) => row.id}
+          dataSource={shownRows as DistributionNormalizedRow[]}
+          minWidth={640}
+          emptyText="Tidak ada baris yang cocok dengan filter atau dimensi ini."
+          pagination={visibleRows > 0 ? pagination : undefined}
+          columns={normalizedTableColumns}
+        />
+      ) : (
+        <Table
+          caption={`Tabel distribusi beban dimensi ${DIMENSION_LABELS[dimension]}`}
+          rowKey={(row) => row.id}
+          dataSource={shownRows as DistributionRow[]}
+          minWidth={1400}
+          emptyText="Tidak ada baris yang cocok dengan filter atau dimensi ini."
+          pagination={visibleRows > 0 ? pagination : undefined}
+          expandable={drillDownEnabled ? expandable : undefined}
+          columns={standardTableColumns}
+        />
+      )}
     </Card>
   );
 }

@@ -376,6 +376,27 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
     // Derived section: no manual input controls are offered for work experience.
     expect(screen.queryByPlaceholderText(/pengalaman kerja/i)).not.toBeInTheDocument();
   });
+
+  it("shows a clear empty state — not an error — for a talent without assignments (US5 skenario 2)", async () => {
+    render(
+      <ToastProvider>
+        <MockedProvider
+          mocks={[
+            {
+              request: { query: MyCvProfileDocument },
+              result: { data: { myCvProfile: { ...cv, workExperience: [] } } },
+            },
+          ]}
+        >
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    expect(await screen.findByText("Belum ada riwayat assignment.")).toBeInTheDocument();
+    // Empty state bukan error: tidak ada pesan kegagalan yang tampil.
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });
 
 describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
@@ -407,6 +428,66 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
     expect(await screen.findByText(/Universitas Indonesia/)).toBeInTheDocument();
     expect(screen.getByText("AWS Certified Developer")).toBeInTheDocument();
     expect(screen.getByText("Go")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
+  });
+
+  it("gives Operation the same read-only roster over every talent (2026-10-16 clarify 6)", async () => {
+    setRole("OPERATION");
+    render(
+      <ToastProvider>
+        <MockedProvider
+          mocks={[
+            {
+              request: { query: EmployeesDocument, variables: { filter: { assignableOnly: true }, first: 25, after: null } },
+              result: employeesResult,
+            },
+            {
+              request: { query: CvProfileDocument, variables: { employeeId: "emp-1" } },
+              result: cvProfileResult,
+            },
+          ]}
+        >
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    expect(await screen.findByText(/seluruh talent/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "emp-1" } });
+
+    expect(await screen.findByText(/Universitas Indonesia/)).toBeInTheDocument();
+    // A CV is personal content: Operation reads it, never edits it (FR-13).
+    expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
+  });
+
+  it("gives Admin the same read-only roster over every talent (TAN-212 clarify 4)", async () => {
+    setRole("ADMIN");
+    render(
+      <ToastProvider>
+        <MockedProvider
+          mocks={[
+            {
+              request: { query: EmployeesDocument, variables: { filter: { assignableOnly: true }, first: 25, after: null } },
+              result: employeesResult,
+            },
+            {
+              request: { query: CvProfileDocument, variables: { employeeId: "emp-1" } },
+              result: cvProfileResult,
+            },
+          ]}
+        >
+          <CvPage />
+        </MockedProvider>
+      </ToastProvider>
+    );
+
+    expect(await screen.findByText(/seluruh talent/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "emp-1" } });
+
+    expect(await screen.findByText(/Universitas Indonesia/)).toBeInTheDocument();
+    // A CV is personal content: Admin reads it, never edits it (FR-13).
     expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
   });
 });

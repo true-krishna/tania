@@ -3,12 +3,11 @@
 import * as React from "react";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { Card } from "@/components/Card";
-import { Pagination } from "@/components/Pagination";
+import { Table, type TableColumn } from "@/components/Table";
 import { Chip, type ChipVariant } from "@/components/Chip";
 import { Input } from "@/components/Input";
 import { formatTimestamp } from "./formatTimestamp";
 import type { IndividualBacklogNormalizedRow, IndividualBacklogRow } from "./types";
-import { cn } from "@/lib/cn";
 
 type BacklogVariant = "detail" | "normalized";
 type SortKey = "issueKey" | "timespent" | "updated";
@@ -41,6 +40,48 @@ function sortBy<T>(rows: T[], key: SortKey, dir: "asc" | "desc", valueOf: (row: 
   });
   return dir === "desc" ? sorted.reverse() : sorted;
 }
+
+function sortHeaderProps(
+  sort: SortState,
+  sortKey: SortKey,
+): React.ThHTMLAttributes<HTMLTableCellElement> {
+  return {
+    "aria-sort":
+      sort?.key === sortKey ? (sort.dir === "asc" ? "ascending" : "descending") : undefined,
+  };
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  sort,
+  onToggle,
+}: {
+  label: string;
+  sortKey: SortKey;
+  sort: SortState;
+  onToggle: (key: SortKey) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(sortKey)}
+      className="inline-flex items-center gap-1 hover:text-tp-text"
+    >
+      {label}
+      {sort?.key === sortKey ? (
+        sort.dir === "asc" ? (
+          <IconChevronUp aria-hidden size={14} stroke={2} />
+        ) : (
+          <IconChevronDown aria-hidden size={14} stroke={2} />
+        )
+      ) : null}
+    </button>
+  );
+}
+
+const NORMALIZED_BADGE =
+  "ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-tp-tint-sun px-1 text-[10px] font-bold text-tp-ink-sun";
 
 /**
  * Tabel detail backlog per talent (TAN-234) dengan varian ternormalisasi,
@@ -79,6 +120,17 @@ export function BacklogTable({
     : rows;
   const pageRows = sortedRows.slice((page - 1) * pageSize, page * pageSize);
 
+  const pagination = {
+    page,
+    pageSize,
+    totalItems: rows.length,
+    onPageChange: setPage,
+    onPageSizeChange: (size: number) => {
+      setPageSize(size);
+      setPage(1);
+    },
+  };
+
   function changeVariant(next: BacklogVariant) {
     setVariant(next);
     setPage(1);
@@ -97,6 +149,90 @@ export function BacklogTable({
       return null;
     });
   }
+
+  const detailColumns: TableColumn<IndividualBacklogRow>[] = [
+    {
+      key: "issueKey",
+      title: <SortHeader label="Activity Key" sortKey="issueKey" sort={sort} onToggle={toggleSort} />,
+      headerProps: sortHeaderProps(sort, "issueKey"),
+      className: "font-medium text-tp-text",
+      render: (_value, row) => (
+        <>
+          {row.issueKey}
+          {row.isNormalized ? (
+            <span title="Timespent dinormalisasi" className={NORMALIZED_BADGE}>
+              N
+            </span>
+          ) : null}
+        </>
+      ),
+    },
+    { key: "projectKey", title: "Project", render: (_value, row) => row.projectKey ?? "—" },
+    {
+      key: "backlog",
+      title: "Judul Aktivitas",
+      className: "max-w-[320px]",
+      render: (_value, row) => row.backlog ?? "—",
+    },
+    {
+      key: "status",
+      title: "Status",
+      render: (_value, row) =>
+        row.status ? <Chip variant={STATUS_VARIANT[row.status] ?? "neutral"}>{row.status}</Chip> : "—",
+    },
+    { key: "priority", title: "Priority", render: (_value, row) => row.priority ?? "—" },
+    {
+      key: "updated",
+      title: <SortHeader label="Activity Time" sortKey="updated" sort={sort} onToggle={toggleSort} />,
+      headerProps: sortHeaderProps(sort, "updated"),
+      render: (_value, row) => formatTimestamp(row.updated),
+    },
+    {
+      key: "timespent",
+      title: <SortHeader label="Time Spent" sortKey="timespent" sort={sort} onToggle={toggleSort} />,
+      headerProps: sortHeaderProps(sort, "timespent"),
+      align: "right",
+      render: (_value, row) => (row.timespent === null ? "—" : `${row.timespent} jam`),
+    },
+  ];
+
+  const normalizedColumns: TableColumn<IndividualBacklogNormalizedRow>[] = [
+    {
+      key: "issueKey",
+      title: <SortHeader label="Activity Key" sortKey="issueKey" sort={sort} onToggle={toggleSort} />,
+      headerProps: sortHeaderProps(sort, "issueKey"),
+      className: "font-medium text-tp-text",
+      render: (_value, row) => row.issueKey ?? "—",
+    },
+    { key: "projectKey", title: "Project", render: (_value, row) => row.projectKey ?? "—" },
+    {
+      key: "backlog",
+      title: "Judul Aktivitas",
+      className: "max-w-[320px]",
+      render: (_value, row) => row.backlog ?? "—",
+    },
+    {
+      key: "updated",
+      title: <SortHeader label="Activity Time" sortKey="updated" sort={sort} onToggle={toggleSort} />,
+      headerProps: sortHeaderProps(sort, "updated"),
+      render: (_value, row) => formatTimestamp(row.updated),
+    },
+    {
+      key: "timespent",
+      title: <SortHeader label="Filled Time Spent" sortKey="timespent" sort={sort} onToggle={toggleSort} />,
+      headerProps: sortHeaderProps(sort, "timespent"),
+      align: "right",
+      className: "font-medium text-tp-ink-peach",
+      render: (_value, row) => `${row.timespent ?? "—"} jam`,
+    },
+    {
+      key: "timespentNormalized",
+      title: "Normalized Time Spent",
+      align: "right",
+      className: "font-medium text-tp-ink-mint",
+      render: (_value, row) => `${row.timespentNormalized ?? "—"} jam`,
+    },
+  ];
 
   return (
     <Card className="flex flex-col gap-4">
@@ -146,185 +282,27 @@ export function BacklogTable({
         />
       </label>
 
-      <div className="table-panel">
-        <div className="table-scroll">
-          {variant === "detail" ? (
-            <table className="w-full min-w-[900px]">
-              <caption className="sr-only">Tabel detail aktivitas per individu</caption>
-              <thead>
-                <tr>
-                  {(
-                    [
-                      { key: "issueKey", header: "Activity Key" },
-                      { key: "projectKey", header: "Project" },
-                      { key: "backlog", header: "Judul Aktivitas" },
-                      { key: "status", header: "Status" },
-                      { key: "priority", header: "Priority" },
-                      { key: "updated", header: "Activity Time" },
-                      { key: "timespent", header: "Time Spent" },
-                    ] as const
-                  ).map((col) => {
-                    const sortable = col.key === "issueKey" || col.key === "timespent" || col.key === "updated";
-                    return (
-                      <th
-                        key={col.key}
-                        scope="col"
-                        aria-sort={
-                          sort && col.key === sort.key
-                            ? sort.dir === "asc"
-                              ? "ascending"
-                              : "descending"
-                            : undefined
-                        }
-                        className={cn(col.key === "timespent" && "text-right")}
-                      >
-                        {sortable ? (
-                          <button
-                            type="button"
-                            onClick={() => toggleSort(col.key as SortKey)}
-                            className="inline-flex items-center gap-1 hover:text-tp-text"
-                          >
-                            {col.header}
-                            {sort?.key === col.key ? (
-                              sort.dir === "asc" ? (
-                                <IconChevronUp aria-hidden size={14} stroke={2} />
-                              ) : (
-                                <IconChevronDown aria-hidden size={14} stroke={2} />
-                              )
-                            ) : null}
-                          </button>
-                        ) : (
-                          col.header
-                        )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="empty-row">
-                      Tidak ada aktivitas yang cocok dengan pencarian.
-                    </td>
-                  </tr>
-                ) : (
-                  (pageRows as IndividualBacklogRow[]).map((row) => (
-                    <tr key={`${row.issueKey}-${row.updated ?? ""}`}>
-                      <td className="font-medium text-tp-text">
-                        {row.issueKey}
-                        {row.isNormalized ? (
-                          <span
-                            title="Timespent dinormalisasi"
-                            className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-tp-tint-sun px-1 text-[10px] font-bold text-tp-ink-sun"
-                          >
-                            N
-                          </span>
-                        ) : null}
-                      </td>
-                      <td>{row.projectKey ?? "—"}</td>
-                      <td className="max-w-[320px]">{row.backlog ?? "—"}</td>
-                      <td>
-                        {row.status ? <Chip variant={STATUS_VARIANT[row.status] ?? "neutral"}>{row.status}</Chip> : "—"}
-                      </td>
-                      <td>{row.priority ?? "—"}</td>
-                      <td>{formatTimestamp(row.updated)}</td>
-                      <td className="text-right">{row.timespent === null ? "—" : `${row.timespent} jam`}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          ) : (
-            <table className="w-full min-w-[820px]">
-              <caption className="sr-only">Tabel aktivitas ternormalisasi</caption>
-              <thead>
-                <tr>
-                  {(
-                    [
-                      { key: "issueKey", header: "Activity Key" },
-                      { key: "projectKey", header: "Project" },
-                      { key: "backlog", header: "Judul Aktivitas" },
-                      { key: "updated", header: "Activity Time" },
-                      { key: "timespent", header: "Filled Time Spent" },
-                      { key: "timespentNormalized", header: "Normalized Time Spent" },
-                    ] as const
-                  ).map((col) => {
-                    const sortable = col.key === "issueKey" || col.key === "timespent" || col.key === "updated";
-                    return (
-                      <th
-                        key={col.key}
-                        scope="col"
-                        aria-sort={
-                          sort && col.key === sort.key
-                            ? sort.dir === "asc"
-                              ? "ascending"
-                              : "descending"
-                            : undefined
-                        }
-                        className={cn((col.key === "timespent" || col.key === "timespentNormalized") && "text-right")}
-                      >
-                        {sortable ? (
-                          <button
-                            type="button"
-                            onClick={() => toggleSort(col.key as SortKey)}
-                            className="inline-flex items-center gap-1 hover:text-tp-text"
-                          >
-                            {col.header}
-                            {sort?.key === col.key ? (
-                              sort.dir === "asc" ? (
-                                <IconChevronUp aria-hidden size={14} stroke={2} />
-                              ) : (
-                                <IconChevronDown aria-hidden size={14} stroke={2} />
-                              )
-                            ) : null}
-                          </button>
-                        ) : (
-                          col.header
-                        )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="empty-row">
-                      Tidak ada aktivitas ternormalisasi pada periode ini.
-                    </td>
-                  </tr>
-                ) : (
-                  (pageRows as IndividualBacklogNormalizedRow[]).map((row) => (
-                    <tr key={`${row.issueKey}-${row.updated ?? ""}`}>
-                      <td className="font-medium text-tp-text">{row.issueKey ?? "—"}</td>
-                      <td>{row.projectKey ?? "—"}</td>
-                      <td className="max-w-[320px]">{row.backlog ?? "—"}</td>
-                      <td>{formatTimestamp(row.updated)}</td>
-                      <td className="text-right font-medium text-tp-ink-peach">{row.timespent ?? "—"} jam</td>
-                      <td className="text-right font-medium text-tp-ink-mint">{row.timespentNormalized ?? "—"} jam</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-        {rows.length > 0 ? (
-          <footer className="table-footer">
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              totalItems={rows.length}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-            />
-          </footer>
-        ) : null}
-      </div>
+      {variant === "detail" ? (
+        <Table
+          caption="Tabel detail aktivitas per individu"
+          rowKey={(row) => `${row.issueKey}-${row.updated ?? ""}`}
+          dataSource={pageRows as IndividualBacklogRow[]}
+          minWidth={900}
+          emptyText="Tidak ada aktivitas yang cocok dengan pencarian."
+          pagination={rows.length > 0 ? pagination : undefined}
+          columns={detailColumns}
+        />
+      ) : (
+        <Table
+          caption="Tabel aktivitas ternormalisasi"
+          rowKey={(row) => `${row.issueKey}-${row.updated ?? ""}`}
+          dataSource={pageRows as IndividualBacklogNormalizedRow[]}
+          minWidth={820}
+          emptyText="Tidak ada aktivitas ternormalisasi pada periode ini."
+          pagination={rows.length > 0 ? pagination : undefined}
+          columns={normalizedColumns}
+        />
+      )}
     </Card>
   );
 }

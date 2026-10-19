@@ -6,10 +6,12 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { Select } from "@/components/Select";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
 import { useSessionRole } from "@/lib/auth/guard";
+import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
 import { useMyCvProfile } from "@/features/cv/useMyCvProfile";
 import { useCvProfile } from "@/features/cv/useCvProfile";
 import { useEmployees } from "@/features/employees/useEmployees";
@@ -29,7 +31,6 @@ import {
   type EducationLevel,
 } from "@/generated/graphql";
 
-const BLOCK = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 const LABEL =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm";
 
@@ -53,16 +54,22 @@ function formatDegree(degree: string | null | undefined): string {
  * CV profile (FR-12/FR-13) — US4.
  * Talent edits their own structured CV (summary, educations, certifications,
  * skills) one section at a time; work experience is derived from assignment
- * history (never hand-entered). Chapter gets a read-only view of a talent in
- * its scope. Other roles are blocked at the UI layer (server enforces FR-16).
+ * history (never hand-entered). Chapter, Operation and Admin get a read-only
+ * view — Chapter for a talent in its scope, Operation and Admin for any talent
+ * (TAN-212 clarify 4 + 2026-10-16 clarify 6).
+ * Other roles are blocked at the UI layer (server enforces FR-16).
  */
 export default function CvPage() {
   const role = useSessionRole();
   if (role === "TALENT") return <TalentCvEditor />;
-  if (role === "CHAPTER") return <ChapterCvViewer />;
+  if (role === "CHAPTER") return <CvRosterViewer audience="CHAPTER" />;
+  // Admin manages every active module (TAN-212 clarify 4) and Operation reads
+  // every talent (2026-10-16): a read-only roster view in both cases, since a
+  // CV is personal content owned by its talent (FR-13).
+  if (role === "OPERATION" || role === "ADMIN") return <CvRosterViewer audience={role} />;
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title="Profil CV" subtitle="Fitur CV hanya untuk peran Talent dan Chapter (FR-13)." />
+      <PageHeader title="Profil CV" subtitle="Fitur CV hanya untuk peran Talent, Chapter, Operation, dan Admin (FR-13)." />
     </section>
   );
 }
@@ -107,8 +114,7 @@ function SummarySection({ cv }: { cv: CvFieldsFragment | undefined }) {
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="text-base font-semibold text-zinc-900">Ringkasan Profil</h2>
-      <label className={BLOCK}>
-        Ringkasan
+      <InputControl label="Ringkasan">
         <textarea
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
@@ -116,7 +122,7 @@ function SummarySection({ cv }: { cv: CvFieldsFragment | undefined }) {
           placeholder="Tulis ringkasan singkat tentang diri Anda…"
           className={LABEL}
         />
-      </label>
+      </InputControl>
       <div>
         <Button onClick={onSave} disabled={loading}>
           Simpan Ringkasan
@@ -510,9 +516,7 @@ function WorkExperienceSection({ cv }: { cv: CvFieldsFragment | undefined }) {
                   {exp.periodEnd ? ` — ${exp.periodEnd}` : " — sekarang"}
                 </p>
               </div>
-              <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
-                {exp.status === "ACTIVE" ? "Berjalan" : "Selesai"}
-              </span>
+              <AssignmentStatusBadge status={exp.status} />
             </li>
           ))}
         </ul>
@@ -523,7 +527,7 @@ function WorkExperienceSection({ cv }: { cv: CvFieldsFragment | undefined }) {
   );
 }
 
-function ChapterCvViewer() {
+function CvRosterViewer({ audience }: { audience: "CHAPTER" | "OPERATION" | "ADMIN" }) {
   const talents = useEmployees({ assignableOnly: true });
   const [selected, setSelected] = React.useState("");
   const { status, data, error } = useCvProfile(selected || null);
@@ -536,10 +540,13 @@ function ChapterCvViewer() {
     <section className="flex flex-col gap-4">
       <PageHeader
         title="Profil CV Talent"
-        subtitle="Lihat profil CV talent dalam chapter Anda (hanya-baca, FR-13)."
+        subtitle={
+          audience === "CHAPTER"
+            ? "Lihat profil CV talent dalam chapter Anda (hanya-baca, FR-13)."
+            : "Lihat profil CV seluruh talent (hanya-baca; konten CV milik talent, FR-13)."
+        }
       />
-      <label className={BLOCK}>
-        Pilih Talent
+      <InputControl label="Pilih Talent">
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
@@ -552,7 +559,7 @@ function ChapterCvViewer() {
             </option>
           ))}
         </select>
-      </label>
+      </InputControl>
 
       {!selected ? null : status === "loading" ? (
         <LoadingState label="Memuat CV…" />
@@ -639,9 +646,7 @@ function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
                     {exp.periodEnd ? ` — ${exp.periodEnd}` : " — sekarang"}
                   </span>
                 </span>
-                <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
-                  {exp.status === "ACTIVE" ? "Berjalan" : "Selesai"}
-                </span>
+                <AssignmentStatusBadge status={exp.status} />
               </li>
             ))}
           </ul>

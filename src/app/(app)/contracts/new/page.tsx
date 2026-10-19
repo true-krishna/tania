@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
+import { InputControl } from "@/components/InputControl";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { useEmployees } from "@/features/employees/useEmployees";
 import { useJobRoles, useUnits } from "@/features/master-data/useMasterData";
@@ -210,8 +211,7 @@ export default function NewContractPage({
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {formError ? <ErrorState message={formError} /> : null}
-        <Label error={errors.employeeId}>
-          Karyawan
+        <InputControl label="Karyawan" error={errors.employeeId}>
           <Select
             value={values.employeeId}
             onChange={(e) => set("employeeId", e.target.value)}
@@ -223,18 +223,16 @@ export default function NewContractPage({
               })),
             ]}
           />
-        </Label>
-        <Label error={errors.contractNo}>
-          No. Kontrak
+        </InputControl>
+        <InputControl label="No. Kontrak" error={errors.contractNo}>
           <Input
             type="text"
             value={values.contractNo}
             onChange={(e) => set("contractNo", e.target.value)}
             placeholder="cth. PKWT/2026/001"
           />
-        </Label>
-        <Label error={errors.contractType}>
-          Jenis kontrak
+        </InputControl>
+        <InputControl label="Jenis kontrak" error={errors.contractType}>
           <Select
             value={values.contractType}
             onChange={(e) => {
@@ -247,26 +245,23 @@ export default function NewContractPage({
               label: CONTRACT_TYPE_LABEL[type],
             }))}
           />
-        </Label>
-        <Label error={errors.nomorInduk}>
-          Nomor induk karyawan
+        </InputControl>
+        <InputControl label="Nomor induk karyawan" error={errors.nomorInduk}>
           <Input
             type="text"
             value={values.nomorInduk}
             onChange={(e) => set("nomorInduk", e.target.value)}
             placeholder="cth. EMP-0100"
           />
-        </Label>
-        <Label error={errors.officeEmail}>
-          Email kantor <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Email kantor" helper="(opsional)" error={errors.officeEmail}>
           <Input
             type="email"
             value={values.officeEmail}
             onChange={(e) => set("officeEmail", e.target.value)}
           />
-        </Label>
-        <Label error={errors.unitId}>
-          Unit
+        </InputControl>
+        <InputControl label="Unit" error={errors.unitId}>
           <Select
             value={values.unitId}
             onChange={(e) => set("unitId", e.target.value)}
@@ -275,9 +270,8 @@ export default function NewContractPage({
               ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
             ]}
           />
-        </Label>
-        <Label error={errors.jobRoleId}>
-          Posisi / Job Role
+        </InputControl>
+        <InputControl label="Posisi / Job Role" error={errors.jobRoleId}>
           <Select
             value={values.jobRoleId}
             onChange={(e) => set("jobRoleId", e.target.value)}
@@ -286,25 +280,22 @@ export default function NewContractPage({
               ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
             ]}
           />
-        </Label>
-        <Label error={errors.jobTitle}>
-          Job title <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Job title" helper="(opsional)" error={errors.jobTitle}>
           <Input
             type="text"
             value={values.jobTitle}
             onChange={(e) => set("jobTitle", e.target.value)}
           />
-        </Label>
-        <Label error={errors.jobLevel}>
-          Job level <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Job level" helper="(opsional)" error={errors.jobLevel}>
           <Input
             type="text"
             value={values.jobLevel}
             onChange={(e) => set("jobLevel", e.target.value)}
           />
-        </Label>
-        <Label error={errors.bandPosition}>
-          Band position
+        </InputControl>
+        <InputControl label="Band position" error={errors.bandPosition}>
           <Select
             value={values.bandPosition}
             onChange={(e) => set("bandPosition", e.target.value)}
@@ -318,9 +309,8 @@ export default function NewContractPage({
               { value: "VI", label: "VI" },
             ]}
           />
-        </Label>
-        <Label error={errors.workLocation}>
-          Work location
+        </InputControl>
+        <InputControl label="Work location" error={errors.workLocation}>
           <Select
             value={values.workLocation}
             onChange={(e) => set("workLocation", e.target.value)}
@@ -330,29 +320,26 @@ export default function NewContractPage({
               { value: "BANDUNG", label: "Bandung" },
             ]}
           />
-        </Label>
-        <Label error={errors.startDate}>
-          Tanggal mulai
+        </InputControl>
+        <InputControl label="Tanggal mulai" error={errors.startDate}>
           <Input
             type="date"
             value={values.startDate}
             onChange={(e) => set("startDate", e.target.value)}
           />
-        </Label>
+        </InputControl>
         {!isOpenEndedContractType(values.contractType) ? (
-          <Label error={errors.endDate}>
-            Tanggal selesai
+          <InputControl label="Tanggal selesai" error={errors.endDate}>
             <Input
               type="date"
               value={values.endDate}
               onChange={(e) => set("endDate", e.target.value)}
             />
-          </Label>
+          </InputControl>
         ) : null}
-        <Label error={errors.notes}>
-          Catatan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        <InputControl label="Catatan" helper="(opsional)" error={errors.notes}>
           <Input type="text" value={values.notes} onChange={(e) => set("notes", e.target.value)} />
-        </Label>
+        </InputControl>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>
@@ -366,18 +353,5 @@ export default function NewContractPage({
         </div>
       </form>
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { BoardTable, type Column } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
@@ -23,64 +23,6 @@ import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 import { EMPLOYEE_NEW, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
-
-type EmployeeRowData = {
-  id: string;
-  fullName: string;
-  nikMasked: string;
-  email: string;
-  status: EmployeeStatus;
-  nomorInduk: string | null;
-  unit: { name: string } | null;
-  jobRole: { name: string } | null;
-};
-
-const COLUMNS: Column[] = [
-  { key: "name", label: "Nama" },
-  { key: "nik", label: "NIK" },
-  { key: "email", label: "Email" },
-  { key: "unit", label: "Divisi" },
-  { key: "jobRole", label: "Job Role" },
-  { key: "status", label: "Status" },
-  { key: "actions", label: "Aksi", className: "col-action" },
-];
-
-function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
-  const router = useRouter();
-  return (
-    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
-      <td className="px-4 py-2.5">
-        <Link
-          href={EMPLOYEE_DETAIL(employee.id)}
-          className="font-medium text-zinc-900 hover:underline"
-        >
-          {employee.fullName}
-        </Link>
-        <span className="block text-xs text-zinc-500">{orDash(employee.nomorInduk)}</span>
-      </td>
-      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">{orDash(employee.nikMasked)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.email)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.unit?.name)}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.jobRole?.name)}</td>
-      <td className="px-4 py-2.5">
-        <Chip variant={EMPLOYEE_STATUS_VARIANT[employee.status]} size="small">
-          {EMPLOYEE_STATUS_LABEL[employee.status]}
-        </Chip>
-      </td>
-      <td className="col-action">
-        <RowActionsMenu
-          label={`Aksi ${employee.fullName}`}
-          actions={[
-            {
-              label: "Lihat detail",
-              onSelect: () => router.push(EMPLOYEE_DETAIL(employee.id)),
-            },
-          ]}
-        />
-      </td>
-    </tr>
-  );
-}
 
 export default function EmployeesPage() {
   const role = useSessionRole();
@@ -120,23 +62,34 @@ function ChapterTalentList() {
       ) : !data || data.length === 0 ? (
         <EmptyState message="Belum ada talent dalam cakupan chapter Anda." />
       ) : (
-        <BoardTable
+        <Table
           caption="Talent dalam cakupan chapter"
+          rowKey={(talent) => talent.id}
+          dataSource={data}
           columns={[
-            { key: "name", label: "Nama" },
-            { key: "nomorInduk", label: "Nomor Induk" },
-            { key: "actions", label: "Aksi", className: "col-action" },
-          ]}
-        >
-          {data.map((talent) => (
-            <tr key={talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-              <td className="px-4 py-2.5">
-                <Link href={EMPLOYEE_DETAIL(talent.id)} className="font-medium text-zinc-900 hover:underline">
+            {
+              key: "name",
+              title: "Nama",
+              render: (_value, talent) => (
+                <Link
+                  href={EMPLOYEE_DETAIL(talent.id)}
+                  className="font-medium text-zinc-900 hover:underline"
+                >
                   {talent.fullName}
                 </Link>
-              </td>
-              <td className="px-4 py-2.5 text-zinc-600">{orDash(talent.nomorInduk)}</td>
-              <td className="col-action">
+              ),
+            },
+            {
+              key: "nomorInduk",
+              title: "Nomor Induk",
+              className: "text-zinc-600",
+              render: (_value, talent) => orDash(talent.nomorInduk),
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, talent) => (
                 <RowActionsMenu
                   label={`Aksi ${talent.fullName}`}
                   actions={[
@@ -146,16 +99,17 @@ function ChapterTalentList() {
                     },
                   ]}
                 />
-              </td>
-            </tr>
-          ))}
-        </BoardTable>
+              ),
+            },
+          ]}
+        />
       )}
     </section>
   );
 }
 
 function EmployeeDirectory({ manage }: { manage: boolean }) {
+  const router = useRouter();
   const [searchInput, setSearchInput] = React.useState("");
   const search = useDebouncedValue(searchInput);
   const [unitId, setUnitId] = React.useState("");
@@ -193,6 +147,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   });
   const hintFrom = (pagination.page - 1) * pagination.pageSize + 1;
   const hintTo = Math.min(pagination.page * pagination.pageSize, totalCount);
+  const loadingMoreRow = loadingMore && pageRows.length === 0;
 
   return (
     <section className="flex flex-col gap-4">
@@ -200,7 +155,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         title="Data Karyawan"
         subtitle={
           manage
-            ? "Kelola data karyawan, pencarian, dan filter (Operation)."
+            ? "Kelola data karyawan, pencarian, dan filter."
             : "Data karyawan untuk konteks penautan akun (hanya baca)."
         }
         actions={
@@ -293,18 +248,84 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       ) : !employees || employees.length === 0 ? (
         <EmptyState message="Tidak ada karyawan yang cocok dengan pencarian/filter." />
       ) : (
-        <BoardTable caption="Daftar karyawan" columns={COLUMNS} footer={<Pagination {...pagination} />}>
-          {pageRows.map((employee) => (
-            <EmployeeRow key={employee.id} employee={employee} />
-          ))}
-          {loadingMore && pageRows.length === 0 ? (
-            <tr>
-              <td colSpan={COLUMNS.length} className="px-4 py-6 text-center text-sm text-zinc-500">
-                Memuat baris {hintFrom}–{hintTo} dari {totalCount}…
-              </td>
-            </tr>
-          ) : null}
-        </BoardTable>
+        <Table
+          caption="Daftar karyawan"
+          rowKey={(employee) => employee.id}
+          dataSource={pageRows}
+          loading={loadingMoreRow}
+          loadingText={
+            <>
+              Memuat baris {hintFrom}–{hintTo} dari {totalCount}…
+            </>
+          }
+          pagination={pagination}
+          columns={[
+            {
+              key: "name",
+              title: "Nama",
+              render: (_value, employee) => (
+                <>
+                  <Link
+                    href={EMPLOYEE_DETAIL(employee.id)}
+                    className="font-medium text-zinc-900 hover:underline"
+                  >
+                    {employee.fullName}
+                  </Link>
+                  <span className="block text-xs text-zinc-500">{orDash(employee.nomorInduk)}</span>
+                </>
+              ),
+            },
+            {
+              key: "nik",
+              title: "NIK",
+              className: "font-mono text-xs text-zinc-600",
+              render: (_value, employee) => orDash(employee.nikMasked),
+            },
+            {
+              key: "email",
+              title: "Email",
+              className: "text-zinc-600",
+              render: (_value, employee) => orDash(employee.email),
+            },
+            {
+              key: "unit",
+              title: "Divisi",
+              className: "text-zinc-600",
+              render: (_value, employee) => orDash(employee.unit?.name),
+            },
+            {
+              key: "jobRole",
+              title: "Job Role",
+              className: "text-zinc-600",
+              render: (_value, employee) => orDash(employee.jobRole?.name),
+            },
+            {
+              key: "status",
+              title: "Status",
+              render: (_value, employee) => (
+                <Chip variant={EMPLOYEE_STATUS_VARIANT[employee.status]} size="small">
+                  {EMPLOYEE_STATUS_LABEL[employee.status]}
+                </Chip>
+              ),
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, employee) => (
+                <RowActionsMenu
+                  label={`Aksi ${employee.fullName}`}
+                  actions={[
+                    {
+                      label: "Lihat detail",
+                      onSelect: () => router.push(EMPLOYEE_DETAIL(employee.id)),
+                    },
+                  ]}
+                />
+              ),
+            },
+          ]}
+        />
       )}
     </section>
   );

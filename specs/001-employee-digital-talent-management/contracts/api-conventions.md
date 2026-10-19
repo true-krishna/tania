@@ -8,7 +8,7 @@ Menyertai `schema.graphql`. Kontrak ini adalah **satu-satunya** antarmuka data a
 | Item | Nilai |
 | --- | --- |
 | GraphQL endpoint | `POST /graphql` (HTTP) |
-| GraphiQL / playground | hanya aktif di lingkungan non-produksi |
+| GraphiQL / playground | `GET /graphql` (browser), hanya aktif di lingkungan non-produksi |
 | Health | `GET /healthz` (liveness + versi), `GET /readyz` (readiness: PostgreSQL + Redis) |
 | SSO (redirect flows, W8) | `GET /auth/entra/login`, `GET /auth/entra/callback`, `GET /auth/saml/login`, `POST /auth/saml/acs` |
 | Logout | mutation GraphQL `logout` (bukan endpoint REST) |

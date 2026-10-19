@@ -3,10 +3,10 @@
 import Link from "next/link";
 import * as React from "react";
 import { ApolloError, useMutation } from "@apollo/client";
-import { BoardTable, type Column } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import {
   EmployeesWithoutEntraDocument,
@@ -23,13 +23,6 @@ import {
 import { mapSubmitError } from "@/lib/errors";
 import { orDash } from "@/lib/cell";
 import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
-
-const COLUMNS: Column[] = [
-  { key: "name", label: "Nama" },
-  { key: "email", label: "Email" },
-  { key: "provision", label: "Hasil provisi" },
-  { key: "action", label: "Aksi", className: "col-action" },
-];
 
 export default function EntraProvisioningPage() {
   const { status, employees, totalCount, error } = useEmployeesWithoutEntra();
@@ -104,62 +97,78 @@ export default function EntraProvisioningPage() {
       ) : null}
 
       {status === "ready" && employees && employees.length > 0 ? (
-        <>
-          <BoardTable caption="Talent tanpa akun Entra" columns={COLUMNS} footer={<Pagination {...pagination} />}>
-            {pageRows.map((employee) => {
-              const outcome = employee.entraProvision;
-              const failed = outcome?.status === "FAILED";
-              return (
-                <tr
-                  key={employee.id}
-                  className="border-b border-board-border transition-colors hover:bg-zinc-50"
+        <Table
+          caption="Talent tanpa akun Entra"
+          rowKey={(employee) => employee.id}
+          dataSource={pageRows}
+          pagination={pagination}
+          columns={[
+            {
+              key: "name",
+              title: "Nama",
+              render: (_value, employee) => (
+                <Link
+                  href={EMPLOYEE_DETAIL(employee.id)}
+                  className="font-medium text-zinc-900 hover:underline"
                 >
-                  <td className="px-4 py-2.5">
-                    <Link
-                      href={EMPLOYEE_DETAIL(employee.id)}
-                      className="font-medium text-zinc-900 hover:underline"
+                  {employee.fullName}
+                </Link>
+              ),
+            },
+            {
+              key: "email",
+              title: "Email",
+              className: "text-zinc-600",
+              render: (_value, employee) => orDash(employee.email),
+            },
+            {
+              key: "provision",
+              title: "Hasil provisi",
+              render: (_value, employee) => {
+                const outcome = employee.entraProvision;
+                if (!outcome) return <span className="text-xs text-zinc-500">Belum dibuat</span>;
+                const failed = outcome.status === "FAILED";
+                return (
+                  <>
+                    <span
+                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ENTRA_PROVISION_STATUS_TONE[outcome.status]}`}
                     >
-                      {employee.fullName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2.5 text-zinc-600">{orDash(employee.email)}</td>
-                  <td className="px-4 py-2.5">
-                    {outcome ? (
-                      <>
-                        <span
-                          className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ENTRA_PROVISION_STATUS_TONE[outcome.status]}`}
-                        >
-                          {ENTRA_PROVISION_STATUS_LABEL[outcome.status]}
-                        </span>
-                        <span className="mt-1 block text-xs text-zinc-500">
-                          {orDash(
-                            failed
-                              ? outcome.lastError
-                              : outcome.upn ?? outcome.action
-                          )}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-xs text-zinc-500">Belum dibuat</span>
-                    )}
-                  </td>
-                  <td className="col-action">
-                    <RowActionsMenu
-                      label={`Aksi ${employee.fullName}`}
-                      actions={[
-                        {
-                          label: busyId === employee.id ? "Memproses…" : failed ? "Coba lagi" : "Provisioning",
-                          onSelect: () => void provision(employee.id, employee.fullName),
-                          disabled: busyId !== null,
-                        },
-                      ]}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </BoardTable>
-        </>
+                      {ENTRA_PROVISION_STATUS_LABEL[outcome.status]}
+                    </span>
+                    <span className="mt-1 block text-xs text-zinc-500">
+                      {orDash(failed ? outcome.lastError : outcome.upn ?? outcome.action)}
+                    </span>
+                  </>
+                );
+              },
+            },
+            {
+              key: "action",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, employee) => {
+                const failed = employee.entraProvision?.status === "FAILED";
+                return (
+                  <RowActionsMenu
+                    label={`Aksi ${employee.fullName}`}
+                    actions={[
+                      {
+                        label:
+                          busyId === employee.id
+                            ? "Memproses…"
+                            : failed
+                              ? "Coba lagi"
+                              : "Provisioning",
+                        onSelect: () => void provision(employee.id, employee.fullName),
+                        disabled: busyId !== null,
+                      },
+                    ]}
+                  />
+                );
+              },
+            },
+          ]}
+        />
       ) : null}
     </section>
   );

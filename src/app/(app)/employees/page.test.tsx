@@ -272,7 +272,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 });
 
 describe("EmployeesPage per role (T034)", () => {
-  it("shows the add action to Operation only", async () => {
+  it("shows the add action to Operation and Admin", async () => {
     render(
       <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
@@ -282,7 +282,7 @@ describe("EmployeesPage per role (T034)", () => {
     expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
   });
 
-  it("is a read-only directory for Admin", async () => {
+  it("lets Admin manage the directory (TAN-212 clarify 4)", async () => {
     auth.role = "ADMIN";
     render(
       <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
@@ -290,8 +290,7 @@ describe("EmployeesPage per role (T034)", () => {
       </MockedProvider>
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
-    expect(screen.getByText(/konteks penautan akun/i)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /tambah karyawan/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
   });
 
   it("lists scoped talents for Chapter via assignableTalents", async () => {

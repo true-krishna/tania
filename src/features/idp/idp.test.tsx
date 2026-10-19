@@ -15,10 +15,20 @@ import {
   CreateIdpDocument,
   IdpDocument,
   IdpsDocument,
+  MyIdpDocument,
   UpdateDevelopmentActionStatusDocument,
 } from "@/generated/graphql";
 
 const nav = vi.hoisted(() => ({ push: vi.fn() }));
+// Peran berasal dari session store di aplikasi; di sini di-drive langsung supaya
+// jalur mengelola (Chapter/Admin) dan hanya-baca (Operation) sama-sama teruji
+// (klarifikasi 9).
+const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
+
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => nav,
@@ -206,6 +216,67 @@ describe("IdpPage (Apollo, US3)", () => {
     );
 
     expect(await screen.findByText(/tidak ada idp yang cocok/i)).toBeInTheDocument();
+  });
+
+  it("menampilkan daftar hanya-baca tanpa tombol buat untuk Operation (klarifikasi 9)", async () => {
+    auth.role = "OPERATION";
+    try {
+      render(
+        <MockedProvider
+          mocks={[
+            { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
+          ]}
+        >
+          <IdpPage />
+        </MockedProvider>
+      );
+
+      expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+      expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /buat idp/i })).toBeNull();
+    } finally {
+      auth.role = "CHAPTER";
+    }
+  });
+
+  it("mengarahkan Talent ke IDP miliknya pada entri menu yang sama (klarifikasi 9)", async () => {
+    auth.role = "TALENT";
+    try {
+      render(
+        <MockedProvider
+          mocks={[
+            {
+              request: { query: MyIdpDocument },
+              result: {
+                data: {
+                  myIdp: {
+                    __typename: "Idp",
+                    id: "idp-1",
+                    status: "IN_PROGRESS",
+                    developmentObjective: "Menjadi Go backend engineer yang andal",
+                    currentAssessment: "Kuat di API",
+                    gapAnalysis: "Perlu concurrency",
+                    timelineStart: "2025-07-01",
+                    timelineEnd: "2025-09-30",
+                    successIndicators: "3 fitur mandiri",
+                    actions: [],
+                    reviews: [],
+                    revisions: [],
+                  },
+                },
+              },
+            },
+          ]}
+        >
+          <IdpPage />
+        </MockedProvider>
+      );
+
+      expect(await screen.findByText("IDP Saya")).toBeInTheDocument();
+      expect(screen.getByText(/menjadi go backend engineer yang andal/i)).toBeInTheDocument();
+    } finally {
+      auth.role = "CHAPTER";
+    }
   });
 });
 
@@ -487,5 +558,28 @@ describe("IdpDetailPage (Apollo, US3)", () => {
     fireEvent.click(screen.getByRole("button", { name: /tutup idp/i }));
 
     expect(await screen.findByText(/idp ditutup/i)).toBeInTheDocument();
+  });
+
+  it("menyembunyikan form pengelolaan untuk Operation (klarifikasi 9)", async () => {
+    auth.role = "OPERATION";
+    try {
+      await act(async () => {
+        render(
+          <React.Suspense fallback={null}>
+            <MockedProvider mocks={detailMocks}>
+              <IdpDetailPage params={Promise.resolve({ id: "idp-1" })} />
+            </MockedProvider>
+          </React.Suspense>
+        );
+      });
+
+      expect(await screen.findByText(/training go lanjutan/i)).toBeInTheDocument();
+      expect(screen.queryByRole("combobox", { name: /status aksi training go lanjutan/i })).toBeNull();
+      expect(screen.queryByText(/tambah aksi pengembangan/i)).toBeNull();
+      expect(screen.queryByText(/catat hasil review/i)).toBeNull();
+      expect(screen.queryByText(/tutup idp ini/i)).toBeNull();
+    } finally {
+      auth.role = "CHAPTER";
+    }
   });
 });

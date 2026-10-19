@@ -290,12 +290,13 @@ test("T029 — peran non-MVP tidak melihat panel/bubble asisten (FR-01)", async 
 });
 
 // ---------------------------------------------------------------------------
-// T034 — Asisten Data: balasan grounded & retry idempoten (K3)
+// T034 — Asisten Data: balasan grounded & coba ulang idempoten (K3)
 //
-// ⚠ Butuh API hidup + provider AI. Tanpa provider, `sendChatMessage` menjawab
-// "asisten belum dikonfigurasi", sehingga assertion balasan tidak mungkin lulus
-// — karena itu skenario ini **bukan** gate K2 dan di-`skip` secara eksplisit
-// kecuali `E2E_AI_PROVIDER=1` (lihat `e2e/README.md`). Ter-`skip` bukan lulus.
+// ⚠ Kedua skenario di bawah butuh API hidup + provider AI. Tanpa provider,
+// `sendChatMessage` menjawab "asisten belum dikonfigurasi", sehingga assertion
+// balasan tidak mungkin lulus — karena itu keduanya **bukan** gate K2 dan
+// di-`skip` secara eksplisit kecuali `E2E_AI_PROVIDER=1` (lihat
+// `e2e/README.md`). Ter-`skip` bukan lulus.
 // ---------------------------------------------------------------------------
 
 test("T034 — Chapter menerima balasan grounded dari asisten (butuh provider)", async ({ page }) => {
@@ -315,7 +316,8 @@ test("T034 — Chapter menerima balasan grounded dari asisten (butuh provider)",
   await expect(dialog).toBeVisible();
 
   const question = "Siapa saja yang kontraknya berakhir dalam 90 hari?";
-  await page.getByLabel("Pertanyaan untuk asisten").fill(question);
+  const input = page.getByLabel("Pertanyaan untuk asisten");
+  await input.fill(question);
   await page.getByRole("button", { name: "Kirim pertanyaan" }).click();
 
   // Bubble user tampil optimistis — dipilih lewat `data-role`, sebab teks
@@ -324,7 +326,83 @@ test("T034 — Chapter menerima balasan grounded dari asisten (butuh provider)",
   await expect(dialog.locator('[data-role="ASSISTANT"]').first()).toBeVisible({ timeout: 30_000 });
   await expect(dialog.getByText("Belum terjawab")).toHaveCount(0);
 
+  // T052: selama `busy` tombol kirim (yang baru saja diklik, jadi pemegang fokus)
+  // di-`disable`, dan browser memindahkan fokus ke `body`; `Escape` dari sana
+  // tidak melewati dialog yang handler-nya ada di elemen dialog. Tunggu kiriman
+  // selesai (input kembali aktif ⇔ tidak `busy`) lalu kembalikan fokus ke dalam
+  // panel sebelum `Escape`, agar hasilnya tidak bergantung kecepatan backend.
+  // Assertion panel-tertutup di bawah tidak dilonggarkan.
+  await expect(input).toBeEnabled();
+  await input.focus();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(bubble).toBeFocused();
+});
+
+test("T034 — gagal ramah lalu coba ulang idempoten dengan clientRequestId sama (butuh provider)", async ({ page }) => {
+  test.skip(
+    process.env.E2E_AI_PROVIDER !== "1",
+    "butuh API + provider AI: jalankan dengan E2E_AI_PROVIDER=1 (lihat e2e/README.md)",
+  );
+
+  await loginAs(page, SEED_USERS.CHAPTER);
+  await page.goto("/dashboard");
+
+  const bubble = page.getByRole("button", { name: "Buka asisten data" });
+  await expect(bubble).toBeVisible();
+  await bubble.click();
+
+  const dialog = page.getByRole("dialog", { name: "Asisten data Tania" });
+  await expect(dialog).toBeVisible();
+
+  // Kegagalan disimulasikan di sisi klien: POST `SendChatMessage` pertama
+  // di-`abort` sebelum menyentuh server, jadi tidak perlu mematikan provider
+  // nyata. Kiriman coba ulang dibiarkan lewat. Setiap `clientRequestId` yang
+  // benar-benar terkirim dicatat untuk membuktikan idempotensinya.
+  const graphqlRoute = "**/graphql";
+  const sentRequestIds: string[] = [];
+  let abortSend = true;
+  await page.route(graphqlRoute, async (route) => {
+    const request = route.request();
+    const body = request.postData() ?? "";
+    if (request.method() !== "POST" || !body.includes("SendChatMessage")) {
+      await route.continue();
+      return;
+    }
+    const variables = (JSON.parse(body) as { variables?: { clientRequestId?: string } }).variables;
+    if (variables?.clientRequestId) sentRequestIds.push(variables.clientRequestId);
+    if (abortSend) {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+
+  const question = "Siapa saja yang kontraknya berakhir dalam 90 hari?";
+  await page.getByLabel("Pertanyaan untuk asisten").fill(question);
+  await page.getByRole("button", { name: "Kirim pertanyaan" }).click();
+
+  // State gagal ramah: bubble optimistis menyebut belum terkirim + menawarkan
+  // "Coba ulang", dan toast memuat pesan ramah — bukan crash atau layar kosong.
+  const userBubbles = dialog.locator('[data-role="USER"]', { hasText: question });
+  await expect(userBubbles).toHaveCount(1);
+  await expect(userBubbles.getByText("Belum terkirim")).toBeVisible();
+  const retry = userBubbles.getByRole("button", { name: "Coba ulang" });
+  await expect(retry).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Asisten gagal menjawab" })).toBeVisible();
+
+  // Percobaan ulang: simulasi kegagalan dilepas, tombol "Coba ulang" ditekan.
+  abortSend = false;
+  await retry.click();
+
+  await expect(dialog.locator('[data-role="ASSISTANT"]').first()).toBeVisible({ timeout: 30_000 });
+
+  // Balasan masuk → "Belum terjawab" hilang, dan riwayat tetap SATU pesan USER
+  // untuk pertanyaan itu (tidak digandakan oleh coba ulang).
+  await expect(dialog.getByText("Belum terjawab")).toHaveCount(0);
+  await expect(userBubbles).toHaveCount(1);
+
+  // Idempotensi FR-14: coba ulang memakai `clientRequestId` yang sama.
+  expect(sentRequestIds).toHaveLength(2);
+  expect(sentRequestIds[1]).toBe(sentRequestIds[0]);
 });

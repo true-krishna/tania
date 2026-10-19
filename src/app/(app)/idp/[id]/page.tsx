@@ -9,11 +9,14 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Chip } from "@/components/Chip";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ToastStack } from "@/components/Toast";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useIdp } from "@/features/idp/useIdp";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 import {
   AddDevelopmentActionDocument,
   AddIdpReviewDocument,
@@ -21,7 +24,6 @@ import {
   IdpDocument,
   UpdateDevelopmentActionStatusDocument,
 } from "@/generated/graphql";
-import { cn } from "@/lib/cn";
 import { IDP } from "@/lib/constants/routes";
 import type {
   DevelopmentActionStatus,
@@ -45,23 +47,6 @@ const METHOD_LABEL: Record<DevelopmentMethod, string> = {
 const BLOCK =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm";
 
-function Field({
-  label,
-  children,
-  className = "",
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</span>
-      {children}
-    </div>
-  );
-}
-
 function Definition({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -75,6 +60,11 @@ type ToastItem = { id: number; variant: "error" | "success"; message: string };
 
 export default function IdpDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
+  const role = useSessionRole();
+  // Chapter/Admin manage the plan; a Talent may still update the status of its own
+  // actions (matrix: kelola miliknya, FR-14); Operation only reads (klarifikasi 9).
+  const managing = canManage(role, "idp");
+  const canUpdateStatus = managing || role === "TALENT";
   const { status, data, error } = useIdp(id);
 
   const [addAction, { loading: addingAction }] = useMutation(AddDevelopmentActionDocument, {
@@ -225,32 +215,36 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                     {action.dueDate ? ` · tenggat ${action.dueDate}` : ""}
                   </p>
                 </div>
-                <Select
-                  aria-label={`Status aksi ${action.description}`}
-                  className="w-auto py-1 text-xs"
-                  value={action.status}
-                  onChange={(e) => {
-                    const status = e.target.value as DevelopmentActionStatus;
-                    updateActionStatus({ variables: { id: action.id, status } }).catch((err: unknown) => {
-                      addToast("error", err instanceof Error ? err.message : "Gagal memperbarui status aksi.");
-                    });
-                  }}
-                  options={(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map(
-                    (s) => ({ value: s, label: ACTION_STATUS_LABEL[s] }),
-                  )}
-                />
+                {canUpdateStatus ? (
+                  <Select
+                    aria-label={`Status aksi ${action.description}`}
+                    className="w-auto py-1 text-xs"
+                    value={action.status}
+                    onChange={(e) => {
+                      const status = e.target.value as DevelopmentActionStatus;
+                      updateActionStatus({ variables: { id: action.id, status } }).catch((err: unknown) => {
+                        addToast("error", err instanceof Error ? err.message : "Gagal memperbarui status aksi.");
+                      });
+                    }}
+                    options={(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map(
+                      (s) => ({ value: s, label: ACTION_STATUS_LABEL[s] }),
+                    )}
+                  />
+                ) : (
+                  <Chip size="small">{ACTION_STATUS_LABEL[action.status]}</Chip>
+                )}
               </li>
             ))}
           </ul>
         )}
 
-        <form onSubmit={handleAddAction} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
-          <h3 className="text-sm font-medium text-zinc-700">Tambah aksi pengembangan</h3>
-          <Field label="Deskripsi / tindakan">
+        {managing ? (
+          <form onSubmit={handleAddAction} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
+          <h3 className="text-sm font-medium text-zinc-700">Tambah aksi pengembangan</h3>          <InputControl label="Deskripsi / tindakan">
             <Input value={actionDesc} onChange={(e) => setActionDesc(e.target.value)} placeholder="Mis. Ikuti training Go lanjutan" />
-          </Field>
+          </InputControl>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Metode">
+            <InputControl label="Metode">
               <Select
                 value={actionMethod}
                 onChange={(e) => setActionMethod(e.target.value as DevelopmentMethod)}
@@ -259,10 +253,10 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                   label: METHOD_LABEL[m],
                 }))}
               />
-            </Field>
-            <Field label="Tenggat (opsional)">
+            </InputControl>
+            <InputControl label="Tenggat (opsional)">
               <Input type="date" value={actionDue} onChange={(e) => setActionDue(e.target.value)} />
-            </Field>
+            </InputControl>
           </div>
           {actionError ? <p className="text-xs text-red-600">{actionError}</p> : null}
           <div>
@@ -270,7 +264,8 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
               Tambah aksi
             </Button>
           </div>
-        </form>
+          </form>
+        ) : null}
       </Card>
 
       <Card className="max-w-3xl">
@@ -296,14 +291,15 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
           </ul>
         )}
 
-        <form onSubmit={handleAddReview} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
+        {managing ? (
+          <form onSubmit={handleAddReview} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
           <h3 className="text-sm font-medium text-zinc-700">Catat hasil review</h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="Tanggal review">
+            <InputControl label="Tanggal review">
               <Input type="date" aria-label="Tanggal review" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} />
-            </Field>
+            </InputControl>
           </div>
-          <Field label="Ringkasan hasil">
+          <InputControl label="Ringkasan hasil">
             <textarea
               className={BLOCK}
               rows={3}
@@ -312,8 +308,8 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
               onChange={(e) => setReviewSummary(e.target.value)}
               placeholder="Catat perkembangan talent sejak review terakhir…"
             />
-          </Field>
-          <Field label="Tindak lanjut (opsional)">
+          </InputControl>
+          <InputControl label="Tindak lanjut (opsional)">
             <textarea
               className={BLOCK}
               rows={2}
@@ -321,14 +317,15 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
               value={reviewFollowUp}
               onChange={(e) => setReviewFollowUp(e.target.value)}
             />
-          </Field>
+          </InputControl>
           {reviewError ? <p className="text-xs text-red-600">{reviewError}</p> : null}
           <div>
             <Button type="submit" disabled={addingReview}>
               Simpan review
             </Button>
           </div>
-        </form>
+          </form>
+        ) : null}
       </Card>
 
       <Card className="max-w-3xl">
@@ -350,7 +347,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         )}
       </Card>
 
-      {idp.status !== "COMPLETED" ? (
+      {managing && idp.status !== "COMPLETED" ? (
         <Card className="flex max-w-3xl flex-col gap-3 border-amber-200 bg-amber-50">
           <p className="text-sm text-amber-800">
             Tutup IDP ini saat success indicators sudah dievaluasi pada review (status →{" "}
@@ -368,11 +365,11 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
             </Button>
           </div>
         </Card>
-      ) : (
+      ) : idp.status === "COMPLETED" ? (
         <Chip variant="success" size="large">
           IDP selesai.
         </Chip>
-      )}
+      ) : null}
     </section>
   );
 }
