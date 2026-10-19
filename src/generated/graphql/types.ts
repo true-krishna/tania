@@ -1239,8 +1239,14 @@ export type MutationUpsertPerformanceEvaluationArgs = {
 
 export type OperationDashboard = {
   __typename?: 'OperationDashboard';
+  /** Kontrak berjalan yang berakhir dalam 30 hari ke depan (FR-40). */
+  contractsExpiringIn30Days: Scalars['Int']['output'];
+  /** Kontrak berjalan yang berakhir dalam 90 hari ke depan (FR-40). */
+  contractsExpiringIn90Days: Scalars['Int']['output'];
   employeesPerUnit: Array<UnitCount>;
   nonAssignableEmployees: Scalars['Int']['output'];
+  /** Karyawan aktif pra-pensiun: usia ≥ retirement_age − 1 (FR-40; default 55 → ≥ 54). */
+  preRetirementEmployees: Scalars['Int']['output'];
   recentEmployeeChanges: Array<Employee>;
   totalActiveEmployees: Scalars['Int']['output'];
 };
@@ -1341,7 +1347,7 @@ export type Query = {
   performanceEvaluations: PerformanceEvaluationConnection;
   /** Referensi Project level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Assignment); 2026-10-16 clarify 8. */
   projects: Array<Project>;
-  /** Usia pensiun (tahun) dari setelan aplikasi Admin (FR-40, T042). */
+  /** Usia pensiun (tahun) dari setelan aplikasi Admin — default 55 (FR-40, T042). */
   retirementAge: Scalars['Int']['output'];
   talentReport: TalentReport;
   talentReportRange: TalentReportRange;

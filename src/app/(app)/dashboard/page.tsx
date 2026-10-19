@@ -8,11 +8,15 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import {
+  IconAlertTriangle,
+  IconCalendarClock,
   IconClipboardText,
+  IconHourglass,
   IconTarget,
   IconUserShield,
   IconUsers,
 } from "@tabler/icons-react";
+import { orDash } from "@/lib/cell";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
 import { TalentReportContent } from "@/features/talent-report/TalentReportPageView";
@@ -58,6 +62,14 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
  * untuk OperationDashboard & ChapterDashboard konten widget digantikan oleh
  * konten Laporan Talent (TalentReportContent); Admin & Talent tetap
  * melihat widget eksisting — laporan talent adalah konten Operation/Chapter.
+ *
+ * Amandemen remediasi (2026-10-19, TAN-238/TAN-240): dashboard Operation
+ * kembali menampilkan widget administratifnya (total karyawan aktif,
+ * distribusi per Unit, perubahan data terbaru) DI ATAS konten Laporan Talent,
+ * kini org-wide mengikuti populasi BE (tanpa dimensi chapter), ditambah
+ * indikator FR-40 (kontrak berakhir H-90/H-30 & pra-pensiun). Field
+ * `nonAssignableEmployees` sengaja tidak dirender — istilah internal tidak
+ * ditampilkan di UI. Dashboard Chapter tidak berubah.
  */
 export default function DashboardPage() {
   const { status, data, error } = useDashboard();
@@ -126,7 +138,71 @@ export default function DashboardPage() {
         </>
       ) : null}
 
-      {dash.__typename === "OperationDashboard" ? <TalentReportContent /> : null}
+      {dash.__typename === "OperationDashboard" ? (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="Karyawan aktif" value={dash.totalActiveEmployees} icon={IconUsers} />
+            <StatCard
+              label="Kontrak berakhir ≤ 90 hari"
+              value={dash.contractsExpiringIn90Days}
+              hint="FR-40"
+              icon={IconAlertTriangle}
+            />
+            <StatCard
+              label="Kontrak berakhir ≤ 30 hari"
+              value={dash.contractsExpiringIn30Days}
+              hint="FR-40"
+              icon={IconCalendarClock}
+            />
+            <StatCard
+              label="Karyawan pra-pensiun"
+              value={dash.preRetirementEmployees}
+              hint="Usia ≥ batas pensiun − 1 tahun (FR-40)"
+              icon={IconHourglass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel title="Karyawan per Unit">
+              {dash.employeesPerUnit.length ? (
+                <BarList
+                  items={dash.employeesPerUnit.map((u) => ({ label: u.unit.name, value: u.count }))}
+                />
+              ) : (
+                <EmptyNote>Belum ada karyawan pada unit mana pun.</EmptyNote>
+              )}
+            </Panel>
+
+            <Panel title="Perubahan data terbaru">
+              {dash.recentEmployeeChanges.length ? (
+                <ul className="flex flex-col gap-2">
+                  {dash.recentEmployeeChanges.map((e) => (
+                    <li
+                      key={e.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-surface-border px-3 py-2.5"
+                    >
+                      <span className="text-sm font-medium text-zinc-900">{e.fullName}</span>
+                      <span className="text-xs text-zinc-500">{orDash(e.nomorInduk)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyNote>Belum ada perubahan data terbaru.</EmptyNote>
+              )}
+            </Panel>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <h2 className="text-base font-semibold text-zinc-900">Laporan Talent — seluruh unit</h2>
+            <p className="text-sm text-zinc-500">
+              Ringkasan seluruh karyawan kontrak berjalan dalam satu laporan org-wide, tanpa dimensi
+              chapter.
+            </p>
+          </div>
+
+          <TalentReportContent />
+        </>
+      ) : null}
 
       {dash.__typename === "ChapterDashboard" ? <TalentReportContent /> : null}
 
