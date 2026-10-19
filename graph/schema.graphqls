@@ -22,7 +22,11 @@ scalar JSON
 
 # ------------------------------- Enums --------------------------------------
 
-"""Application access roles (fixed set, FR-15)."""
+"""Application access roles (fixed set, FR-15).
+
+The four built-in roles of the dynamic RBAC configuration (FR-03 amandemen
+2026-10-19); a role built on one of them as its template keeps this enum as the
+value of AccessRoleDefinition.templateRole."""
 enum AccessRole {
   ADMIN
   OPERATION
@@ -954,6 +958,59 @@ type ChatMessageConnection { edges: [ChatMessageEdge!]!, pageInfo: PageInfo!, to
 type ChatConversationEdge { node: ChatConversation!, cursor: String! }
 type ChatConversationConnection { edges: [ChatConversationEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
 
+# ------------------------- Dynamic RBAC (FR-03 amandemen 2026-10-19) ---------
+
+"""Status sebuah access role."""
+enum RoleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+"""Tingkat akses satu sel menu × role; cakupan data diwarisi dari template_role."""
+enum MenuAccessLevel {
+  NONE
+  VIEW
+  MANAGE
+}
+
+"""Definisi access role sebagai data — built-in atau custom (FR-01 amandemen)."""
+type AccessRoleDefinition {
+  id: ID!
+  """Nama mesin, unik; built-in memakai nama AccessRole (ADMIN, OPERATION, ...)."""
+  name: String!
+  label: String!
+  """Peran built-in yang diwarisi cakupan servernya; null untuk peran built-in."""
+  templateRole: AccessRole
+  """True untuk empat peran bawaan yang tidak boleh dihapus."""
+  isBuiltin: Boolean!
+  status: RoleStatus!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+"""Satu entri menu yang dapat dikonfigurasi per role (top-level atau submenu)."""
+type MenuEntry {
+  id: ID!
+  label: String!
+  """Null untuk entri top-level."""
+  parentId: ID
+}
+
+"""Sel menu × role: visibilitas menu dan tingkat akses di dalamnya."""
+type RoleMenuAccess {
+  roleId: ID!
+  menuEntryId: ID!
+  visible: Boolean!
+  accessLevel: MenuAccessLevel!
+}
+
+"""Konfigurasi efektif untuk editor Admin: katalog menu, role, dan sel ter-resolve."""
+type RoleMenuConfiguration {
+  menuEntries: [MenuEntry!]!
+  roles: [AccessRoleDefinition!]!
+  cells: [RoleMenuAccess!]!
+}
+
 # -------------------------------- Queries -----------------------------------
 
 type Query {
@@ -1027,6 +1084,12 @@ type Query {
 
   # --- Audit (Admin) ---
   auditLogs(filter: AuditLogFilter, first: Int = 25, after: String): AuditLogConnection!
+
+  # --- Konfigurasi akses per role (Admin; FR-03 amandemen 2026-10-19) ---
+  """Daftar access role: built-in + custom (FR-01 amandemen). Khusus Admin."""
+  roles(includeInactive: Boolean = false): [AccessRoleDefinition!]!
+  """Matriks menu × role efektif; sel tanpa baris tersimpan memakai default FR-03."""
+  roleMenuConfig: RoleMenuConfiguration!
 
   # --- Asisten data (Chapter & Operation; FR-01/FR-02) ---
   """Percakapan asisten milik pemanggil (privat mutlak; FR-02)."""

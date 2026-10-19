@@ -4,7 +4,13 @@ type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
-/** Application access roles (fixed set, FR-15). */
+/**
+ * Application access roles (fixed set, FR-15).
+ *
+ * The four built-in roles of the dynamic RBAC configuration (FR-03 amandemen
+ * 2026-10-19); a role built on one of them as its template keeps this enum as the
+ * value of AccessRoleDefinition.templateRole.
+ */
 export type AccessRole =
   | 'ADMIN'
   | 'CHAPTER'

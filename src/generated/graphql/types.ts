@@ -12,12 +12,34 @@ export type Scalars = {
   Time: { input: string; output: string; }
 };
 
-/** Application access roles (fixed set, FR-15). */
+/**
+ * Application access roles (fixed set, FR-15).
+ *
+ * The four built-in roles of the dynamic RBAC configuration (FR-03 amandemen
+ * 2026-10-19); a role built on one of them as its template keeps this enum as the
+ * value of AccessRoleDefinition.templateRole.
+ */
 export type AccessRole =
   | 'ADMIN'
   | 'CHAPTER'
   | 'OPERATION'
   | 'TALENT';
+
+/** Definisi access role sebagai data — built-in atau custom (FR-01 amandemen). */
+export type AccessRoleDefinition = {
+  __typename?: 'AccessRoleDefinition';
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  /** True untuk empat peran bawaan yang tidak boleh dihapus. */
+  isBuiltin: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  /** Nama mesin, unik; built-in memakai nama AccessRole (ADMIN, OPERATION, ...). */
+  name: Scalars['String']['output'];
+  status: RoleStatus;
+  /** Peran built-in yang diwarisi cakupan servernya; null untuk peran built-in. */
+  templateRole?: Maybe<AccessRole>;
+  updatedAt: Scalars['Time']['output'];
+};
 
 export type AccountStatus =
   | 'ACTIVE'
@@ -800,6 +822,21 @@ export type MasterDataCount = {
   kind: Scalars['String']['output'];
 };
 
+/** Tingkat akses satu sel menu × role; cakupan data diwarisi dari template_role. */
+export type MenuAccessLevel =
+  | 'MANAGE'
+  | 'NONE'
+  | 'VIEW';
+
+/** Satu entri menu yang dapat dikonfigurasi per role (top-level atau submenu). */
+export type MenuEntry = {
+  __typename?: 'MenuEntry';
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  /** Null untuk entri top-level. */
+  parentId?: Maybe<Scalars['ID']['output']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addCvCertification: CvCertification;
@@ -1349,6 +1386,10 @@ export type Query = {
   projects: Array<Project>;
   /** Usia pensiun (tahun) dari setelan aplikasi Admin — default 55 (FR-40, T042). */
   retirementAge: Scalars['Int']['output'];
+  /** Matriks menu × role efektif; sel tanpa baris tersimpan memakai default FR-03. */
+  roleMenuConfig: RoleMenuConfiguration;
+  /** Daftar access role: built-in + custom (FR-01 amandemen). Khusus Admin. */
+  roles: Array<AccessRoleDefinition>;
   talentReport: TalentReport;
   talentReportRange: TalentReportRange;
   /** Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8. */
@@ -1492,6 +1533,11 @@ export type QueryProjectsArgs = {
 };
 
 
+export type QueryRolesArgs = {
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryTalentReportArgs = {
   period: TalentReportPeriodInput;
 };
@@ -1583,6 +1629,28 @@ export type RoleCount = {
   count: Scalars['Int']['output'];
   role: AccessRole;
 };
+
+/** Sel menu × role: visibilitas menu dan tingkat akses di dalamnya. */
+export type RoleMenuAccess = {
+  __typename?: 'RoleMenuAccess';
+  accessLevel: MenuAccessLevel;
+  menuEntryId: Scalars['ID']['output'];
+  roleId: Scalars['ID']['output'];
+  visible: Scalars['Boolean']['output'];
+};
+
+/** Konfigurasi efektif untuk editor Admin: katalog menu, role, dan sel ter-resolve. */
+export type RoleMenuConfiguration = {
+  __typename?: 'RoleMenuConfiguration';
+  cells: Array<RoleMenuAccess>;
+  menuEntries: Array<MenuEntry>;
+  roles: Array<AccessRoleDefinition>;
+};
+
+/** Status sebuah access role. */
+export type RoleStatus =
+  | 'ACTIVE'
+  | 'INACTIVE';
 
 export type TalentDashboard = {
   __typename?: 'TalentDashboard';
