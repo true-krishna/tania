@@ -223,7 +223,7 @@ export default function DashboardPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-zinc-900">{a.project.name}</p>
                       <p className="text-xs text-zinc-500">
-                        {a.jobRole.name} · {a.periodStart} — {a.periodEnd ?? "…"}
+                        {a.periodStart} — {a.periodEnd ?? "…"}
                       </p>
                     </div>
                     <Chip variant={ASSIGNMENT_STATUS_VARIANT[a.status]} size="small">

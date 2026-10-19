@@ -16,10 +16,6 @@ query Assignments($filter: AssignmentFilter, $first: Int = 25, $after: String) {
           id
           name
         }
-        jobRole {
-          id
-          name
-        }
       }
     }
     pageInfo {

@@ -30,7 +30,7 @@ export function useAssignment(id: string): QueryState<AssignmentNode | undefined
  * Update hook (Chapter) — US2 / FR-05, gelombang K2 (T001).
  *
  * Backed by the served `updateAssignment(id, input)` mutation (SDL
- * `UpdateAssignmentInput`: projectId/jobRoleId/periodStart/periodEnd, semua
+ * `UpdateAssignmentInput`: projectId/periodStart/periodEnd, semua
  * opsional — talent bukan bagian input sehingga tidak dapat diganti). Backend
  * hanya menerima assignment berstatus ACTIVE (selain itu `PRECONDITION`).
  *

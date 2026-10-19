@@ -512,7 +512,7 @@ function WorkExperienceSection({ cv }: { cv: CvFieldsFragment | undefined }) {
               <div>
                 <p className="font-medium text-zinc-900">{exp.project.name}</p>
                 <p className="text-xs text-zinc-500">
-                  {exp.jobRole.name} · {exp.periodStart}
+                  {exp.periodStart}
                   {exp.periodEnd ? ` — ${exp.periodEnd}` : " — sekarang"}
                 </p>
               </div>
@@ -640,7 +640,7 @@ function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
             {cv.workExperience.map((exp) => (
               <li key={exp.id} className="flex items-start justify-between gap-3 text-sm">
                 <span className="text-zinc-800">
-                  {exp.project.name} — {exp.jobRole.name}
+                  {exp.project.name}
                   <span className="ml-2 text-xs text-zinc-500">
                     {exp.periodStart}
                     {exp.periodEnd ? ` — ${exp.periodEnd}` : " — sekarang"}

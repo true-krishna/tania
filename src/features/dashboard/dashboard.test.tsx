@@ -260,7 +260,6 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
           periodEnd: null,
           status: "ACTIVE",
           project: { __typename: "Project", id: "p-1", name: "Riset API" },
-          jobRole: { __typename: "JobRole", id: "j-1", name: "Backend Engineer" },
         },
       ],
     });
