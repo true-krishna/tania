@@ -5,6 +5,7 @@ import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
@@ -79,10 +80,9 @@ export default function NewEvaluationTemplatePage() {
     <section className="flex max-w-2xl flex-col gap-4">
       <PageHeader title="Buat Template Evaluasi" subtitle="Daftar kriteria dengan tipe jawaban fixed (Admin)." />
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <Label error={errors.name}>
-          Nama Template
+        <InputControl label="Nama Template" error={errors.name}>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Framework Performa 2025" />
-        </Label>
+        </InputControl>
 
         <fieldset className="flex flex-col gap-3">
           <legend className="text-sm font-medium text-zinc-700">Kriteria</legend>
@@ -144,14 +144,5 @@ export default function NewEvaluationTemplatePage() {
         </div>
       </form>
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-      {children}
-      {error ? <span className="text-xs font-normal text-red-600">{error}</span> : null}
-    </label>
   );
 }

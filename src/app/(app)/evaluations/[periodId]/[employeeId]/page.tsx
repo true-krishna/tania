@@ -7,6 +7,7 @@ import { useMutation } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
 import { useCurrentEvaluationPeriod } from "@/features/evaluations/useCurrentEvaluationPeriod";
@@ -227,24 +228,20 @@ function EvaluationForm({
             .sort((a, b) => a.position - b.position)
             .map((criterion) => (
               <div key={criterion.id} className="flex flex-col gap-1">
-                <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-                  <span>
-                    {criterion.position}. {criterion.label}
-                  </span>
+                <InputControl label={`${criterion.position}. ${criterion.label}`}>
                   <CriterionInput
                     answerType={criterion.answerType}
                     value={answersState[criterion.id] ?? ""}
                     disabled={readOnly || busy}
                     onChange={(v) => setAnswer(criterion.id, v)}
                   />
-                </label>
+                </InputControl>
               </div>
             ))
         )}
 
         <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Ringkasan pencapaian
+          <InputControl label="Ringkasan pencapaian">
             <textarea
               value={summary}
               disabled={readOnly || busy}
@@ -255,9 +252,8 @@ function EvaluationForm({
               }}
               className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
             />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Catatan pengembangan
+          </InputControl>
+          <InputControl label="Catatan pengembangan">
             <textarea
               value={notes}
               disabled={readOnly || busy}
@@ -268,7 +264,7 @@ function EvaluationForm({
               }}
               className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
             />
-          </label>
+          </InputControl>
         </div>
       </div>
 

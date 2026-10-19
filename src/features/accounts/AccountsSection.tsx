@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
@@ -209,17 +210,15 @@ export function AccountsSection({
           onSubmit={handleSubmit}
           className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
         >
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Cari Karyawan
+          <InputControl label="Cari Karyawan">
             <Input
               type="search"
               value={employeeSearch}
               onChange={(e) => setEmployeeSearch(e.target.value)}
               placeholder="Cari nama, email, atau kode…"
             />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Karyawan
+          </InputControl>
+          <InputControl label="Karyawan" error={fieldErrors.employeeId}>
             <Select
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
@@ -237,29 +236,21 @@ export function AccountsSection({
                 })),
               ]}
             />
-            {fieldErrors.employeeId ? (
-              <span className="text-xs text-red-600">{fieldErrors.employeeId}</span>
-            ) : null}
-          </label>
+          </InputControl>
           {employees.status === "error" ? (
             <span className="text-xs text-red-600">
               {employees.error ?? "Gagal memuat daftar karyawan."}
             </span>
           ) : null}
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Email
+          <InputControl label="Email" error={fieldErrors.email}>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="cth: nama@telkom.co.id"
             />
-            {fieldErrors.email ? (
-              <span className="text-xs text-red-600">{fieldErrors.email}</span>
-            ) : null}
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Peran Akses
+          </InputControl>
+          <InputControl label="Peran Akses" error={fieldErrors.accessRole}>
             <Select
               value={accessRole}
               onChange={(e) => setAccessRole(e.target.value as AccessRole | "")}
@@ -268,18 +259,14 @@ export function AccountsSection({
                 ...ROLE_OPTIONS.map((role) => ({ value: role, label: roleLabel[role] })),
               ]}
             />
-            {fieldErrors.accessRole ? (
-              <span className="text-xs text-red-600">{fieldErrors.accessRole}</span>
-            ) : null}
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Kata Sandi Sementara (opsional)
+          </InputControl>
+          <InputControl label="Kata Sandi Sementara (opsional)">
             <Input
               type="password"
               value={temporaryPassword}
               onChange={(e) => setTemporaryPassword(e.target.value)}
             />
-          </label>
+          </InputControl>
           {formError ? <span className="text-xs text-red-600">{formError}</span> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={busy}>

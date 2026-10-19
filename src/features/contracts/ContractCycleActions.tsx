@@ -8,6 +8,7 @@ import { Card } from "@/components/Card";
 import { ErrorState } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
+import { InputControl } from "@/components/InputControl";
 import { useJobRoles, useUnits } from "@/features/master-data/useMasterData";
 import {
   EmployeeDocument,
@@ -137,8 +138,7 @@ function ResignAction({ contract }: { contract: Contract }) {
         </div>
       ) : (
         <>
-          <Label error={dateError ?? undefined}>
-            Tanggal efektif
+          <InputControl label="Tanggal efektif" error={dateError ?? undefined}>
             <Input
               type="date"
               value={effectiveDate}
@@ -147,11 +147,10 @@ function ResignAction({ contract }: { contract: Contract }) {
                 setDateError(null);
               }}
             />
-          </Label>
-          <Label>
-            Alasan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+          </InputControl>
+          <InputControl label="Alasan" helper="(opsional)">
             <Input type="text" value={reason} onChange={(e) => setReason(e.target.value)} />
-          </Label>
+          </InputControl>
           <div>
             <Button type="button" variant="secondary" onClick={() => run(false)} disabled={loading}>
               Catat resign
@@ -295,33 +294,29 @@ function MutationAction({ contract }: { contract: Contract }) {
       </p>
       {formError ? <ErrorState message={formError} /> : null}
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <Label error={errors.effectiveDate}>
-          Tanggal efektif
+        <InputControl label="Tanggal efektif" error={errors.effectiveDate}>
           <Input
             type="date"
             value={values.effectiveDate}
             onChange={(e) => set("effectiveDate", e.target.value)}
           />
-        </Label>
-        <Label error={errors.contractNo}>
-          No. Kontrak baru
+        </InputControl>
+        <InputControl label="No. Kontrak baru" error={errors.contractNo}>
           <Input
             type="text"
             value={values.contractNo}
             onChange={(e) => set("contractNo", e.target.value)}
             placeholder="cth. PKWT/2026/MUT-01"
           />
-        </Label>
-        <Label error={errors.nomorInduk}>
-          Nomor induk karyawan
+        </InputControl>
+        <InputControl label="Nomor induk karyawan" error={errors.nomorInduk}>
           <Input
             type="text"
             value={values.nomorInduk}
             onChange={(e) => set("nomorInduk", e.target.value)}
           />
-        </Label>
-        <Label error={errors.unitId}>
-          Unit baru
+        </InputControl>
+        <InputControl label="Unit baru" error={errors.unitId}>
           <Select
             value={values.unitId}
             onChange={(e) => set("unitId", e.target.value)}
@@ -330,9 +325,8 @@ function MutationAction({ contract }: { contract: Contract }) {
               ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
             ]}
           />
-        </Label>
-        <Label error={errors.jobRoleId}>
-          Posisi / Job Role baru
+        </InputControl>
+        <InputControl label="Posisi / Job Role baru" error={errors.jobRoleId}>
           <Select
             value={values.jobRoleId}
             onChange={(e) => set("jobRoleId", e.target.value)}
@@ -341,9 +335,8 @@ function MutationAction({ contract }: { contract: Contract }) {
               ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
             ]}
           />
-        </Label>
-        <Label error={errors.workLocation}>
-          Work location
+        </InputControl>
+        <InputControl label="Work location" error={errors.workLocation}>
           <Select
             value={values.workLocation}
             onChange={(e) => set("workLocation", e.target.value)}
@@ -353,9 +346,8 @@ function MutationAction({ contract }: { contract: Contract }) {
               { value: "BANDUNG", label: "Bandung" },
             ]}
           />
-        </Label>
-        <Label error={errors.bandPosition}>
-          Band position
+        </InputControl>
+        <InputControl label="Band position" error={errors.bandPosition}>
           <Select
             value={values.bandPosition}
             onChange={(e) => set("bandPosition", e.target.value)}
@@ -369,35 +361,31 @@ function MutationAction({ contract }: { contract: Contract }) {
               { value: "VI", label: "VI" },
             ]}
           />
-        </Label>
-        <Label>
-          Job title <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Job title" helper="(opsional)">
           <Input
             type="text"
             value={values.jobTitle}
             onChange={(e) => set("jobTitle", e.target.value)}
           />
-        </Label>
-        <Label>
-          Job level <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Job level" helper="(opsional)">
           <Input
             type="text"
             value={values.jobLevel}
             onChange={(e) => set("jobLevel", e.target.value)}
           />
-        </Label>
-        <Label>
-          Tanggal selesai <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Tanggal selesai" helper="(opsional)">
           <Input
             type="date"
             value={values.endDate}
             onChange={(e) => set("endDate", e.target.value)}
           />
-        </Label>
-        <Label>
-          Catatan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Catatan" helper="(opsional)">
           <Input type="text" value={values.notes} onChange={(e) => set("notes", e.target.value)} />
-        </Label>
+        </InputControl>
         <div>
           <Button type="submit" disabled={loading}>
             {loading ? "Menyimpan…" : "Catat mutasi"}
@@ -482,8 +470,7 @@ function RetireAction({ contract }: { contract: Contract }) {
         </div>
       ) : (
         <>
-          <Label error={dateError ?? undefined}>
-            Tanggal efektif
+          <InputControl label="Tanggal efektif" error={dateError ?? undefined}>
             <Input
               type="date"
               value={effectiveDate}
@@ -492,7 +479,7 @@ function RetireAction({ contract }: { contract: Contract }) {
                 setDateError(null);
               }}
             />
-          </Label>
+          </InputControl>
           <div>
             <Button type="button" variant="secondary" onClick={() => run(false)} disabled={loading}>
               Catat pensiun
@@ -501,18 +488,5 @@ function RetireAction({ contract }: { contract: Contract }) {
         </>
       )}
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

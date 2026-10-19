@@ -6,6 +6,7 @@ import { useMutation } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
@@ -70,12 +71,10 @@ export default function NewEvaluationPeriodPage() {
     <section className="flex max-w-xl flex-col gap-4">
       <PageHeader title="Buat Periode Evaluasi" subtitle="Periode terpinned ke satu template (Admin)." />
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <Label error={errors.name}>
-          Nama Periode
+        <InputControl label="Nama Periode" error={errors.name}>
           <Input value={values.name} onChange={(e) => set("name", e.target.value)} placeholder="cth: Q3 2025" />
-        </Label>
-        <Label error={errors.templateId}>
-          Template Evaluasi
+        </InputControl>
+        <InputControl label="Template Evaluasi" error={errors.templateId}>
           <Select
             value={values.templateId}
             onChange={(e) => set("templateId", e.target.value)}
@@ -84,16 +83,14 @@ export default function NewEvaluationPeriodPage() {
               ...(templates.data ?? []).map((t) => ({ value: t.id, label: t.name })),
             ]}
           />
-        </Label>
+        </InputControl>
         <div className="grid grid-cols-2 gap-3">
-          <Label error={errors.startDate}>
-            Tanggal Mulai
+          <InputControl label="Tanggal Mulai" error={errors.startDate}>
             <Input type="date" value={values.startDate} onChange={(e) => set("startDate", e.target.value)} />
-          </Label>
-          <Label error={errors.endDate}>
-            Tanggal Selesai
+          </InputControl>
+          <InputControl label="Tanggal Selesai" error={errors.endDate}>
             <Input type="date" value={values.endDate} onChange={(e) => set("endDate", e.target.value)} />
-          </Label>
+          </InputControl>
         </div>
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>
@@ -108,14 +105,5 @@ export default function NewEvaluationPeriodPage() {
         </div>
       </form>
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-      {children}
-      {error ? <span className="text-xs font-normal text-red-600">{error}</span> : null}
-    </label>
   );
 }
