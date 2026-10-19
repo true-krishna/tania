@@ -5,6 +5,7 @@ import * as React from "react";
 import { useMutation, ApolloError } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ErrorState, LoadingState } from "@/components/DataState";
@@ -182,11 +183,7 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
           <span>NIK saat ini</span>
           <span className="font-mono text-sm font-normal text-zinc-700">{employee.nikMasked}</span>
         </div>
-        <Label error={errors.nikBaru}>
-          NIK baru{" "}
-          <span className="text-xs font-normal text-zinc-500">
-            (opsional — kosongkan bila tidak berubah)
-          </span>
+        <InputControl label="NIK baru" helper="(opsional — kosongkan bila tidak berubah)" error={errors.nikBaru}>
           <Input
             type="text"
             value={values.nikBaru}
@@ -194,29 +191,25 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
             placeholder="16 digit nomor KTP"
             inputMode="numeric"
           />
-        </Label>
-        <Label error={errors.fullName}>
-          Nama lengkap
+        </InputControl>
+        <InputControl label="Nama lengkap" error={errors.fullName}>
           <Input
             type="text"
             value={values.fullName}
             onChange={(e) => set("fullName", e.target.value)}
           />
-        </Label>
-        <Label error={errors.email}>
-          Email
+        </InputControl>
+        <InputControl label="Email" error={errors.email}>
           <Input type="email" value={values.email} onChange={(e) => set("email", e.target.value)} />
-        </Label>
-        <Label error={errors.birthDate}>
-          Tanggal lahir
+        </InputControl>
+        <InputControl label="Tanggal lahir" error={errors.birthDate}>
           <Input
             type="date"
             value={values.birthDate}
             onChange={(e) => set("birthDate", e.target.value)}
           />
-        </Label>
-        <Label error={errors.gender}>
-          Jenis kelamin
+        </InputControl>
+        <InputControl label="Jenis kelamin" error={errors.gender}>
           <Select
             value={values.gender}
             onChange={(e) => set("gender", e.target.value)}
@@ -228,47 +221,38 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
               })),
             ]}
           />
-        </Label>
-        <Label error={errors.phone}>
-          Telepon
+        </InputControl>
+        <InputControl label="Telepon" error={errors.phone}>
           <Input type="text" value={values.phone} onChange={(e) => set("phone", e.target.value)} />
-        </Label>
-        <Label error={errors.address}>
-          Alamat
+        </InputControl>
+        <InputControl label="Alamat" error={errors.address}>
           <Input type="text" value={values.address} onChange={(e) => set("address", e.target.value)} />
-        </Label>
-        <Label error={errors.latestEducation}>
-          Pendidikan terakhir{" "}
-          <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Pendidikan terakhir" helper="(opsional)" error={errors.latestEducation}>
           <Input
             type="text"
             value={values.latestEducation}
             onChange={(e) => set("latestEducation", e.target.value)}
           />
-        </Label>
-        <Label error={errors.institutionName}>
-          Nama institusi{" "}
-          <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Nama institusi" helper="(opsional)" error={errors.institutionName}>
           <Input
             type="text"
             value={values.institutionName}
             onChange={(e) => set("institutionName", e.target.value)}
           />
-        </Label>
-        <Label error={errors.major}>
-          Jurusan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Jurusan" helper="(opsional)" error={errors.major}>
           <Input type="text" value={values.major} onChange={(e) => set("major", e.target.value)} />
-        </Label>
-        <Label error={errors.joinedAt}>
-          Tanggal Bergabung
+        </InputControl>
+        <InputControl label="Tanggal Bergabung" error={errors.joinedAt}>
           <Input
             type="date"
             value={values.joinedAt}
             onChange={(e) => set("joinedAt", e.target.value)}
           />
-        </Label>
-        <Label>
-          Status kepegawaian
+        </InputControl>
+        <InputControl label="Status kepegawaian">
           <Select
             value={values.status}
             onChange={(e) => set("status", e.target.value)}
@@ -276,7 +260,7 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
               keyof typeof EMPLOYEE_STATUS_LABEL
             >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] }))}
           />
-        </Label>
+        </InputControl>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={saving}>
@@ -290,18 +274,5 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         </div>
       </form>
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

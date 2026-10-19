@@ -9,6 +9,7 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
+import { InputControl } from "@/components/InputControl";
 import { useEmploymentContract } from "@/features/contracts/useContract";
 import {
   BAND_POSITION_LABEL,
@@ -281,40 +282,35 @@ function ContractEditForm({
           Perubahan kontrak berhasil disimpan.
         </div>
       ) : null}
-      <Label error={errors.contractNo}>
-        No. Kontrak
+      <InputControl label="No. Kontrak" error={errors.contractNo}>
         <Input
           type="text"
           value={values.contractNo}
           onChange={(e) => set("contractNo", e.target.value)}
         />
-      </Label>
-      <Label error={errors.officeEmail}>
-        Email kantor <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+      </InputControl>
+      <InputControl label="Email kantor" helper="(opsional)" error={errors.officeEmail}>
         <Input
           type="email"
           value={values.officeEmail}
           onChange={(e) => set("officeEmail", e.target.value)}
         />
-      </Label>
-      <Label error={errors.jobTitle}>
-        Job title <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+      </InputControl>
+      <InputControl label="Job title" helper="(opsional)" error={errors.jobTitle}>
         <Input
           type="text"
           value={values.jobTitle}
           onChange={(e) => set("jobTitle", e.target.value)}
         />
-      </Label>
-      <Label error={errors.jobLevel}>
-        Job level <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+      </InputControl>
+      <InputControl label="Job level" helper="(opsional)" error={errors.jobLevel}>
         <Input
           type="text"
           value={values.jobLevel}
           onChange={(e) => set("jobLevel", e.target.value)}
         />
-      </Label>
-      <Label error={errors.bandPosition}>
-        Band position
+      </InputControl>
+      <InputControl label="Band position" error={errors.bandPosition}>
         <Select
           value={values.bandPosition}
           onChange={(e) => set("bandPosition", e.target.value)}
@@ -328,9 +324,8 @@ function ContractEditForm({
             { value: "VI", label: "VI" },
           ]}
         />
-      </Label>
-      <Label error={errors.workLocation}>
-        Work location
+      </InputControl>
+      <InputControl label="Work location" error={errors.workLocation}>
         <Select
           value={values.workLocation}
           onChange={(e) => set("workLocation", e.target.value)}
@@ -342,33 +337,19 @@ function ContractEditForm({
             { value: "BANDUNG", label: "Bandung" },
           ]}
         />
-      </Label>
-      <Label error={errors.notes}>
-        Catatan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+      </InputControl>
+      <InputControl label="Catatan" helper="(opsional)" error={errors.notes}>
         <Input
           type="text"
           value={values.notes}
           onChange={(e) => set("notes", e.target.value)}
         />
-      </Label>
+      </InputControl>
       <div className="flex gap-2">
         <Button type="submit" disabled={saving}>
           Simpan perubahan
         </Button>
       </div>
     </form>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

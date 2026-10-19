@@ -7,6 +7,7 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ToastStack } from "@/components/Toast";
@@ -53,15 +54,6 @@ const METHOD_LABEL: Record<DevelopmentMethod, string> = {
 
 const BLOCK =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm outline-none transition-colors focus:border-tp-brand-red focus:ring-2 focus:ring-tp-brand-red/20";
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-      {children}
-      {error ? <span className="text-xs font-normal text-red-600">{error}</span> : null}
-    </label>
-  );
-}
 
 export default function NewIdpPage() {
   const talents = useAssignableTalents();
@@ -180,8 +172,7 @@ export default function NewIdpPage() {
       <PageHeader title="Buat IDP" subtitle="Rancang Individual Development Plan untuk talent (Chapter)." />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <Label error={errors.employeeId}>
-          Talent
+        <InputControl label="Talent" error={errors.employeeId}>
           <Select
             value={values.employeeId}
             onChange={(e) => set("employeeId", e.target.value)}
@@ -193,12 +184,11 @@ export default function NewIdpPage() {
               })),
             ]}
           />
-        </Label>
+        </InputControl>
 
         <Card className="flex flex-col gap-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Komponen Plan</h2>
-          <Label error={errors.developmentObjective}>
-            Development Objective
+          <InputControl label="Development Objective" error={errors.developmentObjective}>
             <textarea
               className={BLOCK}
               rows={3}
@@ -206,9 +196,8 @@ export default function NewIdpPage() {
               onChange={(e) => set("developmentObjective", e.target.value)}
               placeholder="Target peran/kapabilitas spesifik yang ingin dicapai…"
             />
-          </Label>
-          <Label error={errors.currentAssessment}>
-            Penilaian Kondisi Saat Ini
+          </InputControl>
+          <InputControl label="Penilaian Kondisi Saat Ini" error={errors.currentAssessment}>
             <textarea
               className={BLOCK}
               rows={3}
@@ -216,9 +205,8 @@ export default function NewIdpPage() {
               onChange={(e) => set("currentAssessment", e.target.value)}
               placeholder="Kekuatan & keterbatasan talent saat ini…"
             />
-          </Label>
-          <Label error={errors.gapAnalysis}>
-            Identifikasi Gap
+          </InputControl>
+          <InputControl label="Identifikasi Gap" error={errors.gapAnalysis}>
             <textarea
               className={BLOCK}
               rows={3}
@@ -226,9 +214,8 @@ export default function NewIdpPage() {
               onChange={(e) => set("gapAnalysis", e.target.value)}
               placeholder="Selisih kondisi saat ini vs kebutuhan peran…"
             />
-          </Label>
-          <Label error={errors.successIndicators}>
-            Success Indicators
+          </InputControl>
+          <InputControl label="Success Indicators" error={errors.successIndicators}>
             <textarea
               className={BLOCK}
               rows={3}
@@ -236,16 +223,14 @@ export default function NewIdpPage() {
               onChange={(e) => set("successIndicators", e.target.value)}
               placeholder="Kriteria yang menunjukkan pengembangan berhasil…"
             />
-          </Label>
+          </InputControl>
           <div className="grid grid-cols-2 gap-4">
-            <Label error={errors.timelineStart}>
-              Timeline Mulai
+            <InputControl label="Timeline Mulai" error={errors.timelineStart}>
               <Input type="date" value={values.timelineStart} onChange={(e) => set("timelineStart", e.target.value)} />
-            </Label>
-            <Label error={errors.timelineEnd}>
-              Timeline Selesai
+            </InputControl>
+            <InputControl label="Timeline Selesai" error={errors.timelineEnd}>
               <Input type="date" value={values.timelineEnd} onChange={(e) => set("timelineEnd", e.target.value)} />
-            </Label>
+            </InputControl>
           </div>
         </Card>
 
@@ -258,17 +243,15 @@ export default function NewIdpPage() {
           ) : null}
           {actions.map((action, index) => (
             <div key={index} className="flex flex-col gap-3 rounded-md border border-zinc-100 p-3">
-              <Label>
-                Deskripsi / tindakan
+              <InputControl label="Deskripsi / tindakan">
                 <Input
                   value={action.description}
                   onChange={(e) => updateAction(index, { description: e.target.value })}
                   placeholder="Mis. Ikuti training Go lanjutan"
                 />
-              </Label>
+              </InputControl>
               <div className="grid grid-cols-2 gap-3">
-                <Label>
-                  Metode
+                <InputControl label="Metode">
                   <Select
                     value={action.method}
                     onChange={(e) => updateAction(index, { method: e.target.value as DevelopmentMethod })}
@@ -277,15 +260,14 @@ export default function NewIdpPage() {
                       label: METHOD_LABEL[m],
                     }))}
                   />
-                </Label>
-                <Label>
-                  Tenggat (opsional)
+                </InputControl>
+                <InputControl label="Tenggat (opsional)">
                   <Input
                     type="date"
                     value={action.dueDate}
                     onChange={(e) => updateAction(index, { dueDate: e.target.value })}
                   />
-                </Label>
+                </InputControl>
               </div>
               <div>
                 <Button

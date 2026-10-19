@@ -8,6 +8,7 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
@@ -203,8 +204,7 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
         Talent tidak dapat diganti. Pilihan project dan job role hanya master data aktif.
       </p>
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <Label error={errors.projectId}>
-          Project
+        <InputControl label="Project" error={errors.projectId}>
           <Select
             value={values.projectId}
             onChange={(e) => set("projectId", e.target.value)}
@@ -213,9 +213,8 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
               ...activeProjects.map((p) => ({ value: p.id, label: p.name })),
             ]}
           />
-        </Label>
-        <Label error={errors.jobRoleId}>
-          Job Role
+        </InputControl>
+        <InputControl label="Job Role" error={errors.jobRoleId}>
           <Select
             value={values.jobRoleId}
             onChange={(e) => set("jobRoleId", e.target.value)}
@@ -224,23 +223,21 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
               ...activeJobRoles.map((role) => ({ value: role.id, label: role.name })),
             ]}
           />
-        </Label>
-        <Label error={errors.periodStart}>
-          Tanggal Mulai
+        </InputControl>
+        <InputControl label="Tanggal Mulai" error={errors.periodStart}>
           <Input
             type="date"
             value={values.periodStart}
             onChange={(e) => set("periodStart", e.target.value)}
           />
-        </Label>
-        <Label error={errors.periodEnd}>
-          Tanggal Selesai <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Tanggal Selesai" error={errors.periodEnd} helper="(opsional)">
           <Input
             type="date"
             value={values.periodEnd}
             onChange={(e) => set("periodEnd", e.target.value)}
           />
-        </Label>
+        </InputControl>
         {formError ? (
           <p role="alert" className="text-sm text-red-700">
             {formError}
@@ -295,8 +292,7 @@ function EndAssignmentCard({ assignment }: { assignment: AssignmentNode }) {
         talent untuk tugas berikutnya. Isi tanggal selesai terlebih dahulu.
       </p>
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <Label error={error}>
-          Tanggal Selesai
+        <InputControl label="Tanggal Selesai" error={error}>
           <Input
             type="date"
             value={periodEnd}
@@ -305,7 +301,7 @@ function EndAssignmentCard({ assignment }: { assignment: AssignmentNode }) {
               setError(null);
             }}
           />
-        </Label>
+        </InputControl>
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>
             Akhiri assignment
@@ -318,14 +314,5 @@ function EndAssignmentCard({ assignment }: { assignment: AssignmentNode }) {
         </p>
       ) : null}
     </Card>
-  );
-}
-
-function Label({ error, children }: { error?: string | null; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-      {children}
-      {error ? <span className="text-xs font-normal text-red-600">{error}</span> : null}
-    </label>
   );
 }

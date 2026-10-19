@@ -6,6 +6,7 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { Select } from "@/components/Select";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
@@ -30,7 +31,6 @@ import {
   type EducationLevel,
 } from "@/generated/graphql";
 
-const BLOCK = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 const LABEL =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm";
 
@@ -114,8 +114,7 @@ function SummarySection({ cv }: { cv: CvFieldsFragment | undefined }) {
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="text-base font-semibold text-zinc-900">Ringkasan Profil</h2>
-      <label className={BLOCK}>
-        Ringkasan
+      <InputControl label="Ringkasan">
         <textarea
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
@@ -123,7 +122,7 @@ function SummarySection({ cv }: { cv: CvFieldsFragment | undefined }) {
           placeholder="Tulis ringkasan singkat tentang diri Anda…"
           className={LABEL}
         />
-      </label>
+      </InputControl>
       <div>
         <Button onClick={onSave} disabled={loading}>
           Simpan Ringkasan
@@ -547,8 +546,7 @@ function CvRosterViewer({ audience }: { audience: "CHAPTER" | "OPERATION" | "ADM
             : "Lihat profil CV seluruh talent (hanya-baca; konten CV milik talent, FR-13)."
         }
       />
-      <label className={BLOCK}>
-        Pilih Talent
+      <InputControl label="Pilih Talent">
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
@@ -561,7 +559,7 @@ function CvRosterViewer({ audience }: { audience: "CHAPTER" | "OPERATION" | "ADM
             </option>
           ))}
         </select>
-      </label>
+      </InputControl>
 
       {!selected ? null : status === "loading" ? (
         <LoadingState label="Memuat CV…" />

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { Select } from "@/components/Select";
 import { ACTIVITY_TYPE_LABEL } from "./mocks";
 import type {
@@ -139,7 +140,7 @@ export function ActivityForm({
         </p>
       ) : null}
 
-      <Field label="Judul aktivitas" error={errors.title} htmlFor="activity-title">
+      <InputControl label="Judul aktivitas" error={errors.title} htmlFor="activity-title">
         <Input
           id="activity-title"
           type="text"
@@ -148,10 +149,10 @@ export function ActivityForm({
           placeholder="cth. Implementasi form aktivitas"
           aria-invalid={Boolean(errors.title)}
         />
-      </Field>
+      </InputControl>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Jenis aktivitas" error={errors.activityType} htmlFor="activity-type">
+        <InputControl label="Jenis aktivitas" error={errors.activityType} htmlFor="activity-type">
           <Select
             id="activity-type"
             value={values.activityType}
@@ -161,9 +162,9 @@ export function ActivityForm({
               { value: "training", label: ACTIVITY_TYPE_LABEL.training },
             ]}
           />
-        </Field>
+        </InputControl>
 
-        <Field label="Prioritas" error={errors.priorityId} htmlFor="activity-priority">
+        <InputControl label="Prioritas" error={errors.priorityId} htmlFor="activity-priority">
           <Select
             id="activity-priority"
             value={values.priorityId}
@@ -174,9 +175,9 @@ export function ActivityForm({
               ...priorities.map((priority) => ({ value: priority.id, label: priority.name })),
             ]}
           />
-        </Field>
+        </InputControl>
 
-        <Field label="Tanggal mulai" error={errors.startDate} htmlFor="activity-start">
+        <InputControl label="Tanggal mulai" error={errors.startDate} htmlFor="activity-start">
           <Input
             id="activity-start"
             type="date"
@@ -184,9 +185,9 @@ export function ActivityForm({
             onChange={(e) => set("startDate", e.target.value)}
             aria-invalid={Boolean(errors.startDate)}
           />
-        </Field>
+        </InputControl>
 
-        <Field label="Tanggal selesai (opsional)" error={errors.endDate} htmlFor="activity-end">
+        <InputControl label="Tanggal selesai (opsional)" error={errors.endDate} htmlFor="activity-end">
           <Input
             id="activity-end"
             type="date"
@@ -194,13 +195,13 @@ export function ActivityForm({
             onChange={(e) => set("endDate", e.target.value)}
             aria-invalid={Boolean(errors.endDate)}
           />
-        </Field>
+        </InputControl>
 
-        <Field
+        <InputControl
           label="Project"
           error={errors.projectId}
           htmlFor="activity-project"
-          hint={isTraining ? "Pelatihan tidak terikat project." : undefined}
+          helper={isTraining ? "Pelatihan tidak terikat project." : undefined}
         >
           <Select
             id="activity-project"
@@ -213,9 +214,9 @@ export function ActivityForm({
               ...projects.map((project) => ({ value: project.id, label: project.name })),
             ]}
           />
-        </Field>
+        </InputControl>
 
-        <Field label="Status" error={errors.statusId} htmlFor="activity-status">
+        <InputControl label="Status" error={errors.statusId} htmlFor="activity-status">
           <Select
             id="activity-status"
             value={values.statusId}
@@ -226,7 +227,7 @@ export function ActivityForm({
               ...statuses.map((status) => ({ value: status.id, label: status.name })),
             ]}
           />
-        </Field>
+        </InputControl>
       </div>
 
       <div className="flex gap-2">
@@ -240,32 +241,5 @@ export function ActivityForm({
         ) : null}
       </div>
     </form>
-  );
-}
-
-function Field({
-  label,
-  error,
-  hint,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  error?: string;
-  hint?: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label htmlFor={htmlFor} className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {label}
-      {children}
-      {hint ? <span className="text-xs font-normal text-zinc-500">{hint}</span> : null}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

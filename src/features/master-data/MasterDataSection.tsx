@@ -6,6 +6,7 @@ import { Table, type TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
@@ -247,25 +248,20 @@ export function MasterDataSection<T extends MasterDataItem>({
           onSubmit={handleSubmit}
           className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
         >
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            {nameLabel}
+          <InputControl label={nameLabel} error={nameError}>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Digital Business" />
-            {nameError ? <span className="text-xs text-red-600">{nameError}</span> : null}
-          </label>
+          </InputControl>
           {codeLabel ? (
-            <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-              {codeLabel}
+            <InputControl label={codeLabel} error={codeError}>
               <Input
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder={codePlaceholder ?? "cth: DBT"}
               />
-              {codeError ? <span className="text-xs text-red-600">{codeError}</span> : null}
-            </label>
+            </InputControl>
           ) : null}
           {select ? (
-            <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-              {select.label}
+            <InputControl label={select.label} error={selectError}>
               <Select
                 value={selectValue}
                 onChange={(e) => setSelectValue(e.target.value)}
@@ -274,8 +270,7 @@ export function MasterDataSection<T extends MasterDataItem>({
                   ...select.options.map((o) => ({ value: o.id, label: o.name })),
                 ]}
               />
-              {selectError ? <span className="text-xs text-red-600">{selectError}</span> : null}
-            </label>
+            </InputControl>
           ) : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={busy}>
