@@ -14,6 +14,8 @@
 
 **Revisi**: 2026-10-16 (T045, TAN-217) — Penyeragaman **rujukan** nilai guardrail FR-10: nilai batas tidak lagi diulang di FR-10, melainkan menunjuk satu sumber (`plan.md` D6 + konstanta `tania-backend/internal/domain/chat.go`); FR-13 memakai rujukan yang sama. **Tidak ada nilai yang berubah** dan tidak ada perilaku baru.
 
+**Revisi**: 2026-10-19 (remediasi `/speckit.analyze`, TAN-204) — Temuan staging "jawaban asisten memuat nama yang tidak ada di basis data" ditutup dengan butir **FR-15**: jawaban untuk **hasil kosong** disusun server dengan kalimat baku, bukan oleh model. Butir ini mengikat perilaku yang sebelumnya **tidak diatur** (tidak ada FR, kalimat, maupun test untuk `rowCount = 0`) dan **tidak mengubah** FR lain, nilai guardrail FR-10, atau matriks otorisasi.
+
 **Status**: Final — seluruh butir klarifikasi (NC-01..NC-05) ditutup; siap untuk `/speckit.plan`. Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
 
 **Input**: `/speckit.specify` (TAN-203) — "Buat chatbot yang membantu chapter dan operation dalam aplikasi Tania yang tugasnya merangkum data, menunjukkan data, hingga memberikan rekomendasi untuk pengambilan keputusan."
@@ -149,6 +151,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 - **FR-12**: Pertanyaan di luar domain data Tania ditolak dengan sopan beserta penjelasan cakupan asisten.
 - **FR-13**: **Batas pemakaian asisten**: maksimum **20 pertanyaan per pengguna per jam**; kelebihan batas ditolak dengan pesan ramah yang menyebutkan kapan pengguna dapat mencoba lagi, dan penolakan terjadi **sebelum** model dipanggil sehingga **tidak ada token terpakai**. Nilai batas adalah konstanta kode (bukan env; satu rujukan: `plan.md` D6 + `tania-backend/internal/domain/chat.go`) dan mengubahnya memerlukan persetujuan pemilik produk — setara FR-10. *(Rantai keterlacakan: plan D6 · `contracts/chat.md` §Kontrak error “Kuota per user terlampaui” · task T012 (implementasi) & T018 (test) · UAT §E butir 4 / T033.)*
 - **FR-14**: **Pengiriman ulang idempoten**: percobaan ulang atas pertanyaan yang gagal memakai **pengenal permintaan dari klien** (`clientRequestId`) yang dibuat sekali per kiriman, sehingga riwayat menyimpan tepat **satu** pesan pengguna per pertanyaan berapa kali pun “coba ulang” ditekan, dan jendela konteks tidak bergeser. *(Rantai keterlacakan: plan R7 · `data-model.md` §ChatMessage `clientRequestId` (indeks unik parsial) · `contracts/chat.md` §Idempotensi kirim (FR-14) · task T003/T005/T024 · test T018 · UAT §B langkah 7 / T034.)*
+- **FR-15**: **Hasil kosong dijawab jujur, bukan dikarang**: bila **seluruh** hasil tool pada satu jawaban berisi **nol baris**, jawaban disusun **di server** dengan kalimat baku *"Tidak ada data yang cocok dalam cakupan Anda."* — model tidak menyusun kalimat itu dan **tidak boleh** muncul nama, angka, atau atribut apa pun yang tidak ada pada hasil tool jawaban tersebut. Kalimat ini sengaja **netral terhadap sebab** (data memang tidak ada vs di luar cakupan penanya), karena lapisan data tidak dapat membedakan keduanya tanpa membocorkan keberadaan data; penolakan karena **hak akses** tetap memakai jalur FR-06 dan kegagalan layanan tetap memakai FR-11. *(Rantai keterlacakan: plan D10 · `contracts/chat.md` §Kontrak error baris "hasil kosong" · task T054 (implementasi + test) · UAT §B / T031.)*
 
 ### Key Entities *(include if feature involves data)*
 
@@ -213,4 +216,5 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 - [x] Prinsip read-only & grounded terverifikasi pada setiap story terkait. (Diverifikasi `/speckit.analyze` 2026-10-14.)
 - [ ] Guardrail biaya (FR-10) disetujui pemilik produk secara eksplisit. (Menunggu konfirmasi bersama persetujuan breakdown.)
 - [x] Kebutuhan yang sudah terimplementasi namun belum ber-butir FR ditutup dengan butir yang dapat dilacak: **FR-13** → T012/T018/T033, **FR-14** → T003/T005/T024/T018/T034 (ditambahkan atas instruksi pemilik, 2026-10-15).
+- [x] Temuan `/speckit.analyze` U7 (jawaban untuk hasil kosong tidak diatur) ditutup dengan **FR-15** + plan D10 + task T054 — disetujui pemilik produk 2026-10-19 ("sesuai rekomendasi").
 - [x] Status spesifikasi diubah menjadi Final sebelum `/speckit.plan`.

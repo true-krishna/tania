@@ -559,3 +559,15 @@ T006–T009 wajib ikut MVP: tanpa baca ber-cakupan (D9), 5 dari 6 tool menolak C
       **Verifikasi**: setiap klaim tentang baca kontrak existing pada keempat dokumen menyebut keadaan **sekarang** (Chapter-scoped sejak 002 clarify 5) dan menyisakan satu jaminan yang benar-benar milik 005 — *005 tidak menambah permukaan GraphQL baru* dan `ScopeChapterID` tidak pernah dipetakan dari input klien; baris verifikasi T019 diperbarui ke bentuk itu (atau ditandai usang dengan rujukan ke matriks 002), lalu task ini ditandai selesai dengan bukti `grep`. Tidak ada kode, migrasi, atau nilai guardrail yang disentuh.
 
 **Checkpoint K7**: dokumen 005 tidak lagi memuat klaim cakupan yang bertentangan dengan matriks RBAC yang berlaku; T040 dijalankan ulang untuk ditutup; T049/T050/T052 tetap menunggu (T050 butuh bukti staging dari pemilik). Gerbang rilis K3 (T030–T034) tetap baru boleh ditutup setelah T035–T041 selesai — dan sejak K7 penghalang mesinnya (T051) sudah hilang.
+
+## Phase K8: Convergence (2026-10-19)
+
+**Scope**: menutup temuan **U7** dari `/speckit.analyze` (TAN-204, 2026-10-19) yang **disetujui pemilik produk** pada hari yang sama ("sesuai rekomendasi"). Basis saat append: `tania-dashboard` `master` `500e915` (termasuk merge MR `!91` — paruh klien T039) dan `tania-backend` `master` `1c5706c`. ID dilanjutkan dari maksimum yang ada (T053); task lama tidak disentuh.
+
+- [ ] T054 Jawab "hasil kosong" dengan kalimat baku yang disusun server (bukan oleh model) per FR-15/plan D10/SC-002 (missing)
+      → `tania-backend`: `internal/usecase/chat.go` (setelah putaran tool: bila **seluruh** hasil tool pada jawaban itu `rowCount = 0`, ganti jawaban model dengan kalimat baku sebelum pesan disimpan), `internal/usecase/chat_tools.go` (konstanta kalimat baku + larangan prompt sebagai lapis pertama), test di `internal/usecase/chat_test.go`/`chat_send_test.go`.
+      **Bukti gap**: FR-04/FR-15 menuntut jawaban jujur saat tidak ada data, tetapi sebelum task ini tidak ada aturan, kalimat, maupun test untuk `rowCount = 0` — pemilik melaporkan jawaban berisi nama yang tidak ada di basis data justru pada pertanyaan "siapa yang datanya belum lengkap". Rantai: `spec.md` FR-15 · `plan.md` D10 · `contracts/chat.md` §Kontrak error (baris "hasil kosong").
+      **Verifikasi**: test `fakeGateway` — (a) seluruh tool `rowCount = 0` → jawaban pengguna **tepat** kalimat baku dan tidak memuat entitas apa pun dari model; (b) minimal satu tool berisi baris → jawaban model lewat apa adanya (tanpa regresi); (c) penggantian terjadi **sebelum** pesan disimpan sehingga kalimat karangan tidak masuk riwayat/konteks 12 pesan. `go test ./...` + `go vet` hijau.
+      **Ketergantungan**: kerjakan **setelah T049 mendarat** — keduanya menyentuh `internal/usecase/chat.go`, jadi dua cabang paralel berisiko konflik. T049 = pengaman nama (kasus ada hasil), T054 = kalimat baku (kasus nol hasil); keduanya lapis penegakan FR-04/FR-15.
+
+**Checkpoint K8**: tidak ada lagi jalur di mana asisten menyebut entitas yang tidak ada pada hasil tool — kasus berisi hasil dijaga pengaman nama (T049), kasus nol hasil dijawab kalimat baku server (T054).

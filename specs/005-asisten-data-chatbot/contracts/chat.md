@@ -96,6 +96,7 @@ Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER id
 | Provider model gagal/timeout/anggaran jawaban habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (`CHAT_FAILED`; anggaran satu jawaban — `plan.md` D6/R2) | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; tidak ada angka yang ditampilkan |
 | `clientRequestId` hilang/bukan UUID | Ditolak sebelum menyentuh model | — |
 | Kuota per user terlampaui (**20 pesan/jam**, konstanta disetujui — `plan.md` D6) | Ditolak **sebelum** pemanggilan model — tidak ada token terpakai; kode `CHAT_RATE_LIMITED` + `extensions.retryAfterSeconds` (sisa jendela) | Pesan ramah "kuota asisten tercapai … Coba lagi dalam N menit." (pesan server ditampilkan apa adanya); tombol kirim nonaktif **dan** tombol "coba ulang" disembunyikan sampai jendela bergeser |
+| **Seluruh hasil tool pada jawaban itu berisi 0 baris** (FR-15, `plan.md` D10) | Jawaban **disusun server**, bukan oleh model: "Tidak ada data yang cocok dalam cakupan Anda." — tidak ada nama/angka dari luar hasil tool; pesan USER tetap tersimpan | Ditampilkan sebagai jawaban biasa (bukan state gagal, tanpa tombol coba ulang) |
 | Pertanyaan di luar domain Tania (FR-12) | Model diarahkan system prompt menolak sopan + menjelaskan cakupan | Ditampilkan sebagai jawaban biasa |
 
 ## Toolset data (read-only; diekspos ke model, bukan ke klien)
