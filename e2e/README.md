@@ -76,6 +76,18 @@ guard peran) tidak memanggil model, jadi jalannya tanpa provider:
 
   Ter-`skip` **bukan** lulus — tanpa provider, jalur balasan belum diverifikasi.
 
+- **T052** — skenario "balasan grounded" tahan backend cepat. Selama `busy`
+  tombol kirim di-`disable`, dan fokus pindah ke `body` (perilaku browser saat
+  elemen yang fokus menjadi disabled), sehingga `Escape` yang ditekan tepat
+  setelah balasan tidak lagi melewati dialog dan panel tetap terbuka. Skenario
+  kini menunggu `busy` selesai (input kembali aktif) dan mengembalikan fokus ke
+  input panel secara eksplisit sebelum `Escape`; assertion "panel tertutup" +
+  "fokus kembali ke bubble" tidak dilonggarkan. Batasnya: panel **belum**
+  memulihkan fokus sendiri setelah tombol kirim dinonaktifkan (temuan UX, bukan
+  test) — pengguna papan-ketik yang menekan `Escape` tanpa memfokuskan panel
+  lebih dulu tetap tidak menutup panel. Itu dilaporkan sebagai temuan terpisah,
+  bukan disamarkan dengan melonggarkan skenario ini.
+
 ## Skenario T028
 
 1. Operation login → `/reports/talent` → 5 grafik (V-1…V-5) tampil.
