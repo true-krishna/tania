@@ -10,6 +10,7 @@ import { Select } from "@/components/Select";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
 import { useSessionRole } from "@/lib/auth/guard";
+import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
 import { useMyCvProfile } from "@/features/cv/useMyCvProfile";
 import { useCvProfile } from "@/features/cv/useCvProfile";
 import { useEmployees } from "@/features/employees/useEmployees";
@@ -516,9 +517,7 @@ function WorkExperienceSection({ cv }: { cv: CvFieldsFragment | undefined }) {
                   {exp.periodEnd ? ` — ${exp.periodEnd}` : " — sekarang"}
                 </p>
               </div>
-              <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
-                {exp.status === "ACTIVE" ? "Berjalan" : "Selesai"}
-              </span>
+              <AssignmentStatusBadge status={exp.status} />
             </li>
           ))}
         </ul>
@@ -649,9 +648,7 @@ function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
                     {exp.periodEnd ? ` — ${exp.periodEnd}` : " — sekarang"}
                   </span>
                 </span>
-                <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
-                  {exp.status === "ACTIVE" ? "Berjalan" : "Selesai"}
-                </span>
+                <AssignmentStatusBadge status={exp.status} />
               </li>
             ))}
           </ul>

@@ -117,6 +117,8 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
     expect(screen.getAllByText("Network Modernization").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("link", { name: /buat assignment/i })).toBeInTheDocument();
+    // O4 — label status seragam: ACTIVE tampil sebagai "Berjalan" (bukan "Aktif").
+    expect(screen.getByText("Berjalan")).toBeInTheDocument();
   });
 
   it("is read-only for Operation (T033)", async () => {
@@ -459,6 +461,34 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       );
     });
   };
+
+  it("shows a completed assignment as \"Selesai\" without edit or end actions (O4)", async () => {
+    await renderDetail([
+      {
+        request: { query: AssignmentsDocument, variables: { first: 100 } },
+        result: {
+          data: {
+            assignments: {
+              ...assignmentsResult.data.assignments,
+              edges: [
+                {
+                  __typename: "AssignmentEdge",
+                  cursor: "asg-1",
+                  node: { ...assignmentNode, status: "COMPLETED" },
+                },
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    // Label seragam: COMPLETED tampil sebagai "Selesai" (bukan "Nonaktif").
+    expect(await screen.findByText("Selesai")).toBeInTheDocument();
+    expect(screen.getByText(/assignment selesai\./i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /akhiri assignment/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /simpan/i })).toBeNull();
+  });
 
   it("sends the update mutation with the edited fields and shows the latest version", async () => {
     await renderDetail([

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as React from "react";
 import { useMutation } from "@apollo/client";
-import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
+import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
 import { useAssignment, useUpdateAssignment } from "@/features/assignments/useAssignment";
 import { EndAssignmentDocument, type AssignmentsQuery } from "@/generated/graphql";
 import { errorMessage, mapAssignmentSubmitError } from "@/lib/errors";
@@ -67,7 +68,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Status</dt>
             <dd>
-              <StatusBadge active={isActive} />
+              <AssignmentStatusBadge status={assignment.status} />
             </dd>
           </div>
         </dl>
