@@ -49,11 +49,13 @@ Login sebagai **Chapter** (chapter A berisi data seed).
 5. **Riwayat (US1)** — tutup panel, logout, login ulang, buka panel. Harapan: percakapan tampil kembali; tombol "Percakapan baru" memulai thread kosong; pertanyaan baru **tidak** membawa konteks thread lama.
 6. **Batas panjang (US6)** — tempel teks > 2.000 karakter (batas UI — `plan.md` D6). Harapan: ditolak (input terbatas/pesan jelas), **tanpa** bubble asisten dan tanpa pemakaian token.
 7. **Coba ulang setelah gagal (FR-14)** — matikan provider sebentar, kirim satu pertanyaan (harus gagal ramah), nyalakan provider kembali, tekan "coba ulang". Harapan: balasan muncul dan riwayat memuat **satu** pesan user, bukan dua (idempotensi `clientRequestId`).
+8. **Tidak ada hasil (FR-15)** — kirim pertanyaan data yang pasti **tidak punya baris** di cakupan chapter ini (mis. menanyakan karyawan chapter lain lewat nama yang hanya ada di chapter lain, atau kontrak yang berakhir dalam 1 hari bila tidak ada). Harapan: jawaban **tepat** kalimat baku *"Tidak ada data yang cocok dalam cakupan Anda."* (disusun server, bukan model), **tanpa** nama/angka yang tidak ada di data, dan tanpa menyebut sebabnya — kalimat yang sama untuk "data memang tidak ada" dan "di luar cakupan Anda" adalah perilaku yang **disengaja** (anti-enumerasi, lihat §D).
 
 ## C. UAT manual — Operation
 
 1. **Cakupan (US2)** — minta ringkasan data karyawan. Harapan: mencakup seluruh data karyawan (bukan satu chapter) + indikator kontrak segera berakhir/pra-pensiun (FR-40 induk).
 2. **Chip Operation** — chip contoh berbeda dari Chapter dan semuanya dapat dijawab.
+3. **Tidak ada hasil (FR-15)** — kirim pertanyaan data yang pasti tidak punya baris (mis. kontrak yang berakhir dalam 1 hari bila tidak ada). Harapan: jawaban **tepat** kalimat baku *"Tidak ada data yang cocok dalam cakupan Anda."*, tanpa nama/angka dari luar hasil tool.
 
 ## D. Probe keamanan (US4 — wajib lulus semua)
 
@@ -92,4 +94,5 @@ Login sebagai **Chapter** (chapter A berisi data seed).
 ## Kriteria lulus
 
 - Seluruh gerbang otomatis (A) hijau; seluruh skenario B–C sesuai harapan; **seluruh probe D lulus** (satu saja gagal = penghalang rilis — US4 adalah syarat rilis).
+- **FR-15**: tidak ada jawaban yang menyebut entitas di luar hasil tool; pertanyaan tanpa hasil dijawab kalimat baku yang disusun server (B.8 / C.3).
 - SC-001–SC-004 dapat dinyatakan terpenuhi berdasarkan B–E.
