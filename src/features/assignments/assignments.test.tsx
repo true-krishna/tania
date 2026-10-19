@@ -296,6 +296,132 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
 
     expect(await screen.findByText(/berhasil dibuat/i)).toBeInTheDocument();
   });
+
+  // G5/K4 (T006/T007) — penolakan server tampil sebagai pesan Indonesia yang
+  // jelas: per field untuk validasi tanggal, pesan aksi untuk duplikat
+  // aktif (CONFLICT) dan cakupan (FORBIDDEN). Tanpa swallowed error.
+  const formMocks = newMocks.slice(0, 3);
+  const renderNewWithError = (createMock: MockedResponse) =>
+    render(
+      <MockedProvider mocks={[...formMocks, createMock]}>
+        <NewAssignmentPage />
+      </MockedProvider>
+    );
+  const fillNewForm = () => {
+    fireEvent.change(screen.getByRole("combobox", { name: /talent/i }), {
+      target: { value: "emp-1" },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: /project/i }), {
+      target: { value: "prj-1" },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: /job role/i }), {
+      target: { value: "jr-1" },
+    });
+    fireEvent.change(screen.getByLabelText(/tanggal mulai/i), { target: { value: "2025-07-01" } });
+  };
+
+  it("maps a server date rejection to a per-field message on the end-date input (T007)", async () => {
+    renderNewWithError({
+      request: {
+        query: CreateAssignmentDocument,
+        variables: {
+          input: {
+            employeeId: "emp-1",
+            projectId: "prj-1",
+            jobRoleId: "jr-1",
+            periodStart: "2025-07-01",
+            periodEnd: "2025-06-30",
+          },
+        },
+      },
+      result: {
+        errors: [
+          new GraphQLError("invalid periodEnd: must not precede periodStart", {
+            extensions: { code: "BAD_USER_INPUT", field: "periodEnd" },
+          }),
+        ],
+      },
+    });
+    await screen.findByRole("heading", { name: /buat assignment/i });
+    fillNewForm();
+    fireEvent.change(screen.getByLabelText(/tanggal selesai/i), { target: { value: "2025-06-30" } });
+    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+
+    expect(await screen.findByText("Tanggal selesai tidak boleh lebih awal dari tanggal mulai.")).toBeInTheDocument();
+    // Pesan menempel pada field Tanggal Selesai, bukan pesan aksi.
+    const periodEndField = screen.getByLabelText(/tanggal selesai/i).closest("label")!;
+    expect(within(periodEndField).getByText(/tidak boleh lebih awal/i)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.queryByText(/berhasil dibuat/i)).toBeNull();
+  });
+
+  it("maps a duplicate-active CONFLICT rejection to a clear action message (T007)", async () => {
+    renderNewWithError({
+      request: {
+        query: CreateAssignmentDocument,
+        variables: {
+          input: {
+            employeeId: "emp-1",
+            projectId: "prj-1",
+            jobRoleId: "jr-1",
+            periodStart: "2025-07-01",
+            periodEnd: undefined,
+          },
+        },
+      },
+      result: {
+        errors: [
+          new GraphQLError("resource already exists", {
+            extensions: { code: "CONFLICT" },
+          }),
+        ],
+      },
+    });
+    await screen.findByRole("heading", { name: /buat assignment/i });
+    fillNewForm();
+    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+
+    expect(
+      await screen.findByText("Talent ini sudah memiliki assignment aktif pada project tersebut.")
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).toHaveTextContent(
+      "Talent ini sudah memiliki assignment aktif pada project tersebut."
+    );
+    // Pesan mentah server berbahasa Inggris — tidak ditampilkan apa adanya.
+    expect(screen.queryByText(/resource already exists/i)).toBeNull();
+    expect(screen.queryByText(/berhasil dibuat/i)).toBeNull();
+  });
+
+  it("maps a FORBIDDEN rejection to a clear action message (T007)", async () => {
+    renderNewWithError({
+      request: {
+        query: CreateAssignmentDocument,
+        variables: {
+          input: {
+            employeeId: "emp-1",
+            projectId: "prj-1",
+            jobRoleId: "jr-1",
+            periodStart: "2025-07-01",
+            periodEnd: undefined,
+          },
+        },
+      },
+      result: {
+        errors: [
+          new GraphQLError("operation not permitted", {
+            extensions: { code: "FORBIDDEN" },
+          }),
+        ],
+      },
+    });
+    await screen.findByRole("heading", { name: /buat assignment/i });
+    fillNewForm();
+    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+
+    expect(await screen.findByText("Anda tidak memiliki izin untuk aksi ini.")).toBeInTheDocument();
+    expect(screen.queryByText(/operation not permitted/i)).toBeNull();
+    expect(screen.queryByText(/berhasil dibuat/i)).toBeNull();
+  });
 });
 
 describe("AssignmentDetailPage (Apollo, US2)", () => {
@@ -388,7 +514,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
     expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
   });
 
-  it("shows the server error from a failed update (T003)", async () => {
+  it("maps a server date rejection on the edit form to a per-field message (T006/T007)", async () => {
     await renderDetail([
       ...baseDetailMocks,
       {
@@ -401,7 +527,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
         },
         result: {
           errors: [
-            new GraphQLError("periode assignment tidak valid", {
+            new GraphQLError("invalid periodEnd: must not precede periodStart", {
               extensions: { code: "BAD_USER_INPUT", field: "periodEnd" },
             }),
           ],
@@ -412,7 +538,69 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
     const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
     fireEvent.submit(editForm);
 
-    expect(await screen.findByText("periode assignment tidak valid")).toBeInTheDocument();
+    // Pesan menempel pada field Tanggal Selesai di form ubah.
+    const periodEndField = within(editForm).getByLabelText(/tanggal selesai/i).closest("label")!;
+    expect(
+      await within(periodEndField).findByText("Tanggal selesai tidak boleh lebih awal dari tanggal mulai.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
+  });
+
+  it("maps a duplicate-active CONFLICT rejection on the edit form to a clear message (T007)", async () => {
+    await renderDetail([
+      ...baseDetailMocks,
+      {
+        request: {
+          query: UpdateAssignmentDocument,
+          variables: {
+            id: "asg-1",
+            input: { projectId: "prj-1", jobRoleId: "jr-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
+          },
+        },
+        result: {
+          errors: [
+            new GraphQLError("resource already exists", {
+              extensions: { code: "CONFLICT" },
+            }),
+          ],
+        },
+      },
+    ]);
+
+    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    fireEvent.submit(editForm);
+
+    expect(
+      await screen.findByText("Talent ini sudah memiliki assignment aktif pada project tersebut.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
+  });
+
+  it("maps a FORBIDDEN rejection on the edit form to a clear message (T007)", async () => {
+    await renderDetail([
+      ...baseDetailMocks,
+      {
+        request: {
+          query: UpdateAssignmentDocument,
+          variables: {
+            id: "asg-1",
+            input: { projectId: "prj-1", jobRoleId: "jr-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
+          },
+        },
+        result: {
+          errors: [
+            new GraphQLError("operation not permitted", {
+              extensions: { code: "FORBIDDEN" },
+            }),
+          ],
+        },
+      },
+    ]);
+
+    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    fireEvent.submit(editForm);
+
+    expect(await screen.findByText("Anda tidak memiliki izin untuk aksi ini.")).toBeInTheDocument();
     expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
   });
 

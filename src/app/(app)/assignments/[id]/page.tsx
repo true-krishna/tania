@@ -13,7 +13,7 @@ import { Select } from "@/components/Select";
 import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
 import { useAssignment, useUpdateAssignment } from "@/features/assignments/useAssignment";
 import { EndAssignmentDocument, type AssignmentsQuery } from "@/generated/graphql";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, mapAssignmentSubmitError } from "@/lib/errors";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
@@ -117,9 +117,10 @@ function toEditFormValues(assignment: {
 function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
   const projects = useProjects();
   const jobRoles = useJobRoles();
-  const [updateAssignment, { loading: saving, error: saveError }] = useUpdateAssignment();
+  const [updateAssignment, { loading: saving }] = useUpdateAssignment();
   const [values, setValues] = React.useState<EditFormValues>(() => toEditFormValues(assignment));
   const [errors, setErrors] = React.useState<Partial<Record<keyof EditFormValues, string>>>({});
+  const [formError, setFormError] = React.useState<string | null>(null);
   const [saved, setSaved] = React.useState(false);
 
   if (projects.status === "loading" || jobRoles.status === "loading")
@@ -135,6 +136,7 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
   function set<K extends keyof EditFormValues>(key: K, value: string) {
     setValues((v) => ({ ...v, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
+    setFormError(null);
     setSaved(false);
   }
 
@@ -157,11 +159,25 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     const nextErrors = validate(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
     const result = await updateAssignment({
-      onError: () => undefined,
+      onError: (err) => {
+        // G5/K4 — penolakan server dipetakan ke pesan per field/pesan aksi
+        // Indonesia (tanggal, duplikat aktif, cakupan) — konstitusi §IX.
+        const submitError = mapAssignmentSubmitError(err, "Gagal menyimpan perubahan.");
+        if (submitError.field && submitError.field in values) {
+          setErrors((prev) => ({
+            ...prev,
+            [submitError.field as keyof EditFormValues]: submitError.message,
+          }));
+        } else {
+          setSaved(false);
+          setFormError(submitError.message);
+        }
+      },
       variables: {
         id: assignment.id,
         input: {
@@ -224,9 +240,9 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
             onChange={(e) => set("periodEnd", e.target.value)}
           />
         </Label>
-        {saveError ? (
+        {formError ? (
           <p role="alert" className="text-sm text-red-700">
-            {errorMessage(saveError, "Gagal menyimpan perubahan.")}
+            {formError}
           </p>
         ) : null}
         {saved ? (

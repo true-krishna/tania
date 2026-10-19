@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import * as React from "react";
-import { useMutation } from "@apollo/client";
+import { ApolloError, useMutation } from "@apollo/client";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
@@ -12,6 +12,7 @@ import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
 import { CreateAssignmentDocument } from "@/generated/graphql";
 import { AuthGuard } from "@/lib/auth/guard";
+import { mapAssignmentSubmitError } from "@/lib/errors";
 import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
 
 type FormValues = {
@@ -45,6 +46,7 @@ function NewAssignmentForm() {
   const [createAssignment, { data, error, loading }] = useMutation(CreateAssignmentDocument);
   const [values, setValues] = React.useState<FormValues>(EMPTY);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});
+  const [formError, setFormError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
 
   if (projects.status === "loading" || jobRoles.status === "loading" || talents.status === "loading")
@@ -59,6 +61,7 @@ function NewAssignmentForm() {
   function set<K extends keyof FormValues>(key: K, value: string) {
     setValues((v) => ({ ...v, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
+    setFormError(null);
   }
 
   function validate(valuesToCheck: FormValues): Partial<Record<keyof FormValues, string>> {
@@ -72,6 +75,7 @@ function NewAssignmentForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     const nextErrors = validate(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -89,7 +93,20 @@ function NewAssignmentForm() {
       });
       setSubmitted(true);
     } catch (err) {
-      setErrors({ employeeId: err instanceof Error ? err.message : "Gagal membuat assignment." });
+      // G5/K4 — penolakan server dipetakan ke pesan per field/pesan aksi
+      // Indonesia (tanggal, duplikat aktif, cakupan) — konstitusi §IX.
+      const submitError = mapAssignmentSubmitError(
+        err instanceof ApolloError ? err : null,
+        "Gagal membuat assignment."
+      );
+      if (submitError.field && submitError.field in values) {
+        setErrors((prev) => ({
+          ...prev,
+          [submitError.field as keyof FormValues]: submitError.message,
+        }));
+      } else {
+        setFormError(submitError.message);
+      }
     }
   }
 
@@ -114,6 +131,7 @@ function NewAssignmentForm() {
           onClick={() => {
             setValues(EMPTY);
             setErrors({});
+            setFormError(null);
             setSubmitted(false);
           }}
         >
@@ -128,6 +146,11 @@ function NewAssignmentForm() {
       <PageHeader title="Buat Assignment" subtitle="Tugaskan talent ke project (Chapter)." />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        {formError ? (
+          <p role="alert" className="text-sm text-red-700">
+            {formError}
+          </p>
+        ) : null}
         <Label error={errors.employeeId}>
           Talent
           <Select
@@ -172,7 +195,7 @@ function NewAssignmentForm() {
             onChange={(e) => set("periodStart", e.target.value)}
           />
         </Label>
-        <Label>
+        <Label error={errors.periodEnd}>
           Tanggal Selesai{" "}
           <span className="text-xs font-normal text-zinc-500">(opsional, kosong = aktif)</span>
           <Input
