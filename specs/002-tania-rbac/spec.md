@@ -16,6 +16,8 @@
 **Revisi**: 2026-10-16 (clarify 8, TAN-212) — Keputusan pemilik produk atas batas teknis cakupan Master Data: **Unit & Project diterima sebagai daftar referensi level organisasi yang boleh dibaca**, sementara **Chapter & Role tetap ber-cakupan**. Jadi "lihat cakupan" pada baris Master data diterapkan per entitas: `chapters` (chapter membaca barisnya sendiri) dan `jobRoles` (chapter membaca role miliknya); `units`/`projects` tidak dibatasi per chapter karena dipakai sebagai filter/dropdown lintas modul (Data karyawan, Assignment). Baris Master data Talent tetap `—`: yang dimaksud adalah modul Master Data, sedangkan Unit/Project sebagai referensi tetap terbaca oleh peran yang membutuhkannya di modul lain.
 **Revisi**: 2026-10-16 (clarify 9, TAN-212 — **aktivasi**) — Keputusan pemilik produk: (1) **modul IDP dan evaluasi diaktifkan**; penundaan teknis dicabut sehingga baris matriks clarify 5–7 berlaku penuh (gate "belum tersedia" di server dikosongkan, rutenya dibuka). (2) **Field IDP pada API/SDL tidak dihapus** — permintaan tegas pemilik produk; karena modulnya hidup, field tersebut tetap dipakai dan rencana penghapusan field (T040) **dibatalkan**. (3) **Entri menu IDP & Evaluations tetap tampil untuk semua peran — hanya aksesnya yang berbeda**: entri IDP yang sama membuka tampilan sesuai peran (Talent → rencana miliknya; Operation → hanya baca; Chapter/Admin → kelola), dan anak grup Evaluations mengikuti akses masing-masing (Roster: Admin/Operation/Chapter; Periode & Template: Admin; Evaluasi Saya: Talent). Detail as-built: plan §14.11. Tafsiran periode & template (hak Chapter dibaca sebagai **baca**, tulis tetap Admin) **dikonfirmasi pemilik produk** lewat `/speckit.plan` pada 2026-10-16.
 
+**Revisi**: 2026-10-19 (amandemen dinamis, TAN-258/TAN-262) — Keputusan pemilik produk: **RBAC menjadi konfigurasi data**. Empat peran bawaan (Admin, Operation, Chapter, Talent) tetap ada dan berperan sebagai **template**; Admin dapat membuat **peran kustom dari salah satu template** dan menyunting **akses menu × peran** di dalam aplikasi. Matriks Peran & Modul **tidak dihapus** — statusnya turun menjadi **default**: sel menu × peran yang belum dikonfigurasi berperilaku persis seperti matriks, sel yang sudah dikonfigurasi memakai nilai tersimpan (tabel `roles` & `role_menu_config`). **Cakupan data tidak dikonfigurasi per sel** — cakupan chapter / miliknya sendiri diwarisi dari `template_role`, sehingga peran kustom berperilaku sama dengan template-nya. Penyembunyian menu tetap bukan batas keamanan (FR-14). Amandemen ini **mencabut** larangan "peran kustom" pada FR-01 dan butir pertama Out of Scope, serta menambah Key Entities `RoleDefinition` & `RoleMenuConfig`.
+
 **Status**: Draft
 
 **Input**: User description: "Buat spesifikasi detail RBAC TANIA via /speckit.specify (TAN-144); referensi penyusunan: `specs/001-employee-digital-talent-management/spec.md`"
@@ -24,11 +26,11 @@
 
 ## Ringkasan
 
-RBAC (Role-Based Access Control) Tania mengatur siapa boleh melakukan apa di dalam aplikasi. Setiap akun user terhubung ke tepat satu karyawan dan memegang tepat satu peran akses dari empat peran tetap — Admin, Operation, Chapter, Talent. Admin mengelola akun user dan penetapan peran aksesnya di dalam aplikasi. Hak akses per modul mengikuti satu matriks peran (bagian Matriks Peran & Modul) dan ditegakkan sepenuhnya di sisi server pada setiap permintaan — penyembunyian menu/aksi di antarmuka hanya kenyamanan dan bukan batas keamanan. Cakupan data peran Chapter diturunkan otomatis dari kontrak aktif karyawan yang terhubung ke akun (posisi → Master Data Role → chapter pemilik), tanpa atribut chapter tersimpan pada akun — pendekatan chapter-as-data yang disetujui stakeholder. Setiap perubahan akun dan peran tercatat pada jejak audit yang hanya dapat dilihat Admin.
+RBAC (Role-Based Access Control) Tania mengatur siapa boleh melakukan apa di dalam aplikasi. Setiap akun user terhubung ke tepat satu karyawan dan memegang tepat satu peran akses — salah satu dari empat peran bawaan (Admin, Operation, Chapter, Talent) atau peran kustom yang diturunkan dari salah satunya sebagai template (amandemen 2026-10-19, FR-01/FR-03). Admin mengelola akun user, penetapan peran aksesnya, serta konfigurasi akses menu × peran di dalam aplikasi. Hak akses per modul mengikuti konfigurasi menu × peran yang tersimpan, dengan Matriks Peran & Modul (bagian Matriks Peran & Modul) sebagai default bagi sel yang belum dikonfigurasi, dan ditegakkan sepenuhnya di sisi server pada setiap permintaan — penyembunyian menu/aksi di antarmuka hanya kenyamanan dan bukan batas keamanan. Cakupan data peran Chapter diturunkan otomatis dari kontrak aktif karyawan yang terhubung ke akun (posisi → Master Data Role → chapter pemilik), tanpa atribut chapter tersimpan pada akun — pendekatan chapter-as-data yang disetujui stakeholder. Setiap perubahan akun dan peran tercatat pada jejak audit yang hanya dapat dilihat Admin.
 
 ## Matriks Peran & Modul
 
-Matriks ini adalah satu-satunya definisi hak akses per modul (FR-03). Makna nilai:
+Matriks ini adalah **default** hak akses per modul; sumber kebenaran saat runtime adalah konfigurasi tersimpan, dan sel menu × peran yang belum dikonfigurasi memakai nilai matriks ini (FR-03, amandemen 2026-10-19). Makna nilai:
 
 - **kelola** — membuat, mengubah, dan menjalankan operasi siklus hidup modul tersebut.
 - **kelola cakupan** — kelola hanya atas data dalam cakupannya (Chapter: talent di chapter-nya; Talent: record miliknya sendiri).
@@ -191,9 +193,9 @@ Sebagai **Admin**, saya dapat menelusuri seluruh perubahan akun user — pembuat
 
 **Model peran & akses**
 
-- **FR-01**: Peran akses aplikasi adalah empat peran tetap — Admin, Operation, Chapter, Talent — dan setiap akun memegang tepat satu peran; tidak ada peran ganda, peran kustom, maupun penyuntingan izin per user. *(FR-15, FR-20 induk)*
+- **FR-01**: Peran akses aplikasi terdiri dari **empat peran bawaan tetap** — Admin, Operation, Chapter, Talent — yang tidak dapat dihapus, **ditambah peran kustom** yang dibuat Admin dengan memilih salah satu peran bawaan sebagai **template**-nya (amandemen 2026-10-19, FR-03). Setiap akun memegang tepat satu peran; tidak ada peran ganda, dan tidak ada penyuntingan izin per user di luar akses menu × peran. Peran kustom tidak membawa cakupan data baru — cakupannya identik dengan template-nya. *(FR-15, FR-20 induk)*
 - **FR-02**: Setiap akun terhubung ke tepat satu karyawan; pembuatan akun wajib memilih karyawannya. *(Asumsi induk: satu user = satu employee.)*
-- **FR-03**: Matriks Peran & Modul adalah satu-satunya definisi hak akses dan berlaku deny-by-default: operasi yang tidak diberikan kepada peran peminta ditolak; modul baru wajib masuk matriks sebelum dapat diakses.
+- **FR-03**: Sumber kebenaran hak akses saat runtime adalah **konfigurasi tersimpan** — definisi peran (`roles`) dan sel akses menu × peran (`role_menu_config`) — bukan kode. **Matriks Peran & Modul tetap berlaku sebagai default**: sel menu × peran yang belum dikonfigurasi berperilaku persis seperti matriks, sehingga instalasi yang belum dikonfigurasi tidak berubah perilakunya dan tidak ada menu yang tampil tanpa haknya di server. Tingkat akses satu sel adalah `NONE | READ | MANAGE` (tidak diberikan / lihat / kelola); **cakupan data tidak disimpan per sel**, melainkan diwarisi dari `template_role` peran (peran kustom bertemplate Chapter otomatis ber-cakupan chapter). Katalog entri menu (id stabil, sama dengan path rute di antarmuka tanpa garis miring di depan) ditetapkan di server; konfigurasi merujuk id tersebut. Admin mengelola peran kustom — membuat, mengubah label, mengaktifkan/menonaktifkan, dan menghapus — sementara empat peran bawaan bersifat tetap (tidak dapat diganti nama, diubah statusnya, atau dihapus) dan peran yang masih dipakai akun tidak dapat dihapus (nonaktifkan saja). **Nama mesin peran tidak dapat diubah** setelah dibuat karena ia tersimpan pada akun, klaim sesi, dan jejak audit; yang berubah adalah labelnya. Membaca dan mengubah konfigurasi hanya boleh dilakukan Admin, dan perubahan berlaku pada permintaan berikutnya tanpa login ulang (FR-17). Berlaku deny-by-default: peran atau entri menu yang tidak punya hak pada matriks maupun konfigurasi ditolak untuk peran peminta. *(amandemen 2026-10-19)*
 
 **Akun user (Admin)**
 
@@ -243,7 +245,8 @@ Sebagai **Admin**, saya dapat menelusuri seluruh perubahan akun user — pembuat
 ### Key Entities
 
 - **User (akun)**: identitas login — email unik, nama (mengikuti karyawan terkait), tepat satu peran akses, status (aktif/nonaktif), karyawan terkait, waktu login terakhir.
-- **AccessRole (peran akses)**: himpunan tetap Admin, Operation, Chapter, Talent — berbeda dari Master Data Role yang merupakan peran jabatan organisasi.
+- **AccessRole (peran akses)**: peran akses aplikasi — empat peran bawaan Admin, Operation, Chapter, Talent plus peran kustom yang diturunkan dari salah satunya sebagai template — berbeda dari Master Data Role yang merupakan peran jabatan organisasi. *(amandemen 2026-10-19)*
+- **RoleDefinition & RoleMenuConfig (amandemen 2026-10-19)**: definisi peran sebagai data (nama mesin unik, label, `template_role`, penanda bawaan, status aktif/nonaktif) dan sel akses per menu × peran (`visible`, `access_level`); sel yang tidak tersimpan memakai default matriks FR-03.
 - **AccountStatus**: aktif / nonaktif; menentukan kebolehan login dan perpanjangan sesi.
 - **Session**: dibuka saat login, dapat diperpanjang selama akun aktif, diakhiri logout atau pencabutan; pencabutan massal per akun tersedia untuk Admin.
 - **AuditEntry**: catatan aktor, waktu, jenis aksi, entitas, dan nilai sebelum→sesudah atas setiap perubahan akun.
@@ -260,7 +263,7 @@ Sebagai **Admin**, saya dapat menelusuri seluruh perubahan akun user — pembuat
 
 ## Assumptions
 
-- Empat peran akses tetap dan pendekatan chapter-as-data membawa terus keputusan spesifikasi induk (disetujui stakeholder, 2026-09-27).
+- Empat peran akses tetap dan pendekatan chapter-as-data membawa terus keputusan spesifikasi induk (disetujui stakeholder, 2026-09-27). Amandemen 2026-10-19 mempertahankan empat peran itu sebagai bawaan sekaligus template bagi peran kustom.
 - Proteksi "satu-satunya akun Admin aktif tidak dapat dinonaktifkan" adalah default keamanan yang dipilih karena belum ada ketentuan induk — perlu konfirmasi pemilik produk.
 - Pembatasan laju login gagal adalah praktik standar keamanan; ambang spesifiknya ditetapkan pada fase rencana teknis.
 - Kata sandi sementara disampaikan Admin kepada user melalui saluran di luar aplikasi; notifikasi email tetap di luar cakupan (induk).
@@ -271,7 +274,7 @@ Sebagai **Admin**, saya dapat menelusuri seluruh perubahan akun user — pembuat
 
 ## Out of Scope
 
-- Peran kustom, penyuntingan izin per-halaman/per-aksi, dan akun multi-peran — matriks empat peran tetap adalah keseluruhan model.
+- ~~Peran kustom~~ — **tidak lagi di luar cakupan** (amandemen 2026-10-19, FR-01/FR-03). Yang tetap di luar cakupan: penyuntingan izin per-halaman/per-aksi di luar akses menu × peran, dan akun multi-peran.
 - Login Single Sign-On (SSO) melalui Microsoft Entra ID — Entra hanya dipakai untuk provisi akun talent (FR-43–FR-46 induk), bukan autentikasi aplikasi.
 - Perubahan kata sandi mandiri, MFA/2FA, dan pemulihan akun mandiri.
 - Alur approval/persetujuan permintaan akses.

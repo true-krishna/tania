@@ -12,7 +12,13 @@ export type Scalars = {
   Time: { input: string; output: string; }
 };
 
-/** Application access roles (fixed set, FR-15). */
+/**
+ * Application access roles (fixed set, FR-15).
+ *
+ * The four built-in roles of the dynamic RBAC configuration (FR-03 amandemen
+ * 2026-10-19); a role built on one of them as its template keeps this enum as the
+ * value of AccessRoleDefinition.templateRole.
+ */
 export type AccessRole =
   | 'ADMIN'
   | 'CHAPTER'
@@ -348,6 +354,14 @@ export type CreateIdpInput = {
   successIndicators: Scalars['String']['input'];
   timelineEnd: Scalars['Date']['input'];
   timelineStart: Scalars['Date']['input'];
+};
+
+/** Input pembuatan role kustom: template menentukan cakupan servernya. */
+export type CreateRoleInput = {
+  label: Scalars['String']['input'];
+  /** Nama mesin, ^[A-Z][A-Z0-9_]{2,49}$, unik, dan immutable setelah dibuat. */
+  name: Scalars['String']['input'];
+  templateRole: AccessRole;
 };
 
 export type CvCertification = {
@@ -800,6 +814,12 @@ export type MasterDataCount = {
   kind: Scalars['String']['output'];
 };
 
+/** Tingkat akses satu sel menu × role; cakupan data diwarisi dari template_role. */
+export type MenuAccessLevel =
+  | 'MANAGE'
+  | 'NONE'
+  | 'READ';
+
 export type Mutation = {
   __typename?: 'Mutation';
   addCvCertification: CvCertification;
@@ -819,6 +839,8 @@ export type Mutation = {
   createIdp: Idp;
   createJobRole: JobRole;
   createProject: Project;
+  /** Buat role kustom dari salah satu template bawaan. Khusus Admin. */
+  createRole: Role;
   createUnit: Unit;
   createUserAccount: User;
   deactivateEmployee: Employee;
@@ -826,6 +848,8 @@ export type Mutation = {
   deleteCvEducation: Scalars['Boolean']['output'];
   deleteCvSkill: Scalars['Boolean']['output'];
   deleteDevelopmentAction: Scalars['Boolean']['output'];
+  /** Hapus role kustom yang tidak dipakai akun mana pun. Khusus Admin. */
+  deleteRole: Scalars['Boolean']['output'];
   endAssignment: Assignment;
   login: AuthPayload;
   /** Revoke the current access token and, when supplied, the refresh token. */
@@ -860,6 +884,8 @@ export type Mutation = {
   setProjectActive: Project;
   /** Ubah usia pensiun (tahun); hanya Admin (T042). */
   setRetirementAge: Scalars['Int']['output'];
+  /** Aktifkan/nonaktifkan role kustom. Khusus Admin. */
+  setRoleStatus: Role;
   setUnitActive: Unit;
   setUserAccountStatus: User;
   submitPerformanceEvaluation: PerformanceEvaluation;
@@ -878,6 +904,8 @@ export type Mutation = {
   updateIdp: Idp;
   updateJobRole: JobRole;
   updateProject: Project;
+  /** Ubah label role kustom; nama mesin immutable. Khusus Admin. */
+  updateRole: Role;
   updateUnit: Unit;
   updateUserAccessRole: User;
   upsertCvProfile: CvProfile;
@@ -964,6 +992,11 @@ export type MutationCreateProjectArgs = {
 };
 
 
+export type MutationCreateRoleArgs = {
+  input: CreateRoleInput;
+};
+
+
 export type MutationCreateUnitArgs = {
   code: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -1000,6 +1033,11 @@ export type MutationDeleteCvSkillArgs = {
 
 
 export type MutationDeleteDevelopmentActionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteRoleArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -1108,6 +1146,12 @@ export type MutationSetRetirementAgeArgs = {
 };
 
 
+export type MutationSetRoleStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: RoleStatus;
+};
+
+
 export type MutationSetUnitActiveArgs = {
   id: Scalars['ID']['input'];
   isActive: Scalars['Boolean']['input'];
@@ -1212,6 +1256,12 @@ export type MutationUpdateProjectArgs = {
   id: Scalars['ID']['input'];
   name: Scalars['String']['input'];
   unitId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateRoleArgs = {
+  id: Scalars['ID']['input'];
+  label: Scalars['String']['input'];
 };
 
 
@@ -1349,6 +1399,14 @@ export type Query = {
   projects: Array<Project>;
   /** Usia pensiun (tahun) dari setelan aplikasi Admin — default 55 (FR-40, T042). */
   retirementAge: Scalars['Int']['output'];
+  /**
+   * Grid menu × role efektif: sel tanpa baris tersimpan memakai default FR-03.
+   *
+   * `roleId` kosong = seluruh role; terisi = role itu saja. Khusus Admin.
+   */
+  roleMenuConfig: Array<RoleMenuEntry>;
+  /** Daftar access role: built-in + custom (FR-01 amandemen). Khusus Admin. */
+  roles: Array<Role>;
   talentReport: TalentReport;
   talentReportRange: TalentReportRange;
   /** Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8. */
@@ -1492,6 +1550,16 @@ export type QueryProjectsArgs = {
 };
 
 
+export type QueryRoleMenuConfigArgs = {
+  roleId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryRolesArgs = {
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryTalentReportArgs = {
   period: TalentReportPeriodInput;
 };
@@ -1578,11 +1646,40 @@ export type ReviewLog = {
   summary: Scalars['String']['output'];
 };
 
+/** Definisi access role sebagai data — built-in atau custom (FR-01 amandemen). */
+export type Role = {
+  __typename?: 'Role';
+  /** True untuk empat peran bawaan: tidak dapat diubah maupun dihapus. */
+  builtIn: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  /** Nama mesin, unik; built-in memakai nama AccessRole (ADMIN, OPERATION, ...). */
+  name: Scalars['String']['output'];
+  status: RoleStatus;
+  /** Peran yang diwarisi cakupan servernya; built-in mewarisi dirinya sendiri. */
+  templateRole: AccessRole;
+};
+
 export type RoleCount = {
   __typename?: 'RoleCount';
   count: Scalars['Int']['output'];
   role: AccessRole;
 };
+
+/** Sel menu × role: visibilitas menu dan tingkat akses di dalamnya. */
+export type RoleMenuEntry = {
+  __typename?: 'RoleMenuEntry';
+  accessLevel: MenuAccessLevel;
+  /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`. */
+  menuEntryId: Scalars['String']['output'];
+  roleId: Scalars['ID']['output'];
+  visible: Scalars['Boolean']['output'];
+};
+
+/** Status sebuah access role. */
+export type RoleStatus =
+  | 'ACTIVE'
+  | 'INACTIVE';
 
 export type TalentDashboard = {
   __typename?: 'TalentDashboard';
