@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
 import type { AccessRole, MenuAccessLevel, RoleStatus } from "@/generated/graphql/types";
 import { CustomRolesPanel } from "./CustomRolesPanel";
-import { MenuGrid, type GridDraft } from "./MenuGrid";
+import { MenuGrid, type GridDraft } from "./RoleMenuGrid";
 import { SidebarPreview } from "./SidebarPreview";
 import { useRoleMenuConfig, useRoleMutations, useRoles, type Role } from "./useRoles";
 import {
