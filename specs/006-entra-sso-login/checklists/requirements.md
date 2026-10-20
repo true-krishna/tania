@@ -2,6 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-10-20
+**Updated**: 2026-10-20 (`/speckit.clarify`, TAN-267)
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -13,8 +14,8 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
-- [ ] Requirements are testable and unambiguous
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
 - [x] All acceptance scenarios are defined
@@ -24,17 +25,14 @@
 
 ## Feature Readiness
 
-- [ ] All functional requirements have clear acceptance criteria
+- [x] All functional requirements have clear acceptance criteria
 - [x] User scenarios cover primary flows
 - [x] Feature meets measurable outcomes defined in Success Criteria
 - [x] No implementation details leak into specification
 
 ## Notes
 
-- Draft awal (`/speckit.specify`, TAN-267, 2026-10-20). Tiga butir `[NEEDS CLARIFICATION]` menunggu keputusan pemilik produk:
-  - **NC-01** (FR-005): lingkup akun korporat — hanya tenant Telkom, atau juga akun personal/multi-tenant; adakah pembatasan domain/grup?
-  - **NC-02** (FR-004): kebijakan pemetaan identitas korporat ke akun Tania — cocokkan otomatis via email, auto-create dengan peran default, atau tolak hingga admin menghubungkan manual?
-  - **NC-03** (FR-001): makna "opsi utama" — tombol ditonjolkan dengan alternatif email + kata sandi tampil, atau pengalihan otomatis ke SSO dengan jalur fallback?
-- Butir "Requirements are testable and unambiguous" dan "All functional requirements have clear acceptance criteria" ditahan sampai NC-01..NC-03 ditutup (FR-001/FR-004/FR-005 memuat placeholder keputusan).
+- **NC-01..NC-03 tertutup** (`/speckit.clarify`, TAN-267, 2026-10-20): keputusan pemilik produk — tenant korporat Telkom saja (NC-01), pemetaan otomatis via work email tanpa auto-create (NC-02), auto-redirect ke Microsoft dengan email + kata sandi sebagai fallback (NC-03). Prioritas fitur: High (tanpa tanggal target). Marker `[NEEDS CLARIFICATION]` sudah dihapus; seluruh item lulus validasi.
+- Interpretasi NC-02 yang terekam: identitas tanpa kecocokan akun Tania **ditolak** (tidak dibuatkan akun otomatis) — konsisten dengan model akun yang dikelola Admin/provisi (FR-43–FR-46 spesifikasi 001); pembukaan kembali hanya bila pemilik produk menghendaki auto-create.
 - Prasyarat eksternal (di luar kendali tim): pendaftaran aplikasi di sisi Entra — URI pengalihan + cakupan profil/email — oleh admin Entra.
-- Langkah lanjut yang disarankan: `/speckit.clarify` untuk menutup NC-01..NC-03, lalu `/speckit.plan`.
+- Spesifikasi siap untuk `/speckit.plan`; pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
