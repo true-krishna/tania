@@ -21,16 +21,16 @@ export default function ProjectsPage() {
       await fn();
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan proyek.");
+      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan initiative.");
     }
   }
 
   return (
     <MasterDataSection<Project>
-      caption="Daftar proyek"
-      emptyMessage="Belum ada proyek. Tambahkan proyek pertama."
-      addLabel="Tambah Proyek"
-      nameLabel="Nama Proyek"
+      caption="Daftar initiative"
+      emptyMessage="Belum ada initiative. Tambahkan initiative pertama."
+      addLabel="Tambah Initiative"
+      nameLabel="Nama Initiative"
       items={data}
       status={status}
       error={error}
@@ -44,15 +44,15 @@ export default function ProjectsPage() {
       selectIdOf={(project) => project.unit.id}
       extraColumn={{ label: "Unit", render: (project) => project.unit.name }}
       onCreate={({ name, selectValue }) =>
-        detectError(() => projectMutations.create({ name, selectValue }), `Proyek "${name}" berhasil dibuat.`)
+        detectError(() => projectMutations.create({ name, selectValue }), `Initiative "${name}" berhasil dibuat.`)
       }
       onUpdate={(id, { name, selectValue }) =>
-        detectError(() => projectMutations.update(id, { name, selectValue }), "Proyek berhasil diubah.")
+        detectError(() => projectMutations.update(id, { name, selectValue }), "Initiative berhasil diubah.")
       }
       onToggleActive={(id, isActive) =>
         detectError(
           () => projectMutations.toggleActive(id, isActive),
-          isActive ? "Proyek berhasil diaktifkan." : "Proyek berhasil dinonaktifkan.",
+          isActive ? "Initiative berhasil diaktifkan." : "Initiative berhasil dinonaktifkan.",
         )
       }
     />

@@ -37,7 +37,7 @@ export default function UnitsPage() {
       status={status}
       error={error}
       searchable
-      extraColumn={{ label: "Proyek", render: (unit) => unit.projects.length }}
+      extraColumn={{ label: "Initiative", render: (unit) => unit.projects.length }}
       onCreate={({ name, code }) =>
         detectError(
           () => unitMutations.create({ name, code }),
