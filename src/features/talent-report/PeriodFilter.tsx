@@ -26,26 +26,32 @@ const MONTH_NAMES = [
   "Desember",
 ] as const;
 
-/** Daftar bulan inklusif `YYYY-MM` dari `startMonth` s.d. `endMonth`. */
-export function monthRange(startMonth: YearMonth, endMonth: YearMonth): YearMonth[] {
-  const months: YearMonth[] = [];
-  let [year, month] = startMonth.split("-").map(Number);
-  const [endYear, endMonthNumber] = endMonth.split("-").map(Number);
-  while (year < endYear || (year === endYear && month <= endMonthNumber)) {
-    months.push(`${year}-${String(month).padStart(2, "0")}`);
-    month += 1;
-    if (month > 12) {
-      month = 1;
-      year += 1;
-    }
-  }
-  return months;
-}
+/** Pilihan bulan `01`–`12` (nilai `YYYY-MM` disusun dari tahun + bulan). */
+const MONTH_OPTIONS = MONTH_NAMES.map((name, index) => ({
+  value: String(index + 1).padStart(2, "0"),
+  label: name,
+}));
 
 /** `2025-01` → "Januari 2025" (label bulan-tahun, FR-11). */
 export function formatMonthLabel(month: YearMonth): string {
   const [year, monthNumber] = month.split("-").map(Number);
   return `${MONTH_NAMES[monthNumber - 1] ?? month} ${year}`;
+}
+
+/** `2025-01` → `2025` / `01`. */
+const yearOf = (month: YearMonth) => month.slice(0, 4);
+const monthOf = (month: YearMonth) => month.slice(5, 7);
+
+/**
+ * Pilihan bulan untuk satu sisi filter. Saat tahunnya sama dengan tahun batas
+ * rentang, hanya bulan yang masih di dalam rentang yang ditawarkan.
+ */
+function monthOptions(bound: YearMonth | undefined, current: YearMonth, edge: "min" | "max") {
+  if (bound === undefined || yearOf(bound) !== yearOf(current)) return MONTH_OPTIONS;
+  const limit = Number(monthOf(bound));
+  return MONTH_OPTIONS.filter((option) =>
+    edge === "min" ? Number(option.value) >= limit : Number(option.value) <= limit,
+  );
 }
 
 interface PeriodFilterProps {
@@ -57,28 +63,36 @@ interface PeriodFilterProps {
 }
 
 /**
- * T021 — filter rentang bulan-tahun (FR-11). Pilihan dibatasi
+ * T021 — filter rentang bulan-tahun (FR-11). Bulan dan tahun dipilih terpisah
+ * supaya daftar pilihannya tidak memanjang mengikuti rentang (rentang bisa
+ * mencakup puluhan tahun sejak kontrak paling awal). Pilihan tetap dibatasi
  * `talentReportRange`; "Terapkan" memicu satu refetch (FR-12/SC-04).
  */
 export function PeriodFilter({ range, value, onApply }: PeriodFilterProps) {
   const [draft, setDraft] = React.useState<TalentReportPeriod>(value);
 
-  const months = React.useMemo(
-    () => (range ? monthRange(range.startMonth, range.endMonth) : []),
-    [range],
-  );
+  const years = React.useMemo(() => {
+    if (!range) return [];
+    const first = Number(yearOf(range.startMonth));
+    const last = Number(yearOf(range.endMonth));
+    return Array.from({ length: last - first + 1 }, (_, index) => String(first + index));
+  }, [range]);
+
+  const yearOptions = years.map((year) => ({ value: year, label: year }));
 
   function setStartMonth(startMonth: YearMonth) {
+    const floored = range && startMonth < range.startMonth ? range.startMonth : startMonth;
     setDraft((prev) => ({
-      startMonth,
-      endMonth: startMonth > prev.endMonth ? startMonth : prev.endMonth,
+      startMonth: floored,
+      endMonth: floored > prev.endMonth ? floored : prev.endMonth,
     }));
   }
 
   function setEndMonth(endMonth: YearMonth) {
+    const capped = range && endMonth > range.endMonth ? range.endMonth : endMonth;
     setDraft((prev) => ({
-      startMonth: endMonth < prev.startMonth ? endMonth : prev.startMonth,
-      endMonth,
+      startMonth: capped < prev.startMonth ? capped : prev.startMonth,
+      endMonth: capped,
     }));
   }
 
@@ -88,29 +102,43 @@ export function PeriodFilter({ range, value, onApply }: PeriodFilterProps) {
     <div className="flex flex-wrap items-end gap-3">
       <label className="flex flex-col gap-1 text-sm font-semibold text-tp-text">
         Mulai
-        <Select
-          value={draft.startMonth}
-          onChange={(e) => setStartMonth(e.target.value)}
-          disabled={!range}
-          aria-label="Bulan mulai"
-          options={months.map((month) => ({ value: month, label: formatMonthLabel(month) }))}
-        />
+        <span className="flex items-center gap-2">
+          <Select
+            value={monthOf(draft.startMonth)}
+            onChange={(e) => setStartMonth(`${yearOf(draft.startMonth)}-${e.target.value}`)}
+            disabled={!range}
+            aria-label="Bulan mulai"
+            options={monthOptions(range?.startMonth, draft.startMonth, "min")}
+          />
+          <Select
+            value={yearOf(draft.startMonth)}
+            onChange={(e) => setStartMonth(`${e.target.value}-${monthOf(draft.startMonth)}`)}
+            disabled={!range}
+            aria-label="Tahun mulai"
+            options={yearOptions}
+          />
+        </span>
       </label>
       <label className="flex flex-col gap-1 text-sm font-semibold text-tp-text">
         Sampai
-        <Select
-          value={draft.endMonth}
-          onChange={(e) => setEndMonth(e.target.value)}
-          disabled={!range}
-          aria-label="Bulan akhir"
-          options={months.map((month) => ({ value: month, label: formatMonthLabel(month) }))}
-        />
+        <span className="flex items-center gap-2">
+          <Select
+            value={monthOf(draft.endMonth)}
+            onChange={(e) => setEndMonth(`${yearOf(draft.endMonth)}-${e.target.value}`)}
+            disabled={!range}
+            aria-label="Bulan akhir"
+            options={monthOptions(range?.endMonth, draft.endMonth, "max")}
+          />
+          <Select
+            value={yearOf(draft.endMonth)}
+            onChange={(e) => setEndMonth(`${e.target.value}-${monthOf(draft.endMonth)}`)}
+            disabled={!range}
+            aria-label="Tahun akhir"
+            options={yearOptions}
+          />
+        </span>
       </label>
-      <Button
-        type="button"
-        onClick={() => onApply(draft)}
-        disabled={!range || !dirty}
-      >
+      <Button type="button" onClick={() => onApply(draft)} disabled={!range || !dirty}>
         Terapkan
       </Button>
     </div>
