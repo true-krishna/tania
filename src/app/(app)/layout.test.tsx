@@ -20,7 +20,15 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@apollo/client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@apollo/client")>();
-  return { ...actual, useMutation: () => [vi.fn()] };
+  // The shell's menu configuration query is stubbed to "not loaded yet": the
+  // sidebar then keeps its static role lists, which is what these tests cover.
+  // Sidebar behaviour under an active configuration is covered by
+  // src/components/Sidebar/nav.test.ts.
+  return {
+    ...actual,
+    useMutation: () => [vi.fn()],
+    useQuery: () => ({ data: undefined, loading: true, error: undefined }),
+  };
 });
 
 const SESSION = {

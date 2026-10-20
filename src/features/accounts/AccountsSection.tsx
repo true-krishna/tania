@@ -11,39 +11,40 @@ import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
-import { roleLabel } from "@/features/accounts/roles";
+import { roleLabelFor, roleOptions, type RoleOption } from "@/features/accounts/roles";
 import { useEmployees } from "@/features/employees/useEmployees";
 import type { UsersQuery } from "@/generated/graphql";
-import type { AccessRole, AccountStatus } from "@/generated/graphql/types";
+import type { AccountStatus, Role } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 
 type Account = UsersQuery["users"][number];
-
-const ROLE_OPTIONS = Object.keys(roleLabel) as AccessRole[];
 
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 type CreateValues = {
   employeeId: string;
   email: string;
-  accessRole: AccessRole;
+  /** Machine name of the access role: a built-in name or a custom role's name. */
+  roleName: string;
   temporaryPassword?: string;
 };
 
 type AccountsSectionProps = {
   accounts: Account[] | undefined;
+  /** Access roles from the `roles` query: built-ins and custom ones alike. */
+  roles: readonly Role[] | undefined;
   status: "loading" | "ready" | "error";
   error: string | null;
   onCreate: (values: CreateValues) => Promise<void>;
-  onChangeRole: (userId: string, accessRole: AccessRole) => Promise<void>;
+  onChangeRole: (userId: string, roleName: string) => Promise<void>;
   onSetStatus: (userId: string, status: AccountStatus) => Promise<void>;
   onRevokeSessions: (userId: string) => Promise<void>;
 };
 
-function RoleBadge({ role }: { role: string }) {
+function RoleBadge({ roleName, options }: { roleName: string; options: readonly RoleOption[] }) {
   return (
     <Chip variant="info" size="small">
-      {roleLabel[role as AccessRole] ?? role}
+      {roleLabelFor(roleName, options)}
     </Chip>
   );
 }
@@ -53,6 +54,7 @@ function RoleBadge({ role }: { role: string }) {
 // There is deliberately no delete operation — accounts are only deactivated.
 export function AccountsSection({
   accounts,
+  roles,
   status,
   error,
   onCreate,
@@ -64,7 +66,7 @@ export function AccountsSection({
   const [employeeSearch, setEmployeeSearch] = React.useState("");
   const [employeeId, setEmployeeId] = React.useState("");
   const [email, setEmail] = React.useState("");
-  const [accessRole, setAccessRole] = React.useState<AccessRole | "">("");
+  const [roleName, setRoleName] = React.useState("");
   const [temporaryPassword, setTemporaryPassword] = React.useState("");
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string | undefined>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
@@ -73,6 +75,8 @@ export function AccountsSection({
 
   const employees = useEmployees({ search: employeeSearch || undefined }, 100);
   const { pageRows, pagination } = useTablePagination(accounts);
+  // Custom roles come from the API, not from a static list (W3 / TAN-264).
+  const options = React.useMemo(() => roleOptions(roles), [roles]);
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -82,7 +86,7 @@ export function AccountsSection({
     setEmployeeSearch("");
     setEmployeeId("");
     setEmail("");
-    setAccessRole("");
+    setRoleName("");
     setTemporaryPassword("");
     setFieldErrors({});
     setFormError(null);
@@ -94,7 +98,7 @@ export function AccountsSection({
     if (!employeeId) nextErrors.employeeId = "Karyawan wajib dipilih.";
     if (!email.trim()) nextErrors.email = "Email wajib diisi.";
     else if (!EMAIL_PATTERN.test(email.trim())) nextErrors.email = "Format email tidak valid.";
-    if (!accessRole) nextErrors.accessRole = "Peran akses wajib dipilih.";
+    if (!roleName) nextErrors.roleName = "Peran akses wajib dipilih.";
     setFieldErrors(nextErrors);
     setFormError(null);
     if (Object.values(nextErrors).some(Boolean)) return;
@@ -104,7 +108,7 @@ export function AccountsSection({
       await onCreate({
         employeeId,
         email: email.trim(),
-        accessRole: accessRole as AccessRole,
+        roleName,
         temporaryPassword: temporaryPassword.trim() || undefined,
       });
       resetForm();
@@ -133,7 +137,9 @@ export function AccountsSection({
     {
       key: "role",
       title: "Peran",
-      render: (_value, account) => <RoleBadge role={account.accessRole} />,
+      render: (_value, account) => (
+        <RoleBadge roleName={account.roleName} options={options} />
+      ),
     },
     {
       key: "status",
@@ -181,9 +187,9 @@ export function AccountsSection({
               <Select
                 aria-label={`Ubah peran ${account.fullName}`}
                 className="w-auto"
-                value={account.accessRole}
-                onChange={(e) => void onChangeRole(account.id, e.target.value as AccessRole)}
-                options={ROLE_OPTIONS.map((role) => ({ value: role, label: roleLabel[role] }))}
+                value={account.roleName}
+                onChange={(e) => void onChangeRole(account.id, e.target.value)}
+                options={options.map((option) => ({ value: option.value, label: option.label }))}
               />
             </label>
           </RowActionsMenu>
@@ -250,13 +256,13 @@ export function AccountsSection({
               placeholder="cth: nama@telkom.co.id"
             />
           </InputControl>
-          <InputControl label="Peran Akses" error={fieldErrors.accessRole}>
+          <InputControl label="Peran Akses" error={fieldErrors.roleName}>
             <Select
-              value={accessRole}
-              onChange={(e) => setAccessRole(e.target.value as AccessRole | "")}
+              value={roleName}
+              onChange={(e) => setRoleName(e.target.value)}
               options={[
                 { value: "", label: "— Pilih peran —" },
-                ...ROLE_OPTIONS.map((role) => ({ value: role, label: roleLabel[role] })),
+                ...options.map((option) => ({ value: option.value, label: option.label })),
               ]}
             />
           </InputControl>

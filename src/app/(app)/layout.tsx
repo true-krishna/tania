@@ -9,6 +9,7 @@ import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { AssistantBubble } from "@/features/assistant/AssistantBubble";
 import { roleLabel } from "@/features/accounts/roles";
+import { useMyMenuConfig } from "@/features/roles/useRoles";
 import { authConfig } from "@/lib/auth/config";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
 import { onSessionExpired } from "@/lib/auth/session-expiry";
@@ -18,6 +19,11 @@ import { ACTIVITIES, LOGIN, PROFILE, WORKLOAD } from "@/lib/constants/routes";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const role = useSessionRole();
+  // Active menu configuration of the signed-in role (FR-03 amandemen): the
+  // sidebar follows it, so an Admin's change shows up on the next load without
+  // a re-deploy. Absent while it loads — the sidebar then keeps its static
+  // role lists rather than rendering empty.
+  const { config: menuConfig, roleName } = useMyMenuConfig();
   const pathname = usePathname();
   const [logout] = useMutation(LogoutDocument);
 
@@ -52,7 +58,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
        * fills the viewport minus the sidebar and adapts to large viewports;
        * ≤860px the sidebar strip is static and paddings tighten. */}
       <div className="flex min-h-screen flex-col min-[861px]:flex-row">
-        <Sidebar role={role} pathname={pathname} />
+        <Sidebar role={role} pathname={pathname} menuConfig={menuConfig} roleName={roleName} />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-tp-line bg-tp-surface px-4 py-3 min-[861px]:px-6 min-[861px]:py-4">
             <p className="truncate text-sm font-semibold text-zinc-700">{sectionForPath(pathname)}</p>

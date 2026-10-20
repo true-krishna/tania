@@ -4,6 +4,7 @@ query Users($search: String, $accessRole: AccessRole, $status: AccountStatus) {
     fullName
     email
     accessRole
+    roleName
     status
   }
 }
