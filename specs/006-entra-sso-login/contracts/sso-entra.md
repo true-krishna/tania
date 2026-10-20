@@ -54,7 +54,7 @@ type Mutation {
 
 ## 3. Aturan pemetaan identitas → akun Tania (FR-004)
 
-Berurutan; berhenti pada kecocokan pertama. Tanpa kecocokan → `UNAUTHENTICATED` dengan pesan generik, **tanpa membuat akun**.
+Berurutan; berhenti pada kecocokan pertama. Tanpa kecocokan → `UNAUTHENTICATED` dengan pesan generik, **tanpa membuat akun**. Langkah (1)+(2) bersama-sama memenuhi **FR-004 jalur (a)** (keterkaitan hasil Provisi Entra); langkah (3) memenuhi **jalur (b)** (kesamaan work email).
 
 | # | Kunci | Menutup kasus | Efek samping |
 | --- | --- | --- | --- |
