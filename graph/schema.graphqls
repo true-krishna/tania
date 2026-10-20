@@ -541,7 +541,6 @@ type Assignment {
   id: ID!
   talent: Employee!
   project: Project!
-  jobRole: JobRole!
   periodStart: Date!
   periodEnd: Date
   status: AssignmentStatus!
@@ -562,14 +561,12 @@ input AssignmentFilter {
 input CreateAssignmentInput {
   employeeId: ID!
   projectId: ID!
-  jobRoleId: ID!
   periodStart: Date!
   periodEnd: Date
 }
 
 input UpdateAssignmentInput {
   projectId: ID
-  jobRoleId: ID
   periodStart: Date
   periodEnd: Date
 }

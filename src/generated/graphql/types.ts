@@ -55,7 +55,6 @@ export type Assignment = {
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   id: Scalars['ID']['output'];
-  jobRole: JobRole;
   periodEnd?: Maybe<Scalars['Date']['output']>;
   periodStart: Scalars['Date']['output'];
   project: Project;
@@ -284,7 +283,6 @@ export type ContractType =
 
 export type CreateAssignmentInput = {
   employeeId: Scalars['ID']['input'];
-  jobRoleId: Scalars['ID']['input'];
   periodEnd?: InputMaybe<Scalars['Date']['input']>;
   periodStart: Scalars['Date']['input'];
   projectId: Scalars['ID']['input'];
@@ -1793,7 +1791,6 @@ export type UnitCount = {
 };
 
 export type UpdateAssignmentInput = {
-  jobRoleId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd?: InputMaybe<Scalars['Date']['input']>;
   periodStart?: InputMaybe<Scalars['Date']['input']>;
   projectId?: InputMaybe<Scalars['ID']['input']>;

@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { useProjects } from "@/features/master-data/useMasterData";
-import { CreateAssignmentDocument, type CreateAssignmentInput } from "@/generated/graphql";
+import { CreateAssignmentDocument } from "@/generated/graphql";
 import { AuthGuard } from "@/lib/auth/guard";
 import { mapAssignmentSubmitError } from "@/lib/errors";
 import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
@@ -91,11 +91,7 @@ function NewAssignmentForm() {
             projectId: values.projectId,
             periodStart: values.periodStart,
             periodEnd: values.periodEnd || undefined,
-            // TAN-252 — peran dihapus dari assignment (TAN-133): payload
-            // dikirim tanpa jobRoleId. SDL yang dilayani masih menuntutnya,
-            // jadi sementara di-cast ke input codegen sampai sinkronisasi
-            // skema (langkah terakhir TAN-252, setelah MR backend merge).
-          } as CreateAssignmentInput,
+          },
         },
       });
       setSubmitted(true);

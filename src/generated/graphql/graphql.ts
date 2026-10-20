@@ -102,7 +102,6 @@ export type ContractType =
 
 export type CreateAssignmentInput = {
   employeeId: string | number;
-  jobRoleId: string | number;
   periodEnd?: string | null | undefined;
   periodStart: string;
   projectId: string | number;
@@ -409,7 +408,6 @@ export type TalentReportPeriodInput = {
 };
 
 export type UpdateAssignmentInput = {
-  jobRoleId?: string | number | null | undefined;
   periodEnd?: string | null | undefined;
   periodStart?: string | null | undefined;
   projectId?: string | number | null | undefined;
