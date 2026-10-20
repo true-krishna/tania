@@ -11,7 +11,7 @@ import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
-import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
+import { useProjects } from "@/features/master-data/useMasterData";
 import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
 import { useAssignment, useUpdateAssignment } from "@/features/assignments/useAssignment";
 import { EndAssignmentDocument, type AssignmentsQuery } from "@/generated/graphql";
@@ -41,7 +41,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
       </Link>
       <PageHeader
         title={`${assignment.talent.fullName} — ${assignment.project.name}`}
-        subtitle={`${assignment.id} · ${assignment.jobRole.name}`}
+        subtitle={assignment.id}
       />
 
       <Card className="max-w-2xl">
@@ -55,10 +55,6 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Project</dt>
             <dd className="text-zinc-900">{assignment.project.name}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-zinc-500">Job Role</dt>
-            <dd className="text-zinc-900">{assignment.jobRole.name}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Periode</dt>
@@ -91,20 +87,17 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
 
 type EditFormValues = {
   projectId: string;
-  jobRoleId: string;
   periodStart: string;
   periodEnd: string;
 };
 
 function toEditFormValues(assignment: {
-  jobRole: { id: string };
   periodEnd: string | null | undefined;
   periodStart: string;
   project: { id: string };
 }): EditFormValues {
   return {
     projectId: assignment.project.id,
-    jobRoleId: assignment.jobRole.id,
     periodStart: assignment.periodStart,
     periodEnd: assignment.periodEnd ?? "",
   };
@@ -112,28 +105,24 @@ function toEditFormValues(assignment: {
 
 /**
  * Form ubah assignment (gelombang K2 — G1/FR-05): hanya untuk assignment
- * berjalan. Project dan job role dipilih dari master data aktif; talent tidak
+ * berjalan. Project dipilih dari master data aktif; talent tidak
  * dapat diganti (bukan bagian `UpdateAssignmentInput`). Setelah simpan, entity
  * terbaru tertulis ke cache sehingga detail menampilkan versi terbaru.
  */
 function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
   const projects = useProjects();
-  const jobRoles = useJobRoles();
   const [updateAssignment, { loading: saving }] = useUpdateAssignment();
   const [values, setValues] = React.useState<EditFormValues>(() => toEditFormValues(assignment));
   const [errors, setErrors] = React.useState<Partial<Record<keyof EditFormValues, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
   const [saved, setSaved] = React.useState(false);
 
-  if (projects.status === "loading" || jobRoles.status === "loading")
+  if (projects.status === "loading")
     return <LoadingState label="Memuat master data…" />;
   if (projects.status === "error")
     return <ErrorState message={projects.error ?? "Gagal memuat project."} />;
-  if (jobRoles.status === "error")
-    return <ErrorState message={jobRoles.error ?? "Gagal memuat job role."} />;
 
   const activeProjects = (projects.data ?? []).filter((p) => p.isActive);
-  const activeJobRoles = (jobRoles.data ?? []).filter((role) => role.isActive);
 
   function set<K extends keyof EditFormValues>(key: K, value: string) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -145,7 +134,6 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
   function validate(valuesToCheck: EditFormValues): Partial<Record<keyof EditFormValues, string>> {
     const next: Partial<Record<keyof EditFormValues, string>> = {};
     if (!valuesToCheck.projectId) next.projectId = "Project wajib dipilih.";
-    if (!valuesToCheck.jobRoleId) next.jobRoleId = "Job role wajib dipilih.";
     if (!valuesToCheck.periodStart) next.periodStart = "Tanggal mulai wajib diisi.";
     // FR-09 — perbandingan string ISO (YYYY-MM-DD), tanpa konversi Date yang
     // rawan geser zona waktu.
@@ -184,7 +172,6 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
         id: assignment.id,
         input: {
           projectId: values.projectId,
-          jobRoleId: values.jobRoleId,
           periodStart: values.periodStart,
           periodEnd: values.periodEnd || undefined,
         },
@@ -201,7 +188,7 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
     <Card className="flex max-w-2xl flex-col gap-3">
       <h2 className="text-sm font-semibold text-zinc-900">Ubah assignment</h2>
       <p className="text-sm text-zinc-500">
-        Talent tidak dapat diganti. Pilihan project dan job role hanya master data aktif.
+        Talent tidak dapat diganti. Pilihan project hanya master data aktif.
       </p>
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
         <InputControl label="Project" error={errors.projectId}>
@@ -211,16 +198,6 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
             options={[
               { value: "", label: "— pilih project —" },
               ...activeProjects.map((p) => ({ value: p.id, label: p.name })),
-            ]}
-          />
-        </InputControl>
-        <InputControl label="Job Role" error={errors.jobRoleId}>
-          <Select
-            value={values.jobRoleId}
-            onChange={(e) => set("jobRoleId", e.target.value)}
-            options={[
-              { value: "", label: "— pilih job role —" },
-              ...activeJobRoles.map((role) => ({ value: role.id, label: role.name })),
             ]}
           />
         </InputControl>

@@ -192,12 +192,6 @@ export default function AssignmentsPage() {
               render: (_value, assignment) => orDash(assignment.project.name),
             },
             {
-              key: "jobRole",
-              title: "Job Role",
-              className: "text-zinc-600",
-              render: (_value, assignment) => orDash(assignment.jobRole.name),
-            },
-            {
               key: "periode",
               title: "Periode",
               className: "text-zinc-600",

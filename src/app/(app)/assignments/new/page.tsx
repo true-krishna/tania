@@ -10,8 +10,8 @@ import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
-import { useJobRoles, useProjects } from "@/features/master-data/useMasterData";
-import { CreateAssignmentDocument } from "@/generated/graphql";
+import { useProjects } from "@/features/master-data/useMasterData";
+import { CreateAssignmentDocument, type CreateAssignmentInput } from "@/generated/graphql";
 import { AuthGuard } from "@/lib/auth/guard";
 import { mapAssignmentSubmitError } from "@/lib/errors";
 import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
@@ -19,7 +19,6 @@ import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
 type FormValues = {
   employeeId: string;
   projectId: string;
-  jobRoleId: string;
   periodStart: string;
   periodEnd: string;
 };
@@ -27,7 +26,6 @@ type FormValues = {
 const EMPTY: FormValues = {
   employeeId: "",
   projectId: "",
-  jobRoleId: "",
   periodStart: "",
   periodEnd: "",
 };
@@ -42,7 +40,6 @@ export default function NewAssignmentPage() {
 
 function NewAssignmentForm() {
   const projects = useProjects();
-  const jobRoles = useJobRoles();
   const talents = useAssignableTalents();
   const [createAssignment, { data, error, loading }] = useMutation(CreateAssignmentDocument);
   const [values, setValues] = React.useState<FormValues>(EMPTY);
@@ -50,12 +47,10 @@ function NewAssignmentForm() {
   const [formError, setFormError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
 
-  if (projects.status === "loading" || jobRoles.status === "loading" || talents.status === "loading")
+  if (projects.status === "loading" || talents.status === "loading")
     return <LoadingState />;
   if (projects.status === "error")
     return <ErrorState message={projects.error ?? "Gagal memuat project."} />;
-  if (jobRoles.status === "error")
-    return <ErrorState message={jobRoles.error ?? "Gagal memuat job role."} />;
   if (talents.status === "error")
     return <ErrorState message={talents.error ?? "Gagal memuat talent."} />;
 
@@ -69,7 +64,6 @@ function NewAssignmentForm() {
     const next: Partial<Record<keyof FormValues, string>> = {};
     if (!valuesToCheck.employeeId) next.employeeId = "Talent wajib dipilih.";
     if (!valuesToCheck.projectId) next.projectId = "Project wajib dipilih.";
-    if (!valuesToCheck.jobRoleId) next.jobRoleId = "Job role wajib dipilih.";
     if (!valuesToCheck.periodStart) next.periodStart = "Tanggal mulai wajib diisi.";
     // US1-4/FR-09 — perbandingan string ISO (YYYY-MM-DD), tanpa konversi Date
     // yang rawan geser zona waktu; aturan yang sama dengan form ubah & akhiri.
@@ -95,10 +89,13 @@ function NewAssignmentForm() {
           input: {
             employeeId: values.employeeId,
             projectId: values.projectId,
-            jobRoleId: values.jobRoleId,
             periodStart: values.periodStart,
             periodEnd: values.periodEnd || undefined,
-          },
+            // TAN-252 — peran dihapus dari assignment (TAN-133): payload
+            // dikirim tanpa jobRoleId. SDL yang dilayani masih menuntutnya,
+            // jadi sementara di-cast ke input codegen sampai sinkronisasi
+            // skema (langkah terakhir TAN-252, setelah MR backend merge).
+          } as CreateAssignmentInput,
         },
       });
       setSubmitted(true);
@@ -182,17 +179,6 @@ function NewAssignmentForm() {
               { value: "", label: "— pilih project —" },
               // US1-3 — pilihan hanya Master Data Project aktif.
               ...(projects.data ?? []).filter((p) => p.isActive).map((p) => ({ value: p.id, label: p.name })),
-            ]}
-          />
-        </InputControl>
-        <InputControl label="Job Role" error={errors.jobRoleId}>
-          <Select
-            value={values.jobRoleId}
-            onChange={(e) => set("jobRoleId", e.target.value)}
-            options={[
-              { value: "", label: "— pilih job role —" },
-              // US1-3 — pilihan hanya Master Data Role aktif.
-              ...(jobRoles.data ?? []).filter((role) => role.isActive).map((role) => ({ value: role.id, label: role.name })),
             ]}
           />
         </InputControl>

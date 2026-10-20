@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 
+import { readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
-import { GraphQLError } from "graphql";
+import { GraphQLError, Kind, parse, visit, type FieldNode } from "graphql";
 import AssignmentsPage from "@/app/(app)/assignments/page";
 import NewAssignmentPage from "@/app/(app)/assignments/new/page";
 import AssignmentDetailPage from "@/app/(app)/assignments/[id]/page";
@@ -14,7 +16,6 @@ import {
   CreateAssignmentDocument,
   EmployeesDocument,
   EndAssignmentDocument,
-  JobRolesDocument,
   ProjectsDocument,
   UpdateAssignmentDocument,
 } from "@/generated/graphql";
@@ -63,14 +64,6 @@ const projectsResult = {
   },
 };
 
-const jobRolesResult = {
-  data: {
-    jobRoles: [
-      { __typename: "JobRole", id: "jr-1", name: "Engineer", isActive: true, chapter: null },
-    ],
-  },
-};
-
 const assignableTalentNode = {
   __typename: "Employee",
   id: "emp-1",
@@ -86,7 +79,6 @@ const assignmentNode = {
   periodEnd: "2025-12-31",
   talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
   project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
-  jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
 };
 
 const assignmentsResult = {
@@ -119,6 +111,8 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     expect(screen.getByRole("link", { name: /buat assignment/i })).toBeInTheDocument();
     // O4 — label status seragam: ACTIVE tampil sebagai "Berjalan" (bukan "Aktif").
     expect(screen.getByText("Berjalan")).toBeInTheDocument();
+    // TAN-133 — peran bukan lagi bagian assignment: tidak ada "Engineer" di mana pun.
+    expect(screen.queryByText("Engineer")).toBeNull();
   });
 
   // UAT K6 (T009) — US3-2/SC-004: assignment yang sudah diakhiri tetap tampil
@@ -132,7 +126,6 @@ describe("AssignmentsPage (Apollo, US2)", () => {
       periodEnd: "2025-06-30",
       talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
       project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
-      jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
     };
     render(
       <MockedProvider
@@ -168,8 +161,9 @@ describe("AssignmentsPage (Apollo, US2)", () => {
   });
 
   // UAT K6 (T009) — US4-1: daftar per project — memilih project memfilter
-  // daftar; talent dalam cakupan chapter tampil beserta perannya.
-  it("filters the list by project and shows the talent with its role (US4-1)", async () => {
+  // daftar; talent dalam cakupan chapter tampil beserta periodenya — tanpa
+  // peran assignment (dihapus dari model, keputusan TAN-133).
+  it("filters the list by project without a role column (US4-1)", async () => {
     const filteredNode = {
       __typename: "Assignment",
       id: "asg-7",
@@ -178,7 +172,6 @@ describe("AssignmentsPage (Apollo, US2)", () => {
       periodEnd: null,
       talent: { __typename: "Employee", id: "emp-2", fullName: "Rina Kartika", nomorInduk: "EMP-002" },
       project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
-      jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
     };
     render(
       <MockedProvider
@@ -209,10 +202,11 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Filter" }));
     fireEvent.change(screen.getByLabelText("Project"), { target: { value: "prj-1" } });
 
-    // Query ulang berjalan dengan filter project; hasilnya talent + peran.
+    // Query ulang berjalan dengan filter project; hasilnya talent + periode,
+    // tanpa peran assignment.
     expect(await screen.findByRole("link", { name: "Rina Kartika" })).toBeInTheDocument();
     expect(screen.getByText("2025-08-01 — sekarang")).toBeInTheDocument();
-    expect(screen.getByText("Engineer")).toBeInTheDocument();
+    expect(screen.queryByText("Engineer")).toBeNull();
   });
 
   it("is read-only for Operation (T033)", async () => {
@@ -323,17 +317,8 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
       ],
     },
   };
-  const createJobRolesResult = {
-    data: {
-      jobRoles: [
-        ...jobRolesResult.data.jobRoles,
-        { __typename: "JobRole", id: "jr-2", name: "Manager", isActive: false, chapter: null },
-      ],
-    },
-  };
   const newMocks = [
     { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: createProjectsResult },
-    { request: { query: JobRolesDocument, variables: { includeInactive: true } }, result: createJobRolesResult },
     {
       request: { query: AssignableTalentsDocument, variables: { first: 100 } },
       result: {
@@ -352,7 +337,6 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
           input: {
             employeeId: "emp-1",
             projectId: "prj-1",
-            jobRoleId: "jr-1",
             periodStart: "2025-07-01",
             periodEnd: undefined,
           },
@@ -367,7 +351,6 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
           input: {
             employeeId: "emp-1",
             projectId: "prj-1",
-            jobRoleId: "jr-1",
             periodStart: "2025-07-01",
             periodEnd: "2025-12-31",
           },
@@ -402,8 +385,11 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
 
     expect(screen.getByText(/talent wajib dipilih/i)).toBeInTheDocument();
     expect(screen.getByText(/project wajib dipilih/i)).toBeInTheDocument();
-    expect(screen.getByText(/job role wajib dipilih/i)).toBeInTheDocument();
     expect(screen.getByText(/tanggal mulai wajib diisi/i)).toBeInTheDocument();
+    // TAN-133 — peran tidak lagi diminta pada form buat: tidak ada field job
+    // role maupun pesan validasinya.
+    expect(screen.queryByRole("combobox", { name: /job role/i })).toBeNull();
+    expect(screen.queryByText(/job role wajib dipilih/i)).toBeNull();
   });
 
   it("creates the assignment and shows a success state", async () => {
@@ -416,9 +402,6 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
     fireEvent.change(screen.getByRole("combobox", { name: /project/i }), {
       target: { value: "prj-1" },
     });
-    fireEvent.change(screen.getByRole("combobox", { name: /job role/i }), {
-      target: { value: "jr-1" },
-    });
     fireEvent.change(screen.getByLabelText(/tanggal mulai/i), { target: { value: "2025-07-01" } });
 
     fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
@@ -426,8 +409,9 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
     expect(await screen.findByText(/berhasil dibuat/i)).toBeInTheDocument();
   });
 
-  // UAT K6 (T009) — US1-3: pilihan project/peran hanya master data aktif.
-  it("only offers active master data for project and job role (US1-3)", async () => {
+  // UAT K6 (T009) — US1-3: pilihan project hanya master data aktif. Peran
+  // bukan lagi bagian assignment (TAN-133) — form tidak memintanya sama sekali.
+  it("only offers active master data for project (US1-3)", async () => {
     renderPage();
     await screen.findByRole("heading", { name: /buat assignment/i });
 
@@ -437,11 +421,7 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
     expect(projectOptions.some((t) => t?.includes("Legacy System"))).toBe(false);
     expect(projectOptions.some((t) => t?.includes("Network Modernization"))).toBe(true);
 
-    const roleOptions = Array.from(
-      screen.getByRole("combobox", { name: /job role/i }).querySelectorAll("option")
-    ).map((o) => o.textContent);
-    expect(roleOptions.some((t) => t?.includes("Manager"))).toBe(false);
-    expect(roleOptions.some((t) => t?.includes("Engineer"))).toBe(true);
+    expect(screen.queryByRole("combobox", { name: /job role/i })).toBeNull();
   });
 
   // UAT K6 (T009) — FR-01: tanggal selesai rencana terkirim pada payload buat.
@@ -459,7 +439,7 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
   // G5/K4 (T006/T007) — penolakan server tampil sebagai pesan Indonesia yang
   // jelas: per field untuk validasi tanggal, pesan aksi untuk duplikat
   // aktif (CONFLICT) dan cakupan (FORBIDDEN). Tanpa swallowed error.
-  const formMocks = newMocks.slice(0, 3);
+  const formMocks = newMocks.slice(0, 2);
   const renderNewWithError = (createMock: MockedResponse) =>
     render(
       <MockedProvider mocks={[...formMocks, createMock]}>
@@ -473,9 +453,6 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
     fireEvent.change(screen.getByRole("combobox", { name: /project/i }), {
       target: { value: "prj-1" },
     });
-    fireEvent.change(screen.getByRole("combobox", { name: /job role/i }), {
-      target: { value: "jr-1" },
-    });
     fireEvent.change(screen.getByLabelText(/tanggal mulai/i), { target: { value: "2025-07-01" } });
   };
 
@@ -487,7 +464,6 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
           input: {
             employeeId: "emp-1",
             projectId: "prj-1",
-            jobRoleId: "jr-1",
             periodStart: "2025-07-01",
             periodEnd: "2025-06-30",
           },
@@ -527,7 +503,6 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
           input: {
             employeeId: "emp-1",
             projectId: "prj-1",
-            jobRoleId: "jr-1",
             periodStart: "2025-07-01",
             periodEnd: undefined,
           },
@@ -564,7 +539,6 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
           input: {
             employeeId: "emp-1",
             projectId: "prj-1",
-            jobRoleId: "jr-1",
             periodStart: "2025-07-01",
             periodEnd: undefined,
           },
@@ -598,18 +572,9 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       ],
     },
   };
-  const detailJobRolesResult = {
-    data: {
-      jobRoles: [
-        ...jobRolesResult.data.jobRoles,
-        { __typename: "JobRole", id: "jr-2", name: "Manager", isActive: false, chapter: null },
-      ],
-    },
-  };
   const baseDetailMocks = [
     { request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult },
     { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: detailProjectsResult },
-    { request: { query: JobRolesDocument, variables: { includeInactive: true } }, result: detailJobRolesResult },
   ];
 
   const renderDetail = async (mocks: ReadonlyArray<MockedResponse>) => {
@@ -648,6 +613,8 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
     // Label seragam: COMPLETED tampil sebagai "Selesai" (bukan "Nonaktif").
     expect(await screen.findByText("Selesai")).toBeInTheDocument();
     expect(screen.getByText(/assignment selesai\./i)).toBeInTheDocument();
+    // TAN-133 — peran tidak lagi dirender pada detail.
+    expect(screen.queryByText("Engineer")).toBeNull();
     expect(screen.queryByRole("button", { name: /akhiri assignment/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /simpan/i })).toBeNull();
   });
@@ -660,7 +627,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
           query: UpdateAssignmentDocument,
           variables: {
             id: "asg-1",
-            input: { projectId: "prj-2", jobRoleId: "jr-1", periodStart: "2025-08-01", periodEnd: "2026-01-31" },
+            input: { projectId: "prj-2", periodStart: "2025-08-01", periodEnd: "2026-01-31" },
           },
         },
         result: {
@@ -672,7 +639,6 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
               periodStart: "2025-08-01",
               periodEnd: "2026-01-31",
               project: { __typename: "Project", id: "prj-2", name: "Aplikasi Mobile" },
-              jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
             },
           },
         },
@@ -680,9 +646,10 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
     ]);
 
     const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
-    // Master data nonaktif tidak lagi jadi pilihan (T002).
+    // Master data nonaktif tidak lagi jadi pilihan (T002); peran tidak lagi
+    // diminta pada form ubah (TAN-133).
     expect(within(editForm).queryByText("Legacy System")).toBeNull();
-    expect(within(editForm).queryByText("Manager")).toBeNull();
+    expect(within(editForm).queryByRole("combobox", { name: /job role/i })).toBeNull();
 
     fireEvent.change(within(editForm).getByRole("combobox", { name: /project/i }), { target: { value: "prj-2" } });
     fireEvent.change(within(editForm).getByLabelText(/tanggal mulai/i), { target: { value: "2025-08-01" } });
@@ -714,7 +681,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
           query: UpdateAssignmentDocument,
           variables: {
             id: "asg-1",
-            input: { projectId: "prj-1", jobRoleId: "jr-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
+            input: { projectId: "prj-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
           },
         },
         result: {
@@ -746,7 +713,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
           query: UpdateAssignmentDocument,
           variables: {
             id: "asg-1",
-            input: { projectId: "prj-1", jobRoleId: "jr-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
+            input: { projectId: "prj-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
           },
         },
         result: {
@@ -776,7 +743,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
           query: UpdateAssignmentDocument,
           variables: {
             id: "asg-1",
-            input: { projectId: "prj-1", jobRoleId: "jr-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
+            input: { projectId: "prj-1", periodStart: "2025-07-01", periodEnd: "2025-12-31" },
           },
         },
         result: {
@@ -870,4 +837,57 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       expect(screen.queryByRole("button", { name: /simpan/i })).toBeNull();
     });
   }
+});
+
+/**
+ * Bukti (c) TAN-252 — tidak ada lagi permintaan GraphQL yang menyeleksi
+ * `jobRole` pada assignment. Setiap dokumen `.graphql` di `src/features`
+ * diparse, lalu seleksi `jobRole` di dalam selection set bertipe Assignment
+ * (assignments, activeAssignments, workExperience pada CvProfile,
+ * createAssignment/updateAssignment/endAssignment) ditolak. Seleksi
+ * `jobRole` pada Employee/kontrak kerja tetap sah — hanya peran assignment
+ * yang dihapus (TAN-133).
+ */
+describe("assignment jobRole removal (TAN-252, bukti c)", () => {
+  const ASSIGNMENT_RETURNING_FIELDS = new Set([
+    "assignment",
+    "assignments",
+    "activeAssignments",
+    "workExperience",
+    "createAssignment",
+    "updateAssignment",
+    "endAssignment",
+  ]);
+
+  function listGraphqlFiles(dir: string): string[] {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) return listGraphqlFiles(full);
+      return entry.name.endsWith(".graphql") ? [full] : [];
+    });
+  }
+
+  it("no operation document selects jobRole inside an assignment selection set", () => {
+    const featuresDir = join(process.cwd(), "src", "features");
+    const violations: string[] = [];
+
+    for (const file of listGraphqlFiles(featuresDir)) {
+      const doc = parse(readFileSync(file, "utf8"));
+      visit(doc, {
+        Field: {
+          enter(node, _key, _parent, _path, ancestors) {
+            if (node.name.value !== "jobRole") return;
+            const parentFields = ancestors
+              .filter((a): a is FieldNode => "kind" in a && a.kind === Kind.FIELD)
+              .map((a) => a.name.value);
+            if (parentFields.some((name) => ASSIGNMENT_RETURNING_FIELDS.has(name))) {
+              violations.push(`${relative(featuresDir, file)}: ${parentFields.join(".")}.jobRole`);
+            }
+          },
+        },
+      });
+    }
+
+    expect(violations).toEqual([]);
+  });
 });

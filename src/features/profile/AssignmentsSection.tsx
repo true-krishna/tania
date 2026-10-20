@@ -31,12 +31,6 @@ export function AssignmentsSection({
             render: (_value, assignment) => assignment.project.name,
           },
           {
-            key: "jobRole",
-            title: "Job Role",
-            className: "text-zinc-600",
-            render: (_value, assignment) => assignment.jobRole.name,
-          },
-          {
             key: "periode",
             title: "Periode",
             className: "text-zinc-600",

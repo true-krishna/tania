@@ -8,9 +8,5 @@ mutation UpdateAssignment($id: ID!, $input: UpdateAssignmentInput!) {
       id
       name
     }
-    jobRole {
-      id
-      name
-    }
   }
 }
