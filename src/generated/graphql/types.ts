@@ -842,6 +842,12 @@ export type Mutation = {
   /** Buat role kustom dari salah satu template bawaan. Khusus Admin. */
   createRole: Role;
   createUnit: Unit;
+  /**
+   * Buat akun untuk seorang karyawan (Khusus Admin).
+   *
+   * `accessRole` (bawaan) atau `roleName` (bawaan maupun kustom) menunjuk role
+   * tersimpan; keduanya opsional tetapi tepat satu harus diisi.
+   */
   createUserAccount: User;
   deactivateEmployee: Employee;
   deleteCvCertification: Scalars['Boolean']['output'];
@@ -865,6 +871,8 @@ export type Mutation = {
   refreshSession: AuthPayload;
   /** Perpanjangan kontrak berbatas waktu — kontrak baru terkait predecessor (FR-36). */
   renewEmploymentContract: EmploymentContract;
+  /** Kembalikan konfigurasi menu satu role ke matriks default FR-03. Khusus Admin. */
+  resetRoleMenuConfig: Array<RoleMenuEntry>;
   /** Resign: akhiri kontrak aktif (end_reason=resign), status → RESIGNED, nonaktifkan akun (FR-37, FR-46). */
   resignEmployee: Employee;
   /** Pensiun: akhiri kontrak aktif (end_reason=retirement), status → RETIRED (FR-39). */
@@ -884,6 +892,14 @@ export type Mutation = {
   setProjectActive: Project;
   /** Ubah usia pensiun (tahun); hanya Admin (T042). */
   setRetirementAge: Scalars['Int']['output'];
+  /**
+   * Simpan konfigurasi menu satu role.
+   *
+   * Hanya sel yang benar-benar berbeda dari matriks default FR-03 yang ditulis dan
+   * dicatat audit. Sel khusus Admin (Accounts, Audit, kelola Master Data) divalidasi
+   * di server. Khusus Admin.
+   */
+  setRoleMenuAccess: Array<RoleMenuEntry>;
   /** Aktifkan/nonaktifkan role kustom. Khusus Admin. */
   setRoleStatus: Role;
   setUnitActive: Unit;
@@ -907,6 +923,12 @@ export type Mutation = {
   /** Ubah label role kustom; nama mesin immutable. Khusus Admin. */
   updateRole: Role;
   updateUnit: Unit;
+  /**
+   * Ubah peran akses sebuah akun (Khusus Admin).
+   *
+   * `accessRole` (bawaan) atau `roleName` (bawaan maupun kustom) menunjuk role
+   * tersimpan; keduanya opsional tetapi tepat satu harus diisi.
+   */
   updateUserAccessRole: User;
   upsertCvProfile: CvProfile;
   upsertPerformanceEvaluation: PerformanceEvaluation;
@@ -1004,9 +1026,10 @@ export type MutationCreateUnitArgs = {
 
 
 export type MutationCreateUserAccountArgs = {
-  accessRole: AccessRole;
+  accessRole?: InputMaybe<AccessRole>;
   email: Scalars['String']['input'];
   employeeId: Scalars['ID']['input'];
+  roleName?: InputMaybe<Scalars['String']['input']>;
   temporaryPassword?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1078,6 +1101,11 @@ export type MutationRenewEmploymentContractArgs = {
 };
 
 
+export type MutationResetRoleMenuConfigArgs = {
+  roleId: Scalars['ID']['input'];
+};
+
+
 export type MutationResignEmployeeArgs = {
   acknowledgeActiveWork?: InputMaybe<Scalars['Boolean']['input']>;
   effectiveDate: Scalars['Date']['input'];
@@ -1143,6 +1171,12 @@ export type MutationSetProjectActiveArgs = {
 
 export type MutationSetRetirementAgeArgs = {
   years: Scalars['Int']['input'];
+};
+
+
+export type MutationSetRoleMenuAccessArgs = {
+  entries: Array<RoleMenuAccessInput>;
+  roleId: Scalars['ID']['input'];
 };
 
 
@@ -1273,7 +1307,8 @@ export type MutationUpdateUnitArgs = {
 
 
 export type MutationUpdateUserAccessRoleArgs = {
-  accessRole: AccessRole;
+  accessRole?: InputMaybe<AccessRole>;
+  roleName?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['ID']['input'];
 };
 
@@ -1392,6 +1427,13 @@ export type Query = {
   myCvProfile?: Maybe<CvProfile>;
   /** IDP milik Talent yang sedang login; null = belum ada IDP (FR-14). */
   myIdp?: Maybe<Idp>;
+  /**
+   * Grid menu efektif milik role pemanggil — sumber sidebar dinamis.
+   *
+   * Tidak khusus Admin: pemanggil hanya menerima baris role-nya sendiri, yang
+   * memang sudah tercermin di sidebar dan sesinya.
+   */
+  myMenuConfig: Array<RoleMenuEntry>;
   /** Evaluasi milik Talent yang sedang login (FR-27). */
   myPerformanceEvaluations: Array<PerformanceEvaluation>;
   performanceEvaluations: PerformanceEvaluationConnection;
@@ -1666,6 +1708,19 @@ export type RoleCount = {
   role: AccessRole;
 };
 
+/**
+ * Satu sel menu × role pada `setRoleMenuAccess`.
+ *
+ * `accessLevel` adalah sumbu otorisasi server; `visible` hanya tampilan sidebar.
+ */
+export type RoleMenuAccessInput = {
+  accessLevel: MenuAccessLevel;
+  /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`. */
+  menuEntryId: Scalars['String']['input'];
+  /** Visibilitas entri di sidebar; tidak pernah mengubah otorisasi server. */
+  visible: Scalars['Boolean']['input'];
+};
+
 /** Sel menu × role: visibilitas menu dan tingkat akses di dalamnya. */
 export type RoleMenuEntry = {
   __typename?: 'RoleMenuEntry';
@@ -1673,6 +1728,8 @@ export type RoleMenuEntry = {
   /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`. */
   menuEntryId: Scalars['String']['output'];
   roleId: Scalars['ID']['output'];
+  /** Nama mesin role pemilik sel ini (bawaan atau kustom) — kunci kolom grid. */
+  roleName: Scalars['String']['output'];
   visible: Scalars['Boolean']['output'];
 };
 
@@ -1800,6 +1857,11 @@ export type User = {
   fullName: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   lastLoginAt?: Maybe<Scalars['Time']['output']>;
+  /**
+   * Nama mesin role di `users.role`: nama bawaan (ADMIN, OPERATION, ...) atau
+   * nama role kustom. Sumbu yang dipakai pemilih peran di halaman Accounts.
+   */
+  roleName: Scalars['String']['output'];
   status: AccountStatus;
   updatedAt: Scalars['Time']['output'];
 };

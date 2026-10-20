@@ -234,6 +234,9 @@ type User {
   email: String!
   fullName: String!
   accessRole: AccessRole!
+  """Nama mesin role di `users.role`: nama bawaan (ADMIN, OPERATION, ...) atau
+  nama role kustom. Sumbu yang dipakai pemilih peran di halaman Accounts."""
+  roleName: String!
   status: AccountStatus!
   employee: Employee
   lastLoginAt: Time
@@ -989,6 +992,8 @@ type Role {
 """Sel menu × role: visibilitas menu dan tingkat akses di dalamnya."""
 type RoleMenuEntry {
   roleId: ID!
+  """Nama mesin role pemilik sel ini (bawaan atau kustom) — kunci kolom grid."""
+  roleName: String!
   """Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`."""
   menuEntryId: String!
   visible: Boolean!
@@ -1001,6 +1006,17 @@ input CreateRoleInput {
   name: String!
   label: String!
   templateRole: AccessRole!
+}
+
+"""Satu sel menu × role pada `setRoleMenuAccess`.
+
+`accessLevel` adalah sumbu otorisasi server; `visible` hanya tampilan sidebar."""
+input RoleMenuAccessInput {
+  """Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`."""
+  menuEntryId: String!
+  """Visibilitas entri di sidebar; tidak pernah mengubah otorisasi server."""
+  visible: Boolean!
+  accessLevel: MenuAccessLevel!
 }
 
 # -------------------------------- Queries -----------------------------------
@@ -1084,6 +1100,11 @@ type Query {
 
   `roleId` kosong = seluruh role; terisi = role itu saja. Khusus Admin."""
   roleMenuConfig(roleId: ID): [RoleMenuEntry!]!
+  """Grid menu efektif milik role pemanggil — sumber sidebar dinamis.
+
+  Tidak khusus Admin: pemanggil hanya menerima baris role-nya sendiri, yang
+  memang sudah tercermin di sidebar dan sesinya."""
+  myMenuConfig: [RoleMenuEntry!]!
 
   # --- Asisten data (Chapter & Operation; FR-01/FR-02) ---
   """Percakapan asisten milik pemanggil (privat mutlak; FR-02)."""
@@ -1187,8 +1208,16 @@ Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FA
   submitPerformanceEvaluation(id: ID!): PerformanceEvaluation!
 
   # --- Akun user (Admin) ---
-  createUserAccount(employeeId: ID!, email: String!, accessRole: AccessRole!, temporaryPassword: String): User!
-  updateUserAccessRole(userId: ID!, accessRole: AccessRole!): User!
+  """Buat akun untuk seorang karyawan (Khusus Admin).
+
+  `accessRole` (bawaan) atau `roleName` (bawaan maupun kustom) menunjuk role
+  tersimpan; keduanya opsional tetapi tepat satu harus diisi."""
+  createUserAccount(employeeId: ID!, email: String!, accessRole: AccessRole, roleName: String, temporaryPassword: String): User!
+  """Ubah peran akses sebuah akun (Khusus Admin).
+
+  `accessRole` (bawaan) atau `roleName` (bawaan maupun kustom) menunjuk role
+  tersimpan; keduanya opsional tetapi tepat satu harus diisi."""
+  updateUserAccessRole(userId: ID!, accessRole: AccessRole, roleName: String): User!
   setUserAccountStatus(userId: ID!, status: AccountStatus!): User!
   revokeUserSessions(userId: ID!): Boolean!
 
@@ -1201,6 +1230,14 @@ Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FA
   setRoleStatus(id: ID!, status: RoleStatus!): Role!
   """Hapus role kustom yang tidak dipakai akun mana pun. Khusus Admin."""
   deleteRole(id: ID!): Boolean!
+  """Simpan konfigurasi menu satu role.
+
+  Hanya sel yang benar-benar berbeda dari matriks default FR-03 yang ditulis dan
+  dicatat audit. Sel khusus Admin (Accounts, Audit, kelola Master Data) divalidasi
+  di server. Khusus Admin."""
+  setRoleMenuAccess(roleId: ID!, entries: [RoleMenuAccessInput!]!): [RoleMenuEntry!]!
+  """Kembalikan konfigurasi menu satu role ke matriks default FR-03. Khusus Admin."""
+  resetRoleMenuConfig(roleId: ID!): [RoleMenuEntry!]!
 
   # --- Asisten data (Chapter & Operation; FR-01) ---
   """Mulai percakapan baru milik pemanggil."""

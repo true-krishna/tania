@@ -10,11 +10,26 @@ import {
 import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/cn";
 import type { AccessRole } from "@/generated/graphql";
-import { NAV, type NavSubmenu } from "./nav";
+import type { MenuAccessConfig } from "@/lib/auth/menuAccess";
+import {
+  NAV,
+  visibleNavEntries,
+  type NavEntry,
+  type NavSubmenu,
+} from "./nav";
 
 interface SidebarProps {
   role: AccessRole | null;
   pathname: string;
+  /**
+   * Active menu configuration of the signed-in role (`myMenuConfig`). Absent
+   * while it loads or in local-only mode: the sidebar then falls back to the
+   * static role lists of `NAV`, so the menu never renders empty.
+   */
+  menuConfig?: MenuAccessConfig | null;
+  /** Machine name of the signed-in role — the key `menuConfig` is indexed by.
+   * It is a built-in name or a custom role's name (FR-03 amandemen). */
+  roleName?: string | null;
 }
 
 /**
@@ -27,32 +42,49 @@ interface SidebarProps {
  */
 
 /** Longest visible href matching the path wins, so `/evaluations` does not also light up on `/evaluations/my`. */
-function useActiveHref(pathname: string, role: AccessRole | null): string {
+function useActiveHref(
+  pathname: string,
+  role: AccessRole | null,
+  entries: readonly NavEntry[],
+  roleScoped: boolean,
+): string {
   return React.useMemo(() => {
     let best = "";
-    for (const entry of NAV) {
-      if (role && !entry.roles.includes(role)) continue;
-      const hrefs = entry.kind === "link" ? [entry.href] : entry.children.filter((c) => !role || c.roles.includes(role)).map((c) => c.href);
+    for (const entry of entries) {
+      if (roleScoped && role && !entry.roles.includes(role)) continue;
+      const hrefs = entry.kind === "link" ? [entry.href] : entry.children.filter((c) => !roleScoped || !role || c.roles.includes(role)).map((c) => c.href);
       for (const href of hrefs) {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         if (active && href.length > best.length) best = href;
       }
     }
     return best;
-  }, [pathname, role]);
+  }, [pathname, role, entries, roleScoped]);
 }
 
-export function Sidebar({ role, pathname }: SidebarProps) {
-  const activeHref = useActiveHref(pathname, role);
+export function Sidebar({ role, pathname, menuConfig = null, roleName = null }: SidebarProps) {
+  // A configured sidebar is already scoped by the configuration (a custom role's
+  // machine name is not in `entry.roles`), so the static role lists only apply
+  // when no configuration is available.
+  const configured = !!menuConfig && !!roleName;
+  const entries = React.useMemo(
+    () => (configured ? visibleNavEntries(menuConfig, roleName) : NAV),
+    [configured, menuConfig, roleName],
+  );
+  const activeHref = useActiveHref(pathname, role, entries, !configured);
   // User toggles override the default (the submenu owning the current route).
   const [openOverride, setOpenOverride] = React.useState<Record<string, boolean>>({});
   // TAN-171: desktop-only minimize. The mobile strip (≤860px) is unaffected.
   const [collapsed, setCollapsed] = React.useState(false);
 
-  const activeGroupId = NAV.find(
+  const activeGroupId = entries.find(
     (entry): entry is NavSubmenu =>
       entry.kind === "group" && entry.children.some((child) => child.href === activeHref),
   )?.id;
+
+  const hidden = (entry: NavEntry) => !configured && !!role && !entry.roles.includes(role);
+  const childrenOf = (entry: NavSubmenu) =>
+    configured ? entry.children : entry.children.filter((child) => !role || child.roles.includes(role));
 
   const toggle = (
     <button
@@ -97,8 +129,8 @@ export function Sidebar({ role, pathname }: SidebarProps) {
       {/* Desktop: vertical nav with expandable submenus. */}
       <nav aria-label="Main navigation" className="hidden min-w-0 flex-1 flex-col overflow-y-auto min-[861px]:flex">
         <ul className="flex flex-col gap-1">
-          {NAV.map((entry) => {
-            if (role && !entry.roles.includes(role)) return null;
+          {entries.map((entry) => {
+            if (hidden(entry)) return null;
 
             if (entry.kind === "link") {
               const active = activeHref === entry.href;
@@ -117,7 +149,7 @@ export function Sidebar({ role, pathname }: SidebarProps) {
               );
             }
 
-            const children = entry.children.filter((child) => !role || child.roles.includes(role));
+            const children = childrenOf(entry);
 
             if (collapsed) {
               // Icon-only rail: a section cannot expand, so it links to its first
@@ -189,8 +221,8 @@ export function Sidebar({ role, pathname }: SidebarProps) {
         aria-label="Main navigation (compact)"
         className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto min-[861px]:hidden"
       >
-        {NAV.map((entry) => {
-          if (role && !entry.roles.includes(role)) return null;
+        {entries.map((entry) => {
+          if (hidden(entry)) return null;
 
           if (entry.kind === "link") {
             const active = activeHref === entry.href;
@@ -207,7 +239,7 @@ export function Sidebar({ role, pathname }: SidebarProps) {
             );
           }
 
-          const children = entry.children.filter((child) => !role || child.roles.includes(role));
+          const children = childrenOf(entry);
           if (children.length === 0) return null;
 
           return (

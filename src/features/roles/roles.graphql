@@ -1,0 +1,95 @@
+# Role & menu configuration operations (W3 / TAN-264). The `roles`, `roleMenuConfig`,
+# `createRole`, and the role-status mutations come from W1 (TAN-262); the menu
+# configuration writes and `myMenuConfig` are W3's.
+
+query Roles($includeInactive: Boolean) {
+  roles(includeInactive: $includeInactive) {
+    id
+    name
+    label
+    templateRole
+    builtIn
+    status
+  }
+}
+
+query RoleMenuConfig($roleId: ID) {
+  roleMenuConfig(roleId: $roleId) {
+    roleId
+    roleName
+    menuEntryId
+    visible
+    accessLevel
+  }
+}
+
+# The caller's own grid: what makes the sidebar follow the active configuration
+# for every role, without granting a non-Admin read access to other roles.
+query MyMenuConfig {
+  myMenuConfig {
+    roleId
+    roleName
+    menuEntryId
+    visible
+    accessLevel
+  }
+}
+
+mutation CreateRole($input: CreateRoleInput!) {
+  createRole(input: $input) {
+    id
+    name
+    label
+    templateRole
+    builtIn
+    status
+  }
+}
+
+mutation UpdateRole($id: ID!, $label: String!) {
+  updateRole(id: $id, label: $label) {
+    id
+    name
+    label
+    templateRole
+    builtIn
+    status
+  }
+}
+
+mutation SetRoleStatus($id: ID!, $status: RoleStatus!) {
+  setRoleStatus(id: $id, status: $status) {
+    id
+    name
+    label
+    templateRole
+    builtIn
+    status
+  }
+}
+
+mutation DeleteRole($id: ID!) {
+  deleteRole(id: $id)
+}
+
+# `entries` is the whole grid of the role, as rendered: the server stores and
+# audits only the cells that differ from the matrix default.
+mutation SetRoleMenuAccess($roleId: ID!, $entries: [RoleMenuAccessInput!]!) {
+  setRoleMenuAccess(roleId: $roleId, entries: $entries) {
+    roleId
+    roleName
+    menuEntryId
+    visible
+    accessLevel
+  }
+}
+
+mutation ResetRoleMenuConfig($roleId: ID!) {
+  resetRoleMenuConfig(roleId: $roleId) {
+    roleId
+    roleName
+    menuEntryId
+    visible
+    accessLevel
+  }
+}

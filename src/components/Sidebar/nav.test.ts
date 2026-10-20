@@ -12,7 +12,11 @@ import {
   serverAllows,
   visibleByConfig,
 } from "@/lib/auth/menuAccess";
-import { NAV, sectionForPath } from "./nav";
+import {
+  ACCOUNTS,
+  IDP,
+} from "@/lib/constants/routes";
+import { NAV, sectionForPath, visibleNavEntries } from "./nav";
 
 const ROLES: readonly AccessRole[] = ACCESS_ROLES;
 
@@ -92,6 +96,91 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
  * role. Checked against the default configuration (identical to the W1 seed /
  * 002 baseline) and against a non-default one.
  */
+describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
+  /** Sidebar hrefs, flattened — the grid must equal this set, id for id. */
+  const NAV_ENTRY_IDS = NAV.flatMap((entry) =>
+    entry.kind === "link"
+      ? [entry.href]
+      : entry.children.map((child) => child.href)
+  );
+
+  /** Flattened hrefs a sidebar render shows, in order. */
+  function drawnHrefs(config: MenuAccessConfig | null, roleName: string | null) {
+    return visibleNavEntries(config, roleName).flatMap((entry) =>
+      entry.kind === "link" ? [entry.href] : entry.children.map((child) => child.href)
+    );
+  }
+
+  /** The static role filter a caller falls back to with no configuration. */
+  function staticHrefs(role: AccessRole) {
+    return NAV.flatMap((entry) =>
+      entry.kind === "link"
+        ? entry.roles.includes(role)
+          ? [entry.href]
+          : []
+        : entry.roles.includes(role)
+          ? entry.children.filter((child) => child.roles.includes(role)).map((child) => child.href)
+          : []
+    );
+  }
+
+  it("tanpa konfigurasi sidebar tetap memakai filter role statis NAV", () => {
+    // `visibleNavEntries` imposes no filter of its own when there is nothing to
+    // read: it hands NAV back whole and `Sidebar` keeps applying the static role
+    // lists (asserted in Sidebar.config.test.tsx).
+    for (const role of ROLES) {
+      expect(drawnHrefs(null, role)).toEqual(NAV_ENTRY_IDS);
+    }
+    expect(visibleNavEntries(null, "ADMIN")).toBe(NAV);
+    expect(visibleNavEntries(DEFAULT_MENU_ACCESS, null)).toBe(NAV);
+  });
+
+  it("konfigurasi default menghasilkan menu yang identik dengan baseline 002", () => {
+    // The precondition of the whole feature: an untouched `role_menu_config`
+    // changes nothing on screen, for every role.
+    for (const role of ROLES) {
+      expect(drawnHrefs(DEFAULT_MENU_ACCESS, role), `role ${role}`).toEqual(staticHrefs(role));
+    }
+  });
+
+  it("entri yang ditutup hilang dari sidebar, role lain tidak terpengaruh", () => {
+    const closed = withCell(DEFAULT_MENU_ACCESS, "TALENT", "idp", "NONE");
+    expect(drawnHrefs(closed, "TALENT")).not.toContain(IDP);
+    expect(drawnHrefs(closed, "CHAPTER")).toContain(IDP);
+  });
+
+  it("grup tanpa anak yang tampil ikut hilang", () => {
+    let config: MenuAccessConfig = DEFAULT_MENU_ACCESS;
+    for (const entry of ["evaluations", "evaluations/periods", "evaluations/templates", "evaluations/my"]) {
+      config = withCell(config, "ADMIN", entry, "NONE");
+    }
+    const drawn = visibleNavEntries(config, "ADMIN");
+    expect(drawn.some((entry) => entry.kind === "group" && entry.id === "evaluations")).toBe(false);
+    // Only that group: the rest of the Admin menu is untouched.
+    expect(drawn.some((entry) => entry.kind === "link" && entry.href === ACCOUNTS)).toBe(true);
+  });
+
+  it("role kustom memakai konfigurasi miliknya, bukan daftar role statis", () => {
+    // `PM_CHAPTER` is not in any NAV `roles` list, so the static filter would draw
+    // an empty sidebar; its configuration (template CHAPTER + overrides) is what
+    // makes the menu appear without a code change.
+    expect(staticHrefs("CHAPTER").length).toBeGreaterThan(0);
+    const custom: MenuAccessConfig = { PM_CHAPTER: DEFAULT_MENU_ACCESS["CHAPTER"] };
+    expect(drawnHrefs(custom, "PM_CHAPTER")).toEqual(staticHrefs("CHAPTER"));
+    // And an unknown role draws nothing rather than everything: absence of a
+    // configuration is never a reason to show a menu the server may deny.
+    expect(drawnHrefs(DEFAULT_MENU_ACCESS, "PM_CHAPTER")).toEqual([]);
+  });
+
+  it("tidak ada entri yang digambar ketika konfigurasi aktif menolaknya", () => {
+    const closed = withCell(DEFAULT_MENU_ACCESS, "CHAPTER", "employees", "NONE");
+    for (const href of [...drawnHrefs(closed, "CHAPTER"), ...drawnHrefs(closed, "TALENT")]) {
+      const role = drawnHrefs(closed, "CHAPTER").includes(href) ? "CHAPTER" : "TALENT";
+      expect(serverAllows(closed, role, menuEntryIdForHref(href), "READ")).toBe(true);
+    }
+  });
+});
+
 describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif", () => {
   it("konfigurasi default: setiap leaf yang tampil diizinkan server", () => {
     for (const leaf of LEAVES) {
