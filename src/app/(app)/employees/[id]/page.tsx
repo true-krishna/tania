@@ -20,6 +20,7 @@ import {
 } from "@/features/contracts/labels";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { EmployeeWorkloadTab } from "@/features/workload";
+import { EmployeeEntraProvisionCard } from "@/features/entra/EmployeeEntraProvisionCard";
 import {
   DeactivateEmployeeDocument,
   EmployeeDocument,
@@ -49,6 +50,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   const role = useSessionRole();
   const manage = canManage(role, "employees");
   const showHistory = role === "OPERATION" || role === "ADMIN";
+  const showEntra = canAccess(role, "entra");
   const linkContracts = canAccess(role, "contracts");
   const { status, data, error } = useEmployee(id);
   const [tab, setTab] = React.useState<DetailTab>("overview");
@@ -185,6 +187,8 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               </div>
             </dl>
           </Card>
+
+          {showEntra ? <EmployeeEntraProvisionCard employeeId={id} /> : null}
 
           <Card className="max-w-3xl">
             <div className="mb-3 flex items-center justify-between">

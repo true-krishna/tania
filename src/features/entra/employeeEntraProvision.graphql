@@ -1,0 +1,12 @@
+query EmployeeEntraProvision($id: ID!) {
+  employee(id: $id) {
+    id
+    entraProvision {
+      status
+      action
+      upn
+      lastError
+      updatedAt
+    }
+  }
+}
