@@ -161,8 +161,10 @@ test("T028 — satu aksi filter memperbarui kelima grafik (SC-04)", async ({ pag
   expect(before.role).toBe(OPERATION_FULL_RANGE.distribution);
   expect(before.movement).toBe(OPERATION_FULL_RANGE.movement);
 
-  await page.getByLabel("Bulan mulai").selectOption("2025-01");
-  await page.getByLabel("Bulan akhir").selectOption("2025-12");
+  await page.getByLabel("Tahun mulai").selectOption("2025");
+  await page.getByLabel("Bulan mulai").selectOption("01");
+  await page.getByLabel("Tahun akhir").selectOption("2025");
+  await page.getByLabel("Bulan akhir").selectOption("12");
   await page.getByRole("button", { name: "Terapkan" }).click();
 
   await expect(totalOf(page, "Tren churn vs new talent")).toHaveText(
@@ -188,8 +190,12 @@ test("T028 — Unduh PNG per grafik: event, pola nama, dimensi ≥ 2× (SC-03)",
   await page.goto("/dashboard");
   await expect(chartOf(page, "Talent per role").locator("canvas")).toBeVisible();
 
-  const startMonth = await page.getByLabel("Bulan mulai").inputValue();
-  const endMonth = await page.getByLabel("Bulan akhir").inputValue();
+  const startMonth = `${await page.getByLabel("Tahun mulai").inputValue()}-${await page
+    .getByLabel("Bulan mulai")
+    .inputValue()}`;
+  const endMonth = `${await page.getByLabel("Tahun akhir").inputValue()}-${await page
+    .getByLabel("Bulan akhir")
+    .inputValue()}`;
 
   for (const chartTitle of ["Talent per role", "Tren churn vs new talent"]) {
     const downloadPromise = page.waitForEvent("download");
