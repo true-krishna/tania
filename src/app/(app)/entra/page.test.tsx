@@ -38,6 +38,21 @@ const rows = [
       updatedAt: "2026-10-12T10:00:00Z",
     },
   },
+  {
+    __typename: "Employee",
+    id: "emp-3",
+    fullName: "Dewi Anggraini",
+    email: "dewi@example.com",
+    status: "ACTIVE",
+    entraProvision: {
+      __typename: "EntraProvision",
+      status: "CREATED",
+      action: "CREATE",
+      upn: "dewi.anggraini@digitaltelkom.id",
+      lastError: null,
+      updatedAt: "2026-10-12T10:00:00Z",
+    },
+  },
 ];
 
 function connection(nodes: typeof rows, hasNextPage = false, endCursor: string | null = null) {
@@ -79,6 +94,9 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     expect(screen.getByText("Belum dibuat")).toBeInTheDocument();
     expect(screen.getByText("Gagal")).toBeInTheDocument();
     expect(screen.getByText("graph unavailable")).toBeInTheDocument();
+    // CREATED: akun hasil create menunggu aktivasi di luar aplikasi (TAN-273).
+    expect(screen.getByText("Menunggu aktivasi")).toBeInTheDocument();
+    expect(screen.getByText("dewi.anggraini@digitaltelkom.id")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Aksi Budi Santoso" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Aksi Rina Kusuma" })).toBeInTheDocument();
 

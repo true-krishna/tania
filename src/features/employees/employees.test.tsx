@@ -206,6 +206,26 @@ const noProvisionMock = {
   },
 };
 
+const createdProvisionMock = {
+  request: { query: EmployeeEntraProvisionDocument, variables: { id: "emp-1" } },
+  result: {
+    data: {
+      employee: {
+        __typename: "Employee",
+        id: "emp-1",
+        entraProvision: {
+          __typename: "EntraProvision",
+          status: "CREATED",
+          action: "CREATE",
+          upn: "rina.kusuma@digitaltelkom.id",
+          lastError: null,
+          updatedAt: "2026-10-12T10:00:00Z",
+        },
+      },
+    },
+  },
+};
+
 async function renderEdit(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
   await act(async () => {
     render(
@@ -426,5 +446,19 @@ describe("EmployeeDetailPage provisi akun Entra (TAN-272 U1)", () => {
     });
 
     expect(await screen.findByText("Belum pernah diprovisi.")).toBeInTheDocument();
+  });
+
+  it("marks a CREATED outcome as menunggu aktivasi (TAN-273 Opsi A)", async () => {
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock, createdProvisionMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    const card = screen.getByText("Provisi akun Entra").closest("div") as HTMLElement;
+    expect(await within(card).findByText("Menunggu aktivasi")).toBeInTheDocument();
+    expect(within(card).getByText("rina.kusuma@digitaltelkom.id")).toBeInTheDocument();
+    expect(
+      within(card).getByText(/diaktifkan di luar aplikasi/i)
+    ).toBeInTheDocument();
   });
 });

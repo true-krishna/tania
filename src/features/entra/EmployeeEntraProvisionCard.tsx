@@ -64,6 +64,12 @@ export function EmployeeEntraProvisionCard({ employeeId }: { employeeId: string 
           </div>
         </dl>
       )}
+      {provision?.status === "CREATED" ? (
+        <p className="mt-3 rounded-md border border-tp-tint-info bg-tp-surface px-3 py-2 text-xs text-zinc-600">
+          Menunggu aktivasi — akun hasil create diaktifkan di luar aplikasi (reset password
+          awal oleh Admin/IT Entra atau SSPR tenant).
+        </p>
+      ) : null}
     </Card>
   );
 }
