@@ -4,15 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSessionRole } from "@/lib/auth/guard";
 import { PageHeader } from "@/components/PageHeader";
+import { EVALUATIONS, EVALUATION_PERIODS, EVALUATION_TEMPLATES } from "@/lib/constants/routes";
 
 export function EvaluationsShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const role = useSessionRole();
 
   const tabs = [
-    { href: "/evaluations", label: "Roster", roles: ["CHAPTER", "ADMIN"] },
-    { href: "/evaluations/periods", label: "Periode", roles: ["ADMIN"] },
-    { href: "/evaluations/templates", label: "Template", roles: ["ADMIN"] },
+    { href: EVALUATIONS, label: "Roster", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+    { href: EVALUATION_PERIODS, label: "Periode", roles: ["ADMIN"] },
+    { href: EVALUATION_TEMPLATES, label: "Template", roles: ["ADMIN"] },
   ].filter((t) => !role || (t.roles as readonly string[]).includes(role));
 
   const showTabs = tabs.length > 0 && role !== "TALENT";
@@ -21,7 +22,7 @@ export function EvaluationsShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Evaluasi"
-        subtitle="Evaluasi performa talent per periode (Admin: template & periode; Chapter: penilaian; Talent: hanya-baca)."
+        subtitle="Evaluasi performa talent per periode (Admin: template & periode; Chapter: penilaian; Operation: hanya-baca; Talent: evaluasi miliknya)."
       />
       {showTabs ? (
         <nav aria-label="Evaluations section">

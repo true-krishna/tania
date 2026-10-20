@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from "vitest";
-import { type ComponentProps } from "react";
+import * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { ToastProvider } from "@/components/Toast";
@@ -28,6 +28,7 @@ const UNITS_QUERY = {
       units: [
         {
           id: "u-1",
+          code: "DBT",
           name: "Digital Business & Technology",
           isActive: true,
           projects: [],
@@ -38,15 +39,27 @@ const UNITS_QUERY = {
   },
 };
 
+// Master-data pages read the session role from the guard: Admin manages, Chapter
+// and Operation get the same list read-only (2026-10-16 clarify 6).
+const auth = vi.hoisted(() => ({ role: "ADMIN" as string | null }));
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => auth.role,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+beforeEach(() => {
+  auth.role = "ADMIN";
+});
+
 describe("master-data CRUD (Admin) — T052/T054", () => {
   it("creates a unit and shows the success toast", async () => {
     const mocks = [
       UNITS_QUERY,
       {
-        request: { query: CreateUnitDocument, variables: { name: "Engineering" } },
+        request: { query: CreateUnitDocument, variables: { code: "ENG", name: "Engineering" } },
         result: {
           data: {
-            createUnit: { id: "u-2", name: "Engineering", isActive: true, projects: [], __typename: "Unit" },
+            createUnit: { id: "u-2", code: "ENG", name: "Engineering", isActive: true, projects: [], __typename: "Unit" },
           },
         },
       },
@@ -62,6 +75,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Tambah Unit" }));
+    fireEvent.change(screen.getByLabelText("Kode Unit"), { target: { value: "ENG" } });
     fireEvent.change(screen.getByLabelText("Nama Unit"), { target: { value: "Engineering" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
@@ -72,10 +86,10 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     const mocks = [
       UNITS_QUERY,
       {
-        request: { query: UpdateUnitDocument, variables: { id: "u-1", name: "Digital" } },
+        request: { query: UpdateUnitDocument, variables: { id: "u-1", code: "DBT", name: "Digital" } },
         result: {
           data: {
-            updateUnit: { id: "u-1", name: "Digital", isActive: true, projects: [], __typename: "Unit" },
+            updateUnit: { id: "u-1", code: "DBT", name: "Digital", isActive: true, projects: [], __typename: "Unit" },
           },
         },
       },
@@ -105,7 +119,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         request: { query: SetUnitActiveDocument, variables: { id: "u-1", isActive: false } },
         result: {
           data: {
-            setUnitActive: { id: "u-1", name: "Digital Business & Technology", isActive: false, projects: [], __typename: "Unit" },
+            setUnitActive: { id: "u-1", code: "DBT", name: "Digital Business & Technology", isActive: false, projects: [], __typename: "Unit" },
           },
         },
       },
@@ -462,6 +476,51 @@ describe("master-data search per page (US1, US2)", () => {
   });
 });
 
+describe("master-data read-only per role (matrix: lihat untuk semua peran)", () => {
+  it("gives Chapter the units list without any edit surface", async () => {
+    auth.role = "CHAPTER";
+    render(
+      <MockedProvider mocks={[UNITS_QUERY]}>
+        <ToastProvider>
+          <UnitsPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
+    expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Tambah Unit" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Aksi / })).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: "Aksi" })).toBeNull();
+  });
+
+  it("gives Talent the chapters list read-only, without the add action", async () => {
+    auth.role = "TALENT";
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: ChaptersDocument, variables: { includeInactive: true } },
+            result: {
+              data: {
+                chapters: [
+                  { id: "ch-1", name: "Product", isActive: true, jobRoles: [], __typename: "Chapter" },
+                ],
+              },
+            },
+          },
+        ]}
+      >
+        <ToastProvider>
+          <ChaptersPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Product")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Tambah Chapter" })).toBeNull();
+  });
+});
 // --- Create Job Role (US2) & Initiative/Project (US3) — TAN-187, 004-master-data-create ---
 
 const CHAPTERS_QUERY = {
@@ -484,7 +543,7 @@ const UNITS_PICKER_QUERY = {
   },
 };
 
-function renderJobRolesPage(mocks: ComponentProps<typeof MockedProvider>["mocks"]) {
+function renderJobRolesPage(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
   render(
     <MockedProvider mocks={mocks}>
       <ToastProvider>
@@ -494,7 +553,7 @@ function renderJobRolesPage(mocks: ComponentProps<typeof MockedProvider>["mocks"
   );
 }
 
-function renderProjectsPage(mocks: ComponentProps<typeof MockedProvider>["mocks"]) {
+function renderProjectsPage(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
   render(
     <MockedProvider mocks={mocks}>
       <ToastProvider>
@@ -686,7 +745,9 @@ describe("master-data create Initiative/Project (US3, FR-006)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     await waitFor(() => expect(screen.getByText("Unit wajib dipilih.")).toBeInTheDocument());
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    // The inline validation error is now an alert too (InputControl), so assert
+    // the absence of the success toast instead: nothing was submitted.
+    expect(screen.queryByText(/berhasil dibuat/)).not.toBeInTheDocument();
   });
 
   it("surfaces the server validation message on a rejected create (FR-005/FR-007)", async () => {

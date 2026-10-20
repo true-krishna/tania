@@ -174,8 +174,10 @@ describe("ActivityList — states and ownership", () => {
         onDelete={vi.fn()}
       />,
     );
-    expect(screen.getAllByRole("button", { name: /^Aksi / })).toHaveLength(1);
-    expect(screen.getByText("Bukan milik Anda")).toBeInTheDocument();
+    const kebabs = screen.getAllByRole("button", { name: /^Aksi / });
+    expect(kebabs).toHaveLength(2);
+    expect(kebabs[0]).toBeEnabled();
+    expect(kebabs[1]).toBeDisabled();
   });
 });
 

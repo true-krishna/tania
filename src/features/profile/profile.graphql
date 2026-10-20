@@ -1,0 +1,82 @@
+query Profile {
+  me {
+    id
+    email
+    fullName
+    accessRole
+    employee {
+      id
+      fullName
+      nikMasked
+      email
+      birthDate
+      gender
+      phone
+      address
+      latestEducation
+      institutionName
+      major
+      nomorInduk
+      status
+      assignable
+      joinedAt
+      unit {
+        id
+        name
+      }
+      jobRole {
+        id
+        name
+      }
+      chapter {
+        id
+        name
+      }
+      contracts(first: 50) {
+        totalCount
+        edges {
+          node {
+            id
+            contractNo
+            contractType
+            officeEmail
+            nomorInduk
+            bandPosition
+            jobTitle
+            jobLevel
+            workLocation
+            startDate
+            endDate
+            status
+            endReason
+            terminatedAt
+            notes
+            unit {
+              id
+              name
+            }
+            jobRole {
+              id
+              name
+            }
+          }
+        }
+      }
+      assignments(first: 50) {
+        totalCount
+        edges {
+          node {
+            id
+            status
+            periodStart
+            periodEnd
+            project {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+}

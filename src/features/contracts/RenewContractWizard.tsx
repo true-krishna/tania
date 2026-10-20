@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
+import { InputControl } from "@/components/InputControl";
 import { useJobRoles, useUnits } from "@/features/master-data/useMasterData";
 import {
   EmploymentContractDocument,
@@ -24,6 +25,7 @@ import {
   workLocationFormValue,
 } from "@/features/contracts/labels";
 import { mapSubmitError } from "@/lib/errors";
+import { CONTRACT_DETAIL } from "@/lib/constants/routes";
 
 type SourceContract = NonNullable<EmploymentContractQuery["employmentContract"]>;
 
@@ -198,12 +200,12 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
           {created.startDate}. Kontrak lama {contract.contractNo} tetap tersimpan sebagai riwayat.
         </div>
         <div className="flex gap-2">
-          <Link href={`/contracts/${created.id}`} className="no-underline">
+          <Link href={CONTRACT_DETAIL(created.id)} className="no-underline">
             <Button type="button" variant="primary">
               Buka kontrak baru
             </Button>
           </Link>
-          <Link href={`/contracts/${contract.id}`} className="no-underline">
+            <Link href={CONTRACT_DETAIL(contract.id)} className="no-underline">
             <Button type="button" variant="secondary">
               Kembali ke kontrak lama
             </Button>
@@ -222,8 +224,7 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
 
       {step === 1 ? (
         <>
-          <Label error={errors.contractType}>
-            Jenis kontrak
+          <InputControl label="Jenis kontrak" error={errors.contractType}>
             <Select
               value={values.contractType}
               onChange={(e) => {
@@ -231,45 +232,40 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
                 setValues((v) => ({ ...v, contractType: next, endDate: "" }));
                 setErrors((er) => ({ ...er, endDate: undefined }));
               }}
-            >
-              {CONTRACT_TYPE_ORDER.map((type) => (
-                <option key={type} value={type}>
-                  {CONTRACT_TYPE_LABEL[type]}
-                </option>
-              ))}
-            </Select>
-          </Label>
-          <Label error={errors.contractNo}>
-            No. Kontrak baru
+              options={CONTRACT_TYPE_ORDER.map((type) => ({
+                value: type,
+                label: CONTRACT_TYPE_LABEL[type],
+              }))}
+            />
+          </InputControl>
+          <InputControl label="No. Kontrak baru" error={errors.contractNo}>
             <Input
               type="text"
               value={values.contractNo}
               onChange={(e) => set("contractNo", e.target.value)}
               placeholder="cth. PKWT/2027/001"
             />
-          </Label>
-          <Label error={errors.startDate}>
-            Tanggal mulai
+          </InputControl>
+          <InputControl label="Tanggal mulai" error={errors.startDate}>
             <Input
               type="date"
               value={values.startDate}
               min={dayAfter(contract.endDate) || undefined}
               onChange={(e) => set("startDate", e.target.value)}
             />
-          </Label>
+          </InputControl>
           {!isOpenEndedContractType(values.contractType) ? (
-            <Label error={errors.endDate}>
-              Tanggal selesai
+            <InputControl label="Tanggal selesai" error={errors.endDate}>
               <Input
                 type="date"
                 value={values.endDate}
                 onChange={(e) => set("endDate", e.target.value)}
               />
-            </Label>
+            </InputControl>
           ) : null}
           <div className="flex gap-2">
             <Button type="submit">Lanjut</Button>
-            <Link href={`/contracts/${contract.id}`} className="no-underline">
+          <Link href={CONTRACT_DETAIL(contract.id)} className="no-underline">
               <Button type="button" variant="secondary">
                 Batal
               </Button>
@@ -278,94 +274,91 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
         </>
       ) : (
         <>
-          <Label error={errors.nomorInduk}>
-            Nomor induk karyawan
+          <InputControl label="Nomor induk karyawan" error={errors.nomorInduk}>
             <Input
               type="text"
               value={values.nomorInduk}
               onChange={(e) => set("nomorInduk", e.target.value)}
             />
-          </Label>
-          <Label error={errors.officeEmail}>
-            Email kantor <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+          </InputControl>
+          <InputControl label="Email kantor" helper="(opsional)" error={errors.officeEmail}>
             <Input
               type="email"
               value={values.officeEmail}
               onChange={(e) => set("officeEmail", e.target.value)}
             />
-          </Label>
-          <Label error={errors.unitId}>
-            Unit <span className="text-xs font-normal text-zinc-500">(pindah unit bila diubah)</span>
-            <Select value={values.unitId} onChange={(e) => set("unitId", e.target.value)}>
-              <option value="">— pilih unit —</option>
-              {(units.data ?? []).map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
-            </Select>
-          </Label>
-          <Label error={errors.jobRoleId}>
-            Posisi / Job Role
-            <Select value={values.jobRoleId} onChange={(e) => set("jobRoleId", e.target.value)}>
-              <option value="">— pilih job role —</option>
-              {(jobRoles.data ?? []).map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </Select>
-          </Label>
-          <Label error={errors.jobTitle}>
-            Job title <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+          </InputControl>
+          <InputControl
+            label="Unit"
+            helper="(pindah unit bila diubah)"
+            error={errors.unitId}
+          >
+            <Select
+              value={values.unitId}
+              onChange={(e) => set("unitId", e.target.value)}
+              options={[
+                { value: "", label: "— pilih unit —" },
+                ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+              ]}
+            />
+          </InputControl>
+          <InputControl label="Posisi / Job Role" error={errors.jobRoleId}>
+            <Select
+              value={values.jobRoleId}
+              onChange={(e) => set("jobRoleId", e.target.value)}
+              options={[
+                { value: "", label: "— pilih job role —" },
+                ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
+              ]}
+            />
+          </InputControl>
+          <InputControl label="Job title" helper="(opsional)" error={errors.jobTitle}>
             <Input
               type="text"
               value={values.jobTitle}
               onChange={(e) => set("jobTitle", e.target.value)}
             />
-          </Label>
-          <Label error={errors.jobLevel}>
-            Job level <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+          </InputControl>
+          <InputControl label="Job level" helper="(opsional)" error={errors.jobLevel}>
             <Input
               type="text"
               value={values.jobLevel}
               onChange={(e) => set("jobLevel", e.target.value)}
             />
-          </Label>
-          <Label error={errors.bandPosition}>
-            Band position
+          </InputControl>
+          <InputControl label="Band position" error={errors.bandPosition}>
             <Select
               value={values.bandPosition}
               onChange={(e) => set("bandPosition", e.target.value)}
-            >
-              <option value="UNDEFINED">Belum ditetapkan</option>
-              <option value="I">I</option>
-              <option value="II">II</option>
-              <option value="III">III</option>
-              <option value="IV">IV</option>
-              <option value="V">V</option>
-              <option value="VI">VI</option>
-            </Select>
-          </Label>
-          <Label error={errors.workLocation}>
-            Work location
+              options={[
+                { value: "UNDEFINED", label: "Belum ditetapkan" },
+                { value: "I", label: "I" },
+                { value: "II", label: "II" },
+                { value: "III", label: "III" },
+                { value: "IV", label: "IV" },
+                { value: "V", label: "V" },
+                { value: "VI", label: "VI" },
+              ]}
+            />
+          </InputControl>
+          <InputControl label="Work location" error={errors.workLocation}>
             <Select
               value={values.workLocation}
               onChange={(e) => set("workLocation", e.target.value)}
-            >
-              <option value="">— pilih lokasi kerja —</option>
-              <option value="JAKARTA">Jakarta</option>
-              <option value="BANDUNG">Bandung</option>
-            </Select>
-          </Label>
-          <Label error={errors.notes}>
-            Catatan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+              options={[
+                { value: "", label: "— pilih lokasi kerja —" },
+                { value: "JAKARTA", label: "Jakarta" },
+                { value: "BANDUNG", label: "Bandung" },
+              ]}
+            />
+          </InputControl>
+          <InputControl label="Catatan" helper="(opsional)" error={errors.notes}>
             <Input
               type="text"
               value={values.notes}
               onChange={(e) => set("notes", e.target.value)}
             />
-          </Label>
+          </InputControl>
           <div className="flex gap-2">
             <Button type="submit" disabled={loading}>
               {loading ? "Menyimpan…" : "Simpan perpanjangan"}
@@ -377,18 +370,5 @@ export function RenewContractWizard({ contract }: { contract: SourceContract }) 
         </>
       )}
     </form>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

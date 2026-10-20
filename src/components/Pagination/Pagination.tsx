@@ -39,14 +39,18 @@ export function Pagination({
   const from = totalItems > 0 ? (page - 1) * pageSize + 1 : 0;
   const to = Math.min(page * pageSize, totalItems);
 
+  const windowSize = Math.min(3, totalPages);
+  const windowStart = Math.min(Math.max(1, page), totalPages - windowSize + 1);
+  const pages = Array.from({ length: windowSize }, (_, i) => windowStart + i);
+
   return (
-    <div className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
+    <div className={cn("flex w-full flex-wrap items-center justify-between gap-3", className)}>
       <p aria-live="polite">
         Menampilkan{" "}
         <strong>
           {from}–{to}
         </strong>{" "}
-        dari <strong>{totalItems}</strong>
+        dari <span className="page-total">{totalItems}</span>
       </p>
       <div className="flex items-center gap-2">
         <label className="flex items-center gap-2">
@@ -74,14 +78,22 @@ export function Pagination({
                 disabled={disabled || page <= 1}
                 onClick={() => onPageChange(page - 1)}
               >
-                <IconChevronLeft aria-hidden size={16} stroke={2} />
+                <IconChevronLeft aria-hidden size={18} stroke={2} />
               </button>
             </li>
-            <li>
-              <span aria-current={disabled ? undefined : "page"} className="page-current">
-                {page}
-              </span>
-            </li>
+            {pages.map((n) => (
+              <li key={n}>
+                <button
+                  type="button"
+                  className={cn("page-num", n === page && "page-num-active")}
+                  aria-current={disabled || n !== page ? undefined : "page"}
+                  disabled={disabled || n === page}
+                  onClick={() => onPageChange(n)}
+                >
+                  {n}
+                </button>
+              </li>
+            ))}
             <li>
               <button
                 type="button"
@@ -90,7 +102,7 @@ export function Pagination({
                 disabled={disabled || page >= totalPages}
                 onClick={() => onPageChange(page + 1)}
               >
-                <IconChevronRight aria-hidden size={16} stroke={2} />
+                <IconChevronRight aria-hidden size={18} stroke={2} />
               </button>
             </li>
           </ul>

@@ -1,17 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { BoardTable, type Column } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
+import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { canManage } from "@/lib/auth/matrix";
+import { useSessionRole } from "@/lib/auth/guard";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
 import {
   CONTRACT_STATUS_LABEL,
+  CONTRACT_STATUS_VARIANT,
   CONTRACT_TYPE_LABEL,
   CONTRACT_TYPE_ORDER,
 } from "@/features/contracts/labels";
@@ -20,70 +27,18 @@ import type {
   EmploymentContractFilter,
   EmploymentContractStatus,
 } from "@/generated/graphql/types";
-
-type ContractRowData = {
-  id: string;
-  contractNo: string;
-  contractType: ContractType;
-  nomorInduk: string;
-  startDate: string;
-  endDate: string | null;
-  status: EmploymentContractStatus;
-  employee: { id: string; fullName: string };
-  unit: { name: string };
-  jobRole: { name: string };
-};
-
-const COLUMNS: Column[] = [
-  { key: "contractNo", label: "No Kontrak" },
-  { key: "employee", label: "Karyawan" },
-  { key: "type", label: "Jenis" },
-  { key: "unit", label: "Unit" },
-  { key: "role", label: "Posisi" },
-  { key: "nomorInduk", label: "Nomor Induk" },
-  { key: "period", label: "Periode" },
-  { key: "status", label: "Status" },
-];
-
-function ContractRow({ contract }: { contract: ContractRowData }) {
-  return (
-    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
-      <td className="px-4 py-2.5">
-        <Link
-          href={`/contracts/${contract.id}`}
-          className="font-medium text-zinc-900 hover:underline"
-        >
-          {contract.contractNo}
-        </Link>
-      </td>
-      <td className="px-4 py-2.5">
-        <Link
-          href={`/employees/${contract.employee.id}`}
-          className="text-zinc-900 hover:underline"
-        >
-          {contract.employee.fullName}
-        </Link>
-      </td>
-      <td className="px-4 py-2.5 text-zinc-600">{CONTRACT_TYPE_LABEL[contract.contractType]}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{contract.unit.name}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{contract.jobRole.name}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{contract.nomorInduk}</td>
-      <td className="px-4 py-2.5 text-zinc-600">
-        {contract.startDate} — {contract.endDate ?? "tidak berbatas"}
-      </td>
-      <td className="px-4 py-2.5">
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
-          {CONTRACT_STATUS_LABEL[contract.status]}
-        </span>
-      </td>
-    </tr>
-  );
-}
+import { orDash } from "@/lib/cell";
+import { CONTRACT_NEW, CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 export default function ContractsPage() {
+  const router = useRouter();
+  // Chapter reads the contracts of its own chapter (2026-10-16 clarify 5); only
+  // Operation and Admin manage them, so the create action is theirs alone.
+  const manage = canManage(useSessionRole(), "contracts");
   const [search, setSearch] = React.useState("");
   const [contractType, setContractType] = React.useState<ContractType | "ALL">("ALL");
   const [status, setStatus] = React.useState<EmploymentContractStatus | "ALL">("ALL");
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const filter: EmploymentContractFilter = {
     search: search || undefined,
     contractType: contractType === "ALL" ? undefined : contractType,
@@ -98,6 +53,7 @@ export default function ContractsPage() {
     error,
     loadMore,
   } = useEmploymentContracts(filter);
+  const activeFilters = (contractType !== "ALL" ? 1 : 0) + (status !== "ALL" ? 1 : 0);
 
   const { pageRows, pagination, resetPage } = useTablePagination(contracts, {
     totalItems: totalCount,
@@ -110,11 +66,17 @@ export default function ContractsPage() {
     <section className="flex flex-col gap-4">
       <PageHeader
         title="Kontrak Kerja"
-        subtitle="Kelola kontrak kerja karyawan (Operation)."
+        subtitle={
+          manage
+            ? "Kelola kontrak kerja karyawan."
+            : "Daftar kontrak kerja karyawan dalam cakupan chapter Anda (hanya baca)."
+        }
         actions={
-          <Link href="/contracts/new" className="no-underline">
-            <Button variant="primary">+ Tambah Kontrak</Button>
-          </Link>
+          manage ? (
+            <Link href={CONTRACT_NEW} className="no-underline">
+              <Button variant="primary">+ Tambah Kontrak</Button>
+            </Link>
+          ) : undefined
         }
         search={
           <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
@@ -131,48 +93,54 @@ export default function ContractsPage() {
           </label>
         }
         filters={
-          <>
-            <label className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Jenis</span>
-              <Select
-                value={contractType}
-                onChange={(e) => {
-                  setContractType(e.target.value as ContractType | "ALL");
-                  resetPage();
-                }}
-                className="w-auto"
-              >
-                <option value="ALL">Semua</option>
-                {CONTRACT_TYPE_ORDER.map((type) => (
-                  <option key={type} value={type}>
-                    {CONTRACT_TYPE_LABEL[type]}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Status</span>
-              <Select
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value as EmploymentContractStatus | "ALL");
-                  resetPage();
-                }}
-                className="w-auto"
-              >
-                <option value="ALL">Semua</option>
-                {(Object.keys(CONTRACT_STATUS_LABEL) as Array<
-                  keyof typeof CONTRACT_STATUS_LABEL
-                >).map((value) => (
-                  <option key={value} value={value}>
-                    {CONTRACT_STATUS_LABEL[value]}
-                  </option>
-                ))}
-              </Select>
-            </label>
-          </>
+          <FilterButton
+            activeCount={activeFilters}
+            expanded={filtersOpen}
+            onClick={() => setFiltersOpen((open) => !open)}
+            panelId="contract-filter-panel"
+          />
         }
       />
+
+      {filtersOpen ? (
+        <div id="contract-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
+          <label className="flex items-center gap-2 text-sm text-zinc-700">
+            <span>Jenis</span>
+            <Select
+              value={contractType}
+              onChange={(e) => {
+                setContractType(e.target.value as ContractType | "ALL");
+                resetPage();
+              }}
+              className="w-auto"
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...CONTRACT_TYPE_ORDER.map((type) => ({
+                  value: type,
+                  label: CONTRACT_TYPE_LABEL[type],
+                })),
+              ]}
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-zinc-700">
+            <span>Status</span>
+            <Select
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value as EmploymentContractStatus | "ALL");
+                resetPage();
+              }}
+              className="w-auto"
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...(Object.keys(CONTRACT_STATUS_LABEL) as Array<
+                  keyof typeof CONTRACT_STATUS_LABEL
+                >).map((value) => ({ value, label: CONTRACT_STATUS_LABEL[value] })),
+              ]}
+            />
+          </label>
+        </div>
+      ) : null}
 
       {query === "loading" ? (
         <LoadingState />
@@ -181,13 +149,97 @@ export default function ContractsPage() {
       ) : !contracts || contracts.length === 0 ? (
         <EmptyState message="Tidak ada kontrak yang cocok dengan pencarian/filter." />
       ) : (
-        <>
-          <BoardTable caption="Daftar kontrak kerja" columns={COLUMNS} footer={<Pagination {...pagination} />}>
-            {pageRows.map((contract) => (
-              <ContractRow key={contract.id} contract={contract} />
-            ))}
-          </BoardTable>
-        </>
+        <Table
+          caption="Daftar kontrak kerja"
+          rowKey={(contract) => contract.id}
+          dataSource={pageRows}
+          pagination={pagination}
+          columns={[
+            {
+              key: "contractNo",
+              title: "No Kontrak",
+              render: (_value, contract) => (
+                <Link
+                  href={CONTRACT_DETAIL(contract.id)}
+                  className="font-medium text-zinc-900 hover:underline"
+                >
+                  {orDash(contract.contractNo)}
+                </Link>
+              ),
+            },
+            {
+              key: "employee",
+              title: "Karyawan",
+              render: (_value, contract) => (
+                <Link
+                  href={EMPLOYEE_DETAIL(contract.employee.id)}
+                  className="text-zinc-900 hover:underline"
+                >
+                  {contract.employee.fullName}
+                </Link>
+              ),
+            },
+            {
+              key: "type",
+              title: "Jenis",
+              className: "text-zinc-600",
+              render: (_value, contract) => CONTRACT_TYPE_LABEL[contract.contractType],
+            },
+            {
+              key: "unit",
+              title: "Unit",
+              className: "text-zinc-600",
+              render: (_value, contract) => orDash(contract.unit.name),
+            },
+            {
+              key: "role",
+              title: "Posisi",
+              className: "text-zinc-600",
+              render: (_value, contract) => orDash(contract.jobRole.name),
+            },
+            {
+              key: "nomorInduk",
+              title: "Nomor Induk",
+              className: "text-zinc-600",
+              render: (_value, contract) => orDash(contract.nomorInduk),
+            },
+            {
+              key: "period",
+              title: "Periode",
+              className: "text-zinc-600",
+              render: (_value, contract) => (
+                <>
+                  {contract.startDate} — {contract.endDate ?? "tidak berbatas"}
+                </>
+              ),
+            },
+            {
+              key: "status",
+              title: "Status",
+              render: (_value, contract) => (
+                <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
+                  {CONTRACT_STATUS_LABEL[contract.status]}
+                </Chip>
+              ),
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, contract) => (
+                <RowActionsMenu
+                  label={`Aksi ${contract.contractNo}`}
+                  actions={[
+                    {
+                      label: "Lihat detail",
+                      onSelect: () => router.push(CONTRACT_DETAIL(contract.id)),
+                    },
+                  ]}
+                />
+              ),
+            },
+          ]}
+        />
       )}
     </section>
   );

@@ -7,6 +7,7 @@ import { useMutation } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
 import { useCurrentEvaluationPeriod } from "@/features/evaluations/useCurrentEvaluationPeriod";
@@ -16,7 +17,10 @@ import {
   SubmitPerformanceEvaluationDocument,
   UpsertPerformanceEvaluationDocument,
 } from "@/generated/graphql";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 import type { EvaluationAnswerType, EvaluationPeriodState } from "@/generated/graphql/types";
+import { EVALUATIONS } from "@/lib/constants/routes";
 
 type CriterionLike = {
   id: string;
@@ -44,11 +48,12 @@ type AnswerLike = {
 };
 
 /**
- * Chapter evaluation form — US7 / FR-26, FR-28.
+ * Evaluation form — US7 / FR-26, FR-28.
  * Scores one talent for one period following the period's pinned template
  * criteria. Upsert saves a draft; Submit finalizes it. While the period is
- * RUNNING the chapter may revise (revision history kept server-side, FR-28);
- * once CLOSED the page is read-only.
+ * RUNNING a managing role (Chapter scoped, Admin company-wide) may revise
+ * (revision history kept server-side, FR-28); Operation reads it, and once
+ * CLOSED the page is read-only.
  *
  * The form is reached from the running-period roster, so a talent may not have
  * a score yet (`performanceEvaluations` returns an empty connection). In that
@@ -94,7 +99,7 @@ export default function EvaluationFormPage() {
     return (
       <section className="flex flex-col gap-4">
         <ErrorState message="Periode evaluasi tidak ditemukan atau akses ditolak." />
-        <Link href="/evaluations" className="text-sm font-medium text-tp-brand-red-deep hover:underline">
+        <Link href={EVALUATIONS} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
           ← Kembali ke roster
         </Link>
       </section>
@@ -137,8 +142,10 @@ function EvaluationForm({
   const [upsert, upsertState] = useMutation(UpsertPerformanceEvaluationDocument);
   const [submit, submitState] = useMutation(SubmitPerformanceEvaluationDocument);
   const { pushToast } = useToast();
+  const role = useSessionRole();
 
-  const readOnly = period.state === "CLOSED";
+  // Only a managing role scores; Operation lands here read-only from the roster.
+  const readOnly = period.state === "CLOSED" || !canManage(role, "evaluations");
 
   // Seed once from the loaded evaluation (empty for a brand-new score).
   const [answersState, setAnswersState] = React.useState<Record<string, string>>(() =>
@@ -202,7 +209,7 @@ function EvaluationForm({
         subtitle={`${period.name} · ${period.startDate} — ${period.endDate} · status: ${period.state}${readOnly ? " · hanya-baca" : ""}`}
         actions={
           <Link
-            href="/evaluations"
+            href={EVALUATIONS}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             ← Kembali
@@ -221,24 +228,20 @@ function EvaluationForm({
             .sort((a, b) => a.position - b.position)
             .map((criterion) => (
               <div key={criterion.id} className="flex flex-col gap-1">
-                <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-                  <span>
-                    {criterion.position}. {criterion.label}
-                  </span>
+                <InputControl label={`${criterion.position}. ${criterion.label}`}>
                   <CriterionInput
                     answerType={criterion.answerType}
                     value={answersState[criterion.id] ?? ""}
                     disabled={readOnly || busy}
                     onChange={(v) => setAnswer(criterion.id, v)}
                   />
-                </label>
+                </InputControl>
               </div>
             ))
         )}
 
         <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Ringkasan pencapaian
+          <InputControl label="Ringkasan pencapaian">
             <textarea
               value={summary}
               disabled={readOnly || busy}
@@ -249,9 +252,8 @@ function EvaluationForm({
               }}
               className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
             />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Catatan pengembangan
+          </InputControl>
+          <InputControl label="Catatan pengembangan">
             <textarea
               value={notes}
               disabled={readOnly || busy}
@@ -262,13 +264,15 @@ function EvaluationForm({
               }}
               className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
             />
-          </label>
+          </InputControl>
         </div>
       </div>
 
       {readOnly ? (
         <p className="text-xs text-zinc-500">
-          Periode telah berakhir — evaluasi hanya-baca (FR-28).
+          {period.state === "CLOSED"
+            ? "Periode telah berakhir — evaluasi hanya-baca (FR-28)."
+            : "Peran Anda hanya-baca untuk evaluasi ini (FR-15)."}
         </p>
       ) : (
         <div className="flex gap-2">

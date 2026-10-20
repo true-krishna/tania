@@ -2,76 +2,17 @@
 
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { BoardTable, type Column } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { useSessionRole } from "@/lib/auth/guard";
 import { roleLabel } from "@/features/accounts/roles";
 import { useAuditLogs } from "@/features/audit/useAuditLogs";
 import { ACTION_LABEL, ACTION_PILL } from "@/features/audit/actionLabels";
-import type { AuditLogsQuery } from "@/generated/graphql";
 import type { AccessRole } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
 
 const ROLE_LABEL: Record<AccessRole, string> = roleLabel;
-
-type AuditLogNode = AuditLogsQuery["auditLogs"]["edges"][number]["node"];
-
-const COLUMNS: Column[] = [
-  { key: "waktu", label: "Waktu" },
-  { key: "aksi", label: "Aksi" },
-  { key: "entitas", label: "Entitas" },
-  { key: "aktor", label: "Aktor" },
-  { key: "konteks", label: "IP / Request" },
-  { key: "perubahan", label: "Perubahan" },
-];
-
-function AuditRow({ log }: { log: AuditLogNode }) {
-  return (
-    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
-      <td className="px-4 py-2.5 text-xs whitespace-nowrap text-zinc-500">
-        {formatTime(log.occurredAt)}
-      </td>
-      <td className="px-4 py-2.5">
-        <span
-          className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ACTION_PILL[log.action]}`}
-        >
-          {ACTION_LABEL[log.action]}
-        </span>
-      </td>
-      <td className="px-4 py-2.5 font-medium text-zinc-900">
-        {log.entityType}
-        {log.entityId ? ` · ${log.entityId}` : ""}
-      </td>
-      <td className="px-4 py-2.5 text-zinc-600">
-        {log.actor?.fullName ?? "—"}
-        <span className="block text-xs text-zinc-500">
-          {log.actorRole ? ROLE_LABEL[log.actorRole] : "—"}
-        </span>
-      </td>
-      <td className="px-4 py-2.5 text-xs text-zinc-500">
-        {log.ip ?? "—"}
-        {log.requestId ? (
-          <code className="block max-w-[160px] truncate" title={log.requestId}>
-            {log.requestId}
-          </code>
-        ) : null}
-      </td>
-      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">
-        {log.before ? (
-          <span className="block max-w-[220px] truncate" title={log.before}>
-            Sebelum: {log.before}
-          </span>
-        ) : null}
-        {log.after ? (
-          <span className="block max-w-[220px] truncate" title={log.after}>
-            Sesudah: {log.after}
-          </span>
-        ) : null}
-        {!log.before && !log.after ? "—" : null}
-      </td>
-    </tr>
-  );
-}
 
 /**
  * Admin audit trail viewer (FR-17) — US5.
@@ -113,13 +54,90 @@ function AuditViewer() {
       />
 
       {logs && logs.length ? (
-        <>
-          <BoardTable caption="Jejak audit" columns={COLUMNS} footer={<Pagination {...pagination} />}>
-            {pageRows.map((log) => (
-              <AuditRow key={log.id} log={log} />
-            ))}
-          </BoardTable>
-        </>
+        <Table
+          caption="Jejak audit"
+          rowKey={(log) => log.id}
+          dataSource={pageRows}
+          pagination={pagination}
+          columns={[
+            {
+              key: "waktu",
+              title: "Waktu",
+              className: "text-xs whitespace-nowrap text-zinc-500",
+              render: (_value, log) => formatTime(log.occurredAt),
+            },
+            {
+              key: "aksi",
+              title: "Aksi",
+              render: (_value, log) => (
+                <span
+                  className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ACTION_PILL[log.action]}`}
+                >
+                  {ACTION_LABEL[log.action]}
+                </span>
+              ),
+            },
+            {
+              key: "entitas",
+              title: "Entitas",
+              className: "font-medium text-zinc-900",
+              render: (_value, log) => (
+                <>
+                  {log.entityType}
+                  {log.entityId ? ` · ${log.entityId}` : ""}
+                </>
+              ),
+            },
+            {
+              key: "aktor",
+              title: "Aktor",
+              className: "text-zinc-600",
+              render: (_value, log) => (
+                <>
+                  {orDash(log.actor?.fullName)}
+                  <span className="block text-xs text-zinc-500">
+                    {orDash(log.actorRole ? ROLE_LABEL[log.actorRole] : null)}
+                  </span>
+                </>
+              ),
+            },
+            {
+              key: "konteks",
+              title: "IP / Request",
+              className: "text-xs text-zinc-500",
+              render: (_value, log) => (
+                <>
+                  {orDash(log.ip)}
+                  {log.requestId ? (
+                    <code className="block max-w-[160px] truncate" title={log.requestId}>
+                      {log.requestId}
+                    </code>
+                  ) : null}
+                </>
+              ),
+            },
+            {
+              key: "perubahan",
+              title: "Perubahan",
+              className: "font-mono text-xs text-zinc-600",
+              render: (_value, log) => (
+                <>
+                  {log.before ? (
+                    <span className="block max-w-[220px] truncate" title={log.before}>
+                      Sebelum: {log.before}
+                    </span>
+                  ) : null}
+                  {log.after ? (
+                    <span className="block max-w-[220px] truncate" title={log.after}>
+                      Sesudah: {log.after}
+                    </span>
+                  ) : null}
+                  {!log.before && !log.after ? "-" : null}
+                </>
+              ),
+            },
+          ]}
+        />
       ) : (
         <EmptyState message="Belum ada catatan audit." />
       )}

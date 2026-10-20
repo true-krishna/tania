@@ -16,6 +16,11 @@ export const ERROR_CODES = [
   "CONFLICT",
   "PRECONDITION_FAILED",
   "RATE_LIMITED",
+  // Kode modul asisten (FR-13/FR-11). Dipisahkan dari RATE_LIMITED login agar
+  // panel dapat memperlakukan penolakan kuota sebagai keadaan tersendiri.
+  "CHAT_RATE_LIMITED",
+  "CHAT_FAILED",
+  "CHAT_NOT_CONFIGURED",
   "INTERNAL",
 ] as const;
 
@@ -34,6 +39,9 @@ export const ERROR_LABEL: Record<ErrorCode, string> = {
   CONFLICT: "Data sudah ada atau bertentangan.",
   PRECONDITION_FAILED: "Aturan bisnis belum terpenuhi.",
   RATE_LIMITED: "Terlalu banyak permintaan. Silakan coba lagi.",
+  CHAT_RATE_LIMITED: "Batas pertanyaan per jam tercapai. Coba lagi nanti.",
+  CHAT_FAILED: "Asisten gagal menjawab, coba lagi.",
+  CHAT_NOT_CONFIGURED: "Asisten belum dikonfigurasi.",
   INTERNAL: "Terjadi kesalahan. Silakan coba lagi.",
 };
 
@@ -65,6 +73,9 @@ export function mapErrorBehavior(code: ErrorCode): ErrorBehavior {
     case "CONFLICT":
     case "PRECONDITION_FAILED":
     case "RATE_LIMITED":
+    case "CHAT_RATE_LIMITED":
+    case "CHAT_FAILED":
+    case "CHAT_NOT_CONFIGURED":
     case "INTERNAL":
       return { kind: "action" };
   }
@@ -89,6 +100,19 @@ export function errorField(error: ApolloError | null | undefined): string | null
   for (const gqlError of error?.graphQLErrors ?? []) {
     const field = gqlError.extensions?.field;
     if (typeof field === "string" && field) return field;
+  }
+  return null;
+}
+
+/**
+ * Wait time the server attached to an assistant quota refusal (FR-13), from
+ * `extensions.retryAfterSeconds`. Null when the error carries none, so the
+ * caller can tell "the window ends in N seconds" from "unknown".
+ */
+export function errorRetryAfterSeconds(error: ApolloError | null | undefined): number | null {
+  for (const gqlError of error?.graphQLErrors ?? []) {
+    const seconds = Number(gqlError.extensions?.retryAfterSeconds);
+    if (Number.isFinite(seconds) && seconds > 0) return seconds;
   }
   return null;
 }
@@ -126,4 +150,54 @@ export function mapSubmitError(
     return { field: null, message: conflictMessage };
   }
   return { field: errorField(error), message: errorMessage(error, fallback) };
+}
+
+/**
+ * Pesan per field untuk penolakan `BAD_USER_INPUT` dari usecase assignment
+ * (domain.Invalid): server mengirim `extensions.field` — alasannya berbahasa
+ * Inggris di kawat ("invalid periodEnd: must not precede periodStart"), jadi
+ * klien memetakan field → pesan Indonesia (plan.md §Data Layer).
+ */
+const ASSIGNMENT_FIELD_MESSAGES: Record<string, string> = {
+  periodEnd: "Tanggal selesai tidak boleh lebih awal dari tanggal mulai.",
+  employeeId: "Talent harus karyawan aktif dan assignable.",
+};
+
+/**
+ * Pesan aksi untuk penolakan server form buat/ubah assignment (G5/K4). Pesan
+ * server untuk kode-kode ini berbahasa Inggris di kawat (mis. `ErrConflict`
+ * = "resource already exists"), jadi pesan Indonesia diturunkan dari kode —
+ * bukan dari teks server. NOT_FOUND di sini juga menutup penolakan lintas
+ * cakupan chapter (server sengaja tidak membocorkan keberadaan data).
+ */
+const ASSIGNMENT_CODE_MESSAGES: Partial<Record<ErrorCode, string>> = {
+  CONFLICT: "Talent ini sudah memiliki assignment aktif pada project tersebut.",
+  FORBIDDEN: "Anda tidak memiliki izin untuk aksi ini.",
+  NOT_FOUND: "Data tidak ditemukan atau di luar cakupan chapter Anda.",
+  PRECONDITION_FAILED: "Assignment sudah selesai dan tidak dapat diubah.",
+};
+
+/**
+ * Memetakan penolakan mutasi assignment (buat & ubah) ke `SubmitError`:
+ * `BAD_USER_INPUT` → error per field bila field dikenali, `CONFLICT` /
+ * `FORBIDDEN` / `NOT_FOUND` / `PRECONDITION_FAILED` → pesan aksi Indonesia;
+ * kode lain tetap memakai label kodenya dan error tanpa kode memakai pesan
+ * server/fallback (konstitusi §IX — tanpa swallowed error).
+ */
+export function mapAssignmentSubmitError(
+  error: ApolloError | null | undefined,
+  fallback: string
+): SubmitError {
+  const code = graphQLErrorCode(error);
+  if (code === "BAD_USER_INPUT") {
+    const field = errorField(error);
+    if (field && ASSIGNMENT_FIELD_MESSAGES[field]) {
+      return { field, message: ASSIGNMENT_FIELD_MESSAGES[field] };
+    }
+    return { field: null, message: ERROR_LABEL.BAD_USER_INPUT };
+  }
+  const message = code
+    ? ASSIGNMENT_CODE_MESSAGES[code] ?? ERROR_LABEL[code]
+    : errorMessage(error, fallback);
+  return { field: null, message };
 }

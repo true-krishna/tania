@@ -22,7 +22,7 @@ import {
   UpdateUnitDocument,
 } from "@/generated/graphql";
 
-export type MasterDataMutationValue = { name: string; selectValue?: string };
+export type MasterDataMutationValue = { name: string; selectValue?: string; code?: string };
 
 function refetch(
   doc: DocumentNode,
@@ -38,8 +38,10 @@ export function useUnitMutations() {
   const [setUnitActive] = useMutation(SetUnitActiveDocument, { refetchQueries: refetch(UnitsDocument) });
 
   return {
-    create: (v: MasterDataMutationValue) => createUnit({ variables: { name: v.name } }),
-    update: (id: string, v: MasterDataMutationValue) => updateUnit({ variables: { id, name: v.name } }),
+    create: (v: MasterDataMutationValue) =>
+      createUnit({ variables: { code: v.code ?? "", name: v.name } }),
+    update: (id: string, v: MasterDataMutationValue) =>
+      updateUnit({ variables: { id, code: v.code ?? "", name: v.name } }),
     toggleActive: (id: string, isActive: boolean) => setUnitActive({ variables: { id, isActive } }),
     busy: createResult.loading,
   };

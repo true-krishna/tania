@@ -5,12 +5,14 @@ import * as React from "react";
 import { useMutation, ApolloError } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ErrorState } from "@/components/DataState";
 import { CreateEmployeeDocument, type CreateEmployeeInput } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
 import { AuthGuard } from "@/lib/auth/guard";
+import { EMPLOYEES } from "@/lib/constants/routes";
 
 type FormValues = {
   nik: string;
@@ -170,8 +172,7 @@ function NewEmployeeForm() {
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {formError ? <ErrorState message={formError} /> : null}
-        <Label error={errors.nik}>
-          NIK
+        <InputControl label="NIK" error={errors.nik}>
           <Input
             type="text"
             value={values.nik}
@@ -179,18 +180,16 @@ function NewEmployeeForm() {
             placeholder="16 digit nomor KTP"
             inputMode="numeric"
           />
-        </Label>
-        <Label error={errors.fullName}>
-          Nama lengkap
+        </InputControl>
+        <InputControl label="Nama lengkap" error={errors.fullName}>
           <Input
             type="text"
             value={values.fullName}
             onChange={(e) => set("fullName", e.target.value)}
             placeholder="cth. Ahmad Fauzi"
           />
-        </Label>
-        <Label error={errors.email}>
-          Email
+        </InputControl>
+        <InputControl label="Email" error={errors.email}>
           <Input
             type="email"
             value={values.email}
@@ -198,78 +197,72 @@ function NewEmployeeForm() {
             placeholder="cth. ahmad.fauzi@tania.co.id"
             autoComplete="email"
           />
-        </Label>
-        <Label error={errors.birthDate}>
-          Tanggal lahir
+        </InputControl>
+        <InputControl label="Tanggal lahir" error={errors.birthDate}>
           <Input
             type="date"
             value={values.birthDate}
             onChange={(e) => set("birthDate", e.target.value)}
           />
-        </Label>
-        <Label error={errors.gender}>
-          Jenis kelamin
-          <Select value={values.gender} onChange={(e) => set("gender", e.target.value)}>
-            <option value="">— pilih jenis kelamin —</option>
-            <option value="FEMALE">Perempuan</option>
-            <option value="MALE">Laki-laki</option>
-          </Select>
-        </Label>
-        <Label error={errors.phone}>
-          Telepon
+        </InputControl>
+        <InputControl label="Jenis kelamin" error={errors.gender}>
+          <Select
+            value={values.gender}
+            onChange={(e) => set("gender", e.target.value)}
+            options={[
+              { value: "", label: "— pilih jenis kelamin —" },
+              { value: "FEMALE", label: "Perempuan" },
+              { value: "MALE", label: "Laki-laki" },
+            ]}
+          />
+        </InputControl>
+        <InputControl label="Telepon" error={errors.phone}>
           <Input
             type="text"
             value={values.phone}
             onChange={(e) => set("phone", e.target.value)}
             placeholder="cth. 081234567890"
           />
-        </Label>
-        <Label error={errors.address}>
-          Alamat
+        </InputControl>
+        <InputControl label="Alamat" error={errors.address}>
           <Input
             type="text"
             value={values.address}
             onChange={(e) => set("address", e.target.value)}
             placeholder="Alamat domisili"
           />
-        </Label>
-        <Label error={errors.latestEducation}>
-          Pendidikan terakhir{" "}
-          <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Pendidikan terakhir" helper="(opsional)" error={errors.latestEducation}>
           <Input
             type="text"
             value={values.latestEducation}
             onChange={(e) => set("latestEducation", e.target.value)}
             placeholder="cth. S1"
           />
-        </Label>
-        <Label error={errors.institutionName}>
-          Nama institusi{" "}
-          <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Nama institusi" helper="(opsional)" error={errors.institutionName}>
           <Input
             type="text"
             value={values.institutionName}
             onChange={(e) => set("institutionName", e.target.value)}
             placeholder="cth. Universitas Telkom"
           />
-        </Label>
-        <Label error={errors.major}>
-          Jurusan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Jurusan" helper="(opsional)" error={errors.major}>
           <Input
             type="text"
             value={values.major}
             onChange={(e) => set("major", e.target.value)}
             placeholder="cth. Teknik Informatika"
           />
-        </Label>
-        <Label error={errors.joinedAt}>
-          Tanggal Bergabung
+        </InputControl>
+        <InputControl label="Tanggal Bergabung" error={errors.joinedAt}>
           <Input
             type="date"
             value={values.joinedAt}
             onChange={(e) => set("joinedAt", e.target.value)}
           />
-        </Label>
+        </InputControl>
 
         <label className="flex items-start gap-2 text-sm font-medium text-zinc-800">
           <input
@@ -293,7 +286,7 @@ function NewEmployeeForm() {
           <Button type="submit" disabled={loading}>
             Simpan
           </Button>
-          <Link href="/employees" className="no-underline">
+          <Link href={EMPLOYEES} className="no-underline">
             <Button type="button" variant="secondary">
               Batal
             </Button>
@@ -301,18 +294,5 @@ function NewEmployeeForm() {
         </div>
       </form>
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

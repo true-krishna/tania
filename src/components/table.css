@@ -12,16 +12,22 @@
 .table-panel .table-scroll{overflow:auto}
 .table-panel table{width:100%;border-collapse:collapse;text-align:left}
 .table-panel thead{background:var(--tp-bg);border-bottom:1px solid var(--tp-line)}
-.table-panel th{font-size:12px;font-weight:500;color:var(--tp-muted);height:42px;padding:0 20px;vertical-align:middle}
+.table-panel th{font-size:14px;font-weight:700;color:var(--tp-muted);height:42px;padding:0 20px;vertical-align:middle}
 .table-panel td{height:76px;border-bottom:1px solid var(--tp-line);font-size:14px;padding:0 20px;vertical-align:middle}
+/* Kolom aksi baris (TAN-189): sempit, hanya ikon — cel kanan, padding rapat. */
+.table-panel .col-action{width:56px;padding:0 10px;text-align:right}
 .table-panel tbody tr:last-child td{border-bottom:0}
 .table-panel tbody tr:hover{background:var(--tp-bg)}
 .table-panel .empty-row{height:160px;text-align:center;color:var(--tp-muted)}
-.table-panel .table-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-top:1px solid var(--tp-line);font-size:11px;color:var(--tp-muted)}
-.table-panel .table-footer strong{color:var(--tp-text);font-weight:500}
-.table-panel .page-size{height:30px;border-radius:5px;border:1px solid var(--tp-line);background:var(--tp-surface);padding:0 7px;color:var(--tp-text)}
-.table-panel .page-current{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;border:1px solid var(--tp-line);background:var(--tp-bg);color:var(--tp-text);font-size:12px;font-weight:500}
-.table-panel .page-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;color:var(--tp-muted);background:transparent;transition:background .15s}
+.table-panel .table-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-top:1px solid var(--tp-line);font-size:13px;color:var(--tp-muted)}
+.table-panel .table-footer strong{color:var(--tp-text);font-weight:600}
+.table-panel .table-footer .page-total{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--tp-brand-navy);color:var(--tp-on-nav);font-weight:700;font-size:14px;line-height:1;padding:4px 10px}
+.table-panel .page-size{height:32px;border-radius:5px;border:1px solid var(--tp-line);background:var(--tp-surface);padding:0 8px;color:var(--tp-text);font-size:13px}
+.table-panel .page-num{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 6px;border-radius:6px;border:1px solid var(--tp-line);background:var(--tp-surface);color:var(--tp-text);font-size:13px;font-weight:600;transition:background .15s}
+.table-panel .page-num:hover:not(:disabled){background:var(--tp-bg)}
+.table-panel .page-num:disabled{cursor:default}
+.table-panel .page-num[aria-current="page"]{border-color:var(--tp-brand-navy);background:var(--tp-brand-navy);color:var(--tp-on-nav)}
+.table-panel .page-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;color:var(--tp-muted);background:transparent;transition:background .15s}
 .table-panel .page-icon-btn:hover:not(:disabled){background:var(--tp-bg)}
 .table-panel .page-icon-btn:disabled{opacity:.4;cursor:default}
-@media (prefers-reduced-motion:reduce){.table-panel .page-icon-btn{transition:none}}
+@media (prefers-reduced-motion:reduce){.table-panel .page-num{transition:none}.table-panel .page-icon-btn{transition:none}}

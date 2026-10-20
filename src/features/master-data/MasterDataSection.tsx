@@ -2,14 +2,17 @@
 
 import * as React from "react";
 import { IconSearch } from "@tabler/icons-react";
-import { BoardTable } from "@/components/BoardTable";
+import { Table, type TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { useSessionRole } from "@/lib/auth/guard";
+import { canManage } from "@/lib/auth/matrix";
 
 export type MasterDataItem = { id: string; name: string; isActive: boolean };
 
@@ -28,17 +31,24 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   selectRequired?: boolean;
   // Current select value of an item (for pre-filling the edit form), e.g. project.unit.id.
   selectIdOf?: (item: T) => string | undefined;
+  // Optional "Kode" field for entities whose served contract requires it (Unit.code).
+  codeLabel?: string;
+  codePlaceholder?: string;
+  codeOf?: (item: T) => string | undefined;
 
   extraColumn?: { label: string; render: (item: T) => React.ReactNode };
   // Opt-in search over the already-served rows (FR-001). Chapter deliberately
   // does not pass this — see spec Out of Scope.
   searchable?: boolean;
-  onCreate: (values: { name: string; selectValue?: string }) => Promise<void>;
-  onUpdate: (id: string, values: { name: string; selectValue?: string }) => Promise<void>;
+  onCreate: (values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
+  onUpdate: (id: string, values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
 };
 
-// Shared Admin edit surface for master-data entities (FR-15, FR-20, FR-24).
+// Shared master-data surface. Chapter and Operation read the reference data
+// (Talent has no access, 2026-10-16 clarify 6) and Admin manages it (FR-15,
+// FR-20, FR-24) — so the edit surface only
+// renders for the manage roles and the rest get the same list read-only.
 // One list + create form + inline edit + activate/deactivate per entity.
 // There is deliberately NO delete operation (FR-21): master data is only
 // deactivated, and the server rejects deactivation while the row is still
@@ -54,17 +64,24 @@ export function MasterDataSection<T extends MasterDataItem>({
   select,
   selectRequired = false,
   selectIdOf,
+  codeLabel,
+  codePlaceholder,
+  codeOf,
   extraColumn,
   searchable = false,
   onCreate,
   onUpdate,
   onToggleActive,
 }: MasterDataSectionProps<T>) {
+  const role = useSessionRole();
+  const manage = canManage(role, "masterData");
   const [creating, setCreating] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [name, setName] = React.useState("");
+  const [code, setCode] = React.useState("");
   const [selectValue, setSelectValue] = React.useState("");
   const [nameError, setNameError] = React.useState<string | undefined>();
+  const [codeError, setCodeError] = React.useState<string | undefined>();
   const [selectError, setSelectError] = React.useState<string | undefined>();
   const [busy, setBusy] = React.useState(false);
   // Search keyword lives in local component state — never in the URL (D6).
@@ -92,8 +109,10 @@ export function MasterDataSection<T extends MasterDataItem>({
     setCreating(false);
     setEditingId(null);
     setName("");
+    setCode("");
     setSelectValue("");
     setNameError(undefined);
+    setCodeError(undefined);
     setSelectError(undefined);
   }
 
@@ -101,8 +120,10 @@ export function MasterDataSection<T extends MasterDataItem>({
     setCreating(true);
     setEditingId(null);
     setName("");
+    setCode("");
     setSelectValue("");
     setNameError(undefined);
+    setCodeError(undefined);
     setSelectError(undefined);
   }
 
@@ -110,26 +131,30 @@ export function MasterDataSection<T extends MasterDataItem>({
     setEditingId(item.id);
     setCreating(false);
     setName(item.name);
+    setCode(codeOf?.(item) ?? "");
     setSelectValue(selectIdOf?.(item) ?? "");
     setNameError(undefined);
+    setCodeError(undefined);
     setSelectError(undefined);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const nextNameError = name.trim() ? undefined : `${nameLabel} wajib diisi.`;
+    const nextCodeError = codeLabel && !code.trim() ? `${codeLabel} wajib diisi.` : undefined;
     const nextSelectError =
       select && selectRequired && !selectValue ? `${select.label} wajib dipilih.` : undefined;
     setNameError(nextNameError);
+    setCodeError(nextCodeError);
     setSelectError(nextSelectError);
-    if (nextNameError || nextSelectError) return;
+    if (nextNameError || nextCodeError || nextSelectError) return;
 
     setBusy(true);
     try {
       if (editingId !== null) {
-        await onUpdate(editingId, { name: name.trim(), selectValue });
+        await onUpdate(editingId, { name: name.trim(), selectValue, code: code.trim() });
       } else {
-        await onCreate({ name: name.trim(), selectValue });
+        await onCreate({ name: name.trim(), selectValue, code: code.trim() });
       }
       reset();
     } finally {
@@ -139,13 +164,65 @@ export function MasterDataSection<T extends MasterDataItem>({
 
   const editing = creating || editingId !== null;
 
+  const columns: TableColumn<T>[] = [
+    {
+      key: "name",
+      title: nameLabel,
+      className: "text-zinc-900",
+      render: (_value, item) => item.name,
+    },
+    ...(extraColumn
+      ? [
+          {
+            key: "extra",
+            title: extraColumn.label,
+            className: "text-zinc-600",
+            render: (_value: unknown, item: T) => extraColumn.render(item),
+          } satisfies TableColumn<T>,
+        ]
+      : []),
+    {
+      key: "status",
+      title: "Status",
+      render: (_value, item) => <StatusBadge active={item.isActive} />,
+    },
+    ...(manage
+      ? [
+          {
+            key: "actions",
+            title: "Aksi",
+            className: "col-action",
+            render: (_value: unknown, item: T) =>
+              editingId === item.id ? (
+                <span className="text-xs text-zinc-400">Mengedit…</span>
+              ) : (
+                <RowActionsMenu
+                  label={`Aksi ${item.name}`}
+                  actions={[
+                    { label: "Ubah", onSelect: () => startEdit(item) },
+                    {
+                      label: item.isActive ? "Nonaktifkan" : "Aktifkan",
+                      onSelect: () => void onToggleActive(item.id, !item.isActive),
+                    },
+                  ]}
+                />
+              ),
+          } satisfies TableColumn<T>,
+        ]
+      : []),
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Master Data"
-        subtitle="Reference data for the talent ecosystem, managed by Admin."
+        subtitle={
+          manage
+            ? "Reference data for the talent ecosystem, managed by Admin."
+            : "Reference data for the talent ecosystem (hanya baca)."
+        }
         actions={
-          editing ? undefined : (
+          !manage || editing ? undefined : (
             <Button type="button" onClick={openCreate}>
               {addLabel}
             </Button>
@@ -171,29 +248,34 @@ export function MasterDataSection<T extends MasterDataItem>({
         }
       />
 
-      {editing ? (
+      {manage && editing ? (
         <form
           onSubmit={handleSubmit}
           className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
         >
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            {nameLabel}
+          <InputControl label={nameLabel} error={nameError}>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Digital Business" />
-            {nameError ? <span className="text-xs text-red-600">{nameError}</span> : null}
-          </label>
+          </InputControl>
+          {codeLabel ? (
+            <InputControl label={codeLabel} error={codeError}>
+              <Input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder={codePlaceholder ?? "cth: DBT"}
+              />
+            </InputControl>
+          ) : null}
           {select ? (
-            <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-              {select.label}
-              <Select value={selectValue} onChange={(e) => setSelectValue(e.target.value)}>
-                <option value="">— {select.placeholder} —</option>
-                {select.options.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
-                  </option>
-                ))}
-              </Select>
-              {selectError ? <span className="text-xs text-red-600">{selectError}</span> : null}
-            </label>
+            <InputControl label={select.label} error={selectError}>
+              <Select
+                value={selectValue}
+                onChange={(e) => setSelectValue(e.target.value)}
+                options={[
+                  { value: "", label: `— ${select.placeholder} —` },
+                  ...select.options.map((o) => ({ value: o.id, label: o.name })),
+                ]}
+              />
+            </InputControl>
           ) : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={busy}>
@@ -213,42 +295,13 @@ export function MasterDataSection<T extends MasterDataItem>({
         // empty state (FR-006).
         <p className="text-sm text-tp-muted">Tidak ada hasil yang cocok dengan pencarian.</p>
       ) : (
-        <BoardTable
+        <Table
           caption={caption}
-          columns={[
-            { key: "name", label: nameLabel },
-            ...(extraColumn ? [{ key: extraColumn.label, label: extraColumn.label }] : []),
-            { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi" },
-          ]}
-          footer={<Pagination {...pagination} />}
-        >
-          {pageRows.map((item) => (
-            <tr key={item.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-              <td className="px-4 py-2.5 text-zinc-900">{item.name}</td>
-              {extraColumn ? <td className="px-4 py-2.5 text-zinc-600">{extraColumn.render(item)}</td> : null}
-              <td className="px-4 py-2.5">
-                <StatusBadge active={item.isActive} />
-              </td>
-              <td className="px-4 py-2.5">
-                {editingId === item.id ? (
-                  <span className="text-xs text-zinc-400">Mengedit…</span>
-                ) : (
-                  <RowActionsMenu
-                    label={`Aksi ${item.name}`}
-                    actions={[
-                      { label: "Ubah", onSelect: () => startEdit(item) },
-                      {
-                        label: item.isActive ? "Nonaktifkan" : "Aktifkan",
-                        onSelect: () => void onToggleActive(item.id, !item.isActive),
-                      },
-                    ]}
-                  />
-                )}
-              </td>
-            </tr>
-          ))}
-        </BoardTable>
+          columns={columns}
+          dataSource={pageRows}
+          rowKey={(item) => item.id}
+          pagination={pagination}
+        />
       )}
     </div>
   );

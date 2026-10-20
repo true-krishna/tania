@@ -5,11 +5,13 @@ import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { CreateEvaluationTemplateDocument } from "@/generated/graphql";
 import type { EvaluationAnswerType } from "@/generated/graphql/types";
+import { EVALUATION_TEMPLATES } from "@/lib/constants/routes";
 
 type CriterionRow = { label: string; answerType: EvaluationAnswerType };
 
@@ -78,10 +80,9 @@ export default function NewEvaluationTemplatePage() {
     <section className="flex max-w-2xl flex-col gap-4">
       <PageHeader title="Buat Template Evaluasi" subtitle="Daftar kriteria dengan tipe jawaban fixed (Admin)." />
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <Label error={errors.name}>
-          Nama Template
+        <InputControl label="Nama Template" error={errors.name}>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Framework Performa 2025" />
-        </Label>
+        </InputControl>
 
         <fieldset className="flex flex-col gap-3">
           <legend className="text-sm font-medium text-zinc-700">Kriteria</legend>
@@ -103,12 +104,13 @@ export default function NewEvaluationTemplatePage() {
                 <Select
                   value={criterion.answerType}
                   onChange={(e) => setCriterion(index, { answerType: e.target.value as EvaluationAnswerType })}
-                >
-                  <option value="SCALE_1_5">Skala 1–5</option>
-                  <option value="SCALE_1_10">Skala 1–10</option>
-                  <option value="YES_NO">Ya / Tidak</option>
-                  <option value="FREE_TEXT">Teks bebas</option>
-                </Select>
+                  options={[
+                    { value: "SCALE_1_5", label: "Skala 1–5" },
+                    { value: "SCALE_1_10", label: "Skala 1–10" },
+                    { value: "YES_NO", label: "Ya / Tidak" },
+                    { value: "FREE_TEXT", label: "Teks bebas" },
+                  ]}
+                />
               </div>
               <button
                 type="button"
@@ -134,7 +136,7 @@ export default function NewEvaluationTemplatePage() {
             Simpan
           </Button>
           <Link
-            href="/evaluations/templates"
+            href={EVALUATION_TEMPLATES}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
           >
             Batal
@@ -142,14 +144,5 @@ export default function NewEvaluationTemplatePage() {
         </div>
       </form>
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-      {children}
-      {error ? <span className="text-xs font-normal text-red-600">{error}</span> : null}
-    </label>
   );
 }

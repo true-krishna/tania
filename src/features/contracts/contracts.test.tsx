@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
@@ -18,6 +18,23 @@ import {
   UnitsDocument,
 } from "@/generated/graphql";
 import { workLocationFormValue } from "@/features/contracts/labels";
+
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
+const auth = vi.hoisted(() => ({ role: "OPERATION" as "ADMIN" | "OPERATION" | "CHAPTER" | "TALENT" }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => nav,
+  notFound: () => {
+    throw new Error("notFound");
+  },
+}));
+
+// Role comes from the session store in the app; here it is drove directly so the
+// Operation (manage) and Chapter (read-only) surfaces can both be exercised.
+vi.mock("@/lib/auth/guard", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/auth/guard")>();
+  return { ...actual, useSessionRole: () => auth.role };
+});
 
 const unitsMock = {
   request: { query: UnitsDocument, variables: { includeInactive: true } },
@@ -324,6 +341,67 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
     expect(screen.getAllByText("Aktif").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/2025-07-01/)).toBeInTheDocument();
   });
+
+  it("menyembunyikan tombol tambah bagi Chapter dan menampilkannya bagi Operation", async () => {
+    auth.role = "CHAPTER";
+    const chapter = render(
+      <MockedProvider mocks={[listMock]}>
+        <ContractsPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("PKWT/2025/002")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "+ Tambah Kontrak" })).toBeNull();
+    expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
+    chapter.unmount();
+
+    auth.role = "OPERATION";
+    try {
+      render(
+        <MockedProvider mocks={[listMock]}>
+          <ContractsPage />
+        </MockedProvider>
+      );
+      expect(await screen.findByRole("link", { name: "+ Tambah Kontrak" })).toBeInTheDocument();
+    } finally {
+      auth.role = "OPERATION";
+    }
+  });
+
+  it("filters by jenis via the collapsible filter panel", async () => {
+    const filteredMock = {
+      request: {
+        query: EmploymentContractsDocument,
+        variables: { filter: { contractType: "KARYAWAN_TETAP" }, first: 25, after: null },
+      },
+      result: {
+        data: {
+          employmentContracts: {
+            __typename: "EmploymentContractConnection",
+            totalCount: 0,
+            edges: [],
+            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+          },
+        },
+      },
+    };
+    render(
+      <MockedProvider mocks={[listMock, filteredMock]}>
+        <ContractsPage />
+      </MockedProvider>
+    );
+
+    await screen.findByText("PKWT/2025/002");
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Jenis" }), {
+      target: { value: "KARYAWAN_TETAP" },
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Filter, 1 filter aktif" }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText(/tidak ada kontrak yang cocok/i)).toBeInTheDocument();
+  });
 });
 
 const contractDetailNode = {
@@ -427,6 +505,32 @@ describe("ContractDetailPage (detail kontrak + riwayat, T023)", () => {
     expect(await screen.findByText("Perpanjang")).toBeInTheDocument();
     expect(screen.getByText("Sari Operator")).toBeInTheDocument();
     expect(screen.getByText(/sebelum: \{"contractNo":"PKWT\/2024\/001"\}/i)).toBeInTheDocument();
+  });
+
+  // 2026-10-16 clarify 5: Chapter reads the contracts of its own chapter.
+  it("menyembunyikan seluruh aksi tulis bagi Chapter", async () => {
+    auth.role = "CHAPTER";
+    try {
+      await act(async () => {
+        render(
+          <React.Suspense fallback={null}>
+            <MockedProvider mocks={[detailMock, contractAuditMock]}>
+              <ContractDetailPage params={Promise.resolve({ id: "ctr-1" })} />
+            </MockedProvider>
+          </React.Suspense>
+        );
+      });
+
+      expect(await screen.findByRole("heading", { name: /pkwt\/2025\/002/i })).toBeInTheDocument();
+      expect(screen.getByText("EMP-77")).toBeInTheDocument();
+      expect(screen.queryByText("Perpanjang kontrak")).toBeNull();
+      expect(screen.queryByRole("button", { name: "Perpanjang" })).toBeNull();
+      expect(screen.queryByRole("heading", { name: "Ubah data kontrak" })).toBeNull();
+      // Per-record history stays Operation/Admin only (FR-41).
+      expect(screen.queryByRole("heading", { name: "Riwayat perubahan" })).toBeNull();
+    } finally {
+      auth.role = "OPERATION";
+    }
   });
 });
 

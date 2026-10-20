@@ -1,0 +1,65 @@
+query ChatConversations($first: Int = 20, $after: String) {
+  chatConversations(first: $first, after: $after) {
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        id
+        startedAt
+        lastMessageAt
+        messageCount
+      }
+    }
+  }
+}
+
+query ChatMessages($conversationId: ID!, $first: Int = 50, $after: String) {
+  chatMessages(conversationId: $conversationId, first: $first, after: $after) {
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        id
+        role
+        content
+        inputTokens
+        outputTokens
+        clientRequestId
+        createdAt
+      }
+    }
+  }
+}
+
+mutation CreateChatConversation {
+  createChatConversation {
+    id
+    startedAt
+    lastMessageAt
+    messageCount
+  }
+}
+
+mutation SendChatMessage($conversationId: ID!, $content: String!, $clientRequestId: ID!) {
+  sendChatMessage(
+    conversationId: $conversationId
+    content: $content
+    clientRequestId: $clientRequestId
+  ) {
+    id
+    role
+    content
+    inputTokens
+    outputTokens
+    clientRequestId
+    createdAt
+  }
+}

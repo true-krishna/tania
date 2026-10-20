@@ -139,6 +139,19 @@ npm run codegen        # regenerate src/generated/graphql/
 npm run generate:check # fail CI if the generated code is stale
 ```
 
+A drift guard backs this copy rule up mechanically (TAN-213). With a
+`tania-backend` checkout beside this repo (or passed explicitly), run:
+
+```bash
+pnpm run schema:drift   # or: sh scripts/check-schema-drift.sh [path-to-tania-backend]
+```
+
+It fails when `graph/schema.graphqls`, the
+`specs/001-employee-digital-talent-management/contracts/schema.graphql`
+mirror, or the backend repo's own copy of that mirror no longer match the
+served SDL byte-for-byte — the failure mode that broke codegen during
+TAN-208. A missing backend checkout is a hard failure, never a silent pass.
+
 Operations are written next to their feature as `.graphql` files under
 `src/features/**`; codegen turns them into typed documents (`gql()`) and hooks.
 

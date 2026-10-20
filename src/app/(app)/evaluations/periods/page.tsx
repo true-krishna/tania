@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { BoardTable } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { useEvaluationPeriods } from "@/features/evaluations/useEvaluationPeriods";
 import { PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
+import { EVALUATION_PERIOD_NEW } from "@/lib/constants/routes";
 
 /**
  * Evaluation periods (Admin) — US7 / FR-25.
@@ -27,7 +28,7 @@ export default function EvaluationPeriodsPage() {
           title="Periode Evaluasi"
           subtitle="Kelola periode evaluasi performa (Admin)."
           actions={
-            <Link href="/evaluations/periods/new" className="no-underline">
+            <Link href={EVALUATION_PERIOD_NEW} className="no-underline">
             <Button variant="primary">+ Buat Periode</Button>
           </Link>
           }
@@ -42,38 +43,51 @@ export default function EvaluationPeriodsPage() {
         title="Periode Evaluasi"
         subtitle="Kelola periode evaluasi performa (Admin)."
         actions={
-          <Link href="/evaluations/periods/new" className="no-underline">
+          <Link href={EVALUATION_PERIOD_NEW} className="no-underline">
             <Button variant="primary">+ Buat Periode</Button>
           </Link>
         }
       />
-      <BoardTable
+      <Table
         caption="Daftar periode evaluasi"
+        rowKey={(period) => period.id}
+        dataSource={pageRows}
+        pagination={pagination}
         columns={[
-          { key: "name", label: "Nama" },
-          { key: "range", label: "Rentang" },
-          { key: "template", label: "Template" },
-          { key: "state", label: "State" },
-          { key: "status", label: "Status" },
+          {
+            key: "name",
+            title: "Nama",
+            className: "text-zinc-900",
+            render: (_value, period) => period.name,
+          },
+          {
+            key: "range",
+            title: "Rentang",
+            className: "text-zinc-600",
+            render: (_value, period) => (
+              <>
+                {period.startDate} — {period.endDate}
+              </>
+            ),
+          },
+          {
+            key: "template",
+            title: "Template",
+            className: "text-zinc-600",
+            render: (_value, period) => period.template.name,
+          },
+          {
+            key: "state",
+            title: "State",
+            render: (_value, period) => <PeriodStateBadge state={period.state} />,
+          },
+          {
+            key: "status",
+            title: "Status",
+            render: (_value, period) => <StatusBadge active={period.isActive} />,
+          },
         ]}
-        footer={<Pagination {...pagination} />}
-      >
-        {pageRows.map((period) => (
-          <tr key={period.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-            <td className="px-4 py-2.5 text-zinc-900">{period.name}</td>
-            <td className="px-4 py-2.5 text-zinc-600">
-              {period.startDate} — {period.endDate}
-            </td>
-            <td className="px-4 py-2.5 text-zinc-600">{period.template.name}</td>
-            <td className="px-4 py-2.5">
-              <PeriodStateBadge state={period.state} />
-            </td>
-            <td className="px-4 py-2.5">
-              <StatusBadge active={period.isActive} />
-            </td>
-          </tr>
-        ))}
-      </BoardTable>
+      />
     </section>
   );
 }

@@ -1,47 +1,51 @@
 "use client";
 
 import * as React from "react";
-import { BoardTable } from "@/components/BoardTable";
+import { Table, type TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
-import { roleLabel } from "@/features/accounts/roles";
+import { roleLabelFor, roleOptions, type RoleOption } from "@/features/accounts/roles";
 import { useEmployees } from "@/features/employees/useEmployees";
 import type { UsersQuery } from "@/generated/graphql";
-import type { AccessRole, AccountStatus } from "@/generated/graphql/types";
+import type { AccountStatus, Role } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
 
 type Account = UsersQuery["users"][number];
-
-const ROLE_OPTIONS = Object.keys(roleLabel) as AccessRole[];
 
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 type CreateValues = {
   employeeId: string;
   email: string;
-  accessRole: AccessRole;
+  /** Machine name of the access role: a built-in name or a custom role's name. */
+  roleName: string;
   temporaryPassword?: string;
 };
 
 type AccountsSectionProps = {
   accounts: Account[] | undefined;
+  /** Access roles from the `roles` query: built-ins and custom ones alike. */
+  roles: readonly Role[] | undefined;
   status: "loading" | "ready" | "error";
   error: string | null;
   onCreate: (values: CreateValues) => Promise<void>;
-  onChangeRole: (userId: string, accessRole: AccessRole) => Promise<void>;
+  onChangeRole: (userId: string, roleName: string) => Promise<void>;
   onSetStatus: (userId: string, status: AccountStatus) => Promise<void>;
   onRevokeSessions: (userId: string) => Promise<void>;
 };
 
-function RoleBadge({ role }: { role: string }) {
+function RoleBadge({ roleName, options }: { roleName: string; options: readonly RoleOption[] }) {
   return (
-    <span className="rounded-md bg-tp-tint-info px-2 py-0.5 text-xs font-semibold text-tp-ink-info">
-      {roleLabel[role as AccessRole] ?? role}
-    </span>
+    <Chip variant="info" size="small">
+      {roleLabelFor(roleName, options)}
+    </Chip>
   );
 }
 
@@ -50,6 +54,7 @@ function RoleBadge({ role }: { role: string }) {
 // There is deliberately no delete operation — accounts are only deactivated.
 export function AccountsSection({
   accounts,
+  roles,
   status,
   error,
   onCreate,
@@ -61,7 +66,7 @@ export function AccountsSection({
   const [employeeSearch, setEmployeeSearch] = React.useState("");
   const [employeeId, setEmployeeId] = React.useState("");
   const [email, setEmail] = React.useState("");
-  const [accessRole, setAccessRole] = React.useState<AccessRole | "">("");
+  const [roleName, setRoleName] = React.useState("");
   const [temporaryPassword, setTemporaryPassword] = React.useState("");
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string | undefined>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
@@ -70,6 +75,8 @@ export function AccountsSection({
 
   const employees = useEmployees({ search: employeeSearch || undefined }, 100);
   const { pageRows, pagination } = useTablePagination(accounts);
+  // Custom roles come from the API, not from a static list (W3 / TAN-264).
+  const options = React.useMemo(() => roleOptions(roles), [roles]);
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -79,7 +86,7 @@ export function AccountsSection({
     setEmployeeSearch("");
     setEmployeeId("");
     setEmail("");
-    setAccessRole("");
+    setRoleName("");
     setTemporaryPassword("");
     setFieldErrors({});
     setFormError(null);
@@ -91,7 +98,7 @@ export function AccountsSection({
     if (!employeeId) nextErrors.employeeId = "Karyawan wajib dipilih.";
     if (!email.trim()) nextErrors.email = "Email wajib diisi.";
     else if (!EMAIL_PATTERN.test(email.trim())) nextErrors.email = "Format email tidak valid.";
-    if (!accessRole) nextErrors.accessRole = "Peran akses wajib dipilih.";
+    if (!roleName) nextErrors.roleName = "Peran akses wajib dipilih.";
     setFieldErrors(nextErrors);
     setFormError(null);
     if (Object.values(nextErrors).some(Boolean)) return;
@@ -101,7 +108,7 @@ export function AccountsSection({
       await onCreate({
         employeeId,
         email: email.trim(),
-        accessRole: accessRole as AccessRole,
+        roleName,
         temporaryPassword: temporaryPassword.trim() || undefined,
       });
       resetForm();
@@ -113,6 +120,82 @@ export function AccountsSection({
       setBusy(false);
     }
   }
+
+  const columns: TableColumn<Account>[] = [
+    {
+      key: "name",
+      title: "Nama",
+      className: "font-medium text-zinc-900",
+      render: (_value, account) => account.fullName,
+    },
+    {
+      key: "email",
+      title: "Email",
+      className: "text-zinc-600",
+      render: (_value, account) => orDash(account.email),
+    },
+    {
+      key: "role",
+      title: "Peran",
+      render: (_value, account) => (
+        <RoleBadge roleName={account.roleName} options={options} />
+      ),
+    },
+    {
+      key: "status",
+      title: "Status",
+      render: (_value, account) => <StatusBadge active={account.status === "ACTIVE"} />,
+    },
+    {
+      key: "actions",
+      title: "Aksi",
+      className: "col-action",
+      render: (_value, account) =>
+        confirmRevokeId === account.id ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                void onRevokeSessions(account.id).finally(() => setConfirmRevokeId(null));
+              }}
+            >
+              Ya, cabut
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setConfirmRevokeId(null)}>
+              Batal
+            </Button>
+          </div>
+        ) : (
+          <RowActionsMenu
+            label={`Aksi ${account.fullName}`}
+            actions={[
+              {
+                label: account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan",
+                onSelect: () =>
+                  void onSetStatus(
+                    account.id,
+                    account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                  ),
+              },
+              { label: "Cabut Sesi", onSelect: () => setConfirmRevokeId(account.id) },
+            ]}
+          >
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <span>Peran</span>
+              <Select
+                aria-label={`Ubah peran ${account.fullName}`}
+                className="w-auto"
+                value={account.roleName}
+                onChange={(e) => void onChangeRole(account.id, e.target.value)}
+                options={options.map((option) => ({ value: option.value, label: option.label }))}
+              />
+            </label>
+          </RowActionsMenu>
+        ),
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -133,73 +216,63 @@ export function AccountsSection({
           onSubmit={handleSubmit}
           className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
         >
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Cari Karyawan
+          <InputControl label="Cari Karyawan">
             <Input
               type="search"
               value={employeeSearch}
               onChange={(e) => setEmployeeSearch(e.target.value)}
               placeholder="Cari nama, email, atau kode…"
             />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Karyawan
-            <Select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
-              <option value="">
-                {employees.status === "loading" ? "— Memuat karyawan… —" : "— Pilih karyawan —"}
-              </option>
-              {(employees.employees ?? []).map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.fullName} ({employee.nomorInduk ?? "—"})
-                </option>
-              ))}
-            </Select>
-            {fieldErrors.employeeId ? (
-              <span className="text-xs text-red-600">{fieldErrors.employeeId}</span>
-            ) : null}
-          </label>
+          </InputControl>
+          <InputControl label="Karyawan" error={fieldErrors.employeeId}>
+            <Select
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+              options={[
+                {
+                  value: "",
+                  label:
+                    employees.status === "loading"
+                      ? "— Memuat karyawan… —"
+                      : "— Pilih karyawan —",
+                },
+                ...(employees.employees ?? []).map((employee) => ({
+                  value: employee.id,
+                  label: `${employee.fullName} (${employee.nomorInduk ?? "—"})`,
+                })),
+              ]}
+            />
+          </InputControl>
           {employees.status === "error" ? (
             <span className="text-xs text-red-600">
               {employees.error ?? "Gagal memuat daftar karyawan."}
             </span>
           ) : null}
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Email
+          <InputControl label="Email" error={fieldErrors.email}>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="cth: nama@telkom.co.id"
             />
-            {fieldErrors.email ? (
-              <span className="text-xs text-red-600">{fieldErrors.email}</span>
-            ) : null}
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Peran Akses
+          </InputControl>
+          <InputControl label="Peran Akses" error={fieldErrors.roleName}>
             <Select
-              value={accessRole}
-              onChange={(e) => setAccessRole(e.target.value as AccessRole | "")}
-            >
-              <option value="">— Pilih peran —</option>
-              {ROLE_OPTIONS.map((role) => (
-                <option key={role} value={role}>
-                  {roleLabel[role]}
-                </option>
-              ))}
-            </Select>
-            {fieldErrors.accessRole ? (
-              <span className="text-xs text-red-600">{fieldErrors.accessRole}</span>
-            ) : null}
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Kata Sandi Sementara (opsional)
+              value={roleName}
+              onChange={(e) => setRoleName(e.target.value)}
+              options={[
+                { value: "", label: "— Pilih peran —" },
+                ...options.map((option) => ({ value: option.value, label: option.label })),
+              ]}
+            />
+          </InputControl>
+          <InputControl label="Kata Sandi Sementara (opsional)">
             <Input
               type="password"
               value={temporaryPassword}
               onChange={(e) => setTemporaryPassword(e.target.value)}
             />
-          </label>
+          </InputControl>
           {formError ? <span className="text-xs text-red-600">{formError}</span> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={busy}>
@@ -215,83 +288,13 @@ export function AccountsSection({
       {!accounts || accounts.length === 0 ? (
         <EmptyState message="Belum ada akun pengguna." />
       ) : (
-        <BoardTable
+        <Table
           caption="Daftar akun pengguna"
-          columns={[
-            { key: "name", label: "Nama" },
-            { key: "email", label: "Email" },
-            { key: "role", label: "Peran" },
-            { key: "status", label: "Status" },
-            { key: "actions", label: "Aksi" },
-          ]}
-          footer={<Pagination {...pagination} />}
-        >
-          {pageRows.map((account) => (
-            <tr
-              key={account.id}
-              className="border-b border-board-border transition-colors hover:bg-zinc-50"
-            >
-              <td className="px-4 py-2.5 font-medium text-zinc-900">{account.fullName}</td>
-              <td className="px-4 py-2.5 text-zinc-600">{account.email}</td>
-              <td className="px-4 py-2.5">
-                <RoleBadge role={account.accessRole} />
-              </td>
-              <td className="px-4 py-2.5">
-                <StatusBadge active={account.status === "ACTIVE"} />
-              </td>
-              <td className="px-4 py-2.5">
-                {confirmRevokeId === account.id ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-600">Cabut semua sesi akun ini?</span>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => {
-                        void onRevokeSessions(account.id).finally(() => setConfirmRevokeId(null));
-                      }}
-                    >
-                      Ya, cabut
-                    </Button>
-                    <Button type="button" variant="ghost" onClick={() => setConfirmRevokeId(null)}>
-                      Batal
-                    </Button>
-                  </div>
-                ) : (
-                  <RowActionsMenu
-                    label={`Aksi ${account.fullName}`}
-                    actions={[
-                      {
-                        label: account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan",
-                        onSelect: () =>
-                          void onSetStatus(
-                            account.id,
-                            account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                          ),
-                      },
-                      { label: "Cabut Sesi", onSelect: () => setConfirmRevokeId(account.id) },
-                    ]}
-                  >
-                    <label className="flex items-center gap-2 text-sm text-zinc-700">
-                      <span>Peran</span>
-                      <Select
-                        aria-label={`Ubah peran ${account.fullName}`}
-                        className="w-auto"
-                        value={account.accessRole}
-                        onChange={(e) => void onChangeRole(account.id, e.target.value as AccessRole)}
-                      >
-                        {ROLE_OPTIONS.map((role) => (
-                          <option key={role} value={role}>
-                            {roleLabel[role]}
-                          </option>
-                        ))}
-                      </Select>
-                    </label>
-                  </RowActionsMenu>
-                )}
-            </td>
-          </tr>
-        ))}
-          </BoardTable>
+          columns={columns}
+          dataSource={pageRows}
+          rowKey={(account) => account.id}
+          pagination={pagination}
+        />
       )}
     </div>
   );

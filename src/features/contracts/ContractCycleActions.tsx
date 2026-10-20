@@ -8,6 +8,7 @@ import { Card } from "@/components/Card";
 import { ErrorState } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
+import { InputControl } from "@/components/InputControl";
 import { useJobRoles, useUnits } from "@/features/master-data/useMasterData";
 import {
   EmployeeDocument,
@@ -22,6 +23,7 @@ import {
 } from "@/generated/graphql";
 import { workLocationFormValue } from "@/features/contracts/labels";
 import { graphQLErrorCode, mapSubmitError } from "@/lib/errors";
+import { CONTRACT_DETAIL } from "@/lib/constants/routes";
 
 type Contract = NonNullable<EmploymentContractQuery["employmentContract"]>;
 
@@ -136,8 +138,7 @@ function ResignAction({ contract }: { contract: Contract }) {
         </div>
       ) : (
         <>
-          <Label error={dateError ?? undefined}>
-            Tanggal efektif
+          <InputControl label="Tanggal efektif" error={dateError ?? undefined}>
             <Input
               type="date"
               value={effectiveDate}
@@ -146,11 +147,10 @@ function ResignAction({ contract }: { contract: Contract }) {
                 setDateError(null);
               }}
             />
-          </Label>
-          <Label>
-            Alasan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+          </InputControl>
+          <InputControl label="Alasan" helper="(opsional)">
             <Input type="text" value={reason} onChange={(e) => setReason(e.target.value)} />
-          </Label>
+          </InputControl>
           <div>
             <Button type="button" variant="secondary" onClick={() => run(false)} disabled={loading}>
               Catat resign
@@ -277,7 +277,7 @@ function MutationAction({ contract }: { contract: Contract }) {
           Mutasi tercatat. Kontrak baru <strong>{created.contractNo}</strong> efektif{" "}
           {created.startDate}; kontrak lama tetap tersimpan sebagai riwayat.
         </p>
-        <Link href={`/contracts/${created.id}`} className="w-fit no-underline">
+        <Link href={CONTRACT_DETAIL(created.id)} className="w-fit no-underline">
           <Button type="button" variant="secondary">
             Buka kontrak baru
           </Button>
@@ -294,107 +294,98 @@ function MutationAction({ contract }: { contract: Contract }) {
       </p>
       {formError ? <ErrorState message={formError} /> : null}
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <Label error={errors.effectiveDate}>
-          Tanggal efektif
+        <InputControl label="Tanggal efektif" error={errors.effectiveDate}>
           <Input
             type="date"
             value={values.effectiveDate}
             onChange={(e) => set("effectiveDate", e.target.value)}
           />
-        </Label>
-        <Label error={errors.contractNo}>
-          No. Kontrak baru
+        </InputControl>
+        <InputControl label="No. Kontrak baru" error={errors.contractNo}>
           <Input
             type="text"
             value={values.contractNo}
             onChange={(e) => set("contractNo", e.target.value)}
             placeholder="cth. PKWT/2026/MUT-01"
           />
-        </Label>
-        <Label error={errors.nomorInduk}>
-          Nomor induk karyawan
+        </InputControl>
+        <InputControl label="Nomor induk karyawan" error={errors.nomorInduk}>
           <Input
             type="text"
             value={values.nomorInduk}
             onChange={(e) => set("nomorInduk", e.target.value)}
           />
-        </Label>
-        <Label error={errors.unitId}>
-          Unit baru
-          <Select value={values.unitId} onChange={(e) => set("unitId", e.target.value)}>
-            <option value="">— pilih unit —</option>
-            {(units.data ?? []).map((unit) => (
-              <option key={unit.id} value={unit.id}>
-                {unit.name}
-              </option>
-            ))}
-          </Select>
-        </Label>
-        <Label error={errors.jobRoleId}>
-          Posisi / Job Role baru
-          <Select value={values.jobRoleId} onChange={(e) => set("jobRoleId", e.target.value)}>
-            <option value="">— pilih job role —</option>
-            {(jobRoles.data ?? []).map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
-            ))}
-          </Select>
-        </Label>
-        <Label error={errors.workLocation}>
-          Work location
+        </InputControl>
+        <InputControl label="Unit baru" error={errors.unitId}>
+          <Select
+            value={values.unitId}
+            onChange={(e) => set("unitId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih unit —" },
+              ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+            ]}
+          />
+        </InputControl>
+        <InputControl label="Posisi / Job Role baru" error={errors.jobRoleId}>
+          <Select
+            value={values.jobRoleId}
+            onChange={(e) => set("jobRoleId", e.target.value)}
+            options={[
+              { value: "", label: "— pilih job role —" },
+              ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
+            ]}
+          />
+        </InputControl>
+        <InputControl label="Work location" error={errors.workLocation}>
           <Select
             value={values.workLocation}
             onChange={(e) => set("workLocation", e.target.value)}
-          >
-            <option value="">— pilih lokasi kerja —</option>
-            <option value="JAKARTA">Jakarta</option>
-            <option value="BANDUNG">Bandung</option>
-          </Select>
-        </Label>
-        <Label error={errors.bandPosition}>
-          Band position
+            options={[
+              { value: "", label: "— pilih lokasi kerja —" },
+              { value: "JAKARTA", label: "Jakarta" },
+              { value: "BANDUNG", label: "Bandung" },
+            ]}
+          />
+        </InputControl>
+        <InputControl label="Band position" error={errors.bandPosition}>
           <Select
             value={values.bandPosition}
             onChange={(e) => set("bandPosition", e.target.value)}
-          >
-            <option value="UNDEFINED">Belum ditetapkan</option>
-            <option value="I">I</option>
-            <option value="II">II</option>
-            <option value="III">III</option>
-            <option value="IV">IV</option>
-            <option value="V">V</option>
-            <option value="VI">VI</option>
-          </Select>
-        </Label>
-        <Label>
-          Job title <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+            options={[
+              { value: "UNDEFINED", label: "Belum ditetapkan" },
+              { value: "I", label: "I" },
+              { value: "II", label: "II" },
+              { value: "III", label: "III" },
+              { value: "IV", label: "IV" },
+              { value: "V", label: "V" },
+              { value: "VI", label: "VI" },
+            ]}
+          />
+        </InputControl>
+        <InputControl label="Job title" helper="(opsional)">
           <Input
             type="text"
             value={values.jobTitle}
             onChange={(e) => set("jobTitle", e.target.value)}
           />
-        </Label>
-        <Label>
-          Job level <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Job level" helper="(opsional)">
           <Input
             type="text"
             value={values.jobLevel}
             onChange={(e) => set("jobLevel", e.target.value)}
           />
-        </Label>
-        <Label>
-          Tanggal selesai <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Tanggal selesai" helper="(opsional)">
           <Input
             type="date"
             value={values.endDate}
             onChange={(e) => set("endDate", e.target.value)}
           />
-        </Label>
-        <Label>
-          Catatan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Catatan" helper="(opsional)">
           <Input type="text" value={values.notes} onChange={(e) => set("notes", e.target.value)} />
-        </Label>
+        </InputControl>
         <div>
           <Button type="submit" disabled={loading}>
             {loading ? "Menyimpan…" : "Catat mutasi"}
@@ -479,8 +470,7 @@ function RetireAction({ contract }: { contract: Contract }) {
         </div>
       ) : (
         <>
-          <Label error={dateError ?? undefined}>
-            Tanggal efektif
+          <InputControl label="Tanggal efektif" error={dateError ?? undefined}>
             <Input
               type="date"
               value={effectiveDate}
@@ -489,7 +479,7 @@ function RetireAction({ contract }: { contract: Contract }) {
                 setDateError(null);
               }}
             />
-          </Label>
+          </InputControl>
           <div>
             <Button type="button" variant="secondary" onClick={() => run(false)} disabled={loading}>
               Catat pensiun
@@ -498,18 +488,5 @@ function RetireAction({ contract }: { contract: Contract }) {
         </>
       )}
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

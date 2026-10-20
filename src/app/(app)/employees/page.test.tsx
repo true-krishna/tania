@@ -12,7 +12,7 @@ import {
   UnitsDocument,
 } from "@/generated/graphql";
 
-const nav = vi.hoisted(() => ({ replace: vi.fn() }));
+const nav = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => nav }));
 
@@ -116,6 +116,32 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     expect(screen.queryByText(/3273012345678901/)).not.toBeInTheDocument();
   });
 
+  it("renders a dash for cells without a value (TAN-189)", async () => {
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
+    expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "-" })).toBeInTheDocument();
+  });
+
+  it("opens the row action menu and navigates to the detail page (TAN-189)", async () => {
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lihat detail" }));
+    expect(nav.push).toHaveBeenCalledWith("/employees/emp-1");
+  });
+
   it("re-queries with the typed search filter", async () => {
     const mocks = [
       unitsMock,
@@ -151,8 +177,9 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
       target: { value: "citra" },
     });
 
-    expect(await screen.findByText("Citra Lestari")).toBeInTheDocument();
-    expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
+    // The search is debounced, so the requery lands after the debounce delay.
+    await waitFor(() => expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument());
+    expect(screen.getByText("Citra Lestari")).toBeInTheDocument();
   });
 
   it("filters by divisi and status", async () => {
@@ -245,7 +272,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 });
 
 describe("EmployeesPage per role (T034)", () => {
-  it("shows the add action to Operation only", async () => {
+  it("shows the add action to Operation and Admin", async () => {
     render(
       <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
@@ -255,7 +282,7 @@ describe("EmployeesPage per role (T034)", () => {
     expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
   });
 
-  it("is a read-only directory for Admin", async () => {
+  it("lets Admin manage the directory (TAN-212 clarify 4)", async () => {
     auth.role = "ADMIN";
     render(
       <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
@@ -263,8 +290,7 @@ describe("EmployeesPage per role (T034)", () => {
       </MockedProvider>
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
-    expect(screen.getByText(/konteks penautan akun/i)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /tambah karyawan/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
   });
 
   it("lists scoped talents for Chapter via assignableTalents", async () => {

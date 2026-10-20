@@ -124,11 +124,12 @@ export function ActivitiesPageView() {
                 aria-label="Filter jenis aktivitas"
                 value={filter.activityType}
                 onChange={(e) => setFilterValue("activityType", e.target.value as ActivityType | "")}
-              >
-                <option value="">Semua</option>
-                <option value="working">Bekerja</option>
-                <option value="training">Pelatihan</option>
-              </Select>
+                options={[
+                  { value: "", label: "Semua" },
+                  { value: "working", label: "Bekerja" },
+                  { value: "training", label: "Pelatihan" },
+                ]}
+              />
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-700">
               <span>Status</span>
@@ -136,14 +137,11 @@ export function ActivitiesPageView() {
                 aria-label="Filter status aktivitas"
                 value={filter.statusId}
                 onChange={(e) => setFilterValue("statusId", e.target.value)}
-              >
-                <option value="">Semua</option>
-                {ACTIVITY_STATUSES.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
-                ))}
-              </Select>
+                options={[
+                  { value: "", label: "Semua" },
+                  ...ACTIVITY_STATUSES.map((status) => ({ value: status.id, label: status.name })),
+                ]}
+              />
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-700">
               <span>Project</span>
@@ -151,14 +149,11 @@ export function ActivitiesPageView() {
                 aria-label="Filter project aktivitas"
                 value={filter.projectId}
                 onChange={(e) => setFilterValue("projectId", e.target.value)}
-              >
-                <option value="">Semua</option>
-                {ACTIVITY_PROJECTS.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </Select>
+                options={[
+                  { value: "", label: "Semua" },
+                  ...ACTIVITY_PROJECTS.map((project) => ({ value: project.id, label: project.name })),
+                ]}
+              />
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-700">
               <span>Dari tanggal</span>

@@ -9,6 +9,7 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
+import { InputControl } from "@/components/InputControl";
 import { useEmploymentContract } from "@/features/contracts/useContract";
 import {
   BAND_POSITION_LABEL,
@@ -20,6 +21,8 @@ import {
 } from "@/features/contracts/labels";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { ContractCycleActions } from "@/features/contracts/ContractCycleActions";
+import { canManage } from "@/lib/auth/matrix";
+import { useSessionRole } from "@/lib/auth/guard";
 import {
   EmploymentContractDocument,
   UpdateEmploymentContractDocument,
@@ -29,6 +32,12 @@ import {
   type WorkLocation,
 } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
+import {
+  CONTRACTS,
+  CONTRACT_DETAIL,
+  CONTRACT_RENEW,
+  EMPLOYEE_DETAIL,
+} from "@/lib/constants/routes";
 
 type FormValues = {
   contractNo: string;
@@ -45,6 +54,10 @@ const CONFLICT_MESSAGE = "Nomor kontrak sudah dipakai. Periksa kembali isian ter
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data: contract, error } = useEmploymentContract(id);
+  // Chapter reads contracts of its own chapter only (2026-10-16 clarify 5):
+  // every manage surface — renew, cycle actions, edit form, per-record history
+  // (Operation/Admin only, FR-41) — stays hidden.
+  const manage = canManage(useSessionRole(), "contracts");
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data kontrak."} />;
@@ -52,15 +65,15 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href="/contracts" className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={CONTRACTS} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
         ← Kembali ke daftar kontrak
       </Link>
       <PageHeader
-        title={contract.contractNo}
+        title={contract.contractNo ?? "—"}
         subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
         actions={
-          !isOpenEndedContractType(contract.contractType) ? (
-            <Link href={`/contracts/${id}/renew`} className="no-underline">
+          manage && !isOpenEndedContractType(contract.contractType) ? (
+            <Link href={CONTRACT_RENEW(id)} className="no-underline">
               <Button variant="primary">Perpanjang kontrak</Button>
             </Link>
           ) : undefined
@@ -74,7 +87,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Karyawan</dt>
             <dd className="text-zinc-900">
               <Link
-                href={`/employees/${contract.employee.id}`}
+                href={EMPLOYEE_DETAIL(contract.employee.id)}
                 className="text-tp-brand-red-deep hover:underline"
               >
                 {contract.employee.fullName}
@@ -144,7 +157,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Kontrak Pendahulu</dt>
             <dd className="text-zinc-900">
               {contract.predecessor ? (
-                <Link href={`/contracts/${contract.predecessor.id}`} className="text-tp-brand-red-deep hover:underline">
+                <Link href={CONTRACT_DETAIL(contract.predecessor.id)} className="text-tp-brand-red-deep hover:underline">
                   {contract.predecessor.contractNo}
                 </Link>
               ) : (
@@ -165,17 +178,21 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         </dl>
       </Card>
 
-      <ContractCycleActions contract={contract} />
+      {manage ? <ContractCycleActions contract={contract} /> : null}
 
-      <Card className="max-w-3xl">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-900">Ubah data kontrak</h2>
-        <ContractEditForm id={id} contract={contract} />
-      </Card>
+      {manage ? (
+        <>
+          <Card className="max-w-3xl">
+            <h2 className="mb-3 text-sm font-semibold text-zinc-900">Ubah data kontrak</h2>
+            <ContractEditForm id={id} contract={contract} />
+          </Card>
 
-      <Card className="max-w-3xl">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-900">Riwayat perubahan</h2>
-        <RecordChangeHistory entityType="employment_contract" entityId={id} />
-      </Card>
+          <Card className="max-w-3xl">
+            <h2 className="mb-3 text-sm font-semibold text-zinc-900">Riwayat perubahan</h2>
+            <RecordChangeHistory entityType="employment_contract" entityId={id} />
+          </Card>
+        </>
+      ) : null}
     </section>
   );
 }
@@ -194,7 +211,7 @@ function ContractEditForm({
     }
   );
   const [values, setValues] = React.useState<FormValues>(() => ({
-    contractNo: contract.contractNo,
+    contractNo: contract.contractNo ?? "",
     officeEmail: contract.officeEmail ?? "",
     bandPosition: contract.bandPosition,
     jobTitle: contract.jobTitle ?? "",
@@ -265,93 +282,74 @@ function ContractEditForm({
           Perubahan kontrak berhasil disimpan.
         </div>
       ) : null}
-      <Label error={errors.contractNo}>
-        No. Kontrak
+      <InputControl label="No. Kontrak" error={errors.contractNo}>
         <Input
           type="text"
           value={values.contractNo}
           onChange={(e) => set("contractNo", e.target.value)}
         />
-      </Label>
-      <Label error={errors.officeEmail}>
-        Email kantor <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+      </InputControl>
+      <InputControl label="Email kantor" helper="(opsional)" error={errors.officeEmail}>
         <Input
           type="email"
           value={values.officeEmail}
           onChange={(e) => set("officeEmail", e.target.value)}
         />
-      </Label>
-      <Label error={errors.jobTitle}>
-        Job title <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+      </InputControl>
+      <InputControl label="Job title" helper="(opsional)" error={errors.jobTitle}>
         <Input
           type="text"
           value={values.jobTitle}
           onChange={(e) => set("jobTitle", e.target.value)}
         />
-      </Label>
-      <Label error={errors.jobLevel}>
-        Job level <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+      </InputControl>
+      <InputControl label="Job level" helper="(opsional)" error={errors.jobLevel}>
         <Input
           type="text"
           value={values.jobLevel}
           onChange={(e) => set("jobLevel", e.target.value)}
         />
-      </Label>
-      <Label error={errors.bandPosition}>
-        Band position
+      </InputControl>
+      <InputControl label="Band position" error={errors.bandPosition}>
         <Select
           value={values.bandPosition}
           onChange={(e) => set("bandPosition", e.target.value)}
-        >
-          <option value="UNDEFINED">Belum ditetapkan</option>
-          <option value="I">I</option>
-          <option value="II">II</option>
-          <option value="III">III</option>
-          <option value="IV">IV</option>
-          <option value="V">V</option>
-          <option value="VI">VI</option>
-        </Select>
-      </Label>
-      <Label error={errors.workLocation}>
-        Work location
+          options={[
+            { value: "UNDEFINED", label: "Belum ditetapkan" },
+            { value: "I", label: "I" },
+            { value: "II", label: "II" },
+            { value: "III", label: "III" },
+            { value: "IV", label: "IV" },
+            { value: "V", label: "V" },
+            { value: "VI", label: "VI" },
+          ]}
+        />
+      </InputControl>
+      <InputControl label="Work location" error={errors.workLocation}>
         <Select
           value={values.workLocation}
           onChange={(e) => set("workLocation", e.target.value)}
-        >
-          {/* UNDEFINED is the state of a contract whose location was never
-              recorded (legacy rows); showing it keeps the select honest
-              instead of falling back to the first option. */}
-          <option value="UNDEFINED">Belum ditetapkan</option>
-          <option value="JAKARTA">Jakarta</option>
-          <option value="BANDUNG">Bandung</option>
-        </Select>
-      </Label>
-      <Label error={errors.notes}>
-        Catatan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+          options={[
+            // UNDEFINED marks legacy rows whose location was never recorded; keeping it
+            // avoids silently falling back to the select's first region.
+            { value: "UNDEFINED", label: "Belum ditetapkan" },
+            { value: "JAKARTA", label: "Jakarta" },
+            { value: "BANDUNG", label: "Bandung" },
+          ]}
+        />
+      </InputControl>
+      <InputControl label="Catatan" helper="(opsional)" error={errors.notes}>
         <Input
           type="text"
           value={values.notes}
           onChange={(e) => set("notes", e.target.value)}
         />
-      </Label>
+      </InputControl>
       <div className="flex gap-2">
         <Button type="submit" disabled={saving}>
           Simpan perubahan
         </Button>
       </div>
     </form>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

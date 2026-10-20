@@ -1,3 +1,4 @@
+import type { ChipVariant } from "@/components/Chip";
 import type {
   BandPosition,
   ContractEndReason,
@@ -34,6 +35,12 @@ export const CONTRACT_STATUS_LABEL: Record<EmploymentContractStatus, string> = {
   ACTIVE: "Aktif",
   ENDED: "Berakhir",
   TERMINATED: "Dihentikan",
+};
+
+export const CONTRACT_STATUS_VARIANT: Record<EmploymentContractStatus, ChipVariant> = {
+  ACTIVE: "success",
+  ENDED: "neutral",
+  TERMINATED: "danger",
 };
 
 export const CONTRACT_END_REASON_LABEL: Record<ContractEndReason, string> = {

@@ -4,18 +4,35 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { LogoutDocument } from "@/generated/graphql";
-import { IconChartBar, IconClockHour3 } from "@tabler/icons-react";
+import { IconChartBar, IconClockHour3, IconUser } from "@tabler/icons-react";
 import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
+import { AssistantBubble } from "@/features/assistant/AssistantBubble";
 import { roleLabel } from "@/features/accounts/roles";
+import { useMyMenuConfig } from "@/features/roles/useRoles";
+import { authConfig } from "@/lib/auth/config";
 import { AuthGuard, useSessionRole } from "@/lib/auth/guard";
+import { onSessionExpired } from "@/lib/auth/session-expiry";
 import { clearSession, getSession } from "@/lib/auth/token-store";
+import { ACTIVITIES, LOGIN, PROFILE, WORKLOAD } from "@/lib/constants/routes";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const role = useSessionRole();
+  // Active menu configuration of the signed-in role (FR-03 amandemen): the
+  // sidebar follows it, so an Admin's change shows up on the next load without
+  // a re-deploy. Absent while it loads — the sidebar then keeps its static
+  // role lists rather than rendering empty.
+  const { config: menuConfig, roleName } = useMyMenuConfig();
   const pathname = usePathname();
   const [logout] = useMutation(LogoutDocument);
+
+  // Session expiry while the app is open (refresh link failed and cleared the
+  // session) routes back to sign-in; AuthGuard only covers the initial mount.
+  React.useEffect(() => {
+    if (authConfig.localOnly) return;
+    return onSessionExpired(() => router.replace(LOGIN));
+  }, [router]);
 
   // Profile shown in the top-bar avatar; read once at mount, like `useSessionRole`.
   const [session] = React.useState(() => getSession());
@@ -30,7 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (refreshToken) await logout({ variables: { refreshToken } });
     } finally {
       clearSession();
-      router.replace("/login");
+      router.replace(LOGIN);
     }
   }
 
@@ -41,7 +58,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
        * fills the viewport minus the sidebar and adapts to large viewports;
        * ≤860px the sidebar strip is static and paddings tighten. */}
       <div className="flex min-h-screen flex-col min-[861px]:flex-row">
-        <Sidebar role={role} pathname={pathname} />
+        <Sidebar role={role} pathname={pathname} menuConfig={menuConfig} roleName={roleName} />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-tp-line bg-tp-surface px-4 py-3 min-[861px]:px-6 min-[861px]:py-4">
             <p className="truncate text-sm font-semibold text-zinc-700">{sectionForPath(pathname)}</p>
@@ -51,8 +68,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 email={session?.email}
                 roleLabel={role ? roleLabel[role] : null}
                 items={[
-                  { href: "/activities", label: "Aktivitas saya", icon: IconClockHour3 },
-                  { href: "/workload", label: "Workload", icon: IconChartBar },
+                  { href: PROFILE, label: "Profil saya", icon: IconUser },
+                  { href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3 },
+                  { href: WORKLOAD, label: "Workload", icon: IconChartBar },
                 ]}
                 onLogout={handleLogout}
               />
@@ -63,6 +81,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
+      {/* Asisten data (FR-01): bubble + panel dirender sekali di shell, hanya
+       * untuk CHAPTER/OPERATION. Guard ini kenyamanan UI — otorisasi ada di
+       * server (ChatService). */}
+      {(role === "CHAPTER" || role === "OPERATION") && <AssistantBubble />}
     </AuthGuard>
   );
 }

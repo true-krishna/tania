@@ -35,6 +35,9 @@ query Dashboard {
         fullName
         nomorInduk
       }
+      contractsExpiringIn90Days
+      contractsExpiringIn30Days
+      preRetirementEmployees
     }
     ... on ChapterDashboard {
       unassignedTalents {
@@ -50,10 +53,6 @@ query Dashboard {
         periodEnd
         status
         project {
-          id
-          name
-        }
-        jobRole {
           id
           name
         }

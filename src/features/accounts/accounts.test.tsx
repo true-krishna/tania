@@ -9,10 +9,28 @@ import {
   CreateUserAccountDocument,
   EmployeesDocument,
   RevokeUserSessionsDocument,
+  RolesDocument,
   SetUserAccountStatusDocument,
   UpdateUserAccessRoleDocument,
   UsersDocument,
 } from "@/generated/graphql";
+
+// Access roles come from the API (W3 / TAN-264): the pickers list built-ins and
+// custom roles alike, so the page always asks for `roles`.
+const ROLES_QUERY = {
+  request: { query: RolesDocument, variables: { includeInactive: true } },
+  result: {
+    data: {
+      roles: [
+        { id: "role-admin", name: "ADMIN", label: "Admin", templateRole: "ADMIN", builtIn: true, status: "ACTIVE", __typename: "Role" },
+        { id: "role-operation", name: "OPERATION", label: "Operation", templateRole: "OPERATION", builtIn: true, status: "ACTIVE", __typename: "Role" },
+        { id: "role-chapter", name: "CHAPTER", label: "Chapter", templateRole: "CHAPTER", builtIn: true, status: "ACTIVE", __typename: "Role" },
+        { id: "role-talent", name: "TALENT", label: "Talent", templateRole: "TALENT", builtIn: true, status: "ACTIVE", __typename: "Role" },
+        { id: "role-pm", name: "PM_CHAPTER", label: "PM Chapter", templateRole: "CHAPTER", builtIn: false, status: "ACTIVE", __typename: "Role" },
+      ],
+    },
+  },
+};
 
 const USERS_QUERY = {
   request: { query: UsersDocument },
@@ -24,6 +42,7 @@ const USERS_QUERY = {
           fullName: "Sari Dewi",
           email: "sari@telkom.co.id",
           accessRole: "ADMIN",
+          roleName: "ADMIN",
           status: "ACTIVE",
           __typename: "User",
         },
@@ -32,6 +51,7 @@ const USERS_QUERY = {
           fullName: "Budi Santoso",
           email: "budi@telkom.co.id",
           accessRole: "TALENT",
+          roleName: "TALENT",
           status: "INACTIVE",
           __typename: "User",
         },
@@ -50,6 +70,7 @@ const USERS_QUERY_AFTER_ROLE_CHANGE = {
           fullName: "Sari Dewi",
           email: "sari@telkom.co.id",
           accessRole: "ADMIN",
+          roleName: "ADMIN",
           status: "ACTIVE",
           __typename: "User",
         },
@@ -58,6 +79,7 @@ const USERS_QUERY_AFTER_ROLE_CHANGE = {
           fullName: "Budi Santoso",
           email: "budi@telkom.co.id",
           accessRole: "CHAPTER",
+          roleName: "CHAPTER",
           status: "INACTIVE",
           __typename: "User",
         },
@@ -98,7 +120,7 @@ const EMPLOYEES_QUERY = {
 
 function renderPage(mocks: unknown[]) {
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mocks={[ROLES_QUERY, ...mocks] as never}>
       <ToastProvider>
         <AccountsPage />
       </ToastProvider>
@@ -150,7 +172,7 @@ describe("accounts management (Admin) — T053", () => {
           variables: {
             employeeId: "emp-1",
             email: "ahmad@telkom.co.id",
-            accessRole: "TALENT",
+            roleName: "TALENT",
             temporaryPassword: null,
           },
         },
@@ -161,6 +183,7 @@ describe("accounts management (Admin) — T053", () => {
               fullName: "Ahmad Fauzi",
               email: "ahmad@telkom.co.id",
               accessRole: "TALENT",
+              roleName: "TALENT",
               status: "ACTIVE",
               __typename: "User",
             },
@@ -195,7 +218,7 @@ describe("accounts management (Admin) — T053", () => {
           variables: {
             employeeId: "emp-1",
             email: "ahmad@telkom.co.id",
-            accessRole: "TALENT",
+            roleName: "TALENT",
             temporaryPassword: null,
           },
         },
@@ -223,7 +246,7 @@ describe("accounts management (Admin) — T053", () => {
       {
         request: {
           query: UpdateUserAccessRoleDocument,
-          variables: { userId: "usr-2", accessRole: "CHAPTER" },
+          variables: { userId: "usr-2", roleName: "CHAPTER" },
         },
         result: {
           data: {
@@ -232,6 +255,7 @@ describe("accounts management (Admin) — T053", () => {
               fullName: "Budi Santoso",
               email: "budi@telkom.co.id",
               accessRole: "CHAPTER",
+              roleName: "CHAPTER",
               status: "INACTIVE",
               __typename: "User",
             },
@@ -267,6 +291,7 @@ describe("accounts management (Admin) — T053", () => {
               fullName: "Sari Dewi",
               email: "sari@telkom.co.id",
               accessRole: "ADMIN",
+              roleName: "ADMIN",
               status: "INACTIVE",
               __typename: "User",
             },

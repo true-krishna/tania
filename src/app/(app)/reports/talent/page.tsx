@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { DASHBOARD } from "@/lib/constants/routes";
 
 /**
  * Amandemen penempatan (2026-10-12, keputusan pemilik produk, TAN-154):
@@ -7,5 +8,5 @@ import { redirect } from "next/navigation";
  * hanya dibiarkan sebagai redirect agar bookmark lama tidak mati.
  */
 export default function TalentReportPage() {
-  redirect("/dashboard");
+  redirect(DASHBOARD);
 }

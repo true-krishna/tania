@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { BoardTable } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
+import { EVALUATION_TEMPLATE_NEW } from "@/lib/constants/routes";
 
 /**
  * Evaluation templates (Admin) — US7 / FR-31.
@@ -26,7 +27,7 @@ export default function EvaluationTemplatesPage() {
           title="Template Evaluasi"
           subtitle="Framework penilaian yang dikelola Admin (FR-31)."
           actions={
-            <Link href="/evaluations/templates/new" className="no-underline">
+            <Link href={EVALUATION_TEMPLATE_NEW} className="no-underline">
             <Button variant="primary">+ Buat Template</Button>
           </Link>
           }
@@ -41,39 +42,47 @@ export default function EvaluationTemplatesPage() {
         title="Template Evaluasi"
         subtitle="Framework penilaian yang dikelola Admin (FR-31)."
         actions={
-          <Link href="/evaluations/templates/new" className="no-underline">
+          <Link href={EVALUATION_TEMPLATE_NEW} className="no-underline">
             <Button variant="primary">+ Buat Template</Button>
           </Link>
         }
       />
-      <BoardTable
+      <Table
         caption="Daftar template evaluasi"
+        rowKey={(template) => template.id}
+        dataSource={pageRows}
+        pagination={pagination}
         columns={[
-          { key: "name", label: "Nama" },
-          { key: "criteria", label: "Kriteria" },
-          { key: "status", label: "Status" },
+          {
+            key: "name",
+            title: "Nama",
+            className: "text-zinc-900",
+            render: (_value, template) => template.name,
+          },
+          {
+            key: "criteria",
+            title: "Kriteria",
+            render: (_value, template) =>
+              template.criteria.length ? (
+                <ul className="flex flex-col gap-0.5 text-xs text-zinc-600">
+                  {template.criteria.map((c) => (
+                    <li key={c.id}>
+                      {c.position}. {c.label} —{" "}
+                      <span className="text-zinc-400">{ANSWER_TYPE_LABEL[c.answerType]}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                "-"
+              ),
+          },
+          {
+            key: "status",
+            title: "Status",
+            render: (_value, template) => <StatusBadge active={template.isActive} />,
+          },
         ]}
-        footer={<Pagination {...pagination} />}
-      >
-        {pageRows.map((template) => (
-          <tr key={template.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-            <td className="px-4 py-2.5 text-zinc-900">{template.name}</td>
-            <td className="px-4 py-2.5">
-              <ul className="flex flex-col gap-0.5 text-xs text-zinc-600">
-                {template.criteria.map((c) => (
-                  <li key={c.id}>
-                    {c.position}. {c.label} —{" "}
-                    <span className="text-zinc-400">{ANSWER_TYPE_LABEL[c.answerType]}</span>
-                  </li>
-                ))}
-              </ul>
-            </td>
-            <td className="px-4 py-2.5">
-              <StatusBadge active={template.isActive} />
-            </td>
-          </tr>
-        ))}
-      </BoardTable>
+      />
     </section>
   );
 }

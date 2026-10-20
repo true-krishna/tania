@@ -13,6 +13,34 @@ import {
   type TablerIcon,
 } from "@tabler/icons-react";
 import type { AccessRole } from "@/generated/graphql";
+import {
+  menuEntryIdForHref,
+  visibleByConfig,
+  type MenuAccessConfig,
+} from "@/lib/auth/menuAccess";
+import {
+  ACCOUNTS,
+  ACTIVITIES,
+  AUDIT,
+  CONTRACTS,
+  CV,
+  DASHBOARD,
+  EMPLOYEES,
+  ENTRA,
+  EVALUATIONS,
+  EVALUATIONS_MY,
+  EVALUATION_PERIODS,
+  EVALUATION_TEMPLATES,
+  IDP,
+  MASTER_DATA_CHAPTERS,
+  MASTER_DATA_JOB_ROLES,
+  MASTER_DATA_PROJECTS,
+  MASTER_DATA_UNITS,
+  TALENT_ASSIGNMENT,
+  WORKLOAD,
+  WORKLOAD_EXECUTIVE,
+  WORKLOAD_TALENT,
+} from "@/lib/constants/routes";
 
 export interface NavLink {
   href: string;
@@ -47,55 +75,122 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * Evaluations, Master Data) are groups rendered as expandable submenus; the
  * rest are direct links. Visibility is role-scoped at the UI layer — the
  * backend still enforces authorization (FR-16).
+ *
+ * R2.2 (002-tania-rbac): each entry mirrors the role/module matrix. Every
+ * module a role may *read* has a menu entry, even when the page turns out
+ * read-only for that role — Data Karyawan for Chapter (scoped) and Talent
+ * (own record), Kontrak for Chapter (scoped, read-only), CV for Operation,
+ * Assignments for Operation (read-only) and Talent (own history), Master Data
+ * for Operation (read-only) and Chapter (scoped read).
+ *
+ * 2026-10-16 (clarify 5/6): Kontrak `+CHAPTER` (cakupan, hanya baca), CV
+ * `+OPERATION` (hanya baca), Master Data = `[CHAPTER, OPERATION, ADMIN]`
+ * (Talent tanpa akses).
+ *
+ * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation tampil untuk **semua**
+ * peran; yang berbeda hanya aksesnya. `/idp` terbuka bagi keempat peran (Talent
+ * melihat IDP-nya sendiri, Operation hanya baca, Chapter/Admin mengelola) dan
+ * grup Evaluations terbuka bagi keempat peran lewat anak yang sesuai — Roster
+ * untuk Admin/Operation/Chapter, Periode & Template tetap Admin (konfigurasi
+ * global), Evaluasi Saya untuk Talent. `nav.test.ts` menjaga invariannya: tidak
+ * ada tautan mati, dan setiap peran yang boleh membuka modul melihat minimal
+ * satu entri modul itu.
  */
 export const NAV: readonly NavEntry[] = [
-  { kind: "link", href: "/dashboard", label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
-  { kind: "link", href: "/activities", label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
-  { kind: "link", href: "/workload", label: "Workload", icon: IconChartBar, roles: ALL },
+  { kind: "link", href: DASHBOARD, label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
+  { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
+  /**
+   * Umpan balik pemilik produk (TAN-227): level user memakai satu menu
+   * Workload tanpa submenu; level executive memakai grup dengan dua submenu
+   * — Overview dan Talent (tabel talent dengan workload).
+   */
+  { kind: "link", href: WORKLOAD, label: "Workload", icon: IconChartBar, roles: ["TALENT"] },
+  {
+    kind: "group",
+    id: "workload",
+    label: "Workload",
+    icon: IconChartBar,
+    roles: ["CHAPTER", "OPERATION", "ADMIN"],
+    children: [
+      { href: WORKLOAD_EXECUTIVE, label: "Overview", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: WORKLOAD_TALENT, label: "Talent", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+    ],
+  },
   {
     kind: "group",
     id: "employee",
     label: "Employee",
     icon: IconUsers,
-    roles: ["CHAPTER", "OPERATION", "ADMIN"],
+    roles: ALL,
     children: [
-      { href: "/employees", label: "Data Karyawan", roles: ["OPERATION", "ADMIN"] },
-      { href: "/contracts", label: "Kontrak", roles: ["OPERATION", "ADMIN"] },
-      { href: "/assignments", label: "Assignments", roles: ["CHAPTER", "ADMIN"] },
+      { href: EMPLOYEES, label: "Data Karyawan", roles: ALL },
+      { href: CONTRACTS, label: "Kontrak", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: TALENT_ASSIGNMENT, label: "Assignments", roles: ALL },
     ],
   },
-  { kind: "link", href: "/entra", label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION"] },
-  { kind: "link", href: "/idp", label: "IDP", icon: IconTarget, roles: ["CHAPTER", "TALENT", "ADMIN"] },
-  { kind: "link", href: "/cv", label: "CV", icon: IconFileCv, roles: ["TALENT", "CHAPTER"] },
+  { kind: "link", href: ENTRA, label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },
+  { kind: "link", href: IDP, label: "IDP", icon: IconTarget, roles: ALL },
+  { kind: "link", href: CV, label: "CV", icon: IconFileCv, roles: ALL },
   {
     kind: "group",
     id: "evaluations",
     label: "Evaluations",
     icon: IconClipboardCheck,
-    roles: ["CHAPTER", "TALENT", "ADMIN"],
+    roles: ALL,
     children: [
-      { href: "/evaluations", label: "Roster", roles: ["CHAPTER", "ADMIN"] },
-      { href: "/evaluations/periods", label: "Periode", roles: ["ADMIN"] },
-      { href: "/evaluations/templates", label: "Template", roles: ["ADMIN"] },
-      { href: "/evaluations/my", label: "Evaluasi Saya", roles: ["TALENT"] },
+      { href: EVALUATIONS, label: "Roster", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: EVALUATION_PERIODS, label: "Periode", roles: ["ADMIN"] },
+      { href: EVALUATION_TEMPLATES, label: "Template", roles: ["ADMIN"] },
+      { href: EVALUATIONS_MY, label: "Evaluasi Saya", roles: ["TALENT"] },
     ],
   },
-  { kind: "link", href: "/accounts", label: "Accounts", icon: IconUserShield, roles: ["ADMIN"] },
+  { kind: "link", href: ACCOUNTS, label: "Accounts", icon: IconUserShield, roles: ["ADMIN"] },
   {
     kind: "group",
     id: "master-data",
     label: "Master Data",
     icon: IconDatabase,
-    roles: ["ADMIN"],
+    roles: ["CHAPTER", "OPERATION", "ADMIN"],
     children: [
-      { href: "/master-data/units", label: "Unit", roles: ["ADMIN"] },
-      { href: "/master-data/chapters", label: "Chapter", roles: ["ADMIN"] },
-      { href: "/master-data/job-roles", label: "Job Role", roles: ["ADMIN"] },
-      { href: "/master-data/projects", label: "Project", roles: ["ADMIN"] },
+      { href: MASTER_DATA_UNITS, label: "Unit", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: MASTER_DATA_CHAPTERS, label: "Chapter", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: MASTER_DATA_JOB_ROLES, label: "Job Role", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: MASTER_DATA_PROJECTS, label: "Project", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
     ],
   },
-  { kind: "link", href: "/audit", label: "Audit", icon: IconClock, roles: ["ADMIN"] },
+  { kind: "link", href: AUDIT, label: "Audit", icon: IconClock, roles: ["ADMIN"] },
 ];
+
+/**
+ * Entries a role sees under the active configuration, in sidebar order.
+ *
+ * A group survives only while it has a visible child, so an Admin who hides
+ * every page of a section hides the section too. With no configuration (still
+ * loading, or a session the server has not answered for yet) the caller keeps
+ * the static `roles` filter of `NAV`, which is today's behaviour — the sidebar
+ * never flickers empty while the configuration is in flight.
+ *
+ * The server is the enforcement point (US-C): this only decides what is drawn,
+ * and `nav.test.ts` asserts that nothing drawn is denied by the active config.
+ */
+export function visibleNavEntries(
+  config: MenuAccessConfig | null,
+  roleName: string | null,
+): readonly NavEntry[] {
+  if (!config || !roleName) return NAV;
+  const entries: NavEntry[] = [];
+  for (const entry of NAV) {
+    if (entry.kind === "link") {
+      if (visibleByConfig(config, roleName, menuEntryIdForHref(entry.href))) entries.push(entry);
+      continue;
+    }
+    const children = entry.children.filter((child) =>
+      visibleByConfig(config, roleName, menuEntryIdForHref(child.href)),
+    );
+    if (children.length > 0) entries.push({ ...entry, children });
+  }
+  return entries;
+}
 
 /** Sidebar section label for the current route, shown in the top bar. */
 export function sectionForPath(pathname: string): string {

@@ -5,6 +5,7 @@ import * as React from "react";
 import { useMutation, ApolloError } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { InputControl } from "@/components/InputControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ErrorState, LoadingState } from "@/components/DataState";
@@ -20,6 +21,7 @@ import {
 } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
 import { AuthGuard } from "@/lib/auth/guard";
+import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 type EmployeeData = NonNullable<EmployeeQuery["employee"]>;
 
@@ -76,8 +78,8 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
     nikBaru: "",
     fullName: employee.fullName,
     email: employee.email,
-    birthDate: employee.birthDate,
-    gender: employee.gender,
+    birthDate: employee.birthDate ?? "",
+    gender: employee.gender ?? "",
     phone: employee.phone ?? "",
     address: employee.address ?? "",
     latestEducation: employee.latestEducation ?? "",
@@ -164,7 +166,7 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           Perubahan data {saved.updateEmployee.fullName} berhasil disimpan.
         </div>
-        <Link href={`/employees/${id}`} className="w-fit">
+        <Link href={EMPLOYEE_DETAIL(id)} className="w-fit">
           <Button type="button" variant="secondary">
             Kembali ke detail karyawan
           </Button>
@@ -181,11 +183,7 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
           <span>NIK saat ini</span>
           <span className="font-mono text-sm font-normal text-zinc-700">{employee.nikMasked}</span>
         </div>
-        <Label error={errors.nikBaru}>
-          NIK baru{" "}
-          <span className="text-xs font-normal text-zinc-500">
-            (opsional — kosongkan bila tidak berubah)
-          </span>
+        <InputControl label="NIK baru" helper="(opsional — kosongkan bila tidak berubah)" error={errors.nikBaru}>
           <Input
             type="text"
             value={values.nikBaru}
@@ -193,94 +191,82 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
             placeholder="16 digit nomor KTP"
             inputMode="numeric"
           />
-        </Label>
-        <Label error={errors.fullName}>
-          Nama lengkap
+        </InputControl>
+        <InputControl label="Nama lengkap" error={errors.fullName}>
           <Input
             type="text"
             value={values.fullName}
             onChange={(e) => set("fullName", e.target.value)}
           />
-        </Label>
-        <Label error={errors.email}>
-          Email
+        </InputControl>
+        <InputControl label="Email" error={errors.email}>
           <Input type="email" value={values.email} onChange={(e) => set("email", e.target.value)} />
-        </Label>
-        <Label error={errors.birthDate}>
-          Tanggal lahir
+        </InputControl>
+        <InputControl label="Tanggal lahir" error={errors.birthDate}>
           <Input
             type="date"
             value={values.birthDate}
             onChange={(e) => set("birthDate", e.target.value)}
           />
-        </Label>
-        <Label error={errors.gender}>
-          Jenis kelamin
-          <Select value={values.gender} onChange={(e) => set("gender", e.target.value)}>
-            <option value="">— pilih jenis kelamin —</option>
-            {(Object.keys(GENDER_LABEL) as Array<keyof typeof GENDER_LABEL>).map((value) => (
-              <option key={value} value={value}>
-                {GENDER_LABEL[value]}
-              </option>
-            ))}
-          </Select>
-        </Label>
-        <Label error={errors.phone}>
-          Telepon
+        </InputControl>
+        <InputControl label="Jenis kelamin" error={errors.gender}>
+          <Select
+            value={values.gender}
+            onChange={(e) => set("gender", e.target.value)}
+            options={[
+              { value: "", label: "— pilih jenis kelamin —" },
+              ...(Object.keys(GENDER_LABEL) as Array<keyof typeof GENDER_LABEL>).map((value) => ({
+                value,
+                label: GENDER_LABEL[value],
+              })),
+            ]}
+          />
+        </InputControl>
+        <InputControl label="Telepon" error={errors.phone}>
           <Input type="text" value={values.phone} onChange={(e) => set("phone", e.target.value)} />
-        </Label>
-        <Label error={errors.address}>
-          Alamat
+        </InputControl>
+        <InputControl label="Alamat" error={errors.address}>
           <Input type="text" value={values.address} onChange={(e) => set("address", e.target.value)} />
-        </Label>
-        <Label error={errors.latestEducation}>
-          Pendidikan terakhir{" "}
-          <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Pendidikan terakhir" helper="(opsional)" error={errors.latestEducation}>
           <Input
             type="text"
             value={values.latestEducation}
             onChange={(e) => set("latestEducation", e.target.value)}
           />
-        </Label>
-        <Label error={errors.institutionName}>
-          Nama institusi{" "}
-          <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Nama institusi" helper="(opsional)" error={errors.institutionName}>
           <Input
             type="text"
             value={values.institutionName}
             onChange={(e) => set("institutionName", e.target.value)}
           />
-        </Label>
-        <Label error={errors.major}>
-          Jurusan <span className="text-xs font-normal text-zinc-500">(opsional)</span>
+        </InputControl>
+        <InputControl label="Jurusan" helper="(opsional)" error={errors.major}>
           <Input type="text" value={values.major} onChange={(e) => set("major", e.target.value)} />
-        </Label>
-        <Label error={errors.joinedAt}>
-          Tanggal Bergabung
+        </InputControl>
+        <InputControl label="Tanggal Bergabung" error={errors.joinedAt}>
           <Input
             type="date"
             value={values.joinedAt}
             onChange={(e) => set("joinedAt", e.target.value)}
           />
-        </Label>
-        <Label>
-          Status kepegawaian
-          <Select value={values.status} onChange={(e) => set("status", e.target.value)}>
-            {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
-              (value) => (
-                <option key={value} value={value}>
-                  {EMPLOYEE_STATUS_LABEL[value]}
-                </option>
-              )
-            )}
-          </Select>
-        </Label>
+        </InputControl>
+        <InputControl label="Status kepegawaian">
+          <Select
+            value={values.status}
+            onChange={(e) => set("status", e.target.value)}
+            options={(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
+              keyof typeof EMPLOYEE_STATUS_LABEL
+            >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] }))}
+          />
+        </InputControl>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={saving}>
             Simpan
           </Button>
-          <Link href={`/employees/${id}`} className="no-underline">
+          <Link href={EMPLOYEE_DETAIL(id)} className="no-underline">
             <Button type="button" variant="secondary">
               Batal
             </Button>
@@ -288,18 +274,5 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         </div>
       </form>
     </section>
-  );
-}
-
-function Label({ error, children }: { error?: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
-      {children}
-      {error ? (
-        <span className="text-xs font-normal text-red-600" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 }

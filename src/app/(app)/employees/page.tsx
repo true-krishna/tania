@@ -4,65 +4,25 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { BoardTable, type Column } from "@/components/BoardTable";
+import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
+import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
-import { Pagination, useTablePagination } from "@/components/Pagination";
+import { useTablePagination } from "@/components/Pagination";
+import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
-import { EMPLOYEE_STATUS_LABEL } from "@/features/employees/labels";
+import { EMPLOYEE_STATUS_LABEL, EMPLOYEE_STATUS_VARIANT } from "@/features/employees/labels";
 import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
+import { orDash } from "@/lib/cell";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
-
-type EmployeeRowData = {
-  id: string;
-  fullName: string;
-  nikMasked: string;
-  email: string;
-  status: EmployeeStatus;
-  nomorInduk: string | null;
-  unit: { name: string } | null;
-  jobRole: { name: string } | null;
-};
-
-const COLUMNS: Column[] = [
-  { key: "name", label: "Nama" },
-  { key: "nik", label: "NIK" },
-  { key: "email", label: "Email" },
-  { key: "unit", label: "Divisi" },
-  { key: "jobRole", label: "Job Role" },
-  { key: "status", label: "Status" },
-];
-
-function EmployeeRow({ employee }: { employee: EmployeeRowData }) {
-  return (
-    <tr className="border-b border-board-border transition-colors hover:bg-zinc-50">
-      <td className="px-4 py-2.5">
-        <Link
-          href={`/employees/${employee.id}`}
-          className="font-medium text-zinc-900 hover:underline"
-        >
-          {employee.fullName}
-        </Link>
-        <span className="block text-xs text-zinc-500">{employee.nomorInduk ?? "—"}</span>
-      </td>
-      <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">{employee.nikMasked}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.email}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.unit?.name ?? "—"}</td>
-      <td className="px-4 py-2.5 text-zinc-600">{employee.jobRole?.name ?? "—"}</td>
-      <td className="px-4 py-2.5">
-        <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
-          {EMPLOYEE_STATUS_LABEL[employee.status]}
-        </span>
-      </td>
-    </tr>
-  );
-}
+import { EMPLOYEE_NEW, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 export default function EmployeesPage() {
   const role = useSessionRole();
@@ -76,7 +36,7 @@ function OwnEmployeeRedirect() {
   const { status, data, error } = useMyEmployeeId();
 
   React.useEffect(() => {
-    if (data) router.replace(`/employees/${data}`);
+    if (data) router.replace(EMPLOYEE_DETAIL(data));
   }, [data, router]);
 
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -86,6 +46,7 @@ function OwnEmployeeRedirect() {
 }
 
 function ChapterTalentList() {
+  const router = useRouter();
   const { status, data, error } = useAssignableTalents();
 
   return (
@@ -101,48 +62,92 @@ function ChapterTalentList() {
       ) : !data || data.length === 0 ? (
         <EmptyState message="Belum ada talent dalam cakupan chapter Anda." />
       ) : (
-        <BoardTable
+        <Table
           caption="Talent dalam cakupan chapter"
+          rowKey={(talent) => talent.id}
+          dataSource={data}
           columns={[
-            { key: "name", label: "Nama" },
-            { key: "nomorInduk", label: "Nomor Induk" },
-          ]}
-        >
-          {data.map((talent) => (
-            <tr key={talent.id} className="border-b border-board-border transition-colors hover:bg-zinc-50">
-              <td className="px-4 py-2.5">
-                <Link href={`/employees/${talent.id}`} className="font-medium text-zinc-900 hover:underline">
+            {
+              key: "name",
+              title: "Nama",
+              render: (_value, talent) => (
+                <Link
+                  href={EMPLOYEE_DETAIL(talent.id)}
+                  className="font-medium text-zinc-900 hover:underline"
+                >
                   {talent.fullName}
                 </Link>
-              </td>
-              <td className="px-4 py-2.5 text-zinc-600">{talent.nomorInduk ?? "—"}</td>
-            </tr>
-          ))}
-        </BoardTable>
+              ),
+            },
+            {
+              key: "nomorInduk",
+              title: "Nomor Induk",
+              className: "text-zinc-600",
+              render: (_value, talent) => orDash(talent.nomorInduk),
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, talent) => (
+                <RowActionsMenu
+                  label={`Aksi ${talent.fullName}`}
+                  actions={[
+                    {
+                      label: "Lihat detail",
+                      onSelect: () => router.push(EMPLOYEE_DETAIL(talent.id)),
+                    },
+                  ]}
+                />
+              ),
+            },
+          ]}
+        />
       )}
     </section>
   );
 }
 
 function EmployeeDirectory({ manage }: { manage: boolean }) {
-  const [search, setSearch] = React.useState("");
+  const router = useRouter();
+  const [searchInput, setSearchInput] = React.useState("");
+  const search = useDebouncedValue(searchInput);
   const [unitId, setUnitId] = React.useState("");
   const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  // The chosen page size drives the query's first (API default 25, speckit §5).
+  const [pageSize, setPageSize] = React.useState(25);
   const units = useUnits();
-  const { status: query, employees, totalCount, hasNextPage, loadingMore, error, loadMore } =
-    useEmployees({
+  const {
+    status: query,
+    employees,
+    totalCount,
+    hasNextPage,
+    loadingMore,
+    stalled,
+    error,
+    loadMore,
+    reload,
+  } = useEmployees(
+    {
       search: search || undefined,
       unitId: unitId || undefined,
       status: status === "ALL" ? undefined : status,
-    });
+    },
+    pageSize
+  );
   const activeFilters = (unitId ? 1 : 0) + (status !== "ALL" ? 1 : 0);
   const { pageRows, pagination, resetPage } = useTablePagination(employees, {
     totalItems: totalCount,
+    pageSize,
+    onPageSizeChange: setPageSize,
     hasMore: hasNextPage,
     loadingMore,
     loadMore,
   });
+  const hintFrom = (pagination.page - 1) * pagination.pageSize + 1;
+  const hintTo = Math.min(pagination.page * pagination.pageSize, totalCount);
+  const loadingMoreRow = loadingMore && pageRows.length === 0;
 
   return (
     <section className="flex flex-col gap-4">
@@ -150,12 +155,12 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         title="Data Karyawan"
         subtitle={
           manage
-            ? "Kelola data karyawan, pencarian, dan filter (Operation)."
+            ? "Kelola data karyawan, pencarian, dan filter."
             : "Data karyawan untuk konteks penautan akun (hanya baca)."
         }
         actions={
           manage ? (
-            <Link href="/employees/new" className="no-underline">
+            <Link href={EMPLOYEE_NEW} className="no-underline">
               <Button variant="primary">+ Tambah Karyawan</Button>
             </Link>
           ) : undefined
@@ -165,9 +170,9 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             <span className="sr-only">Cari karyawan</span>
             <Input
               type="search"
-              value={search}
+              value={searchInput}
               onChange={(e) => {
-                setSearch(e.target.value);
+                setSearchInput(e.target.value);
                 resetPage();
               }}
               placeholder="Cari nama, email, atau nomor induk…"
@@ -195,14 +200,11 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="">Semua</option>
-              {(units.data ?? []).map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "", label: "Semua" },
+                ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+              ]}
+            />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
@@ -213,17 +215,29 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
                 resetPage();
               }}
               className="w-auto"
-            >
-              <option value="ALL">Semua</option>
-              {(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>).map(
-                (value) => (
-                  <option key={value} value={value}>
-                    {EMPLOYEE_STATUS_LABEL[value]}
-                  </option>
-                )
-              )}
-            </Select>
+              options={[
+                { value: "ALL", label: "Semua" },
+                ...(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
+                  keyof typeof EMPLOYEE_STATUS_LABEL
+                >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] })),
+              ]}
+            />
           </label>
+        </div>
+      ) : null}
+
+      {stalled && query === "ready" ? (
+        <div className="tp-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-amber-800">
+          <span>Sebagian data belum berhasil dimuat dari server.</span>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              reload();
+              resetPage();
+            }}
+          >
+            Muat ulang
+          </Button>
         </div>
       ) : null}
 
@@ -234,13 +248,84 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       ) : !employees || employees.length === 0 ? (
         <EmptyState message="Tidak ada karyawan yang cocok dengan pencarian/filter." />
       ) : (
-        <>
-          <BoardTable caption="Daftar karyawan" columns={COLUMNS} footer={<Pagination {...pagination} />}>
-            {pageRows.map((employee) => (
-              <EmployeeRow key={employee.id} employee={employee} />
-            ))}
-          </BoardTable>
-        </>
+        <Table
+          caption="Daftar karyawan"
+          rowKey={(employee) => employee.id}
+          dataSource={pageRows}
+          loading={loadingMoreRow}
+          loadingText={
+            <>
+              Memuat baris {hintFrom}–{hintTo} dari {totalCount}…
+            </>
+          }
+          pagination={pagination}
+          columns={[
+            {
+              key: "name",
+              title: "Nama",
+              render: (_value, employee) => (
+                <>
+                  <Link
+                    href={EMPLOYEE_DETAIL(employee.id)}
+                    className="font-medium text-zinc-900 hover:underline"
+                  >
+                    {employee.fullName}
+                  </Link>
+                  <span className="block text-xs text-zinc-500">{orDash(employee.nomorInduk)}</span>
+                </>
+              ),
+            },
+            {
+              key: "nik",
+              title: "NIK",
+              className: "font-mono text-xs text-zinc-600",
+              render: (_value, employee) => orDash(employee.nikMasked),
+            },
+            {
+              key: "email",
+              title: "Email",
+              className: "text-zinc-600",
+              render: (_value, employee) => orDash(employee.email),
+            },
+            {
+              key: "unit",
+              title: "Divisi",
+              className: "text-zinc-600",
+              render: (_value, employee) => orDash(employee.unit?.name),
+            },
+            {
+              key: "jobRole",
+              title: "Job Role",
+              className: "text-zinc-600",
+              render: (_value, employee) => orDash(employee.jobRole?.name),
+            },
+            {
+              key: "status",
+              title: "Status",
+              render: (_value, employee) => (
+                <Chip variant={EMPLOYEE_STATUS_VARIANT[employee.status]} size="small">
+                  {EMPLOYEE_STATUS_LABEL[employee.status]}
+                </Chip>
+              ),
+            },
+            {
+              key: "actions",
+              title: "Aksi",
+              className: "col-action",
+              render: (_value, employee) => (
+                <RowActionsMenu
+                  label={`Aksi ${employee.fullName}`}
+                  actions={[
+                    {
+                      label: "Lihat detail",
+                      onSelect: () => router.push(EMPLOYEE_DETAIL(employee.id)),
+                    },
+                  ]}
+                />
+              ),
+            },
+          ]}
+        />
       )}
     </section>
   );

@@ -4,7 +4,21 @@ import type { AccessRole } from "@/generated/graphql";
  * UI mirror of the role & module matrix (specs/002-tania-rbac/spec.md). A
  * module opens only for the roles it lists (deny-by-default, FR-03). TAN-178
  * re-opens IDP & Evaluation on this line to follow the feature/design baseline;
- * the backend remains the enforcement point (FR-15/16).
+ * the backend remains the enforcement point (FR-15/16). TAN-212 (clarify 4)
+ * gives Admin full manage on every active module.
+ *
+ * 2026-10-16 (clarify 5/6): the active modules below mirror the
+ * amended matrix — Kontrak `+CHAPTER` (scoped read), CV `+OPERATION`
+ * (read-only), Master Data `[CHAPTER, OPERATION, ADMIN]` (Talent has no
+ * access).
+ *
+ * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation are active, so every role
+ * has an entry (`ALL`): Admin kelola · Operation lihat · Chapter `kelola cakupan`
+ * · Talent kelola miliknya. The menu entry is therefore visible for all roles
+ * while `MANAGE_ROLES` decides what each role may do inside the page — Operation
+ * only reads, Talent only its own records, and the pages mirror that. Period &
+ * template administration stays Admin-only (global config), exactly like the
+ * server's `RequireRole(Admin)` on their writes.
  */
 export type Module =
   | "dashboard"
@@ -28,20 +42,29 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   activities: ALL,
   workload: ALL,
   employees: ["OPERATION", "ADMIN", "CHAPTER", "TALENT"],
-  entra: ["OPERATION"],
-  contracts: ["OPERATION", "ADMIN"],
-  assignments: ["CHAPTER", "OPERATION", "TALENT"],
-  idp: ["CHAPTER", "TALENT", "ADMIN"],
-  evaluations: ["CHAPTER", "TALENT", "ADMIN"],
-  cv: ["TALENT", "CHAPTER"],
-  masterData: ["ADMIN"],
+  entra: ["OPERATION", "ADMIN"],
+  contracts: ["CHAPTER", "OPERATION", "ADMIN"],
+  assignments: ["CHAPTER", "OPERATION", "TALENT", "ADMIN"],
+  // Aktif sejak 2026-10-16 (klarifikasi 9): Admin kelola · Operation lihat ·
+  // Chapter kelola cakupan · Talent kelola miliknya.
+  idp: ALL,
+  evaluations: ALL,
+  cv: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
+  masterData: ["CHAPTER", "OPERATION", "ADMIN"],
   accounts: ["ADMIN"],
   audit: ["ADMIN"],
 };
 
 const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
-  employees: ["OPERATION"],
-  assignments: ["CHAPTER"],
+  employees: ["OPERATION", "ADMIN"],
+  assignments: ["CHAPTER", "ADMIN"],
+  contracts: ["OPERATION", "ADMIN"],
+  masterData: ["ADMIN"],
+  // IDP & evaluasi: Chapter menilai/mengelola dalam cakupannya, Admin penuh;
+  // Operation hanya membaca dan Talent hanya miliknya (kontrol "miliknya" ada di
+  // halaman masing-masing, bukan di `canManage`).
+  idp: ["CHAPTER", "ADMIN"],
+  evaluations: ["CHAPTER", "ADMIN"],
 };
 
 export function canManage(role: AccessRole | null | undefined, module: Module): boolean {
@@ -54,6 +77,12 @@ export function canAccess(role: AccessRole | null | undefined, module: Module): 
   return MODULE_ROLES[module].includes(role);
 }
 
+/**
+ * A module is open when at least one role may reach it. After the 2026-10-16
+ * activation (klarifikasi 9) no module is closed, but the predicate stays as the
+ * single switch the route layouts (`/idp`, `/evaluations`) use, so a future
+ * deferral only has to empty a `MODULE_ROLES` row again.
+ */
 export function isModuleOpen(module: Module): boolean {
   return MODULE_ROLES[module].length > 0;
 }

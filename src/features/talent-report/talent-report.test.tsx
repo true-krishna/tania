@@ -20,11 +20,7 @@ import {
   MovementTrendChart,
 } from "./MovementTrendChart";
 import { chartFileName, downloadChart } from "./downloadChart";
-import {
-  formatMonthLabel,
-  monthRange,
-  PeriodFilter,
-} from "./PeriodFilter";
+import { formatMonthLabel, PeriodFilter } from "./PeriodFilter";
 import {
   TALENT_REPORT_QUERY,
   TALENT_REPORT_RANGE_QUERY,
@@ -35,6 +31,7 @@ import {
   MOCK_MOVEMENT_TREND,
   MOCK_TALENT_REPORT,
   MOCK_TALENT_REPORT_EMPTY,
+  MOCK_TALENT_REPORT_EMPTY_API_SHAPE,
   MOCK_TALENT_REPORT_RANGE,
 } from "./mocks";
 import type {
@@ -71,7 +68,7 @@ const echartsMock = vi.hoisted(() => {
 });
 
 vi.mock("echarts/core", () => ({ use: echartsMock.use, init: echartsMock.init }));
-vi.mock("echarts/charts", () => ({ BarChart: {}, LineChart: {} }));
+vi.mock("echarts/charts", () => ({ BarChart: {}, LineChart: {}, PieChart: {} }));
 vi.mock("echarts/components", () => ({
   GridComponent: {},
   TitleComponent: {},
@@ -384,23 +381,68 @@ describe("PeriodFilter (T021 / FR-11)", () => {
   const range: TalentReportRange = { startMonth: "2025-01", endMonth: "2026-10" };
   const fullRange: TalentReportPeriod = { startMonth: "2025-01", endMonth: "2026-10" };
 
-  it("formats month labels and expands the month range inclusively", () => {
+  function options(label: string): string[] {
+    const select = screen.getByLabelText(label) as HTMLSelectElement;
+    return Array.from(select.options).map((option) => option.value);
+  }
+
+  it("formats month labels (FR-11)", () => {
     expect(formatMonthLabel("2025-01")).toBe("Januari 2025");
     expect(formatMonthLabel("2026-10")).toBe("Oktober 2026");
-    const months = monthRange("2025-11", "2026-02");
-    expect(months).toEqual(["2025-11", "2025-12", "2026-01", "2026-02"]);
   });
 
-  it("defaults to the whole available range and bounds the month options (FR-11)", () => {
+  it("defaults to the whole range and picks month and year separately (FR-11)", () => {
     render(<PeriodFilter range={range} value={fullRange} onApply={vi.fn()} />);
-    const start = screen.getByLabelText("Bulan mulai") as HTMLSelectElement;
-    const end = screen.getByLabelText("Bulan akhir") as HTMLSelectElement;
-    expect(start.value).toBe("2025-01");
-    expect(end.value).toBe("2026-10");
-    const options = Array.from(start.options).map((o) => o.value);
-    expect(options[0]).toBe("2025-01");
-    expect(options.at(-1)).toBe("2026-10");
-    expect(options).toHaveLength(22);
+    expect(screen.getByLabelText("Bulan mulai")).toHaveValue("01");
+    expect(screen.getByLabelText("Tahun mulai")).toHaveValue("2025");
+    expect(screen.getByLabelText("Bulan akhir")).toHaveValue("10");
+    expect(screen.getByLabelText("Tahun akhir")).toHaveValue("2026");
+    // Satu pilihan per tahun rentang — daftarnya tidak memanjang per bulan.
+    expect(options("Tahun mulai")).toEqual(["2025", "2026"]);
+    expect(options("Bulan mulai")).toHaveLength(12);
+    // Sisi akhir tetap dibatasi `talentReportRange`: Januari s.d. Oktober 2026.
+    expect(options("Bulan akhir")).toEqual([
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+    ]);
+  });
+
+  it("limits the month options to the range bound in that bound's year", () => {
+    const bounded: TalentReportRange = { startMonth: "2025-03", endMonth: "2026-10" };
+    render(
+      <PeriodFilter
+        range={bounded}
+        value={{ startMonth: "2025-03", endMonth: "2026-10" }}
+        onApply={vi.fn()}
+      />,
+    );
+    expect(options("Bulan mulai")).toHaveLength(10);
+    expect(options("Bulan mulai")[0]).toBe("03");
+
+    fireEvent.change(screen.getByLabelText("Tahun mulai"), { target: { value: "2026" } });
+    expect(options("Bulan mulai")).toHaveLength(12);
+    expect(screen.getByLabelText("Bulan mulai")).toHaveValue("03");
+  });
+
+  it("clamps the month onto the range bound when the year would leave it", () => {
+    const bounded: TalentReportRange = { startMonth: "2025-03", endMonth: "2026-10" };
+    render(
+      <PeriodFilter
+        range={bounded}
+        value={{ startMonth: "2026-01", endMonth: "2026-10" }}
+        onApply={vi.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Tahun mulai"), { target: { value: "2025" } });
+    expect(screen.getByLabelText("Bulan mulai")).toHaveValue("03");
   });
 
   it("applies a changed period in one action (SC-04)", () => {
@@ -409,9 +451,7 @@ describe("PeriodFilter (T021 / FR-11)", () => {
     const apply = screen.getByRole("button", { name: "Terapkan" });
     expect(apply).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText("Bulan mulai"), {
-      target: { value: "2026-01" },
-    });
+    fireEvent.change(screen.getByLabelText("Tahun mulai"), { target: { value: "2026" } });
     expect(apply).toBeEnabled();
     fireEvent.click(apply);
     expect(onApply).toHaveBeenCalledTimes(1);
@@ -421,14 +461,11 @@ describe("PeriodFilter (T021 / FR-11)", () => {
   it("clamps the pair so start never exceeds end", () => {
     const onApply = vi.fn();
     render(<PeriodFilter range={range} value={fullRange} onApply={onApply} />);
-    fireEvent.change(screen.getByLabelText("Bulan mulai"), {
-      target: { value: "2026-10" },
-    });
-    fireEvent.change(screen.getByLabelText("Bulan akhir"), {
-      target: { value: "2025-06" },
-    });
+    fireEvent.change(screen.getByLabelText("Tahun mulai"), { target: { value: "2026" } });
+    fireEvent.change(screen.getByLabelText("Bulan mulai"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("Bulan akhir"), { target: { value: "06" } });
     fireEvent.click(screen.getByRole("button", { name: "Terapkan" }));
-    expect(onApply).toHaveBeenCalledWith({ startMonth: "2025-06", endMonth: "2025-06" });
+    expect(onApply).toHaveBeenCalledWith({ startMonth: "2026-06", endMonth: "2026-06" });
   });
 });
 
@@ -493,6 +530,12 @@ describe("useTalentReport (T022 / FR-11, FR-12, FR-15)", () => {
     await screen.findByText("empty");
   });
 
+  it("reports empty when the API sends zero-count categories instead of empty arrays", async () => {
+    renderHook([rangeMock, reportMock(fullPeriod, MOCK_TALENT_REPORT_EMPTY_API_SHAPE)]);
+
+    await screen.findByText("empty");
+  });
+
   it("maps a server FORBIDDEN to the forbidden status (SC-05)", async () => {
     renderHook([
       rangeMock,
@@ -544,6 +587,16 @@ describe("TalentReportContent (T023 / SC-04, SC-05)", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Terapkan" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("explains an empty range even when the API sends zero-count categories", async () => {
+    renderPage([rangeMock, reportMock(fullPeriod, MOCK_TALENT_REPORT_EMPTY_API_SHAPE)]);
+
+    expect(
+      await screen.findByText(
+        "Tidak ada data pada rentang ini. Pilih rentang bulan lain untuk melihat laporan.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows the access-denied state on FORBIDDEN (SC-05)", async () => {
@@ -605,9 +658,7 @@ describe("TalentReportContent (T023 / SC-04, SC-05)", () => {
     await screen.findByText("Talent per role");
     expect(screen.getAllByText("n = 25")).toHaveLength(4);
 
-    fireEvent.change(screen.getByLabelText("Bulan mulai"), {
-      target: { value: "2026-01" },
-    });
+    fireEvent.change(screen.getByLabelText("Tahun mulai"), { target: { value: "2026" } });
     fireEvent.click(screen.getByRole("button", { name: "Terapkan" }));
 
     expect(await screen.findByText("n = 99")).toBeInTheDocument();
@@ -616,7 +667,8 @@ describe("TalentReportContent (T023 / SC-04, SC-05)", () => {
     expect(screen.getByText("n = 30")).toBeInTheDocument();
     expect(screen.getByText("n = 9")).toBeInTheDocument();
     expect(screen.queryByText("n = 25")).toBeNull();
-    expect(screen.getByLabelText("Bulan mulai")).toHaveValue("2026-01");
+    expect(screen.getByLabelText("Tahun mulai")).toHaveValue("2026");
+    expect(screen.getByLabelText("Bulan mulai")).toHaveValue("01");
   });
 });
 
