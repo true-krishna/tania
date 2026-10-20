@@ -8,7 +8,7 @@ import { useTablePagination } from "@/components/Pagination";
 import { useSessionRole } from "@/lib/auth/guard";
 import { roleLabel } from "@/features/accounts/roles";
 import { useAuditLogs } from "@/features/audit/useAuditLogs";
-import { ACTION_LABEL, ACTION_PILL } from "@/features/audit/actionLabels";
+import { ACTION_LABEL, ACTION_PILL, entityLabel } from "@/features/audit/actionLabels";
 import type { AccessRole } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 
@@ -83,7 +83,7 @@ function AuditViewer() {
               className: "font-medium text-zinc-900",
               render: (_value, log) => (
                 <>
-                  {log.entityType}
+                  {entityLabel(log.entityType)}
                   {log.entityId ? ` · ${log.entityId}` : ""}
                 </>
               ),

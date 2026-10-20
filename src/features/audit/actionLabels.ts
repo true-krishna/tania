@@ -29,3 +29,42 @@ export const ACTION_PILL: Record<AuditAction, string> = {
   END: "bg-zinc-100 text-zinc-700",
   ANONYMIZE: "bg-zinc-100 text-zinc-700",
 };
+
+/**
+ * Human label of an audit `entityType` (FR-17). The server stores the
+ * snake_case machine name of the mutated entity; the access-configuration
+ * entities of the dynamic RBAC (`role`, `menu_access`, `access_config`) are part
+ * of the trail too, so an Admin reads what changed instead of a raw key. An
+ * unknown type falls back to the stored value: a new entity must never become
+ * invisible in the trail.
+ */
+export const ENTITY_LABEL: Record<string, string> = {
+  user: "Akun",
+  employee: "Karyawan",
+  employment_contract: "Kontrak kerja",
+  assignment: "Assignment",
+  idp: "IDP",
+  development_action: "Aksi pengembangan",
+  review_log: "Catatan review",
+  performance_evaluation: "Evaluasi",
+  evaluation_period: "Periode evaluasi",
+  evaluation_template: "Template evaluasi",
+  cv_profile: "Profil CV",
+  cv_skill: "Keahlian CV",
+  cv_education: "Pendidikan CV",
+  cv_certification: "Sertifikasi CV",
+  unit: "Unit",
+  chapter: "Chapter",
+  job_role: "Job role",
+  project: "Project",
+  setting: "Pengaturan",
+  entra_account: "Akun Entra",
+  role: "Role akses",
+  menu_access: "Akses menu",
+  access_config: "Konfigurasi akses",
+};
+
+/** Display label of an audit entity type, falling back to the stored value. */
+export function entityLabel(entityType: string): string {
+  return ENTITY_LABEL[entityType] ?? entityType;
+}
