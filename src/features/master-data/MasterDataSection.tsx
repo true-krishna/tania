@@ -26,6 +26,9 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   error: string | null;
   // Optional select on the create/edit form, e.g. Project -> Unit or JobRole -> Chapter.
   select?: { label: string; placeholder: string; options: { id: string; name: string }[] };
+  // Whether that select must be chosen before submit (FR-006 for Project -> Unit).
+  // Defaults to false so an optional reference (JobRole -> Chapter, FR-022) stays optional.
+  selectRequired?: boolean;
   // Current select value of an item (for pre-filling the edit form), e.g. project.unit.id.
   selectIdOf?: (item: T) => string | undefined;
   // Optional "Kode" field for entities whose served contract requires it (Unit.code).
@@ -59,6 +62,7 @@ export function MasterDataSection<T extends MasterDataItem>({
   status,
   error,
   select,
+  selectRequired = false,
   selectIdOf,
   codeLabel,
   codePlaceholder,
@@ -138,7 +142,8 @@ export function MasterDataSection<T extends MasterDataItem>({
     e.preventDefault();
     const nextNameError = name.trim() ? undefined : `${nameLabel} wajib diisi.`;
     const nextCodeError = codeLabel && !code.trim() ? `${codeLabel} wajib diisi.` : undefined;
-    const nextSelectError = select && !selectValue ? `${select.label} wajib dipilih.` : undefined;
+    const nextSelectError =
+      select && selectRequired && !selectValue ? `${select.label} wajib dipilih.` : undefined;
     setNameError(nextNameError);
     setCodeError(nextCodeError);
     setSelectError(nextSelectError);

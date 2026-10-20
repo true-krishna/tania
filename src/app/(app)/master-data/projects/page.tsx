@@ -40,6 +40,7 @@ export default function ProjectsPage() {
         placeholder: "pilih unit pemilik —",
         options: (units.data ?? []).map((u) => ({ id: u.id, name: u.name })),
       }}
+      selectRequired
       selectIdOf={(project) => project.unit.id}
       extraColumn={{ label: "Unit", render: (project) => project.unit.name }}
       onCreate={({ name, selectValue }) =>
