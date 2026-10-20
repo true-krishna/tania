@@ -134,6 +134,26 @@ Suite E2E/UAT yang butuh lebih banyak login (mis. matriks 12×4) harus menaikkan
 menggunakan ulang `storageState` per peran; kalau tidak, suite akan berhenti
 dengan `RATE_LIMITED`.
 
+## Skenario konfigurasi RBAC (W4/TAN-265)
+
+Spec ketiga: `e2e/rbac-config.spec.ts` — jalur utama US-D: Admin membuat role
+kustom dari template, menutup satu menu (`idp`) untuk role itu, pemegangnya
+login ulang dan sidebar-nya mengikuti konfigurasi (modul lain tetap seperti
+default), lalu `resetRoleMenuConfig` mengembalikannya ke matriks default tanpa
+deploy dan tanpa login baru. Prasyarat stack sama dengan `rbac.spec.ts` (fixture
+laporan talent tidak diperlukan); endpoint API diambil dari `E2E_API_URL`
+(default `http://localhost:8080/graphql`):
+
+```sh
+docker compose -f ../tania-backend/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --build
+E2E_BASE_URL=http://localhost:3000 npx playwright test e2e/rbac-config.spec.ts
+```
+
+⚠ Spec ini memakai **dua login** (Admin lewat API + pemegang role lewat UI) dan
+membuat role + akun khusus (`W4QA…`) yang dibersihkan lagi di `finally`; jalankan
+terpisah dari `rbac.spec.ts` (8 login) atau naikkan `LOGIN_RATE_MAX` pada proses
+API (lihat peringatan rate limit di bawah).
+
 ## Catatan eksekusi: matriks RBAC sudah diverifikasi tanpa browser (2026-10-16)
 
 Lingkungan agent kini memadai untuk menjalankan backend sungguhan (postgres +
