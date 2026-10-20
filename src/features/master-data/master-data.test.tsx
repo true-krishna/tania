@@ -466,7 +466,7 @@ describe("master-data search per page (US1, US2)", () => {
     );
     await screen.findByText("Alpha Transformation");
 
-    fireEvent.change(screen.getByRole("searchbox", { name: "Cari nama proyek" }), {
+    fireEvent.change(screen.getByRole("searchbox", { name: "Cari nama initiative" }), {
       target: { value: "rollout" },
     });
 
@@ -721,12 +721,12 @@ describe("master-data create Initiative/Project (US3, FR-006)", () => {
     ];
     renderProjectsPage(mocks);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Tambah Proyek" }));
-    fireEvent.change(screen.getByLabelText("Nama Proyek"), { target: { value: "Alpha Transformation" } });
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Initiative" }));
+    fireEvent.change(screen.getByLabelText("Nama Initiative"), { target: { value: "Alpha Transformation" } });
     fireEvent.change(screen.getByLabelText("Unit"), { target: { value: "u-1" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent('Proyek "Alpha Transformation" berhasil dibuat.');
+    expect(await screen.findByRole("alert")).toHaveTextContent('Initiative "Alpha Transformation" berhasil dibuat.');
     expect(await screen.findByText("Alpha Transformation")).toBeInTheDocument();
     expect(screen.getByText("Digital Business")).toBeInTheDocument();
   });
@@ -740,8 +740,8 @@ describe("master-data create Initiative/Project (US3, FR-006)", () => {
       UNITS_PICKER_QUERY,
     ]);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Tambah Proyek" }));
-    fireEvent.change(screen.getByLabelText("Nama Proyek"), { target: { value: "No Unit Project" } });
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Initiative" }));
+    fireEvent.change(screen.getByLabelText("Nama Initiative"), { target: { value: "No Unit Project" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     await waitFor(() => expect(screen.getByText("Unit wajib dipilih.")).toBeInTheDocument());
@@ -764,8 +764,8 @@ describe("master-data create Initiative/Project (US3, FR-006)", () => {
       },
     ]);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Tambah Proyek" }));
-    fireEvent.change(screen.getByLabelText("Nama Proyek"), { target: { value: "Duplikat" } });
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Initiative" }));
+    fireEvent.change(screen.getByLabelText("Nama Initiative"), { target: { value: "Duplikat" } });
     fireEvent.change(screen.getByLabelText("Unit"), { target: { value: "u-1" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 

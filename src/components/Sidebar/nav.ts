@@ -155,7 +155,9 @@ export const NAV: readonly NavEntry[] = [
       { href: MASTER_DATA_UNITS, label: "Unit", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
       { href: MASTER_DATA_CHAPTERS, label: "Chapter", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
       { href: MASTER_DATA_JOB_ROLES, label: "Job Role", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: MASTER_DATA_PROJECTS, label: "Project", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      // Submenu dilabeli "Initiative" (keputusan produk, D5 004-master-data-create);
+      // entitas & rutenya tetap Project.
+      { href: MASTER_DATA_PROJECTS, label: "Initiative", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
     ],
   },
   { kind: "link", href: AUDIT, label: "Audit", icon: IconClock, roles: ["ADMIN"] },
