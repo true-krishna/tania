@@ -4,13 +4,15 @@
 
 **Created**: 2026-10-20
 
-**Status**: Clarified — seluruh butir klarifikasi (NC-01..NC-03) ditutup dengan keputusan pemilik produk (2026-10-20); siap untuk `/speckit.plan`. Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
+**Status**: Clarified & direvisi — seluruh butir klarifikasi (NC-01..NC-03) ditutup dengan keputusan pemilik produk (2026-10-20); **direvisi 2026-10-20** menyusul `/speckit.plan` & diskusi TAN-269 (rincian pada baris `**Revisi**` di bawah). Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
 
 **Input**: `/speckit.specify` (TAN-267) — "Tambahkan opsi login menggunakan Microsoft Entra SSO sebagai opsi utama, selain email & password. Credentials (CLIENT_ID, CLIENT_SECRET, TENANT_ID) sudah disiapkan." (perintah: "/speckit.specify Sesuai issue ini" — deskripsi diambil dari TAN-267)
 
 **Revisi**: 2026-10-20 (`/speckit.clarify`, TAN-267) — Keputusan pemilik produk: **NC-01** ditutup — hanya akun **tenant korporat Telkom** (single-tenant); akun personal Microsoft / tenant lain ditolak; **semua akun dalam tenant** boleh mencoba masuk (tanpa pembatasan domain/grup tambahan). **NC-02** ditutup — pemetaan otomatis berdasarkan **work email**; identitas tanpa kecocokan akun Tania ditolak **tanpa membuat akun baru** (akun tetap dikelola lewat provisi/kelola Admin — FR-43–FR-46 spesifikasi 001). **NC-03** ditutup — halaman login **mengarahkan otomatis** ke proses masuk Microsoft dengan **email + kata sandi sebagai pintu fallback** yang selalu dapat dijangkau. Prioritas fitur: **High** (tanpa tanggal target). Marker `[NEEDS CLARIFICATION]` dihapus dari FR-001/FR-004/FR-005.
 
 **Revisi**: 2026-10-20 (keputusan pemilik produk — **pembatalan opsi B**, TAN-267) — Revisi pemisahan jalur (opsi B: SSO hanya Talent; Admin/Operation/Chapter via email + MFA wajib) **dibatalkan seluruhnya**; spesifikasi kembali ke keadaan hasil `/speckit.clarify` di atas. Latar: tim mempertimbangkan kasus **satu orang memegang lebih dari satu peran** (mis. Talent sekaligus Chapter) — jalur masuk yang bergantung pada peran menjadi tidak konsisten terhadap kasus tersebut; penyelesaian kasus peran jamak ada di domain RBAC (`002-tania-rbac`), bukan pada jalur autentikasi. FR-013 dan SC-006 dihapus; entitas faktor autentikasi kedua dihapus dari Key Entities; butir edge case terkait dihapus.
+
+**Revisi**: 2026-10-20 (hasil `/speckit.plan` & diskusi TAN-269) — **FR-004 disempurnakan**: pemetaan identitas korporat ke akun Tania kini melalui **dua jalur berurutan** — **(a)** keterkaitan hasil kemampuan provisi Entra yang sudah ada (pengundangan maupun pembuatan akun, termasuk akun korporat yang sudah ada sebelum Tania dan disinkronkan), lalu **(b)** kesamaan work email. Butir pemetaan pada *Revisi* `/speckit.clarify` di atas tetap tercatat sebagai riwayat dan **digantikan** oleh revisi ini. **SC-005 diselaraskan**: penyebut keberhasilan dibatasi ke pengguna yang sudah memiliki akun korporat. **Assumptions diselaraskan**: pengguna SSO diasumsikan sudah terdaftar di tenant lewat kemampuan provisi Entra, dan kebijakan pemberian akses korporat (termasuk sifat opsionalnya) adalah ranah fitur Provisi Entra — di luar cakupan spesifikasi ini. Satu butir **Edge Cases** ditambahkan untuk akun Tania yang belum memiliki akun korporat. Perilaku halaman login (auto-redirect dengan pintu email yang selalu terlihat, plus penanda "belum tertaut" di sisi browser selama 7 hari) adalah keputusan fase plan — dicatat pada `plan.md` D8, tidak mengubah FR-001/FR-002/NC-03.
 
 **Relasi ke spesifikasi lain**:
 
@@ -47,7 +49,7 @@ Sebagai **pengguna Tania**, saya dapat masuk ke aplikasi dengan akun korporat Mi
 
 1. **Given** pengguna dengan akun korporat yang terhubung membuka halaman login, **When** mengikuti proses masuk yang diarahkan otomatis ke Microsoft dan menyelesaikan autentikasi dengan akun korporat tersebut, **Then** sesi Tania terbentuk dan pengguna masuk ke aplikasi.
 2. **Given** pengguna membatalkan proses autentikasi di sisi Microsoft atau proses gagal di tengah jalan, **When** kembali ke halaman login, **Then** tidak ada sesi yang terbentuk dan pintu fallback email + kata sandi dapat langsung dipakai tanpa dipaksa kembali ke SSO.
-3. **Given** autentikasi di sisi Microsoft berhasil tetapi work email identitas tidak cocok dengan akun Tania aktif mana pun, **When** proses berakhir, **Then** akses ditolak dengan pesan yang jelas dan tidak ada akun baru yang dibuat (kebijakan pemetaan — NC-02).
+3. **Given** autentikasi di sisi Microsoft berhasil tetapi identitas korporat tidak cocok dengan akun Tania aktif mana pun melalui kedua jalur pemetaan, **When** proses berakhir, **Then** akses ditolak dengan pesan yang jelas dan tidak ada akun baru yang dibuat (kebijakan pemetaan — NC-02).
 4. **Given** pengguna mencoba masuk dengan akun personal Microsoft atau akun tenant lain (NC-01), **When** proses berakhir, **Then** permintaan ditolak dengan pesan yang jelas dan tidak ada sesi yang terbentuk.
 
 ---
@@ -78,9 +80,9 @@ Sebagai **Admin**, setiap identitas korporat yang masuk terhubung dengan tepat k
 
 **Acceptance Scenarios**:
 
-1. **Given** identitas korporat yang work email-nya identik dengan alamat email akun Tania aktif, **When** pemiliknya masuk via SSO, **Then** sesi memakai peran dan hak akses akun Tania tersebut.
-2. **Given** pemetaan work email → akun Tania yang sama telah terbentuk, **When** dipakai untuk masuk lagi, **Then** selalu menuju akun Tania yang sama.
-3. **Given** identitas korporat dari tenant Telkom yang belum terhubung ke akun Tania mana pun (work email tidak cocok dengan akun Tania aktif mana pun), **When** mencoba masuk, **Then** akses ditolak dengan pesan yang jelas dan tidak ada akun baru yang dibuat (kebijakan pemetaan — NC-02).
+1. **Given** identitas korporat yang terhubung ke akun Tania aktif melalui salah satu jalur pemetaan, **When** pemiliknya masuk via SSO, **Then** sesi memakai peran dan hak akses akun Tania tersebut.
+2. **Given** identitas korporat telah dipetakan ke akun Tania tertentu, **When** dipakai untuk masuk lagi, **Then** selalu menuju akun Tania yang sama.
+3. **Given** identitas korporat dari tenant Telkom yang belum terhubung ke akun Tania mana pun (tidak cocok melalui kedua jalur pemetaan), **When** mencoba masuk, **Then** akses ditolak dengan pesan yang jelas dan tidak ada akun baru yang dibuat (kebijakan pemetaan — NC-02).
 4. **Given** akun Tania berstatus tidak aktif (mis. karyawan resign/pensiun — FR-46 spesifikasi 001), **When** identitas korporatnya mencoba masuk, **Then** akses ditolak meskipun autentikasi di sisi Microsoft berhasil.
 
 ---
@@ -109,6 +111,7 @@ Sebagai **Admin/auditor**, setiap upaya masuk via SSO terekam pada jejak audit s
 - Akun personal Microsoft atau akun dari tenant lain mencoba masuk → ditolak dengan pesan yang jelas (NC-01).
 - Satu orang memegang lebih dari satu peran (mis. Talent sekaligus Chapter) → jalur masuk tetap sama untuk akun tersebut; hak akses efektif ditentukan oleh peran akun pada Matriks Peran & Modul `002-tania-rbac` (pengelolaan peran di luar cakupan spesifikasi ini).
 - Akun tenant Telkom tanpa akun Tania yang cocok (belum pernah dibuat/dikelola Admin) → ditolak tanpa membuat akun baru; pesan mengarahkan pengguna ke pengelola/admin (NC-02).
+- Akun Tania aktif yang pemiliknya belum diberi akun korporat → tidak dapat memakai SSO; jalur email + kata sandi tetap berfungsi dan selalu dapat dijangkau (FR-002).
 - Percobaan SSO gagal berulang dari sumber yang sama → pembatasan laju setara dengan yang berlaku pada jalur email + kata sandi.
 - Pesan kesalahan tidak boleh membocorkan apakah suatu email/identitas terdaftar di Tania.
 
@@ -119,7 +122,7 @@ Sebagai **Admin/auditor**, setiap upaya masuk via SSO terekam pada jejak audit s
 - **FR-001**: Halaman login MUST menjadikan masuk dengan akun korporat Microsoft Entra ID sebagai **opsi utama**: pengunjung halaman login diarahkan otomatis ke proses masuk Microsoft Entra ID, dengan jalur email + kata sandi tetap dapat dijangkau sebagai pintu fallback (tanpa lingkaran pengalihan yang memaksa kembali ke SSO).
 - **FR-002**: Sistem MUST mempertahankan jalur masuk email + kata sandi sepenuhnya berfungsi dan selalu dapat dijangkau sebagai fallback dari halaman login — termasuk setelah pembatalan atau kegagalan SSO.
 - **FR-003**: Sistem MUST memverifikasi keabsahan bukti hasil autentikasi dari Microsoft Entra ID sebelum sesi Tania terbentuk; sesi tidak boleh terbentuk dari bukti yang tidak valid, kedaluwarsa, atau dipakai ulang.
-- **FR-004**: Sistem MUST mencocokkan identitas korporat secara otomatis dengan akun Tania yang work email-nya identik; kecocokan ditemukan → sesi terbentuk untuk akun tersebut; tidak ada kecocokan → akses ditolak dengan pesan yang jelas, **tanpa membuat akun baru** (akun tetap dikelola melalui provisi/kelola Admin — FR-43–FR-46 spesifikasi 001).
+- **FR-004**: Sistem MUST mencocokkan identitas korporat secara otomatis dengan akun Tania melalui **dua jalur berurutan**: **(a)** identitas korporat yang sudah diberikan kepada seorang karyawan melalui kemampuan provisi Entra (FR-43–FR-46 spesifikasi 001) — lewat pengundangan maupun pembuatan akun — terhubung ke akun Tania karyawan tersebut; **(b)** work email identitas korporat **identik** dengan alamat email akun Tania. Kecocokan ditemukan → sesi terbentuk untuk akun tersebut; tidak ada kecocokan → akses ditolak dengan pesan yang jelas, **tanpa membuat akun baru** (akun tetap dikelola melalui provisi/kelola Admin — FR-43–FR-46 spesifikasi 001).
 - **FR-005**: Sistem MUST hanya menerima identitas dari **tenant korporat Telkom** (single-tenant); akun personal Microsoft atau tenant lain ditolak dengan pesan yang jelas. Semua akun dalam tenant Telkom boleh mencoba masuk — tanpa pembatasan domain/grup tambahan; terbentuknya sesi tetap mengikuti FR-004 (harus ada akun Tania aktif yang cocok).
 - **FR-006**: Hak akses sesi hasil SSO MUST selalu berasal dari peran akun Tania yang terhubung (Matriks Peran & Modul `002-tania-rbac`); klaim grup/peran di sisi Microsoft tidak menambah atau mengurangi hak akses.
 - **FR-007**: Sistem MUST mencatat jejak audit untuk setiap upaya masuk via SSO — berhasil, gagal, maupun ditolak — setara dengan jejak jalur email + kata sandi, termasuk penanda metode masuk.
@@ -131,7 +134,7 @@ Sebagai **Admin/auditor**, setiap upaya masuk via SSO terekam pada jejak audit s
 
 ### Key Entities *(include if feature involves data)*
 
-- **Akun Tania**: identitas pengguna aplikasi yang sudah ada (email, peran, status aktif); alamat email akun dipakai sebagai kunci pemetaan otomatis (work email); atribut baru: keterkaitan ke nol atau satu identitas korporat Microsoft.
+- **Akun Tania**: identitas pengguna aplikasi yang sudah ada (email, peran, status aktif); dipetakan ke identitas korporat melalui **keterkaitan hasil provisi Entra** bila ada, atau melalui **kesamaan alamat work email** sebagai jalur kedua; atribut baru: keterkaitan ke nol atau satu identitas korporat Microsoft.
 - **Identitas korporat (Microsoft Entra ID)**: identitas unik pada tenant organisasi — pengenal tenant, pengenal akun unik, alamat email/UPN, nama tampilan; dipakai untuk mencocokkan ke akun Tania.
 - **Sesi pengguna**: sesi masuk yang sudah ada; kini mencatat metode masuk (SSO atau email + kata sandi) untuk keperluan audit.
 
@@ -143,14 +146,14 @@ Sebagai **Admin/auditor**, setiap upaya masuk via SSO terekam pada jejak audit s
 - **SC-002**: 100% upaya masuk dari akun di luar lingkup yang diizinkan ditolak (0 sesi terbentuk).
 - **SC-003**: 0 regresi pada jalur email + kata sandi: seluruh pengguna eksisting tetap dapat masuk; tingkat keberhasilan login tidak menurun setelah fitur diluncurkan.
 - **SC-004**: 100% upaya masuk SSO (berhasil/gagal) menghasilkan entri jejak audit yang memuat metode masuk dan dapat diperiksa admin.
-- **SC-005**: Dalam 1 bulan setelah peluncuran, ≥ 80% dari seluruh keberhasilan masuk memakai jalur SSO — indikator bahwa "opsi utama" benar-benar dipakai pengguna.
+- **SC-005**: Dalam 1 bulan setelah peluncuran, ≥ 80% dari keberhasilan masuk **oleh pengguna yang sudah memiliki akun korporat** memakai jalur SSO — indikator bahwa "opsi utama" benar-benar dipakai oleh pengguna yang memang dapat memakainya.
 
 ## Assumptions
 
 - Organisasi memiliki **tenant korporat Telkom** yang aktif pada Microsoft Entra ID, dan pemilik produk dapat mengatur pendaftaran aplikasi di sisi Entra (URI pengalihan, cakupan profil/email) — prasyarat eksternal di luar kendali tim aplikasi.
 - Kredensial yang telah disiapkan pemilik produk (CLIENT_ID, CLIENT_SECRET, TENANT_ID) berlaku untuk tenant korporat yang sama dengan akun pengguna yang dituju; nilainya tidak pernah dicantumkan di dokumen, kode, atau percakapan apa pun.
-- Akun korporat pengguna tersedia (sebagian dibuat melalui kemampuan provisi akun Entra yang sudah ada — FR-43–FR-46 spesifikasi 001).
+- Pengguna yang memakai SSO diasumsikan **sudah terdaftar di tenant korporat** — dibuat atau diundang melalui kemampuan provisi akun Entra yang sudah ada (FR-43–FR-46 spesifikasi 001), termasuk akun yang **sudah ada sebelum Tania** dan disinkronkan ke Tania. Siapa yang diberi akun korporat (termasuk apakah pemberiannya bersifat opsional) adalah kebijakan fitur Provisi Entra — di luar cakupan spesifikasi ini.
 - Peran dan hak akses tetap dikelola di Tania (RBAC); SSO hanya mengganti cara pembuktian identitas, bukan model otorisasi.
 - Cakupan MVP adalah aplikasi web (halaman login yang ada); dukungan mobile/di luar web berada di luar cakupan spesifikasi ini.
-- Semua akun Tania aktif memiliki alamat email unik yang sama dengan work email akun korporatnya — dasar pemetaan otomatis (pengecualian, jika ada, dicatat pada fase plan).
+- Akun Tania yang sudah memiliki keterkaitan identitas korporat dipetakan melalui keterkaitan itu; akun Tania tanpa keterkaitan dipetakan melalui kesamaan alamat email dengan alamat masuk korporatnya. Karena itu akun Tania yang emailnya berbeda dari alamat masuk korporatnya bergantung pada keterkaitan provisi agar dapat memakai SSO.
 - Kebijakan kata sandi tidak berubah pada spesifikasi ini; opsi seperti "wajib SSO penuh / nonaktifkan kata sandi" adalah keputusan fase lanjutan di luar cakupan.

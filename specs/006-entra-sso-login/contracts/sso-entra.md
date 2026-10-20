@@ -52,7 +52,21 @@ type Mutation {
 
 `authority = https://login.microsoftonline.com/{ENTRA_TENANT_ID}`. `prompt` **tidak** dikirim: membiarkan cookie SSO Microsoft yang sudah ada membuat SC-001 (≤3 interaksi) tercapai; memaksa pemilih akun menambah satu layar tanpa manfaat keamanan di tenant tunggal.
 
-## 3. Perilaku & kode kesalahan
+## 3. Aturan pemetaan identitas → akun Tania (FR-004)
+
+Berurutan; berhenti pada kecocokan pertama. Tanpa kecocokan → `UNAUTHENTICATED` dengan pesan generik, **tanpa membuat akun**.
+
+| # | Kunci | Menutup kasus | Efek samping |
+| --- | --- | --- | --- |
+| 1 | `users.entra_object_id = oid` | login berulang; stabil walau email/UPN korporat berubah | — |
+| 2 | `entra_provisions.object_id = oid` → `employee_id` → `employees.user_id` → `users` | akun korporat hasil provisi **CREATE** (UPN turunan nama, tidak identik dengan email akun Tania) | bila (1) masih `NULL`: isi sekali (*first-login link*) + `auth_provider='entra'` |
+| 3 | `lower(users.email) = lower(klaim email/UPN)` | akun korporat yang **sudah ada sebelum Tania** dan belum punya baris provisi | idem |
+
+- **Penolakan**: bila (1) menemukan `oid` **berbeda** dari klaim → tolak (keterkaitan tidak berpindah otomatis; penyelesaian = tindakan Admin, di luar cakupan); bila akun hasil (2)/(3) **tidak aktif** → tolak (FR-011).
+- **Tidak ada panggilan Microsoft Graph per login**: keanggotaan tenant dibuktikan `tid` pada ID token, keterkaitan dibaca dari data Tania sendiri.
+- Langkah (2) memakai `UserRepository.FindByEmployeeID` yang **sudah ada** — tanpa query GraphQL baru dan tanpa perubahan skema `entra_provisions`.
+
+## 4. Perilaku & kode kesalahan
 
 Kesalahan dipetakan lewat `presentError` existing; kode masuk ke `extensions.code`. Pesan yang sampai ke pengguna adalah `message` (halaman login menampilkan `err.message` apa adanya), jadi **semua pesan berbahasa Indonesia dan layak tampil**.
 
@@ -65,15 +79,15 @@ Kesalahan dipetakan lewat `presentError` existing; kode masuk ke `extensions.cod
 | ID token tidak valid (tanda tangan/`iss`/`aud`/`exp`) | `UNAUTHENTICATED` | idem | Alasan teknis hanya ke audit & log (ID teknis saja) |
 | `tid` bukan tenant Telkom (akun personal/tenant lain) | `UNAUTHENTICATED` | idem | FR-005/NC-01 |
 | `nonce` tidak cocok | `UNAUTHENTICATED` | idem | FR-003 |
-| Tidak ada akun Tania dengan email itu | `UNAUTHENTICATED` | idem | FR-004/NC-02 — **tanpa** pembuatan akun |
+| Tidak ada akun Tania yang cocok pada ketiga langkah pemetaan (§3) | `UNAUTHENTICATED` | idem | FR-004/NC-02 — **tanpa** pembuatan akun |
 | Akun Tania tidak aktif | `UNAUTHENTICATED` | idem | FR-011 |
-| `oid` sudah terhubung ke akun lain | `UNAUTHENTICATED` | idem | Keterkaitan tidak berpindah (D5) |
+| `oid` sudah terhubung ke akun lain (langkah 1 ≠ klaim, atau baris provisi milik akun lain) | `UNAUTHENTICATED` | idem | Keterkaitan tidak berpindah (D5 §3) |
 | Endpoint Microsoft tidak terjangkau / 5xx / timeout | `ENTRA_UNAVAILABLE` | `Layanan Microsoft sedang tidak tersedia. Coba lagi, atau masuk dengan email & kata sandi.` | Satu-satunya kegagalan dengan pesan pembeda — tindak lanjut pengguna memang berbeda (FR-009) |
 | Rate limit terlampaui | `RATE_LIMITED` | (pesan existing `ErrRateLimited`) | FR-012 |
 
 **Invarian pesan**: pesan untuk seluruh kegagalan pemetaan identitas **identik**. Klien tidak dapat membedakan "tidak punya akun", "akun nonaktif", "identitas milik akun lain", atau "token tidak valid" — perbedaan hanya di `audit_logs.reason`.
 
-## 4. Rate limit
+## 5. Rate limit
 
 | Jalur | Kunci | Batas | Window |
 | --- | --- | --- | --- |
@@ -84,7 +98,7 @@ Kesalahan dipetakan lewat `presentError` existing; kode masuk ke `extensions.cod
 
 Cakupan yang jujur: batas ini menghitung percobaan yang **mencapai backend** (permintaan token + pemetaan). Percobaan yang berhenti di halaman Microsoft (salah kata sandi korporat berulang) tidak melewati Tania dan tidak dihitung di sini — ditangani oleh kebijakan Entra (kunci akun/risiko masuk Microsoft).
 
-## 5. Jejak audit (FR-007, SC-004, SC-005)
+## 6. Jejak audit (FR-007, SC-004, SC-005)
 
 `action = LOGIN`, `entityType = "user"`, `entityID` = ID akun Tania (string kosong bila tidak ada akun yang cocok), payload JSON pada `After`:
 
@@ -100,10 +114,10 @@ Cakupan yang jujur: batas ini menghitung percobaan yang **mencapai backend** (pe
 ```
 
 - **SC-004** (100% upaya memuat metode): setiap upaya SSO dan setiap login sukses lokal menulis penanda `method`.
-- **SC-005** (≥80% masuk via SSO dalam 1 bulan) diukur dari `audit_logs`: `action='LOGIN'` dan `outcome='success'`, kelompokkan `After->>'method'` → rasio `entra_sso / (entra_sso + local)`. Jalur sesi (rotasi refresh) **tidak** dihitung sebagai masuk baru — `refreshSession` bukan login.
+- **SC-005** (≥80% masuk via SSO dalam 1 bulan) diukur dari `audit_logs`: `action='LOGIN'` dan `outcome='success'`, kelompokkan `After->>'method'` → rasio `entra_sso / (entra_sso + local)`, **dibatasi pada keberhasilan masuk oleh pengguna yang sudah memiliki akun korporat** (SC-005 hasil revisi spec 2026-10-20). Jalur sesi (rotasi refresh) **tidak** dihitung sebagai masuk baru — `refreshSession` bukan login.
 - **Payload tidak pernah memuat**: email, nama, token, klaim, `client_secret`, atau alasan yang dapat dibaca pengguna.
 
-## 6. Konfigurasi (nama variabel saja — tidak ada nilai di dokumen ini)
+## 7. Konfigurasi (nama variabel saja — tidak ada nilai di dokumen ini)
 
 | Variabel | Status | Dipakai untuk |
 | --- | --- | --- |
@@ -113,7 +127,7 @@ Cakupan yang jujur: batas ini menghitung percobaan yang **mencapai backend** (pe
 | `ENTRA_REDIRECT_URI` | **baru** | `redirect_uri` kedua permintaan; wajib sama dengan URI terdaftar di aplikasi Entra, contoh bentuk `https://{host}/login/callback` |
 | `APP_ENV` | ada | `production` + kredensial Entra tidak lengkap → **proses gagal start** (D7) |
 
-## 7. Alur (ringkas)
+## 8. Alur (ringkas)
 
 ```mermaid
 sequenceDiagram
@@ -135,16 +149,17 @@ sequenceDiagram
     G->>M: POST /oauth2/v2.0/token (code + verifier + client_secret)
     M-->>G: id_token (RS256)
     G->>G: verifikasi JWKS + iss/aud/tid/exp/nonce
-    G->>G: petakan oid → akun; tanpa kecocokan → tolak (tanpa buat akun)
+    G->>G: petakan oid → akun (entra_object_id → provisi → email, §3); tanpa kecocokan → tolak (tanpa buat akun)
     G->>G: issueSession(user, "entra_sso") + audit LOGIN method=entra_sso
     G-->>F: AuthPayload (accessToken, refreshToken, user)
     F->>F: setSession(...) → router.replace(/dashboard)
 ```
 
-## 8. Yang tidak boleh dilanggar oleh implementasi
+## 9. Yang tidak boleh dilanggar oleh implementasi
 
 1. `CLIENT_SECRET` tidak pernah keluar dari proses backend — tidak ke respons GraphQL, log, URL, browser, dokumen, atau issue.
 2. Sesi tidak pernah terbentuk sebelum **seluruh** validasi (tanda tangan, `iss`, `aud`, `tid`, `exp`, `nonce`) lulus.
 3. Tidak ada akun yang dibuat, diubah perannya, atau diaktifkan oleh jalur SSO (NC-02, FR-006).
 4. Tidak ada klaim Microsoft selain `oid` yang dipersistensi; tidak ada PII pada log atau URL.
 5. Jalur email + kata sandi tetap berfungsi penuh (FR-002) — perubahan pada jalur itu terbatas pada penanda `method` di audit.
+6. Urutan pemetaan (§3) tidak boleh diubah menjadi "cari akun mana pun yang cocok": langkah 1 dan 2 mengikat identitas korporat ke **karyawan** yang sudah diberi akun itu, sedangkan langkah 3 hanya berlaku bila kedua kunci itu tidak ada. Penanda di sisi browser (opsi A: tautan email selalu terlihat + ingatan "belum tertaut" 7 hari) **tidak pernah** memengaruhi keputusan di sini.

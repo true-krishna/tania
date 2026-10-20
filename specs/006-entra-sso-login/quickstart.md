@@ -47,12 +47,19 @@ Periksa di database bahwa jalur SSO benar-benar tercatat:
 -- keterkaitan terbentuk & metode sesi tercatat
 SELECT id, email, entra_object_id, auth_provider, last_login_at FROM users WHERE email = '<email uji>';
 SELECT id, user_id, auth_method, expires_at, revoked_at FROM refresh_tokens ORDER BY created_at DESC LIMIT 5;
+-- jalur pemetaan yang terpakai: jalur 2 butuh baris provisi yang mencatat object_id
+SELECT ep.employee_id, ep.action, ep.upn, ep.object_id, ep.status, u.email
+  FROM entra_provisions ep
+  JOIN employees e ON e.id = ep.employee_id
+  LEFT JOIN users u ON u.id = e.user_id
+ WHERE ep.object_id = '<oid uji>' OR ep.upn = '<upn uji>';
 -- jejak audit: 100% upaya memuat method (SC-004)
 SELECT occurred_at, action, after FROM audit_logs WHERE action = 'LOGIN' ORDER BY occurred_at DESC LIMIT 20;
 ```
 
 5. Panggil `refreshSession` dengan refresh token hasil SSO → **harapan**: token baru terbit dan `refresh_tokens.auth_method` baris baru tetap `entra_sso` (pewarisan metode — kalau berubah menjadi `local`, SC-005 salah hitung).
 6. Tekan pintu fallback ("Masuk dengan email & kata sandi") → **harapan**: form tampil, tidak ada pengalihan, masuk lokal berhasil, dan sesi lokal tercatat `auth_method='local'`.
+7. Uji **opsi A**: masuk dengan akun korporat yang **belum** tertaut ke akun Tania → kembali ke `/login` dengan pesan "belum tertaut" dan tautan "Masuk dengan email & kata sandi" yang menonjol (tautan ini juga terlihat sebelum ada kegagalan). Tutup tab, buka `/login` lagi di browser yang sama → **harapan**: form email tampil **langsung**, tanpa memutar ulang pengalihan ke Microsoft (penanda 7 hari). Untuk mengulang dari awal, hapus kunci `tania:sso:unlinked` dari Local Storage.
 
 ## B. UAT ke tenant Telkom (butuh akun sungguhan)
 
@@ -66,8 +73,10 @@ SELECT occurred_at, action, after FROM audit_logs WHERE action = 'LOGIN' ORDER B
 | U6 | Alur dibatalkan di halaman Microsoft | Kembali ke `/login` dengan form tampil + pesan jelas; **tidak** ada lingkaran pengalihan | FR-001/FR-002 |
 | U7 | Jalur email + kata sandi dipakai saat SSO aktif | Berhasil masuk seperti sebelumnya | FR-002, SC-003 |
 | U8 | Peran tidak berubah: masuk SSO sebagai akun Chapter lalu buka menu Admin | Ditolak backend (403/FORBIDDEN), bukan karena klaim Microsoft | FR-006 |
+| U9 | Akun korporat hasil provisi **CREATE** (UPN turunan nama, mis. `rina.kusuma@digitaltelkom.id`) milik karyawan yang akun Tania-nya beralamat lain | **Masuk** — lewat keterkaitan provisi, bukan lewat kesamaan email | FR-004 jalur (2) |
+| U10 | Akun korporat yang **sudah ada sebelum Tania** dan belum punya baris provisi, dengan email akun Tania = alamat masuk korporatnya | **Masuk** — lewat kesamaan email, lalu keterkaitan terisi sekali | FR-004 jalur (3) |
 
-Prasyarat U1: akun Tania sudah ada dan emailnya = work email akun korporat. Bila akun berasal dari provisi CREATE (UPN turunan nama, mis. `rina.kusuma@digitaltelkom.id`), U1 dapat gagal karena alasan **data**, bukan kode — lihat **Open Item 1** `plan.md` (menunggu keputusan pemilik produk).
+Prasyarat U1: akun Tania sudah ada dan **salah satu** jalur pemetaan cocok — emailnya = alamat masuk korporatnya (jalur 3), keterkaitannya sudah terisi (jalur 1), atau karyawannya punya baris `entra_provisions` yang mencatat `object_id` (jalur 2, lihat U9 & query pemeriksaan di §A2). Ketiganya sudah tercakup FR-004 hasil revisi 2026-10-20 — tidak ada lagi kasus data yang menggantung.
 
 Cara cepat menyiapkan U1 (lingkungan non-produksi saja):
 
@@ -92,4 +101,4 @@ pnpm test:e2e                                # regresi jalur lokal (SC-003)
 | **SC-002** — akun yang tepat, 0 kesalahan pemetaan | Jalankan U1+U3+U4+U5 untuk seluruh akun uji; bandingkan `users.entra_object_id` dengan `oid` yang sebenarnya; tidak boleh ada akun terhubung ke identitas yang salah |
 | **SC-003** — jalur email 100% utuh | `pnpm test:e2e` + U7 |
 | **SC-004** — 100% upaya memuat metode | `SELECT count(*) FILTER (WHERE after->>'method' IS NULL) FROM audit_logs WHERE action='LOGIN';` → **0** |
-| **SC-005** — ≥80% masuk via SSO dalam 1 bulan | `SELECT after->>'method' AS method, count(*) FROM audit_logs WHERE action='LOGIN' AND after->>'outcome'='success' AND occurred_at >= now() - interval '30 days' GROUP BY 1;` → `entra_sso` ÷ total ≥ 0,8 |
+| **SC-005** — ≥80% masuk via SSO dalam 1 bulan, dibatasi pada pengguna yang sudah memiliki akun korporat (SC-005 hasil revisi 2026-10-20) | `SELECT after->>'method' AS method, count(*) FROM audit_logs WHERE action='LOGIN' AND after->>'outcome'='success' AND occurred_at >= now() - interval '30 days' GROUP BY 1;` → `entra_sso` ÷ total ≥ 0,8. Batasi penyebutnya ke akun yang memang punya akun korporat (`users.entra_object_id IS NOT NULL` atau ada baris `entra_provisions.object_id` untuk karyawannya) — kalau tidak, pengguna tanpa akses korporat menekan rasio dan membuat target tampak tak tercapai |
