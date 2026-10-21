@@ -10,6 +10,8 @@ import LoginForm from "./LoginForm";
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace }),
+  // LoginForm reads `?sso=` to explain a return from Microsoft (006 T024).
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 const loginResult = {

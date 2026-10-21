@@ -1,0 +1,6 @@
+query EntraSsoStart($codeChallenge: String!, $state: String!, $nonce: String!) {
+  entraSsoStart(codeChallenge: $codeChallenge, state: $state, nonce: $nonce) {
+    enabled
+    authorizationUrl
+  }
+}

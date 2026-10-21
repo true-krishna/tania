@@ -1,0 +1,15 @@
+mutation LoginWithEntra($input: EntraLoginInput!) {
+  loginWithEntra(input: $input) {
+    accessToken
+    accessTokenExpiresAt
+    refreshToken
+    refreshTokenExpiresAt
+    user {
+      id
+      email
+      fullName
+      accessRole
+      status
+    }
+  }
+}
