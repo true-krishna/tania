@@ -203,13 +203,13 @@ Tabel di bawah adalah **indeks** (gelombang → rentang task → apa yang ditutu
 
 **Dependensi gelombang**: U2 **hanya** bergantung pada **T011** (SDL SSO sudah masuk backend) untuk penyalinan SDL, dan pada kontrak final `contracts/sso-entra.md` §1/§4/§8 untuk seluruh UI. U2 **tidak** menunggu T010/T012/T013 selesai: codegen + komponen dapat dikerjakan paralel dengan sisa U1; yang belum dapat dibuktikan di U2 adalah pertukaran kode sungguhan (itu milik U3/T030).
 
-- [ ] T020 [US1] **⚠️ Task pertama U2 — salin ulang `graph/schema.graphqls` dari backend**
+- [X] T020 [US1] **⚠️ Task pertama U2 — salin ulang `graph/schema.graphqls` dari backend**
       → `tania-dashboard/graph/schema.graphqls` (menggantikan salinan lama) · `src/generated/graphql/`
       `cp ../tania-backend/graph/schema.graphqls graph/schema.graphqls` lalu `pnpm run codegen` (prosedur README §GraphQL codegen). **Wajib dijalankan sebelum codegen apa pun** — tanpa ini codegen tidak melihat `EntraSsoStart`/`EntraLoginInput`/`entraSsoStart`/`loginWithEntra` sama sekali (R8). Sumber kebenaran tetap SDL yang **dilayani** backend; `contracts/sso-entra.md` bukan sumber generate. Bila ada drift lain yang ikut terbawa salinan ulang, catat sebagai perubahan terpisah yang disengaja di commit/PR — jangan disembunyikan dan jangan dicampur dengan diff fitur SSO.
       **Verifikasi**: `pnpm run generate:check` hijau + `pnpm run schema:drift` OK; `diff -q` salinan terhadap sumber backend bersih; diff generated hanya memuat tipe/operasi SSO (+ drift yang sudah dicatat).
       **Menutup**: R8 · konstitusi API 1.1.1 · prasyarat US1.
 
-- [ ] T021 [US1] **Dokumen GraphQL fitur SSO**
+- [X] T021 [US1] **Dokumen GraphQL fitur SSO**
       → `src/features/auth/entraStart.graphql` (baru) · `src/features/auth/loginWithEntra.graphql` (baru)
       Operasi bertipe: `EntraSsoStart($codeChallenge: String!, $state: String!, $nonce: String!)` dan `LoginWithEntra($input: EntraLoginInput!)` dengan seleksi `AuthPayload` (pola `login.graphql` existing). Jalankan `pnpm run codegen` agar dokumen bertipe.
       **Verifikasi**: `pnpm run typecheck` + `pnpm run generate:check` hijau.
@@ -227,13 +227,13 @@ Tabel di bawah adalah **indeks** (gelombang → rentang task → apa yang ditutu
       **Verifikasi**: `pnpm run typecheck`; unit (T026) — penanda kedaluwarsa tidak dihormati, penanda dibersihkan setelah login sukses.
       **Menutup**: FR-001/FR-002 · US2 · D8 (ii) · R5.
 
-- [ ] T024 [US1] [US2] **`/login` — auto-redirect sekali + pintu fallback yang selalu terlihat (D8 opsi A)**
+- [X] T024 [US1] [US2] **`/login` — auto-redirect sekali + pintu fallback yang selalu terlihat (D8 opsi A)**
       → `src/app/(auth)/login/LoginForm.tsx` · `src/lib/constants/routes.ts`
       Panggil `entraSsoStart` saat mount; bila `enabled` **dan** mode normal **dan** tidak ada penanda fallback → `window.location.replace(authorizationUrl)`. Tautan **"Masuk dengan email & kata sandi" selalu terlihat** (bukan hanya setelah gagal) sehingga akun Tania tanpa akun korporat — yang pasti gagal di auto-redirect — punya jalan keluar jelas; menekannya menyalakan penanda fallback sehingga auto-redirect berhenti (mustahil ada lingkaran pengalihan). Kembali dengan `?sso=error|cancelled` juga menyalakan penanda + menampilkan pesan Bahasa Indonesia yang jelas. `enabled=false` (atau `AUTH_LOCAL_ONLY`) → form email langsung tampil, tanpa tombol SSO menggantung. Tombol "Masuk dengan Microsoft" memakai peran aksi primer halaman (brand-red, arah desain TAN-191) dan tautan fallback sebagai sekunder; state memuat/gagal ber-ARIA + teks (Design §VI/VIII).
       **Verifikasi**: `pnpm run lint && pnpm run typecheck` + `pnpm test` (T026); e2e T028 (tanpa SSO aktif, form tampil langsung).
       **Menutup**: FR-001/FR-002/FR-009 · US1/US2 · D8 (i) · contracts §4 · R5 · Design I/II/VI.
 
-- [ ] T025 [US1] **Rute `/login/callback`**
+- [X] T025 [US1] **Rute `/login/callback`**
       → `src/app/(auth)/login/callback/page.tsx` (baru)
       Baca `code`/`state` (dan `error`) dari query string. `state` tidak cocok/tidak ada → pesan `"Sesi masuk tidak valid atau sudah kedaluwarsa. Silakan coba lagi."` **tanpa** memanggil mutation. `error=access_denied`/pembatalan → kembali ke `/login` dengan penanda fallback + pesan jelas. Sukses → `loginWithEntra({ code, codeVerifier, nonce })` → `setSession(...)` → `router.replace(DASHBOARD)`. Galat mutation ditampilkan dari `err.message` apa adanya (sudah Bahasa Indonesia dari backend, D11); penolakan "belum tertaut" menyalakan penanda 7 hari. Rute sudah publik lewat `isPublicRoute` (`/login/*`) — **jangan** mengubah gate/proxy.
       **Verifikasi**: `pnpm run lint && pnpm run typecheck` + `pnpm test` (T027); manual quickstart §A butir 4.
@@ -241,13 +241,13 @@ Tabel di bawah adalah **indeks** (gelombang → rentang task → apa yang ditutu
 
 ### Test frontend (task tersendiri)
 
-- [ ] T026 [P] [US1] [US2] **Komponen — `/login` & PKCE**
+- [X] T026 [P] [US1] [US2] **Komponen — `/login` & PKCE**
       → `src/app/(auth)/login/LoginForm.test.tsx` (baru; pola `page.test.tsx` existing) · `src/features/auth/entra-pkce.test.ts` (baru)
       Vitest + RTL + `MockedProvider`: `enabled=true` tanpa penanda → `window.location.replace` dipanggil dengan URL otorisasi; penanda fallback aktif → form tampil & **tidak** redirect; `enabled=false` → form tampil tanpa redirect; kembali `?sso=error|cancelled` → form + pesan, tidak memutar ulang; tautan fallback **selalu** terlihat dan menyalakan penanda; PKCE — verifier 43–128 base64url, challenge S256 benar, state/nonce tersimpan; penanda kedaluwarsa (7 hari) tidak dihormati.
       **Verifikasi**: `pnpm test` hijau.
       **Menutup**: US1/US2 · FR-001/FR-002/FR-009 · D8 · Design §VI.
 
-- [ ] T027 [P] [US1] **Komponen — `/login/callback`**
+- [X] T027 [P] [US1] **Komponen — `/login/callback`**
       → `src/app/(auth)/login/callback/callback.test.tsx` (baru)
       Vitest + RTL + `MockedProvider`: `state` tidak cocok → pesan tampil & mutation **tidak** dipanggil; galat mutation → pesan Bahasa Indonesia tampil; sukses → `setSession` dipanggil + `router.replace(DASHBOARD)`; pembatalan (`error=access_denied`) → kembali ke `/login` dengan penanda fallback.
       **Verifikasi**: `pnpm test` hijau.
