@@ -114,7 +114,7 @@ Cakupan yang jujur: batas ini menghitung percobaan yang **mencapai backend** (pe
 ```
 
 - **SC-004** (100% upaya memuat metode): setiap upaya SSO dan setiap login sukses lokal menulis penanda `method`.
-- **SC-005** (≥80% masuk via SSO dalam 1 bulan) diukur dari `audit_logs`: `action='LOGIN'` dan `outcome='success'`, kelompokkan `After->>'method'` → rasio `entra_sso / (entra_sso + local)`, **dibatasi pada keberhasilan masuk oleh pengguna yang sudah memiliki akun korporat** (SC-005 hasil revisi spec 2026-10-20). Jalur sesi (rotasi refresh) **tidak** dihitung sebagai masuk baru — `refreshSession` bukan login.
+- **SC-005** (≥80% masuk via SSO dalam 1 bulan) diukur dari `audit_logs`: `action='LOGIN'` dan `outcome='success'`, kelompokkan `After->>'method'` → rasio `entra_sso / (entra_sso + local)`, **dibatasi pada keberhasilan masuk oleh pengguna yang ada di dalam tenant** — penyebut dibaca dari **daftar keanggotaan tenant** saat pengukuran (`GraphClient.ListEmails`, izin aplikasi yang sama dengan provisi), bukan dari tabel Tania (SC-005 hasil remediasi spec 2026-10-21, TAN-267). Jalur sesi (rotasi refresh) **tidak** dihitung sebagai masuk baru — `refreshSession` bukan login.
 - **Payload tidak pernah memuat**: email, nama, token, klaim, `client_secret`, atau alasan yang dapat dibaca pengguna.
 
 ## 7. Konfigurasi (nama variabel saja — tidak ada nilai di dokumen ini)

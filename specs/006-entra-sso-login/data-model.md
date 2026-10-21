@@ -9,8 +9,8 @@
 | Field | Tipe (Go / SQL) | Status | Aturan |
 | --- | --- | --- | --- |
 | `id` | string / `uuid PK` | ada | Tidak berubah |
-| `email` | string / `citxt` + unik `lower(email)` | ada | **Kunci pemetaan jalur (3)** FR-004 (dibandingkan `lower(email)`, bukan `=` peka huruf) |
-| `entra_object_id` | `*string` (Go) / `text` | **ada, belum dipakai** | Keterkaitan ke **nol atau satu** identitas korporat (Key Entities). Diisi **sekali** saat login SSO pertama yang berhasil (lewat jalur mana pun); menjadi **kunci pemetaan jalur (1)** pada login berikutnya (stabil terhadap perubahan email/UPN) |
+| `email` | string / `citxt` + unik `lower(email)` | ada | **Kunci pemetaan langkah (3)** FR-004 (dibandingkan `lower(email)`, bukan `=` peka huruf) |
+| `entra_object_id` | `*string` (Go) / `text` | **ada, belum dipakai** | Keterkaitan ke **nol atau satu** identitas korporat (Key Entities). Diisi **sekali** saat login SSO pertama yang berhasil (lewat jalur mana pun); menjadi **kunci pemetaan langkah (1)** pada login berikutnya (stabil terhadap perubahan email/UPN) |
 | `auth_provider` | `string` / `text NOT NULL DEFAULT 'local'` | **ada, belum dipakai** | `local` (bawaan, akun dengan kata sandi) atau `entra` setelah keterkaitan terbentuk. Bukan sumber keputusan otorisasi — hanya penanda asal autentikasi untuk Admin/audit |
 | `status`/`active` | `boolean` / `bool` | ada | Akun tidak aktif **menolak** SSO (FR-011) — lewat `user.Active()` yang sama dengan jalur email |
 | `role` | string / `text` | ada | **Satu-satunya** sumber hak akses (FR-006/D9); tidak pernah diisi dari klaim Microsoft |
@@ -45,7 +45,7 @@ Bila (1) menemukan `oid` **berbeda** dari klaim → tolak (keterkaitan tidak ber
 | --- | --- | --- |
 | `oid` | Kunci keterkaitan & pemetaan utama | **Ya** (→ `users.entra_object_id`) |
 | `tid` | Verifikasi single-tenant (NC-01, FR-005) | **Tidak** — dibandingkan dengan `ENTRA_TENANT_ID` saat validasi |
-| `preferred_username` / `email` / `upn` | Kunci pemetaan jalur (3) (FR-004) | **Tidak** — dibandingkan dengan `users.email`; tidak disalin (minimisasi, Security II) |
+| `preferred_username` / `email` / `upn` | Kunci pemetaan langkah (3) (FR-004) | **Tidak** — dibandingkan dengan `users.email`; tidak disalin (minimisasi, Security II) |
 | `name` | Tidak dipakai (nama tampilan sudah ada di `users.full_name`/`employees`) | **Tidak** |
 | ID token mentah / access token Entra | Hanya untuk validasi dalam satu permintaan | **Tidak** — tidak pernah masuk DB, log, atau browser |
 | `groups` / `roles` (klaim Microsoft) | **Tidak dibaca sama sekali** (FR-006) | **Tidak** |
@@ -71,7 +71,7 @@ Catatan: access token (JWT HS256) **tidak** berubah bentuk — menambah klaim me
 
 | Status awal | Kejadian | Hasil | Efek data |
 | --- | --- | --- | --- |
-| **Tak terhubung** (`entra_object_id IS NULL`) | Login SSO berhasil, cocok lewat jalur (2) `entra_provisions.object_id` **atau** jalur (3) `lower(email)`, akun **aktif** | **Sesi terbentuk** | `users.entra_object_id = oid`, `users.auth_provider = 'entra'`, `last_login_at = now()`, baris `refresh_tokens` (`auth_method='entra_sso'`), audit `LOGIN` `method=entra_sso` |
+| **Tak terhubung** (`entra_object_id IS NULL`) | Login SSO berhasil, cocok lewat langkah (2) `entra_provisions.object_id` **atau** langkah (3) `lower(email)`, akun **aktif** | **Sesi terbentuk** | `users.entra_object_id = oid`, `users.auth_provider = 'entra'`, `last_login_at = now()`, baris `refresh_tokens` (`auth_method='entra_sso'`), audit `LOGIN` `method=entra_sso` |
 | **Tak terhubung** | Login SSO berhasil, email **tidak** cocok / akun **tidak aktif** | **Ditolak** | Tidak ada tulisan; audit `LOGIN` `method=entra_sso`, `outcome=rejected`, `reason=no_account`/`inactive_account` |
 | **Terhubung** (`entra_object_id = oid`) | Login SSO berhasil, akun aktif | **Sesi terbentuk** | `last_login_at` diperbarui; tidak ada perubahan keterkaitan. **Email boleh berubah** — keterkaitan tetap (edge case spec) |
 | **Terhubung** (`entra_object_id = oid_lain`) | Login SSO, email cocok ke akun ini | **Ditolak** | Tidak ada tulisan; audit `reason=identity_mismatch`. Keterkaitan **tidak berpindah otomatis**; penyelesaian = tindakan Admin (di luar cakupan) |
@@ -100,9 +100,9 @@ Catatan: access token (JWT HS256) **tidak** berubah bentuk — menambah klaim me
 Microsoft Entra (tenant Telkom)
         │ ID token (validasi: tanda tangan, iss, aud, tid, exp, nonce)
         ▼
-EntraLoginService (usecase) ──► UserRepository.FindByEntraObjectID              (jalur 1)
-        │                        ├─ tak ada → entra_provisions(oid) → FindByEmployeeID   (jalur 2)
-        │                        ├─ tak ada → FindByEmail(lower(email))               (jalur 3)
+EntraLoginService (usecase) ──► UserRepository.FindByEntraObjectID              (langkah 1)
+        │                        ├─ tak ada → entra_provisions(oid) → FindByEmployeeID   (langkah 2)
+        │                        ├─ tak ada → FindByEmail(lower(email))               (langkah 3)
         │                        └─► UserRepository.LinkEntra(userID, oid)  (sekali)
         ├──► AuthService.issueSession(user, "entra_sso")  (reuse: JWT + refresh rotasi)
         │                        └─► RefreshTokenRepository.Create(… auth_method …)
