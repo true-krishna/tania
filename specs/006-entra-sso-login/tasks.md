@@ -103,7 +103,7 @@
 
 - [ ] T008 [P] [US1] **Konfigurasi — `ENTRA_REDIRECT_URI` + gerbang production**
       → `internal/config/config.go` · `.env.example`
-      Tambah `EntraConfig.RedirectURI` dari `ENTRA_REDIRECT_URI` dan perluas `Enabled()` menjadi empat nilai lengkap (pola `EntraConfig.Enabled()` existing). Di `validate()`: `APP_ENV=production` + kredensial Entra **tidak lengkap → proses gagal start** (SSO adalah jalur masuk utama — R10); di luar production → SSO nonaktif dengan peringatan terstruktur, **jangan** gagalkan startup (deviasi terbatas & terdokumentasi: D7). Tambahkan kunci `ENTRA_REDIRECT_URI` (tanpa nilai) ke `.env.example` dengan catatan "hanya dari env/secret store; jangan pernah di-commit atau di-log".
+      Tambah `EntraConfig.RedirectURI` dari `ENTRA_REDIRECT_URI` dan **predikat baru** `EntraConfig.SSOEnabled()` yang menuntut **empat** nilai lengkap (TenantID, ClientID, ClientSecret, RedirectURI). `EntraConfig.Enabled()` yang lama **tidak diubah** (tetap tiga nilai) — ia dipakai wiring **provisi Entra** di `cmd/api/main.go:111`; memperluasnya akan mematikan provisi di lingkungan yang belum memasang `ENTRA_REDIRECT_URI` (regresi di luar lingkup fitur ini, Technical I/III). Di `validate()`: `APP_ENV=production` + `SSOEnabled()==false` → proses gagal start (SSO adalah jalur masuk utama — R10); di luar production → SSO nonaktif dengan peringatan terstruktur, **jangan** gagalkan startup (deviasi terbatas & terdokumentasi: D7). Tambahkan kunci `ENTRA_REDIRECT_URI` (tanpa nilai) ke `.env.example` dengan catatan "hanya dari env/secret store; jangan pernah di-commit atau di-log".
       **Verifikasi**: `go build ./...` + `go test ./internal/config/...` (`config_test.go` hijau); uji manual: tanpa `ENTRA_*` proses tetap start di development; `APP_ENV=production` tanpa `ENTRA_REDIRECT_URI` → gagal start dengan pesan yang menyebut variabel, bukan nilainya; `grep` memastikan tidak ada nilai rahasia di `.env.example`.
       **Menutup**: FR-010 · D7 · plan Open Item 2 · Technical VIII/IX · R10.
 
@@ -137,7 +137,7 @@
 
 - [ ] T013 [US1] **Wiring `cmd/api/main.go`**
       → `cmd/api/main.go`
-      Bangun klien OIDC (`platform/entra`) bila `cfg.Entra.Enabled()` — pola wiring `entra.NewGraphClient` existing — dan rangkai `EntraLoginService` (users, provisi, `authService`, limiter, audit, config) ke resolver. Tanpa kredensial: klien `nil` dan permukaan SSO melaporkan "belum dikonfigurasi"/`enabled=false` (gerbang production sudah dijaga `config.validate`, T008). Wiring provisi Entra existing **tidak** diubah.
+      Bangun klien OIDC (`platform/entra`) bila `cfg.Entra.SSOEnabled()` (bukan `Enabled()` — lihat T008) — pola wiring `entra.NewGraphClient` existing — dan rangkai `EntraLoginService` (users, provisi, `authService`, limiter, audit, config) ke resolver. Tanpa kredensial: klien `nil` dan permukaan SSO melaporkan "belum dikonfigurasi"/`enabled=false` (gerbang production sudah dijaga `config.validate`, T008). Wiring provisi Entra existing (`cmd/api/main.go:111`) **tidak** diubah.
       **Verifikasi**: `go build ./...`; `make run` di development tanpa `ENTRA_*` tetap start dengan peringatan SSO nonaktif + `curl -s localhost:8080/healthz` sehat; `query { entraSsoStart(...) { enabled } }` → `false`.
       **Menutup**: FR-010 · D7 · Technical VII/VIII · R10.
 
@@ -365,6 +365,15 @@ T004 ─► T010
 **Cakupan FR/SC wajib — peta ringkas**: FR-001 (T011/T012/T024/T026/T028/T030) · FR-002 (T009/T024/T026/T028/T030) · FR-003 (T006/T007/T010/T014/T016/T019/T025/T027/T031) · FR-004 (T004/T010/T014/T019/T030) · FR-005 (T007/T010/T014/T016/T030/T031) · FR-006 (T017/T030) · FR-007 (T010/T015/T018/T019/T031/T032) · FR-008 (T002/T005/T009/T015/T019/T032) · FR-009 (T010/T012/T018/T024/T025/T027/T028/T031) · FR-010 (T006/T008/T016/T018/T031/T033) · FR-011 (T010/T014/T018/T030/T031) · FR-012 (T010/T014/T031) · SC-001 (T001/T024/T030/T032) · SC-002 (T014/T017/T018/T031/T032) · SC-003 (T009/T015/T019/T028/T029/T032) · SC-004 (T009/T015/T018/T019/T031/T032) · SC-005 (T002/T005/T009/T015/T032).
 
 ---
+
+## Temuan lintas artefak (dilaporkan, tidak diputuskan sendiri)
+
+Ditemukan saat menyusun task; **tidak ada** artefak plan/spec yang diubah. Dampaknya pada task sudah dijaga seperti dicatat di bawah.
+
+1. **Istilah "jalur" dipakai dengan dua makna** — `quickstart.md` §B menamai U9 sebagai "FR-004 jalur (2)" dan U10 sebagai "jalur (3)" (penomoran **langkah** D5/`contracts` §3), sementara `spec.md` FR-004 (revisi) menamai dua **jalur** sebagai (a)/(b) dan plan D5 memetakan jalur (a) = langkah (1)+(2), jalur (b) = langkah (3). Substansinya selaras; hanya labelnya ambigu. **Dampak task**: T030 menamai U9/U10 sebagai "keterkaitan provisi" dan "kesamaan email" agar tidak bergantung pada nomor. Perbaikan redaksi `quickstart.md` §B ada di luar lingkup (artefak plan tidak disentuh) — **dilaporkan untuk TAN-269/267**, bukan diputuskan di sini.
+2. **Langkah (1) D5 berada di dalam jalur (a) FR-004** — plan D5 menempatkan langkah (1) (`users.entra_object_id`) di dalam jalur (a) yang oleh `spec.md` digambarkan sebagai "keterkaitan hasil kemampuan provisi Entra", padahal keterkaitan itu terisi pada login sukses pertama dari **jalur mana pun**. Semua task mengikut **plan D5/§3** (urutan (1)→(2)→(3)) karena itulah yang dirinci plan. Bila maksud spec lebih sempit, urutan pemetaan tidak berubah — hanya pengelompokan labelnya. **Dilaporkan, tidak diputuskan.**
+3. **Awalan `Enabled()` bersama dengan provisi** — `EntraConfig.Enabled()` (`internal/config/config.go:63`) hari ini bermakna "tiga kredensial Entra lengkap" dan dipakai wiring **provisi Entra** (`cmd/api/main.go:111`). Menambah `ENTRA_REDIRECT_URI` ke predikat itu akan mematikan provisi di lingkungan yang belum memasang redirect URI — regresi pada fitur di luar lingkup. **Dampak task**: T008 menambah predikat terpisah `SSOEnabled()` (empat nilai) dan T013 memakainya; `Enabled()` tidak diubah. Ini penyempurnaan yang taat plan D7 (yang hanya menyebut penambahan `RedirectURI` ke `EntraConfig`), bukan divergensi.
+4. **Berkas test komponen `/login`** — plan §Project Structure menyebut `LoginForm.test.tsx`, sementara repo sudah punya `src/app/(auth)/login/page.test.tsx` yang menguji halaman/login form yang sama. **Dampak task**: T026 memakai nama plan; pelaksana **wajib** memperluas/menggabungkan dengan `page.test.tsx` yang ada alih-alih membuat berkas kedua yang menguji hal yang sama (Technical III — hindari abstraksi/berkas ganda).
 
 ## MVP scope
 
