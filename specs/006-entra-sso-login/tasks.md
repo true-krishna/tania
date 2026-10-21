@@ -10,7 +10,7 @@
 
 **Tests**: Ya — konstitusi Technical II/III menuntut gerbang mesin; test menjadi **task tersendiri** (T014–T019 backend, T026–T028 frontend), bukan diselipkan ke task implementasi. Karena test ini menguji paket nyata (usecase Go, klien OIDC, transport, komponen React), urutannya: task implementasi → task test yang menguji paket itu → harus lulus sebelum checkpoint gelombang dinyatakan tertutup.
 
-**Organization**: Task dikelompokkan mengikuti gelombang roadmap plan — **U0** (prasyarat pemilik produk) → **U1** (fondasi backend) → **U2** (frontend) → **U3** (UAT & pengukuran). Penomoran `T001…T033` berurutan lintas gelombang.
+**Organization**: Task dikelompokkan mengikuti gelombang roadmap plan — **U0** (prasyarat pemilik produk) → **U1** (fondasi backend) → **U2** (frontend) → **U3** (UAT & pengukuran). Penomoran `T001…T033` berurutan lintas gelombang, ditambah **`T004b`** (sisipan hasil `/speckit.analyze` 2026-10-21 — nomor bersisip agar seluruh rujukan task yang sudah ada tidak bergeser).
 
 ## Format: `[ID] [P?] [US?] Description`
 
@@ -31,7 +31,7 @@
 | Gelombang | Tujuan | Task | Menutup |
 | --- | --- | --- | --- |
 | **U0** — Prasyarat pemilik produk | Daftarkan **redirect URI** aplikasi Entra + pasang `ENTRA_REDIRECT_URI` di tiap lingkungan, sehingga `entraSsoStart.enabled = true` | T001 | plan Open Item 2 · prasyarat US1/SC-001 |
-| **U1** — Fondasi backend | Migrasi `0017` · domain & repo (keterkaitan `oid`, `auth_method`) · klien OIDC + JWKS · `EntraLoginService` (D4/D5/D5b/D11/D12) · `issueSession(+authMethod)` (D6) · SDL + gqlgen + resolver · config & gerbang production (D7) · wiring · test unit/contract/security/e2e | T002–T019 | US3, US4, FR-003–FR-012 |
+| **U1** — Fondasi backend | Migrasi `0017` · domain & repo (keterkaitan `oid`, `auth_method`, repo provisi `FindByObjectID`) · klien OIDC + JWKS · `EntraLoginService` (D4/D5/D5b/D11/D12) · `issueSession(+authMethod)` (D6) · SDL + gqlgen + resolver · config & gerbang production (D7) · wiring · test unit/contract/security/e2e | T002–T019 | US3, US4, FR-003–FR-012 |
 | **U2** — Frontend | Salin ulang SDL → codegen → PKCE (Web Crypto) → `/login` auto-redirect + pintu fallback (D8) → `/login/callback` → Vitest/RTL + Playwright | T020–T028 | US1, US2, FR-001/002/009 |
 | **U3** — UAT & pengukuran | Gerbang mesin · UAT tenant Telkom U1–U10 · probe keamanan · pengukuran SC-001–SC-005 · DAMP pra-rilis | T029–T033 | SC-001–SC-005 |
 
@@ -79,6 +79,15 @@
       **Verifikasi**: `go build ./...` + `go test ./internal/repository/postgres/...` (kompilasi + test harness existing); perilaku terapan (link sekali, tidak berpindah, `oid` unik) dibuktikan T019 pada DB terisolasi.
       **Menutup**: FR-004 jalur (1)&(3) · D5 · data-model §Urutan pemetaan · R3.
 
+- [ ] T004b [US1] **Repository provisi Entra — pencarian terbalik menurut `object_id`**
+      → `internal/domain/entra.go` (tambah satu metode pada `EntraProvisionRepository`) · `internal/repository/postgres/entra.go`
+      Tambah `FindByObjectID(ctx, oid string) (domain.EntraProvision, error)`:
+      `SELECT employee_id::text, status, action, upn, object_id, last_error, created_at, updated_at FROM entra_provisions WHERE object_id = $1`,
+      dipindai dengan `derefString`/`nullString` dan mengembalikan `domain.ErrNotFound` seperti `FindByEmployeeID` yang sudah ada. `Upsert`/`FindByEmployeeID` **tidak** berubah; **tanpa perubahan skema** (`object_id text UNIQUE` sudah ada sejak `0008`).
+      Mengapa task tersendiri: D5 langkah (2) menuntut rantai `object_id` → `employee_id` → akun, dan metode ini **belum ada** di repo (`EntraProvisionRepository` hanya punya `Upsert` + `FindByEmployeeID`) — tanpa ini FR-004 jalur (a) tidak dapat dibangun dan kohort akun hasil provisi **CREATE** (UPN turunan nama, R1) tidak bisa masuk sama sekali.
+      **Verifikasi**: `go build ./... && go vet ./...`; `go test ./internal/repository/postgres/...` (kompilasi + harness existing); perilaku "`oid` ada / tidak ada / `oid` milik karyawan lain" dibuktikan T014 (fake) dan T019 (DB terisolasi).
+      **Menutup**: FR-004 jalur (a) langkah (2) · D5/D5b · R1 · data-model §Urutan pemetaan.
+
 - [ ] T005 [US1] **Repository refresh token — `auth_method`**
       → `internal/repository/postgres/refresh_token.go`
       `Create` menulis kolom `auth_method`; `FindByHash` mengembalikannya (kolom + `scan`). TTL, rotasi, deteksi reuse, dan `RevokeAllForUser` **tidak** berubah — D6 bertumpu pada kode yang sama persis.
@@ -112,12 +121,13 @@
 - [ ] T009 [US1] **`AuthService` — `issueSession(+authMethod)` & pewarisan metode**
       → `internal/usecase/auth.go`
       Ubah `issueSession(ctx, user)` → `issueSession(ctx, user, authMethod string)` dan tulis `RefreshToken.AuthMethod` (T005); seluruh call-site jalur lokal meneruskan `"local"`; `Login` juga menambahkan `"method":"local"` pada payload audit sukses (satu field — FR-007 "setara" dan sumber ukur SC-005, D10). `Refresh` meneruskan `stored.AuthMethod` dari `FindByHash` ke sesi baru — **bukan** di-reset ke `local` (bila salah, SC-005 salah hitung setelah rotasi pertama, R9). TTL, rotasi, deteksi reuse, denylist, dan penonaktifan **tidak** berubah.
-      **Verifikasi**: `go build ./... && go vet ./...`; `go test ./internal/usecase/... -run 'Auth|Session|Refresh'` hijau (T015); grep memastikan tidak ada call-site `issueSession` yang tertinggal tanpa argumen metode.
+      Tambahan wajib (temuan analyze **C2**): jalur lokal **penolakan** juga menulis `"method":"local"` — `rejectLogin` saat ini hanya menulis `{"outcome","reason"}` (`internal/usecase/auth.go:135-150`), sehingga query SC-004 mustahil bernilai 0 dan klaim `contracts/sso-entra.md` §6 ("setiap upaya memuat penanda metode") tidak benar. Ubah payload menjadi `{"method":"local","outcome":"rejected","reason":…}` — satu baris, tanpa mengubah perilaku penolakan.
+      **Verifikasi**: `go build ./... && go vet ./...`; `go test ./internal/usecase/... -run 'Auth|Session|Refresh'` hijau (T015); perluas uji `rejectLogin` yang ada agar payload memuat `method=local` untuk ketiga alasan (`inactive account`, `wrong credentials`, `unknown account`); grep memastikan tidak ada call-site `issueSession` yang tertinggal tanpa argumen metode.
       **Menutup**: FR-002/FR-007/FR-008 · D6/D10 · R7/R9 · SC-003/SC-004/SC-005.
 
 - [ ] T010 [US1] [US3] [US4] **`EntraLoginService` — keputusan, pemetaan, audit, rate limit**
       → `internal/usecase/entra_login.go` (baru)
-      Dua permukaan: (a) `Start(...)` yang membangun `enabled` + `authorizationUrl` (D3 — backend satu-satunya sumber `authority`/`client_id`/`scope`/`redirect_uri`; tanpa rahasia); (b) `Login(ctx, code, codeVerifier, nonce, clientKey)` dengan urutan keputusan: **rate limit** `sso-login:`+`clientKey` memakai `AuthConfig.LoginLimit`/`LoginWindow` yang **sama** dengan jalur email (D12) → `Exchange` kode (D1) → `Verify` ID token (D4) → **pemetaan berurutan** (1) `FindByEntraObjectID` (2) `entra_provisions.object_id` → `FindByEmployeeID` → akun (D5b: menutup UPN turunan nama hasil provisi CREATE) (3) `lower(users.email) = lower(klaim email/UPN)` → akun (menutup akun korporat yang sudah ada sebelum Tania) — tanpa kecocokan: **tolak, tanpa membuat akun** (NC-02); `oid` berbeda pada langkah (1) → tolak (keterkaitan tidak berpindah) → akun tidak aktif (`user.Active()`) → tolak (FR-011) → `LinkEntra` sekali bila masih `NULL` → `AuthService.issueSession(user, "entra_sso")` (D6) → audit `LOGIN` `{"method":"entra_sso","outcome":…,"reason":…}` untuk **setiap** upaya (D10). Semua kegagalan pemetaan memakai **satu** pesan generik Bahasa Indonesia `"Akun korporat ini tidak terhubung ke akun Tania. Hubungi Admin."` (D11/anti-enumerasi); hanya kegagalan "layanan Microsoft tidak tersedia" yang memakai pesan pembeda. Klaim `groups`/`roles` **tidak dibaca** (D9); payload audit tidak memuat klaim/token/rahasia.
+      Dua permukaan: (a) `Start(...)` yang membangun `enabled` + `authorizationUrl` (D3 — backend satu-satunya sumber `authority`/`client_id`/`scope`/`redirect_uri`; tanpa rahasia); (b) `Login(ctx, code, codeVerifier, nonce, clientKey)` dengan urutan keputusan: **rate limit** `sso-login:`+`clientKey` memakai `AuthConfig.LoginLimit`/`LoginWindow` yang **sama** dengan jalur email (D12) → `Exchange` kode (D1) → `Verify` ID token (D4) → **pemetaan berurutan** (1) `FindByEntraObjectID` (2) `FindByObjectID(oid)` → `FindByEmployeeID` → akun (D5b: menutup UPN turunan nama hasil provisi CREATE) (3) `lower(users.email) = lower(klaim email/UPN)` → akun (menutup akun korporat yang sudah ada sebelum Tania) — tanpa kecocokan: **tolak, tanpa membuat akun** (NC-02); `oid` berbeda pada langkah (1) → tolak (keterkaitan tidak berpindah) → akun tidak aktif (`user.Active()`) → tolak (FR-011) → `LinkEntra` sekali bila masih `NULL` → `AuthService.issueSession(user, "entra_sso")` (D6) → audit `LOGIN` `{"method":"entra_sso","outcome":…,"reason":…}` untuk **setiap** upaya (D10). Semua kegagalan pemetaan memakai **satu** pesan generik Bahasa Indonesia `"Akun korporat ini tidak terhubung ke akun Tania. Hubungi Admin."` (D11/anti-enumerasi); hanya kegagalan "layanan Microsoft tidak tersedia" yang memakai pesan pembeda. Klaim `groups`/`roles` **tidak dibaca** (D9); payload audit tidak memuat klaim/token/rahasia.
       **Verifikasi**: `go build ./... && go vet ./...`; matriks keputusan & invarian audit dibuktikan T014; kontrak pesan & kebocoran dibuktikan T018.
       **Menutup**: FR-003/FR-004/FR-005/FR-009/FR-011/FR-012 · US3/US4 · D1/D3/D4/D5/D5b/D9/D10/D11/D12 · R1/R3/R4/R6 · SC-002.
 
@@ -145,7 +155,7 @@
 
 - [ ] T014 [P] [US1] [US3] [US4] **Unit — matriks keputusan `EntraLoginService`**
       → `internal/usecase/entra_login_test.go` (baru)
-      Memakai fake `EntraCodeExchanger`/`EntraIDTokenVerifier`/`UserRepository`/`EntraProvisionRepository`/`RateLimiter` (pola `fakes_test.go` existing). Kasus **terima**: ter-link via `users.entra_object_id` ✓; ter-link via `entra_provisions.object_id` dengan UPN ≠ email akun Tania ✓ (dasar U9); *first-link* via kesamaan email ✓ (isi `entra_object_id` + `auth_provider`, dasar U10); `oid` berbeda untuk email yang sama ✗; email tak cocok ✗ (**tanpa** baris akun baru — NC-02); akun nonaktif ✗ (FR-011); `tid` salah/akun personal ✗; `aud` salah ✗; `nonce` beda ✗; token kedaluwarsa ✗; tanda tangan invalid ✗; batas rate limit terlampaui ✗. Setiap jalur **tolak**: `audit_logs` `outcome=rejected` + `reason` yang tepat, dan tidak ada tulisan ke `users`/`refresh_tokens`.
+      Memakai fake `EntraCodeExchanger`/`EntraIDTokenVerifier`/`UserRepository`/`EntraProvisionRepository`/`RateLimiter` (pola `fakes_test.go` existing). Kasus **terima**: ter-link via `users.entra_object_id` ✓; ter-link via `entra_provisions.object_id` dengan UPN ≠ email akun Tania ✓ (dasar U9); *first-link* via kesamaan email ✓ (isi `entra_object_id` + `auth_provider`, dasar U10); `oid` berbeda untuk email yang sama ✗; email tak cocok ✗ (**tanpa** baris akun baru — NC-02); akun nonaktif ✗ (FR-011); `tid` salah/akun personal ✗; `aud` salah ✗; `nonce` beda ✗; token kedaluwarsa ✗; tanda tangan invalid ✗; batas rate limit terlampaui ✗; **replay** — `code`/`nonce` yang sama dipakai **kedua kali** → exchanger mengembalikan galat ✗, tidak ada sesi, tidak ada tulisan ke `users`/`refresh_tokens`, audit `reason=code_exchange_failed` (temuan analyze **C4**; menutup FR-003 + Edge Case "bukti dipakai ulang" secara otomatis, yang sebelumnya hanya probe manual di T031). Setiap jalur **tolak**: `audit_logs` `outcome=rejected` + `reason` yang tepat, dan tidak ada tulisan ke `users`/`refresh_tokens`.
       **Verifikasi**: `go test ./internal/usecase/... -run Entra -count=1` hijau.
       **Menutup**: US3 AC1–AC4 · FR-003/FR-004/FR-005/FR-011/FR-012 · D5/D5b/D11/D12 · R3/R6 · SC-002.
 
@@ -270,7 +280,7 @@
       **Menutup**: US4 · FR-003/FR-005/FR-007/FR-009/FR-010/FR-011/FR-012 · D4/D10/D11/D12 · Security II/III · R6 · SC-002/SC-004.
 
 - [ ] T032 **Pengukuran SC-001–SC-005 (quickstart §C)**
-      **SC-001**: ukur manual di U1 — jumlah interaksi (≤3) dan durasi `/login` → `/dashboard` (<30 detik). **SC-002**: jalankan U1+U3+U4+U5 untuk seluruh akun uji; bandingkan `users.entra_object_id` dengan `oid` sebenarnya; tidak boleh ada akun terhubung ke identitas yang salah. **SC-003**: `pnpm run test:e2e` + U7. **SC-004**: `SELECT count(*) FILTER (WHERE after->>'method' IS NULL) FROM audit_logs WHERE action='LOGIN';` → **0**. **SC-005**: dari `audit_logs` (`action='LOGIN'`, `after->>'outcome'='success'`, 30 hari terakhir, kelompokkan `after->>'method'`) → `entra_sso ÷ total ≥ 0,8`, dengan **penyebut dibatasi** ke pengguna yang sudah memiliki akun korporat (`users.entra_object_id IS NOT NULL` atau ada baris `entra_provisions.object_id` untuk karyawannya) sesuai SC-005 hasil revisi 2026-10-20 — tanpa pembatasan itu pengguna tanpa akses korporat menekan rasio.
+      **SC-001**: ukur manual di U1 — jumlah interaksi (≤3) dan durasi `/login` → `/dashboard` (<30 detik). **SC-002**: jalankan U1+U3+U4+U5 untuk seluruh akun uji; bandingkan `users.entra_object_id` dengan `oid` sebenarnya; tidak boleh ada akun terhubung ke identitas yang salah. **SC-003**: `pnpm run test:e2e` + U7. **SC-004**: hitung pada **jendela sejak rilis**, bukan seluruh riwayat — `SELECT count(*) FROM audit_logs WHERE action='LOGIN' AND occurred_at >= '<tanggal rilis>' AND (after->>'method' IS NULL);` → **0**. Baris sebelum rilis (tanpa payload sama sekali) tidak dihitung; tanggal jendela dicatat pada laporan pengukuran (temuan analyze **C2** — query lama atas seluruh riwayat tidak mungkin bernilai 0). **SC-005**: dari `audit_logs` (`action='LOGIN'`, `after->>'outcome'='success'`, 30 hari terakhir, kelompokkan `after->>'method'`) → `entra_sso ÷ total ≥ 0,8`, dengan **penyebut dibatasi** ke pengguna yang sudah memiliki akun korporat sesuai SC-005 hasil revisi 2026-10-20. Penyebut diambil dari sumber yang **tidak bergantung pada keberhasilan yang diukur**: seluruh baris `entra_provisions` (semua `action`/`status`, **termasuk** `INVITE` yang `object_id`-nya kosong — jalur undangan "sudah guest" tidak mencatat `object_id`) untuk karyawan dengan akun Tania aktif, **ditambah** akun Tania yang `entra_object_id IS NOT NULL`; `refreshSession` tidak dihitung sebagai masuk baru. `users.entra_object_id IS NOT NULL` **tidak boleh** menjadi satu-satunya sumber penyebut (temuan analyze **C3**): kolom itu diisi oleh keberhasilan SSO pertama → sirkular, dan pemegang akun korporat yang belum pernah/gagal SSO akan hilang dari penyebut sehingga rasio naik — justru menyembunyikan kegagalan yang ingin dideteksi. **Sumber otoritatif penyebut ini masih menunggu konfirmasi pemilik produk** (baris provisi = proksi terdekat yang tersedia di data Tania hari ini; bila kelak ada daftar resmi pemegang akun korporat, sumber itu yang dipakai).
       **Verifikasi**: setiap SC punya angka + tanggal + cara (query/langkah) yang tercatat di laporan; yang belum dapat diukur dinyatakan apa adanya beserta sebabnya.
       **Menutup**: SC-001/SC-002/SC-003/SC-004/SC-005 · FR-007/FR-008 · D6/D10 · contracts §6.
 
@@ -302,6 +312,7 @@ T003 ─► T007 (jwks) ─┼─► T010 (EntraLoginService) ─► T011 (SDL) 
 T008 (config) ───────┘            ▲
 T003 ─► T009 (issueSession+authMethod) ──────┘
 T004 ─► T010
+T004b (repo provisi oid) ─► T010
 ```
 
 ### Urutan dalam tiap bagian
@@ -315,7 +326,7 @@ T004 ─► T010
 
 ### Peluang paralelisasi
 
-- **U1 paralel**: T004 ∥ T005 ∥ T006 ∥ T007 ∥ T008 (berkas berbeda, dependensi hanya pada T002/T003).
+- **U1 paralel**: T004 ∥ T004b ∥ T005 ∥ T006 ∥ T007 ∥ T008 (berkas berbeda, dependensi hanya pada T002/T003).
 - **U1 ∥ U2 sebagian**: T021–T023 (dokumen GraphQL, PKCE, penanda browser) dapat dikerjakan begitu T011 mendarat, bersamaan dengan T012/T013.
 - **Test paralel**: T014 ∥ T015 ∥ T016 ∥ T017 ∥ T018 (berkas test berbeda); T026 ∥ T027 setelah implementasinya.
 - **Tidak boleh paralel**: T004 ∥ T002; T010 ∥ T009; T012 ∥ T011; T020 ∥ T011; T024 ∥ T023.
@@ -330,6 +341,7 @@ T004 ─► T010
 | T002 | FR-008 · D5 (invarian `oid` unik) · data-model §Index/§Sesi · Security IV |
 | T003 | D5/D6 · data-model §Relasi & antarmuka · Technical VII |
 | T004 | FR-004 jalur (1)&(3) · D5 · R3 |
+| T004b | FR-004 jalur (a) langkah (2) · D5/D5b · R1 · data-model §Urutan pemetaan |
 | T005 | FR-008 · D6 · SC-005 (dasar) · R9 |
 | T006 | FR-003/FR-010 · D1/D3 · contracts §2 · R-1/R-3 · Technical V |
 | T007 | FR-003/FR-005 · D4 · contracts §4 · R2/R3 |
@@ -362,7 +374,7 @@ T004 ─► T010
 
 **Keputusan teknis → task (dapat dilacak)**: **D1/D2** T006 · T010 · T011 · T012 (Authorization Code + PKCE, mutation `loginWithEntra`, confidential client) · **D3** T006 · T010 · T011 (query `entraSsoStart`) · **D4** T007 · T010 · T016 (validasi ID token + JWKS) · **D5** T002 · T004 · T010 · T014 (langkah (1)(2)(3)) · **D5b** T010 · T014 · T030 (akun korporat yang sudah ada sebelum Tania) · **D6** T005 · T009 · T015 · T019 (pewarisan `authMethod` saat `Refresh`) · **D7** T008 · T013 (config & gerbang production) · **D8** T023 · T024 · T025 · T026 (opsi A: tautan email selalu terlihat + penanda "belum tertaut" 7 hari) · **D9** T010 · T017 (RBAC tak berubah) · **D10** T009 · T010 · T018 · T019 · T032 (audit `method`) · **D11** T010 · T018 (pesan generik anti-enumerasi) · **D12** T010 · T014 · T031 (rate limit).
 
-**Cakupan FR/SC wajib — peta ringkas**: FR-001 (T011/T012/T024/T026/T028/T030) · FR-002 (T009/T024/T026/T028/T030) · FR-003 (T006/T007/T010/T014/T016/T019/T025/T027/T031) · FR-004 (T004/T010/T014/T019/T030) · FR-005 (T007/T010/T014/T016/T030/T031) · FR-006 (T017/T030) · FR-007 (T010/T015/T018/T019/T031/T032) · FR-008 (T002/T005/T009/T015/T019/T032) · FR-009 (T010/T012/T018/T024/T025/T027/T028/T031) · FR-010 (T006/T008/T016/T018/T031/T033) · FR-011 (T010/T014/T018/T030/T031) · FR-012 (T010/T014/T031) · SC-001 (T001/T024/T030/T032) · SC-002 (T014/T017/T018/T031/T032) · SC-003 (T009/T015/T019/T028/T029/T032) · SC-004 (T009/T015/T018/T019/T031/T032) · SC-005 (T002/T005/T009/T015/T032).
+**Cakupan FR/SC wajib — peta ringkas**: FR-001 (T011/T012/T024/T026/T028/T030) · FR-002 (T009/T024/T026/T028/T030) · FR-003 (T006/T007/T010/T014/T016/T019/T025/T027/T031) · FR-004 (T004/T004b/T010/T014/T019/T030) · FR-005 (T007/T010/T014/T016/T030/T031) · FR-006 (T017/T030) · FR-007 (T010/T015/T018/T019/T031/T032) · FR-008 (T002/T005/T009/T015/T019/T032) · FR-009 (T010/T012/T018/T024/T025/T027/T028/T031) · FR-010 (T006/T008/T016/T018/T031/T033) · FR-011 (T010/T014/T018/T030/T031) · FR-012 (T010/T014/T031) · SC-001 (T001/T024/T030/T032) · SC-002 (T014/T017/T018/T031/T032) · SC-003 (T009/T015/T019/T028/T029/T032) · SC-004 (T009/T015/T018/T019/T031/T032) · SC-005 (T002/T005/T009/T015/T032).
 
 ---
 
@@ -374,13 +386,14 @@ Ditemukan saat menyusun task; **tidak ada** artefak plan/spec yang diubah. Dampa
 2. **Langkah (1) D5 berada di dalam jalur (a) FR-004** — plan D5 menempatkan langkah (1) (`users.entra_object_id`) di dalam jalur (a) yang oleh `spec.md` digambarkan sebagai "keterkaitan hasil kemampuan provisi Entra", padahal keterkaitan itu terisi pada login sukses pertama dari **jalur mana pun**. Semua task mengikut **plan D5/§3** (urutan (1)→(2)→(3)) karena itulah yang dirinci plan. Bila maksud spec lebih sempit, urutan pemetaan tidak berubah — hanya pengelompokan labelnya. **Dilaporkan, tidak diputuskan.**
 3. **Awalan `Enabled()` bersama dengan provisi** — `EntraConfig.Enabled()` (`internal/config/config.go:63`) hari ini bermakna "tiga kredensial Entra lengkap" dan dipakai wiring **provisi Entra** (`cmd/api/main.go:111`). Menambah `ENTRA_REDIRECT_URI` ke predikat itu akan mematikan provisi di lingkungan yang belum memasang redirect URI — regresi pada fitur di luar lingkup. **Dampak task**: T008 menambah predikat terpisah `SSOEnabled()` (empat nilai) dan T013 memakainya; `Enabled()` tidak diubah. Ini penyempurnaan yang taat plan D7 (yang hanya menyebut penambahan `RedirectURI` ke `EntraConfig`), bukan divergensi.
 4. **Berkas test komponen `/login`** — plan §Project Structure menyebut `LoginForm.test.tsx`, sementara repo sudah punya `src/app/(auth)/login/page.test.tsx` yang menguji halaman/login form yang sama. **Dampak task**: T026 memakai nama plan; pelaksana **wajib** memperluas/menggabungkan dengan `page.test.tsx` yang ada alih-alih membuat berkas kedua yang menguji hal yang sama (Technical III — hindari abstraksi/berkas ganda).
+5. **Temuan `/speckit.analyze` (2026-10-21) dan penutupannya** — analisis lintas artefak (`spec.md` · `plan.md` · `tasks.md` · `data-model.md` · `contracts/` · `quickstart.md` · konstitusi v1.2.0) menghasilkan **0 CRITICAL, 2 HIGH, 4 MEDIUM, 5 LOW**, cakupan requirement 17/17. Yang menyentuh `tasks.md` **sudah ditutup di berkas ini**: **C1** → task baru **T004b** + rujukan di T010, tabel pemetaan, rantai kritis, dan daftar paralel; **C2** → penanda `method=local` pada penolakan jalur lokal (T009) + query SC-004 terjendela (T032); **C4** → kasus replay di T014. Yang **bukan** milik berkas ini dan dilaporkan ke pemilik artefaknya: **I1** (redaksi FR-004 jalur (a) untuk baris undangan "sudah guest" tanpa `object_id`) dan **I2** (label "jalur"/"langkah" di `quickstart.md` §B) → TAN-267/TAN-269, bersama satu baris §Project Structure plan (`internal/repository/postgres/entra.go`). **C3** (sumber otoritatif penyebut SC-005) = keputusan pemilik produk; proksi tercatat di T032 dengan kaveatnya dan tercantum sebagai butir terbuka di bawah.
 
 ## MVP scope
 
 Urutan minimum yang membuat US1 dapat dipakai pengguna nyata:
 
 1. **T001** — tenant siap (redirect URI + `ENTRA_REDIRECT_URI`).
-2. **T002 + T003 + T004 + T005 + T006 + T007 + T008 + T009 + T010 + T011 + T012 + T013** — backend dapat menukar kode menjadi sesi Tania lewat `loginWithEntra`.
+2. **T002 + T003 + T004 + T004b + T005 + T006 + T007 + T008 + T009 + T010 + T011 + T012 + T013** — backend dapat menukar kode menjadi sesi Tania lewat `loginWithEntra`.
 3. **T020 + T021 + T022 + T023 + T024 + T025** — `/login` mengarahkan sekali, `/login/callback` menutup alur, pintu email selalu tersedia.
 4. **T029** — gerbang mesin.
 
@@ -395,7 +408,8 @@ T014–T019 dan T026–T028 **wajib ikut MVP**: US2 (zero-regression) dan SC-002
 3. **Pekerjaan ranah Provisi Entra (bukan milik fitur ini — Open Item 6/D5b)** — pencatatan `object_id` saat **sinkronisasi** akun korporat yang sudah ada sebelum Tania (+ kemungkinan nilai ketiga pada CHECK `action` migrasi `0008`), langkah operasional akun hasil `create`, dan sifat opsional pemberian akses korporat. Sudah punya/kandidat issue: TAN-271 (kandidat), TAN-272, TAN-273. Tidak dikerjakan di sini.
 4. **DAMP pra-rilis** — T033, dijalankan konkret pada gerbang rilis (plan Open Item 4), bukan di gelombang kode.
 5. **Sub-issue implementasi — TIDAK dibuat.** `spec.md` masih menyatakan pembuatan issue implementasi menunggu **persetujuan eksplisit pemilik produk**, dan `/speckit.taskstoissues` belum diminta. Tracking implementasi dibuat pada tahap berikutnya atas instruksi pemilik.
-6. **`/speckit.analyze` belum dijalankan** — prasyaratnya baru terpenuhi setelah `tasks.md` ini ada; dijalankan hanya bila diminta.
+6. **`/speckit.analyze` sudah dijalankan (2026-10-21)** — read-only, laporan lengkap dikirim ke issue; temuannya yang menyentuh `tasks.md` sudah ditutup (lihat §Temuan lintas artefak butir 5).
+7. **Sumber otoritatif penyebut SC-005 (temuan analyze C3)** — konfirmasi pemilik produk atas daftar "pengguna yang sudah memiliki akun korporat". Sementara ini T032 memakai proksi non-sirkular (baris `entra_provisions` termasuk `INVITE` tanpa `object_id` + akun yang sudah terhubung). Tanpa keputusan ini pengukuran SC-005 tetap dapat dijalankan, tetapi angkanya harus dibaca bersama kaveat yang tercatat di T032.
 
 ## Notes
 
