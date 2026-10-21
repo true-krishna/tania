@@ -63,22 +63,24 @@ SELECT occurred_at, action, after FROM audit_logs WHERE action = 'LOGIN' ORDER B
 
 ## B. UAT ke tenant Telkom (butuh akun sungguhan)
 
+**Kosakata**: kasus di tabel ini bernama **`UAT-1` … `UAT-10`**. Jangan tertukar dengan **gelombang eksekusi `U0`–`U3`** di `plan.md`/`tasks.md` — keduanya dulu memakai huruf `U` dan terbaca seperti daftar ganda.
+
 | # | Skenario | Harapan | Spec |
 | --- | --- | --- | --- |
-| U1 | Akun korporat yang **terhubung** ke akun Tania | Masuk, sampai `/dashboard`, sesi normal | US1, FR-004 |
-| U2 | `US1` diulang setelah email korporat diubah di Entra | Tetap masuk (keterkaitan ikut `oid`, bukan alamat) | Edge case spec |
-| U3 | Akun korporat **tanpa** akun Tania | Ditolak dengan pesan generik + arahan ke Admin; **tidak ada akun baru** di DB | US3 AC3, NC-02 |
-| U4 | Akun Microsoft **personal** / tenant lain | Ditolak (pesan generik) | FR-005, NC-01 |
-| U5 | Akun Tania dalam keadaan **tidak aktif** | Ditolak | FR-011 |
-| U6 | Alur dibatalkan di halaman Microsoft | Kembali ke `/login` dengan form tampil + pesan jelas; **tidak** ada lingkaran pengalihan | FR-001/FR-002 |
-| U7 | Jalur email + kata sandi dipakai saat SSO aktif | Berhasil masuk seperti sebelumnya | FR-002, SC-003 |
-| U8 | Peran tidak berubah: masuk SSO sebagai akun Chapter lalu buka menu Admin | Ditolak backend (403/FORBIDDEN), bukan karena klaim Microsoft | FR-006 |
-| U9 | Akun korporat hasil provisi **CREATE** (UPN turunan nama, mis. `rina.kusuma@digitaltelkom.id`) milik karyawan yang akun Tania-nya beralamat lain | **Masuk** — lewat keterkaitan provisi, bukan lewat kesamaan email | FR-004 langkah (2) |
-| U10 | Akun korporat yang **sudah ada sebelum Tania** dan belum punya baris provisi, dengan email akun Tania = alamat masuk korporatnya | **Masuk** — lewat kesamaan email, lalu keterkaitan terisi sekali | FR-004 langkah (3) |
+| UAT-1 | Akun korporat yang **terhubung** ke akun Tania | Masuk, sampai `/dashboard`, sesi normal | US1, FR-004 |
+| UAT-2 | `US1` diulang setelah email korporat diubah di Entra | Tetap masuk (keterkaitan ikut `oid`, bukan alamat) | Edge case spec |
+| UAT-3 | Akun korporat **tanpa** akun Tania | Ditolak dengan pesan generik + arahan ke Admin; **tidak ada akun baru** di DB | US3 AC3, NC-02 |
+| UAT-4 | Akun Microsoft **personal** / tenant lain | Ditolak (pesan generik) | FR-005, NC-01 |
+| UAT-5 | Akun Tania dalam keadaan **tidak aktif** | Ditolak | FR-011 |
+| UAT-6 | Alur dibatalkan di halaman Microsoft | Kembali ke `/login` dengan form tampil + pesan jelas; **tidak** ada lingkaran pengalihan | FR-001/FR-002 |
+| UAT-7 | Jalur email + kata sandi dipakai saat SSO aktif | Berhasil masuk seperti sebelumnya | FR-002, SC-003 |
+| UAT-8 | Peran tidak berubah: masuk SSO sebagai akun Chapter lalu buka menu Admin | Ditolak backend (403/FORBIDDEN), bukan karena klaim Microsoft | FR-006 |
+| UAT-9 | Akun korporat hasil provisi **CREATE** (UPN turunan nama, mis. `rina.kusuma@digitaltelkom.id`) milik karyawan yang akun Tania-nya beralamat lain | **Masuk** — lewat keterkaitan provisi, bukan lewat kesamaan email | FR-004 langkah (2) |
+| UAT-10 | Akun korporat yang **sudah ada sebelum Tania** dan belum punya baris provisi, dengan email akun Tania = alamat masuk korporatnya | **Masuk** — lewat kesamaan email, lalu keterkaitan terisi sekali | FR-004 langkah (3) |
 
-Prasyarat U1: akun Tania sudah ada dan **salah satu** cara pemetaan cocok — emailnya = alamat masuk korporatnya (langkah 3), keterkaitannya sudah terisi (langkah 1), atau karyawannya punya baris `entra_provisions` yang mencatat `object_id` (langkah 2, lihat U9 & query pemeriksaan di §A2). Ketiganya sudah tercakup FR-004 hasil revisi 2026-10-20 — tidak ada lagi kasus data yang menggantung.
+Prasyarat UAT-1: akun Tania sudah ada dan **salah satu** cara pemetaan cocok — emailnya = alamat masuk korporatnya (langkah 3), keterkaitannya sudah terisi (langkah 1), atau karyawannya punya baris `entra_provisions` yang mencatat `object_id` (langkah 2, lihat UAT-9 & query pemeriksaan di §A2). Ketiganya sudah tercakup FR-004 hasil revisi 2026-10-20 — tidak ada lagi kasus data yang menggantung.
 
-Cara cepat menyiapkan U1 (lingkungan non-produksi saja):
+Cara cepat menyiapkan UAT-1 (lingkungan non-produksi saja):
 
 ```sql
 UPDATE users SET email = '<work email korporat>' WHERE id = '<id akun uji>';   -- atau
@@ -97,8 +99,8 @@ pnpm test:e2e                                # regresi jalur lokal (SC-003)
 
 | SC | Cara mengukur |
 | --- | --- |
-| **SC-001** — ≤3 interaksi, <30 detik | Ukur manual di U1 (klik tautan → masuk Microsoft → selesai) dan catat durasi dari `/login` sampai `/dashboard`; hitung layar yang dihadapi pengguna |
-| **SC-002** — akun yang tepat, 0 kesalahan pemetaan | Jalankan U1+U3+U4+U5 untuk seluruh akun uji; bandingkan `users.entra_object_id` dengan `oid` yang sebenarnya; tidak boleh ada akun terhubung ke identitas yang salah |
-| **SC-003** — jalur email 100% utuh | `pnpm test:e2e` + U7 |
+| **SC-001** — ≤3 interaksi, <30 detik | Ukur manual di UAT-1 (klik tautan → masuk Microsoft → selesai) dan catat durasi dari `/login` sampai `/dashboard`; hitung layar yang dihadapi pengguna |
+| **SC-002** — akun yang tepat, 0 kesalahan pemetaan | Jalankan UAT-1+UAT-3+UAT-4+UAT-5 untuk seluruh akun uji; bandingkan `users.entra_object_id` dengan `oid` yang sebenarnya; tidak boleh ada akun terhubung ke identitas yang salah |
+| **SC-003** — jalur email 100% utuh | `pnpm test:e2e` + UAT-7 |
 | **SC-004** — 100% upaya memuat metode | Hitung pada **jendela sejak rilis**, bukan seluruh riwayat: `SELECT count(*) FROM audit_logs WHERE action='LOGIN' AND occurred_at >= '<tanggal rilis>' AND (after->>'method' IS NULL);` → **0** (baris sebelum rilis tidak punya payload sama sekali, jadi tidak dihitung; tanggal jendela dicatat pada laporan pengukuran — temuan analyze C2) |
 | **SC-005** — ≥80% masuk via SSO dalam 1 bulan, dibatasi pada pengguna yang **ada di dalam tenant** (remediasi 2026-10-21) | `SELECT after->>'method' AS method, count(*) FROM audit_logs WHERE action='LOGIN' AND after->>'outcome'='success' AND occurred_at >= now() - interval '30 days' GROUP BY 1;` → `entra_sso` ÷ total ≥ 0,8. Penyebutnya **keanggotaan tenant**: daftar tenant dibaca sekali saat pengukuran (`GraphClient.ListEmails`, izin aplikasi yang **sama** dengan provisi) — **bukan** dari tabel Tania (`users.entra_object_id IS NOT NULL` sirkular, diisi keberhasilan SSO pertama; baris `entra_provisions` mencatat tindakan provisi, bukan keanggotaan). Bila daftar tenant tidak tersedia saat pengukuran, laporkan SC-005 **tidak dihitung** beserta alasannya — jangan menyajikan angka tanpa menyebut sumber penyebutnya |

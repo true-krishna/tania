@@ -192,7 +192,7 @@ Validasi dilakukan **sebelum** sesi apa pun terbentuk (FR-003): tanda tangan ID 
 | E2E backend | Alur penuh `loginWithEntra` via HTTP dengan fake verifier + fake exchanger: sesi akses+refresh terbit, `auth_method='entra_sso'` tersimpan, audit `LOGIN` ter-`method`, refresh mewarisi `entra_sso` | `internal/transport/httpapi/e2e_test.go` |
 | Komponen frontend | `/login`: SSO aktif → redirect terjadi; penanda fallback → form tampil tanpa redirect; `enabled=false` → form tampil; kembali dengan `?sso=error|cancelled` → form tampil + pesan; PKCE: verifier/challenge/state/nonce benar & tersimpan; `/login/callback`: state mismatch → pesan & tidak memanggil mutation, error dari mutation → pesan Bahasa Indonesia, sukses → `setSession` + `router.replace(DASHBOARD)` | Vitest + RTL + `MockedProvider` |
 | E2E frontend | Regresi jalur lokal tetap masuk (SC-003); `/login` tanpa SSO aktif tetap menampilkan form; `/login/callback` tanpa parameter menampilkan pesan yang jelas (bukan halaman kosong) | Playwright (`critical-path.spec.ts`) |
-| UAT manual (U1) | Login sungguhan ke tenant Telkom oleh pemilik produk: akun terhubung ✓, akun tanpa akun Tania ✗, akun personal ✗, akun nonaktif ✗, pembatalan ✗ + fallback email ✓ | `quickstart.md` §B (tidak mungkin dijalankan di CI — butuh kredensial & tenant) |
+| UAT manual (UAT-1) | Login sungguhan ke tenant Telkom oleh pemilik produk: akun terhubung ✓, akun tanpa akun Tania ✗, akun personal ✗, akun nonaktif ✗, pembatalan ✗ + fallback email ✓ | `quickstart.md` §B (tidak mungkin dijalankan di CI — butuh kredensial & tenant) |
 
 ## Roadmap (gelombang eksekusi)
 
