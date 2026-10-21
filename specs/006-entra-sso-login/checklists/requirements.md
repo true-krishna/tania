@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-10-20
-**Updated**: 2026-10-20 (`/speckit.clarify`, TAN-267); 2026-10-20 (pembatalan opsi B — spesifikasi kembali ke keadaan Clarified, TAN-267); 2026-10-20 (**revisi hasil diskusi plan**, TAN-269 — FR-004 dua jalur pemetaan, SC-005, Assumptions, Edge Cases)
+**Updated**: 2026-10-20 (`/speckit.clarify`, TAN-267); 2026-10-20 (pembatalan opsi B — spesifikasi kembali ke keadaan Clarified, TAN-267); 2026-10-20 (**revisi hasil diskusi plan**, TAN-269 — FR-004 dua jalur pemetaan, SC-005, Assumptions, Edge Cases); 2026-10-21 (**remediasi SC-005 → keanggotaan tenant**, TAN-267)
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -39,3 +39,4 @@
 - **Perilaku halaman login (opsi A) bukan perubahan spec**: auto-redirect tetap, ditambah tautan email yang selalu terlihat dan penanda "belum tertaut" 7 hari di sisi browser — dicatat pada `plan.md` D8; FR-001/FR-002/NC-03 tidak berubah.
 - Prasyarat eksternal (di luar kendali tim): pendaftaran aplikasi di sisi Entra — URI pengalihan + cakupan profil/email — oleh admin Entra.
 - Spesifikasi siap untuk `/speckit.plan`; pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk. — **Diperbarui 2026-10-20 (TAN-269)**: `/speckit.plan` **sudah dijalankan** (`plan.md`, `research.md`, `data-model.md`, `quickstart.md`, `contracts/sso-entra.md`); spec sudah direvisi; sisa pekerjaan yang bukan milik fitur ini dicatat pada `plan.md` Open Item 6 (ranah Provisi Entra).
+- **Remediasi SC-005 → keanggotaan tenant** (keputusan pemilik produk, 2026-10-21, TAN-267): penyebut SC-005 disederhanakan dari "pengguna yang sudah memiliki akun korporat" menjadi "pengguna yang ada di dalam tenant" karena kolom yang dipakai sebelumnya (`users.entra_object_id`) justru diisi oleh keberhasilan SSO itu sendiri (sirkular). Angka/target dan seluruh FR tidak berubah; seluruh item checklist tetap lulus (16/16). Acuan penyebut pada artefak plan (`quickstart.md` §C) menunggu penyelarasan di tiket plan (Diggie).
