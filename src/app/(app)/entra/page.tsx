@@ -25,8 +25,14 @@ import { orDash } from "@/lib/cell";
 import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 export default function EntraProvisioningPage() {
-  const { status, employees, totalCount, error } = useEmployeesWithoutEntra();
-  const { pageRows, pagination } = useTablePagination(employees, { totalItems: totalCount });
+  const { status, employees, totalCount, hasNextPage, loadingMore, loadMore, error } =
+    useEmployeesWithoutEntra();
+  const { pageRows, pagination } = useTablePagination(employees, {
+    totalItems: totalCount,
+    hasMore: hasNextPage,
+    loadingMore,
+    loadMore,
+  });
   const [provisionEntra] = useMutation(ProvisionEntraAccountDocument, {
     refetchQueries: [
       { query: EmployeesWithoutEntraDocument, variables: { ...ENTRA_LIST_VARIABLES } },
