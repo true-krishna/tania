@@ -211,13 +211,13 @@
       **Verifikasi**: `pnpm run typecheck` + `pnpm run generate:check` hijau.
       **Menutup**: US1 · D2/D3 · contracts §1.
 
-- [ ] T022 [US1] **PKCE & state/nonce (Web Crypto — tanpa MSAL)**
+- [X] T022 [US1] **PKCE & state/nonce (Web Crypto — tanpa MSAL)**
       → `src/features/auth/entra-pkce.ts` (baru)
       `crypto.getRandomValues` untuk `code_verifier` (43–128 karakter base64url), `state`, dan `nonce`; `crypto.subtle.digest("SHA-256")` + base64url untuk `code_challenge` (S256); simpan verifier/state/nonce sementara per-percobaan di `sessionStorage` dan hapus setelah dipakai (sekali pakai). Tanpa dependensi npm baru (`@msal-browser` **ditolak**).
       **Verifikasi**: `pnpm run typecheck`; unit `entra-pkce.test.ts` (T026) — panjang/alfabet verifier, challenge = SHA-256 base64url, nilai tersimpan & terhapus.
       **Menutup**: FR-001/FR-003 · D1/D3 · contracts §2 · R-11 · Technical V.
 
-- [ ] T023 [US1] [US2] **Penanda browser (opsi A) — fallback & "belum tertaut" 7 hari**
+- [X] T023 [US1] [US2] **Penanda browser (opsi A) — fallback & "belum tertaut" 7 hari**
       → `src/lib/auth/config.ts` · `src/lib/constants/storage.ts`
       Tambah kunci penanda (`tania:sso:fallback` di `sessionStorage`; `tania:sso:unlinked` di `localStorage`) + helper baca/tulis/hapus, termasuk masa berlaku 7 hari untuk penanda "belum tertaut" dan pembersihan keduanya setelah login berhasil di jalur mana pun. Penanda **murni petunjuk tampilan** di browser — tidak pernah otoritatif; keputusan menerima/menolak tetap di server (D8/§9 butir 6).
       **Verifikasi**: `pnpm run typecheck`; unit (T026) — penanda kedaluwarsa tidak dihormati, penanda dibersihkan setelah login sukses.
