@@ -258,6 +258,26 @@ input LocalLoginInput {
   password: String!
 }
 
+"""Status permulaan alur SSO Microsoft Entra ID."""
+type EntraSsoStart {
+  """True bila backend siap menerima login SSO (kredensial Entra lengkap)."""
+  enabled: Boolean!
+  """
+  URL otorisasi Microsoft yang siap dibuka browser. Null bila enabled=false.
+  Berisi hanya nilai publik (authority, clientId, scope, redirectUri, PKCE challenge).
+  """
+  authorizationUrl: String
+}
+
+input EntraLoginInput {
+  """Authorization code dari query string /login/callback (sekali pakai, umur pendek)."""
+  code: String!
+  """PKCE code verifier yang dipakai saat meminta otorisasi (base64url, 43–128 char)."""
+  codeVerifier: String!
+  """Nonce yang dikirim pada permintaan otorisasi; dicocokkan dengan klaim nonce ID token."""
+  nonce: String!
+}
+
 # ------------------------------- Master data --------------------------------
 
 """Unit master data (FR-18)."""
@@ -1025,6 +1045,9 @@ type Query {
   """Profil user yang sedang login."""
   me: User!
 
+  """Publik. Dipakai halaman login untuk memutuskan redirect otomatis (FR-001)."""
+  entraSsoStart(codeChallenge: String!, state: String!, nonce: String!): EntraSsoStart!
+
   # --- Master data (Admin tulis; baca mengikuti matriks 002-tania-rbac §Matriks) ---
   """Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8."""
   units(includeInactive: Boolean = false): [Unit!]!
@@ -1115,6 +1138,9 @@ type Query {
 type Mutation {
   # --- Auth ---
   login(input: LocalLoginInput!): AuthPayload!
+
+  """Publik. Menukar authorization code dengan sesi Tania (FR-003/FR-004)."""
+  loginWithEntra(input: EntraLoginInput!): AuthPayload!
 
   """Exchange a refresh token for a new token pair (rotating)."""
   refreshSession(refreshToken: String!): AuthPayload!

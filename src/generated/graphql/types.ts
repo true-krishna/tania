@@ -609,6 +609,15 @@ export type EmploymentContractStatus =
   | 'ENDED'
   | 'TERMINATED';
 
+export type EntraLoginInput = {
+  /** Authorization code dari query string /login/callback (sekali pakai, umur pendek). */
+  code: Scalars['String']['input'];
+  /** PKCE code verifier yang dipakai saat meminta otorisasi (base64url, 43–128 char). */
+  codeVerifier: Scalars['String']['input'];
+  /** Nonce yang dikirim pada permintaan otorisasi; dicocokkan dengan klaim nonce ID token. */
+  nonce: Scalars['String']['input'];
+};
+
 /** Hasil provisioning akun Entra seorang talent (FR-44, FR-45). */
 export type EntraProvision = {
   __typename?: 'EntraProvision';
@@ -638,6 +647,18 @@ export type EntraProvisionStatus =
   | 'FAILED'
   /** Undangan Entra terkirim (email telkom.co.id, FR-45). */
   | 'INVITED';
+
+/** Status permulaan alur SSO Microsoft Entra ID. */
+export type EntraSsoStart = {
+  __typename?: 'EntraSsoStart';
+  /**
+   * URL otorisasi Microsoft yang siap dibuka browser. Null bila enabled=false.
+   * Berisi hanya nilai publik (authority, clientId, scope, redirectUri, PKCE challenge).
+   */
+  authorizationUrl?: Maybe<Scalars['String']['output']>;
+  /** True bila backend siap menerima login SSO (kredensial Entra lengkap). */
+  enabled: Scalars['Boolean']['output'];
+};
 
 export type EvaluationAnswer = {
   __typename?: 'EvaluationAnswer';
@@ -856,6 +877,8 @@ export type Mutation = {
   deleteRole: Scalars['Boolean']['output'];
   endAssignment: Assignment;
   login: AuthPayload;
+  /** Publik. Menukar authorization code dengan sesi Tania (FR-003/FR-004). */
+  loginWithEntra: AuthPayload;
   /** Revoke the current access token and, when supplied, the refresh token. */
   logout: Scalars['Boolean']['output'];
   /**
@@ -1071,6 +1094,11 @@ export type MutationEndAssignmentArgs = {
 
 export type MutationLoginArgs = {
   input: LocalLoginInput;
+};
+
+
+export type MutationLoginWithEntraArgs = {
+  input: EntraLoginInput;
 };
 
 
@@ -1409,6 +1437,8 @@ export type Query = {
   employeesWithoutEntra: EmployeeConnection;
   employmentContract?: Maybe<EmploymentContract>;
   employmentContracts: EmploymentContractConnection;
+  /** Publik. Dipakai halaman login untuk memutuskan redirect otomatis (FR-001). */
+  entraSsoStart: EntraSsoStart;
   evaluationPeriods: Array<EvaluationPeriod>;
   evaluationRoster: Array<EvaluationPeriodRosterEntry>;
   evaluationTemplates: Array<EvaluationTemplate>;
@@ -1532,6 +1562,13 @@ export type QueryEmploymentContractsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<EmploymentContractFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryEntraSsoStartArgs = {
+  codeChallenge: Scalars['String']['input'];
+  nonce: Scalars['String']['input'];
+  state: Scalars['String']['input'];
 };
 
 
