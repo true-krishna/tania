@@ -3,6 +3,7 @@
 // Component tests for `/login/callback` (T027 · US1 AC1–AC3 · FR-003/FR-009 ·
 // contracts/sso-entra.md §4/§8). The exchange may only run when the browser's
 // own `state` matches; every failure must end in a readable Indonesian message.
+// Since D8′ no browser hint is written or read here.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -10,7 +11,6 @@ import { MockedProvider } from "@apollo/client/testing";
 import { ApolloError } from "@apollo/client";
 import { LoginWithEntraDocument } from "@/generated/graphql";
 import * as tokenStore from "@/lib/auth/token-store";
-import { SSO_FALLBACK_KEY, SSO_UNLINKED_KEY } from "@/lib/constants/storage";
 import { saveEntraAuthAttempt } from "@/features/auth/entra-pkce";
 import CallbackView from "./CallbackView";
 
@@ -128,9 +128,7 @@ describe("verifikasi state (tanpa memanggil backend)", () => {
 });
 
 describe("pertukaran kode berhasil", () => {
-  it("forms the session, clears the hints and goes to the dashboard", async () => {
-    localStorage.setItem(SSO_UNLINKED_KEY, String(Date.now()));
-    sessionStorage.setItem(SSO_FALLBACK_KEY, "1");
+  it("forms the session and goes to the dashboard", async () => {
     saveEntraAuthAttempt(ATTEMPT);
     params = new URLSearchParams("code=code-1&state=state-xyz");
     renderCallback([exchangeMock()]);
@@ -139,13 +137,11 @@ describe("pertukaran kode berhasil", () => {
       expect(tokenStore.getSession()?.accessToken).toBe("token-abc");
       expect(routerReplace).toHaveBeenCalledWith("/dashboard");
     });
-    expect(sessionStorage.getItem(SSO_FALLBACK_KEY)).toBeNull();
-    expect(localStorage.getItem(SSO_UNLINKED_KEY)).toBeNull();
   });
 });
 
 describe("penolakan & kegagalan", () => {
-  it("shows the backend's Indonesian rejection verbatim and remembers it for 7 days", async () => {
+  it("shows the backend's Indonesian rejection verbatim", async () => {
     saveEntraAuthAttempt(ATTEMPT);
     params = new URLSearchParams("code=code-1&state=state-xyz");
     renderCallback([
@@ -163,11 +159,11 @@ describe("penolakan & kegagalan", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /akun korporat ini tidak terhubung ke akun tania\. hubungi admin\./i,
     );
-    expect(localStorage.getItem(SSO_UNLINKED_KEY)).not.toBeNull();
     expect(tokenStore.getSession()).toBeNull();
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 
-  it("does not remember a transient Microsoft outage (the user should retry)", async () => {
+  it("distinguishes a transient Microsoft outage (the user should retry)", async () => {
     saveEntraAuthAttempt(ATTEMPT);
     params = new URLSearchParams("code=code-1&state=state-xyz");
     renderCallback([
@@ -183,19 +179,18 @@ describe("penolakan & kegagalan", () => {
     ]);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/layanan microsoft sedang tidak tersedia/i);
-    expect(localStorage.getItem(SSO_UNLINKED_KEY)).toBeNull();
+    expect(tokenStore.getSession()).toBeNull();
   });
 });
 
 describe("pembatalan di halaman Microsoft", () => {
-  it("returns to /login with the fallback hint set", async () => {
+  it("returns to /login with the cancellation message", async () => {
     params = new URLSearchParams("error=access_denied");
     renderCallback([]);
 
     await waitFor(() =>
       expect(routerReplace).toHaveBeenCalledWith("/login?sso=cancelled"),
     );
-    expect(sessionStorage.getItem(SSO_FALLBACK_KEY)).toBe("1");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
