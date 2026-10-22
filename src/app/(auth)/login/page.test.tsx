@@ -60,8 +60,9 @@ describe("LoginForm", () => {
       </MockedProvider>
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: /login by email/i }));
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    // SSO is unavailable here (the start query has no mock), so the email form
+    // is the page the visitor lands on (D8′).
+    fireEvent.change(await screen.findByLabelText(/email/i), {
       target: { value: "ada@tania.id" },
     });
     fireEvent.change(screen.getByLabelText(/password/i), {
@@ -96,8 +97,9 @@ describe("LoginForm", () => {
       </MockedProvider>
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: /login by email/i }));
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    // SSO is unavailable here (the start query has no mock), so the email form
+    // is the page the visitor lands on (D8′).
+    fireEvent.change(await screen.findByLabelText(/email/i), {
       target: { value: "ada@tania.id" },
     });
     fireEvent.change(screen.getByLabelText(/password/i), {
@@ -111,7 +113,7 @@ describe("LoginForm", () => {
     });
   });
 
-  it("renders the brand copy and the two sign-in doors", async () => {
+  it("renders the brand copy and the email form when SSO is unavailable", async () => {
     render(
       <MockedProvider mocks={[]}>
         <LoginForm />
@@ -123,8 +125,7 @@ describe("LoginForm", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/talent management platform/i)).toBeInTheDocument();
     expect(screen.queryByText(/invite tania/i)).not.toBeInTheDocument();
-    fireEvent.click(await screen.findByRole("button", { name: /login by email/i }));
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /masuk ke workspace/i })

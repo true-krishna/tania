@@ -85,10 +85,7 @@ describe("tombol Microsoft selalu tampil, tanpa pengalihan otomatis (D8′)", ()
   it("hands the browser to Microsoft on click", async () => {
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    // The button stays disabled until the authorization URL has arrived.
-    const button = await screen.findByRole("button", MICROSOFT);
-    await waitFor(() => expect(button).toBeEnabled());
-    fireEvent.click(button);
+    fireEvent.click(await screen.findByRole("button", MICROSOFT));
 
     expect(locationAssign).toHaveBeenCalledWith(AUTHORIZATION_URL);
     // The attempt must survive the navigation: the callback page reads it back.
@@ -104,6 +101,22 @@ describe("tombol Microsoft selalu tampil, tanpa pengalihan otomatis (D8′)", ()
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(locationAssign).not.toHaveBeenCalled();
     expect(routerReplace).not.toHaveBeenCalled();
+  });
+});
+
+describe("selagi opsi masuk diperiksa (tanpa tombol nonaktif)", () => {
+  it("shows a neutral placeholder instead of a disabled Microsoft button", async () => {
+    // Staging feedback (TAN-287): a button that is disabled and then vanishes
+    // when SSO turns out to be off reads as a glitch. While the answer is in
+    // flight, show a status line and no door at all.
+    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
+
+    expect(screen.getByRole("status")).toHaveTextContent(/memeriksa opsi masuk/i);
+    expect(screen.queryByRole("button", MICROSOFT)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", EMAIL_DOOR)).not.toBeInTheDocument();
+
+    expect(await screen.findByRole("button", MICROSOFT)).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });
 
@@ -155,7 +168,7 @@ describe("kembali dari Microsoft (?sso=)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /masuk dengan microsoft gagal/i,
     );
-    fireEvent.click(screen.getByRole("button", EMAIL_DOOR));
+    fireEvent.click(await screen.findByRole("button", EMAIL_DOOR));
     expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
     expect(locationAssign).not.toHaveBeenCalled();
   });
