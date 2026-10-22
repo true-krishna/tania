@@ -339,6 +339,24 @@ type Project {
   updatedAt: Time!
 }
 
+# ------------------------- Aktivitas (FR-008) -------------------------------
+
+"""Referensi prioritas aktivitas (FR-008); read-only, urut terendah → tertinggi."""
+type ActivityPriority {
+  id: ID!
+  name: String!
+  sortOrder: Int!
+}
+
+"""Referensi status aktivitas (FR-008); read-only, urut siklus hidup."""
+type ActivityStatus {
+  id: ID!
+  name: String!
+  sortOrder: Int!
+  """true untuk Done & Cancelled — hanya untuk gaya badge; transisi status ditegakkan server-side (FR-008)."""
+  isTerminal: Boolean!
+}
+
 # ------------------------------- Employee -----------------------------------
 
 type Employee {
@@ -1068,6 +1086,12 @@ type Query {
   jobRoles(includeInactive: Boolean = false): [JobRole!]!
   """Referensi Project level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Assignment); 2026-10-16 clarify 8."""
   projects(unitId: ID, includeInactive: Boolean = false): [Project!]!
+
+  # --- Referensi aktivitas (FR-008; read-only, tanpa mutation) ---
+  """Referensi prioritas aktivitas, urut terendah → tertinggi."""
+  activityPriorities: [ActivityPriority!]!
+  """Referensi status aktivitas, urut siklus hidup."""
+  activityStatuses: [ActivityStatus!]!
 
   # --- Employee (Operation/Admin tulis; Chapter/Admin baca) ---
   employees(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
