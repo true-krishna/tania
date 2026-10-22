@@ -59,8 +59,9 @@ export default function CallbackView() {
   }
 
   async function settle() {
-    if (searchParams.get("error")) {
-      router.replace(`${LOGIN}?sso=cancelled`);
+    const returnedError = searchParams.get("error");
+    if (returnedError) {
+      router.replace(`${LOGIN}?sso=cancelled&entra=${encodeURIComponent(returnedError)}`);
       return;
     }
 

@@ -26,6 +26,8 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnReason = searchParams.get("sso");
+  const entraCode =
+    (searchParams.get("entra") ?? "").replace(/[^\w.-]/g, "").slice(0, 40) || null;
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
@@ -71,7 +73,7 @@ export default function LoginForm() {
     : null;
   const returnMessage =
     returnReason === "cancelled"
-      ? "Masuk dengan Microsoft dibatalkan. Anda dapat mencoba lagi atau masuk dengan email & kata sandi."
+      ? `Masuk dengan Microsoft dibatalkan${entraCode ? ` (${entraCode})` : ""}. Bila akses ke aplikasi Tania sudah seharusnya ada, hubungi Admin — atau masuk dengan email & kata sandi.`
       : returnReason === "error"
         ? "Masuk dengan Microsoft gagal. Silakan coba lagi atau masuk dengan email & kata sandi."
         : null;

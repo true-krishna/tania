@@ -161,6 +161,15 @@ describe("kembali dari Microsoft (?sso=)", () => {
     expect(locationAssign).not.toHaveBeenCalled();
   });
 
+  it("names the Microsoft error code and points at the admin", async () => {
+    params = new URLSearchParams("sso=cancelled&entra=access_denied");
+    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/access_denied/);
+    expect(screen.getByRole("alert")).toHaveTextContent(/hubungi admin/i);
+    expect(locationAssign).not.toHaveBeenCalled();
+  });
+
   it("explains an error return and still lets the visitor open the email form", async () => {
     params = new URLSearchParams("sso=error");
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
