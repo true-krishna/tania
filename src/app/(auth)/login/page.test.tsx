@@ -60,6 +60,7 @@ describe("LoginForm", () => {
       </MockedProvider>
     );
 
+    fireEvent.click(await screen.findByRole("button", { name: /login by email/i }));
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: "ada@tania.id" },
     });
@@ -95,6 +96,7 @@ describe("LoginForm", () => {
       </MockedProvider>
     );
 
+    fireEvent.click(await screen.findByRole("button", { name: /login by email/i }));
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: "ada@tania.id" },
     });
@@ -109,7 +111,7 @@ describe("LoginForm", () => {
     });
   });
 
-  it("renders the form and the revised brand copy", () => {
+  it("renders the brand copy and the two sign-in doors", async () => {
     render(
       <MockedProvider mocks={[]}>
         <LoginForm />
@@ -119,12 +121,13 @@ describe("LoginForm", () => {
     expect(
       screen.getByRole("heading", { name: /masuk ke tania/i })
     ).toBeInTheDocument();
+    expect(screen.getByText(/talent management platform/i)).toBeInTheDocument();
+    expect(screen.queryByText(/invite tania/i)).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: /login by email/i }));
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /masuk ke workspace/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/talent management platform/i)).toBeInTheDocument();
-    expect(screen.queryByText(/invite tania/i)).not.toBeInTheDocument();
   });
 });
