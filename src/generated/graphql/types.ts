@@ -296,8 +296,6 @@ export type CreateDevelopmentActionInput = {
 
 export type CreateEmployeeInput = {
   address?: InputMaybe<Scalars['String']['input']>;
-  /** Auto-create akun Entra saat data tersimpan (FR-43); default true. */
-  autoCreateEntra?: InputMaybe<Scalars['Boolean']['input']>;
   birthDate: Scalars['Date']['input'];
   email: Scalars['String']['input'];
   fullName: Scalars['String']['input'];
@@ -608,6 +606,12 @@ export type EmploymentContractStatus =
   | 'ACTIVE'
   | 'ENDED'
   | 'TERMINATED';
+
+/** Kolom yang dapat diurutkan pada daftar provisi Entra (FR-44). */
+export type EntraEmployeeSortField =
+  | 'EMAIL'
+  | 'FULL_NAME'
+  | 'PROVISION_STATUS';
 
 export type EntraLoginInput = {
   /** Authorization code dari query string /login/callback (sekali pakai, umur pendek). */
@@ -1433,7 +1437,7 @@ export type Query = {
   employees: EmployeeConnection;
   /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation/Admin (US10 skenario 4). */
   employeesNeedingFollowUp: EmployeeConnection;
-  /** Talent yang belum memiliki akun Entra (FR-44). */
+  /** Talent yang belum memiliki akun Entra (FR-44), dengan pencarian nama dan pengurutan. */
   employeesWithoutEntra: EmployeeConnection;
   employmentContract?: Maybe<EmploymentContract>;
   employmentContracts: EmploymentContractConnection;
@@ -1550,6 +1554,9 @@ export type QueryEmployeesNeedingFollowUpArgs = {
 export type QueryEmployeesWithoutEntraArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<EntraEmployeeSortField>;
+  sortDirection?: InputMaybe<SortDirection>;
 };
 
 
@@ -1772,6 +1779,11 @@ export type RoleMenuEntry = {
 export type RoleStatus =
   | 'ACTIVE'
   | 'INACTIVE';
+
+/** Arah pengurutan daftar (FR-44). */
+export type SortDirection =
+  | 'ASC'
+  | 'DESC';
 
 export type TalentDashboard = {
   __typename?: 'TalentDashboard';
