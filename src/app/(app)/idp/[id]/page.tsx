@@ -61,8 +61,6 @@ type ToastItem = { id: number; variant: "error" | "success"; message: string };
 export default function IdpDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const role = useSessionRole();
-  // Chapter/Admin manage the plan; a Talent may still update the status of its own
-  // actions (matrix: kelola miliknya, FR-14); Operation only reads (klarifikasi 9).
   const managing = canManage(role, "idp");
   const canUpdateStatus = managing || role === "TALENT";
   const { status, data, error } = useIdp(id);
@@ -80,7 +78,6 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
     refetchQueries: [{ query: IdpDocument, variables: { id } }],
   });
 
-  // Local form state — one per collapsible section so interactions stay independent.
   const [actionDesc, setActionDesc] = React.useState("");
   const [actionMethod, setActionMethod] = React.useState<DevelopmentMethod>("TRAINING");
   const [actionDue, setActionDue] = React.useState("");
@@ -169,20 +166,20 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href={IDP} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+      <Link className="w-fit text-sm text-zinc-500 hover:text-zinc-900" href={IDP}>
         ← Kembali ke daftar
       </Link>
       <PageHeader
-        title={`IDP — ${idp.talent.fullName}`}
-        subtitle={`${idp.id} · ${idp.talent.jobRole?.name ?? "—"}`}
         actions={
-          <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
+          <Chip size="small" variant={IDP_STATUS_VARIANT[idp.status]}>
             {IDP_STATUS_LABEL[idp.status]}
           </Chip>
         }
+        subtitle={`${idp.id} · ${idp.talent.jobRole?.name ?? "—"}`}
+        title={`IDP — ${idp.talent.fullName}`}
       />
 
-      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      <ToastStack onDismiss={dismissToast} toasts={toasts} />
 
       <Card className="max-w-3xl">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">Komponen IDP</h2>
@@ -207,7 +204,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         ) : (
           <ul className="divide-y divide-zinc-100">
             {idp.actions.map((action) => (
-              <li key={action.id} className="flex items-center justify-between gap-3 py-2.5">
+              <li className="flex items-center justify-between gap-3 py-2.5" key={action.id}>
                 <div className="flex-1">
                   <p className="text-sm text-zinc-900">{action.description}</p>
                   <p className="text-xs text-zinc-500">
@@ -219,7 +216,6 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                   <Select
                     aria-label={`Status aksi ${action.description}`}
                     className="w-auto py-1 text-xs"
-                    value={action.status}
                     onChange={(e) => {
                       const status = e.target.value as DevelopmentActionStatus;
                       updateActionStatus({ variables: { id: action.id, status } }).catch((err: unknown) => {
@@ -229,6 +225,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                     options={(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map(
                       (s) => ({ value: s, label: ACTION_STATUS_LABEL[s] }),
                     )}
+                    value={action.status}
                   />
                 ) : (
                   <Chip size="small">{ACTION_STATUS_LABEL[action.status]}</Chip>
@@ -239,28 +236,28 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         )}
 
         {managing ? (
-          <form onSubmit={handleAddAction} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
+          <form className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4" onSubmit={handleAddAction}>
           <h3 className="text-sm font-medium text-zinc-700">Tambah aksi pengembangan</h3>          <InputControl label="Deskripsi / tindakan">
-            <Input value={actionDesc} onChange={(e) => setActionDesc(e.target.value)} placeholder="Mis. Ikuti training Go lanjutan" />
+            <Input onChange={(e) => setActionDesc(e.target.value)} placeholder="Mis. Ikuti training Go lanjutan" value={actionDesc} />
           </InputControl>
           <div className="grid grid-cols-2 gap-3">
             <InputControl label="Metode">
               <Select
-                value={actionMethod}
                 onChange={(e) => setActionMethod(e.target.value as DevelopmentMethod)}
                 options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
                   value: m,
                   label: METHOD_LABEL[m],
                 }))}
+                value={actionMethod}
               />
             </InputControl>
             <InputControl label="Tenggat (opsional)">
-              <Input type="date" value={actionDue} onChange={(e) => setActionDue(e.target.value)} />
+              <Input onChange={(e) => setActionDue(e.target.value)} type="date" value={actionDue} />
             </InputControl>
           </div>
           {actionError ? <p className="text-xs text-red-600">{actionError}</p> : null}
           <div>
-            <Button type="submit" disabled={addingAction}>
+            <Button disabled={addingAction} type="submit">
               Tambah aksi
             </Button>
           </div>
@@ -275,7 +272,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         ) : (
           <ul className="divide-y divide-zinc-100">
             {idp.reviews.map((review) => (
-              <li key={review.id} className="py-2.5">
+              <li className="py-2.5" key={review.id}>
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-zinc-900">
                     {review.reviewDate}
@@ -292,35 +289,35 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         )}
 
         {managing ? (
-          <form onSubmit={handleAddReview} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
+          <form className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4" onSubmit={handleAddReview}>
           <h3 className="text-sm font-medium text-zinc-700">Catat hasil review</h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <InputControl label="Tanggal review">
-              <Input type="date" aria-label="Tanggal review" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} />
+              <Input aria-label="Tanggal review" onChange={(e) => setReviewDate(e.target.value)} type="date" value={reviewDate} />
             </InputControl>
           </div>
           <InputControl label="Ringkasan hasil">
             <textarea
-              className={BLOCK}
-              rows={3}
               aria-label="Ringkasan hasil"
-              value={reviewSummary}
+              className={BLOCK}
               onChange={(e) => setReviewSummary(e.target.value)}
               placeholder="Catat perkembangan talent sejak review terakhir…"
+              rows={3}
+              value={reviewSummary}
             />
           </InputControl>
           <InputControl label="Tindak lanjut (opsional)">
             <textarea
-              className={BLOCK}
-              rows={2}
               aria-label="Tindak lanjut"
-              value={reviewFollowUp}
+              className={BLOCK}
               onChange={(e) => setReviewFollowUp(e.target.value)}
+              rows={2}
+              value={reviewFollowUp}
             />
           </InputControl>
           {reviewError ? <p className="text-xs text-red-600">{reviewError}</p> : null}
           <div>
-            <Button type="submit" disabled={addingReview}>
+            <Button disabled={addingReview} type="submit">
               Simpan review
             </Button>
           </div>
@@ -335,7 +332,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         ) : (
           <ul className="divide-y divide-zinc-100">
             {idp.revisions.map((rev) => (
-              <li key={rev.id} className="py-2.5">
+              <li className="py-2.5" key={rev.id}>
                 <p className="text-sm text-zinc-900">
                   Revisi #{rev.revisionNo}
                   <span className="text-xs text-zinc-500"> · {rev.createdAt}</span>
@@ -355,18 +352,18 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
           </p>
           <div>
             <Button
-              type="button"
-              variant="secondary"
+              className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
               disabled={closing}
               onClick={handleClose}
-              className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
+              type="button"
+              variant="secondary"
             >
               Tutup IDP
             </Button>
           </div>
         </Card>
       ) : idp.status === "COMPLETED" ? (
-        <Chip variant="success" size="large">
+        <Chip size="large" variant="success">
           IDP selesai.
         </Chip>
       ) : null}

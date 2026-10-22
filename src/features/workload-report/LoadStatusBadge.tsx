@@ -1,11 +1,6 @@
 import { Chip, type ChipVariant } from "@/components/Chip";
 import type { TtdComplianceLevel, WorkloadStatus } from "./types";
 
-/**
- * Status tidak pernah hanya warna (design §9) — badge selalu memuat teks nilai
- * dari data. Pemetaan varian mengikuti makna WAD: Overload merah, Stretch biru
- * (primary WAD), Fit hijau, Underload jingga/warn, Undefined* netral.
- */
 const STATUS_VARIANT: Record<WorkloadStatus, ChipVariant> = {
   Overload: "danger",
   Stretch: "info",

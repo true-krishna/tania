@@ -18,18 +18,10 @@ import { CHIP_VARIANTS } from "@/components/Chip/Chip";
 import { useSessionRole } from "@/lib/auth/guard";
 import { errorMessage, errorRetryAfterSeconds, graphQLErrorCode } from "@/lib/errors";
 
-/** Batas panjang pesan (FR-10) — konstanta kontrak, bukan env. */
 export const CHAT_MAX_LENGTH = 2000;
 
-/** Peran yang melihat asisten (FR-01). Otorisasi sebenarnya ada di server. */
 export type AssistantRole = "CHAPTER" | "OPERATION";
 
-/**
- * Chip pertanyaan contoh per peran (kontrak UI · plan D8). Setiap contoh
- * dipetakan ke toolset read-only yang benar-benar tersedia bagi peran itu
- * (`ringkas_data`, `chatMessages`), sehingga semuanya dapat dijawab dan tidak
- * menjanjikan yang tidak di-ground.
- */
 export const SAMPLE_QUESTIONS: Record<AssistantRole, readonly string[]> = {
   CHAPTER: [
     "Ringkas kondisi karyawan dan kontrak di cakupan chapter saya",
@@ -50,12 +42,6 @@ type AnswerBlock =
   | { kind: "ul"; items: string[] }
   | { kind: "ol"; items: string[] };
 
-/**
- * Parser subset format jawaban (plan D7/R-8): bold `**…**`, daftar `-`/`*`,
- * daftar bernomor, dan baris baru. Menghasilkan struktur data — bukan HTML —
- * supaya renderer tidak pernah menyuntikkan markup dari keluaran model
- * (keluaran model bukan teks tepercaya).
- */
 export function parseAnswer(text: string): AnswerBlock[] {
   const blocks: AnswerBlock[] = [];
   let bullets: string[] = [];
@@ -91,7 +77,6 @@ export function parseAnswer(text: string): AnswerBlock[] {
   return blocks;
 }
 
-/** `**tebal**` → `<strong>`; sisanya simpul teks. Tidak ada `dangerouslySetInnerHTML`. */
 function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
   return text
     .split("**")
@@ -108,7 +93,7 @@ export function AnswerText({ text }: { text: string }) {
         const key = `blk-${index}`;
         if (block.kind === "ul") {
           return (
-            <ul key={key} className="list-disc pl-5">
+            <ul className="list-disc pl-5" key={key}>
               {block.items.map((item, i) => (
                 <li key={`${key}-${i}`}>{renderInline(item, `${key}-${i}`)}</li>
               ))}
@@ -117,7 +102,7 @@ export function AnswerText({ text }: { text: string }) {
         }
         if (block.kind === "ol") {
           return (
-            <ol key={key} className="list-decimal pl-5">
+            <ol className="list-decimal pl-5" key={key}>
               {block.items.map((item, i) => (
                 <li key={`${key}-${i}`}>{renderInline(item, `${key}-${i}`)}</li>
               ))}
@@ -130,7 +115,6 @@ export function AnswerText({ text }: { text: string }) {
   );
 }
 
-/** Kiriman user yang belum dikonfirmasi server (bubble optimistis). */
 type PendingSend = {
   clientRequestId: string;
   content: string;
@@ -144,7 +128,6 @@ type ChatMessageNode = {
   clientRequestId?: string | null;
 };
 
-/** Semua USER di ekor thread tanpa balasan ASSISTANT setelahnya. */
 export function unansweredUserMessages(messages: readonly ChatMessageNode[]): ChatMessageNode[] {
   let lastAssistant = -1;
   messages.forEach((message, index) => {
@@ -194,9 +177,6 @@ export function AssistantPanel({
   const [selectedId, setSelectedId] = React.useState<string | null | undefined>(undefined);
   const [draft, setDraft] = React.useState("");
   const [pending, setPending] = React.useState<Record<string, PendingSend[]>>({});
-  // Penolakan kuota per jam (FR-13) bukan sekadar toast: selama jendela belum
-  // bergeser, kirim dinonaktifkan dan tombol "coba ulang" disembunyikan —
-  // mengulang sekarang hanya akan ditolak lagi (kontrak chat §Kontrak error).
   const [quota, setQuota] = React.useState<{ message: string; retryAfterSeconds: number } | null>(
     null,
   );
@@ -206,7 +186,6 @@ export function AssistantPanel({
     fetchPolicy: "cache-and-network",
   });
 
-  // `undefined` = ikuti percakapan terbaru; `null` = "Percakapan baru" (thread kosong).
   const defaultConversationId =
     conversations.data?.chatConversations.edges[0]?.node.id ?? null;
   const activeId = selectedId === undefined ? defaultConversationId : selectedId;
@@ -220,12 +199,10 @@ export function AssistantPanel({
   const [createConversation] = useMutation(CreateChatConversationDocument);
   const [sendMessage, sendState] = useMutation(SendChatMessageDocument);
 
-  // Fokus pindah ke input saat panel dibuka (Design §VI).
   React.useEffect(() => {
     if (open && assistantRole) inputRef.current?.focus();
   }, [open, assistantRole]);
 
-  // Percakapan terbaru dimuat otomatis agar riwayat langsung tampil.
 
   const quotaWaitMs = (quota?.retryAfterSeconds ?? 0) * 1000;
   React.useEffect(() => {
@@ -264,8 +241,6 @@ export function AssistantPanel({
         ),
       }));
       setQuota(null);
-      // Percakapan yang sudah tampil perlu dimuat ulang agar balasan server
-      // masuk; percakapan yang baru dibuat termuat sendiri saat aktif.
       if (conversationId === activeId) await messages.refetch();
     } catch (error) {
       setPending((prev) => ({
@@ -311,8 +286,6 @@ export function AssistantPanel({
       }
     }
 
-    // `clientRequestId` dibuat sekali per kiriman dan dipakai ulang saat coba
-    // ulang (S2) — idempoten, termasuk setelah panel dimuat ulang.
     const clientRequestId = newClientRequestId();
     setDraft("");
     void deliver(conversationId, content, clientRequestId);
@@ -329,7 +302,6 @@ export function AssistantPanel({
 
   const conversationNodes =
     conversations.data?.chatConversations.edges.map((edge) => edge.node) ?? [];
-  // Server mengirim terbaru lebih dulu; thread dirender kronologis.
   const thread = activeId
     ? [...(messages.data?.chatMessages.edges.map((edge) => edge.node) ?? [])].reverse()
     : [];
@@ -340,18 +312,18 @@ export function AssistantPanel({
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
       <button
-        type="button"
         aria-label="Tutup asisten"
-        tabIndex={-1}
-        onClick={closeAndRestoreFocus}
         className="absolute inset-0 bg-tp-midnight/40 transition-opacity duration-200 starting:opacity-0 motion-reduce:transition-none"
+        onClick={closeAndRestoreFocus}
+        tabIndex={-1}
+        type="button"
       />
       <section
-        role="dialog"
-        aria-modal="true"
         aria-label="Asisten data Tania"
-        onKeyDown={handleKeyDown}
+        aria-modal="true"
         className="relative flex h-full w-full flex-col border-l border-tp-line bg-tp-surface shadow-card transition-transform duration-200 starting:translate-x-6 motion-reduce:transition-none min-[861px]:w-[440px]"
+        onKeyDown={handleKeyDown}
+        role="dialog"
       >
         <header className="flex items-center justify-between gap-3 border-b border-tp-line px-5 py-4">
           <div>
@@ -362,13 +334,13 @@ export function AssistantPanel({
             </p>
           </div>
           <Button
-            variant="secondary"
             onClick={() => {
               setSelectedId(null);
               setDraft("");
             }}
+            variant="secondary"
           >
-            <IconPlus size={16} aria-hidden /> Percakapan baru
+            <IconPlus aria-hidden size={16} /> Percakapan baru
           </Button>
         </header>
 
@@ -386,8 +358,6 @@ export function AssistantPanel({
                 {conversationNodes.map((conversation) => (
                   <li key={conversation.id}>
                     <button
-                      type="button"
-                      onClick={() => setSelectedId(conversation.id)}
                       aria-current={conversation.id === activeId ? "true" : undefined}
                       className={cn(
                         "tp-chip",
@@ -395,6 +365,8 @@ export function AssistantPanel({
                           ? "border border-tp-line bg-tp-brand-red-tint text-tp-brand-red-ink"
                           : CHIP_VARIANTS.neutral,
                       )}
+                      onClick={() => setSelectedId(conversation.id)}
+                      type="button"
                     >
                       {conversation.messageCount} pesan
                     </button>
@@ -430,11 +402,11 @@ export function AssistantPanel({
                         <span>Belum terjawab</span>
                         {!quota && (
                           <Button
-                            variant="secondary"
                             className="text-xs"
                             onClick={() =>
                               void deliver(activeId!, message.content, message.clientRequestId!)
                             }
+                            variant="secondary"
                           >
                             Coba ulang
                           </Button>
@@ -451,11 +423,11 @@ export function AssistantPanel({
                         <span>Belum terkirim</span>
                         {!quota && (
                           <Button
-                            variant="secondary"
                             className="text-xs"
                             onClick={() =>
                               void deliver(activeId!, item.content, item.clientRequestId)
                             }
+                            variant="secondary"
                           >
                             Coba ulang
                           </Button>
@@ -465,12 +437,12 @@ export function AssistantPanel({
                   </Bubble>
                 ))}
                 {busy && (
-                  <p role="status" className="text-xs text-tp-muted">
+                  <p className="text-xs text-tp-muted" role="status">
                     Asisten sedang menyusun jawaban…
                   </p>
                 )}
                 {quota && (
-                  <p role="status" className="text-xs text-tp-ink-peach">
+                  <p className="text-xs text-tp-ink-peach" role="status">
                     {quota.message}
                   </p>
                 )}
@@ -483,10 +455,10 @@ export function AssistantPanel({
             <div className="flex flex-wrap gap-2">
               {SAMPLE_QUESTIONS[assistantRole].map((question) => (
                 <button
-                  key={question}
-                  type="button"
-                  onClick={() => setDraft(question)}
                   className={cn("tp-chip", CHIP_VARIANTS.neutral, "text-left")}
+                  key={question}
+                  onClick={() => setDraft(question)}
+                  type="button"
                 >
                   {question}
                 </button>
@@ -501,12 +473,9 @@ export function AssistantPanel({
               Pertanyaan untuk asisten
             </label>
             <Input
-              id="assistant-input"
-              ref={inputRef}
-              value={draft}
-              maxLength={CHAT_MAX_LENGTH}
               disabled={busy}
-              placeholder="Tulis pertanyaan tentang karyawan atau kontrak…"
+              id="assistant-input"
+              maxLength={CHAT_MAX_LENGTH}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
@@ -514,13 +483,16 @@ export function AssistantPanel({
                   void handleSend();
                 }
               }}
+              placeholder="Tulis pertanyaan tentang karyawan atau kontrak…"
+              ref={inputRef}
+              value={draft}
             />
             <Button
-              onClick={() => void handleSend()}
-              disabled={busy || !!quota || !draft.trim() || overLimit}
               aria-label="Kirim pertanyaan"
+              disabled={busy || !!quota || !draft.trim() || overLimit}
+              onClick={() => void handleSend()}
             >
-              <IconSend size={16} aria-hidden />
+              <IconSend aria-hidden size={16} />
             </Button>
           </div>
           <p className="mt-2 text-xs text-tp-muted">

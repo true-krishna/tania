@@ -1,7 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 
-/** `\.tp-card` surface for the workload metric grid (design §3 item 5). */
 export function WorkloadCard({
   title,
   action,

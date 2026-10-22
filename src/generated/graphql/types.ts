@@ -35,6 +35,24 @@ export type ActionStatusCount = {
   status: DevelopmentActionStatus;
 };
 
+/** Referensi prioritas aktivitas (FR-008); read-only, urut terendah → tertinggi. */
+export type ActivityPriority = {
+  __typename?: 'ActivityPriority';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
+/** Referensi status aktivitas (FR-008); read-only, urut siklus hidup. */
+export type ActivityStatus = {
+  __typename?: 'ActivityStatus';
+  id: Scalars['ID']['output'];
+  /** true untuk Done & Cancelled — hanya untuk gaya badge; transisi status ditegakkan server-side (FR-008). */
+  isTerminal: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
 export type AddIdpReviewInput = {
   followUp?: InputMaybe<Scalars['String']['input']>;
   reviewDate: Scalars['Date']['input'];
@@ -296,8 +314,6 @@ export type CreateDevelopmentActionInput = {
 
 export type CreateEmployeeInput = {
   address?: InputMaybe<Scalars['String']['input']>;
-  /** Auto-create akun Entra saat data tersimpan (FR-43); default true. */
-  autoCreateEntra?: InputMaybe<Scalars['Boolean']['input']>;
   birthDate: Scalars['Date']['input'];
   email: Scalars['String']['input'];
   fullName: Scalars['String']['input'];
@@ -609,6 +625,21 @@ export type EmploymentContractStatus =
   | 'ENDED'
   | 'TERMINATED';
 
+/** Kolom yang dapat diurutkan pada daftar provisi Entra (FR-44). */
+export type EntraEmployeeSortField =
+  | 'EMAIL'
+  | 'FULL_NAME'
+  | 'PROVISION_STATUS';
+
+export type EntraLoginInput = {
+  /** Authorization code dari query string /login/callback (sekali pakai, umur pendek). */
+  code: Scalars['String']['input'];
+  /** PKCE code verifier yang dipakai saat meminta otorisasi (base64url, 43–128 char). */
+  codeVerifier: Scalars['String']['input'];
+  /** Nonce yang dikirim pada permintaan otorisasi; dicocokkan dengan klaim nonce ID token. */
+  nonce: Scalars['String']['input'];
+};
+
 /** Hasil provisioning akun Entra seorang talent (FR-44, FR-45). */
 export type EntraProvision = {
   __typename?: 'EntraProvision';
@@ -638,6 +669,18 @@ export type EntraProvisionStatus =
   | 'FAILED'
   /** Undangan Entra terkirim (email telkom.co.id, FR-45). */
   | 'INVITED';
+
+/** Status permulaan alur SSO Microsoft Entra ID. */
+export type EntraSsoStart = {
+  __typename?: 'EntraSsoStart';
+  /**
+   * URL otorisasi Microsoft yang siap dibuka browser. Null bila enabled=false.
+   * Berisi hanya nilai publik (authority, clientId, scope, redirectUri, PKCE challenge).
+   */
+  authorizationUrl?: Maybe<Scalars['String']['output']>;
+  /** True bila backend siap menerima login SSO (kredensial Entra lengkap). */
+  enabled: Scalars['Boolean']['output'];
+};
 
 export type EvaluationAnswer = {
   __typename?: 'EvaluationAnswer';
@@ -856,6 +899,8 @@ export type Mutation = {
   deleteRole: Scalars['Boolean']['output'];
   endAssignment: Assignment;
   login: AuthPayload;
+  /** Publik. Menukar authorization code dengan sesi Tania (FR-003/FR-004). */
+  loginWithEntra: AuthPayload;
   /** Revoke the current access token and, when supplied, the refresh token. */
   logout: Scalars['Boolean']['output'];
   /**
@@ -1071,6 +1116,11 @@ export type MutationEndAssignmentArgs = {
 
 export type MutationLoginArgs = {
   input: LocalLoginInput;
+};
+
+
+export type MutationLoginWithEntraArgs = {
+  input: EntraLoginInput;
 };
 
 
@@ -1387,6 +1437,10 @@ export type Project = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Referensi prioritas aktivitas, urut terendah → tertinggi. */
+  activityPriorities: Array<ActivityPriority>;
+  /** Referensi status aktivitas, urut siklus hidup. */
+  activityStatuses: Array<ActivityStatus>;
   /** Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35). */
   assignableTalents: EmployeeConnection;
   assignments: AssignmentConnection;
@@ -1405,10 +1459,12 @@ export type Query = {
   employees: EmployeeConnection;
   /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation/Admin (US10 skenario 4). */
   employeesNeedingFollowUp: EmployeeConnection;
-  /** Talent yang belum memiliki akun Entra (FR-44). */
+  /** Talent yang belum memiliki akun Entra (FR-44), dengan pencarian nama dan pengurutan. */
   employeesWithoutEntra: EmployeeConnection;
   employmentContract?: Maybe<EmploymentContract>;
   employmentContracts: EmploymentContractConnection;
+  /** Publik. Dipakai halaman login untuk memutuskan redirect otomatis (FR-001). */
+  entraSsoStart: EntraSsoStart;
   evaluationPeriods: Array<EvaluationPeriod>;
   evaluationRoster: Array<EvaluationPeriodRosterEntry>;
   evaluationTemplates: Array<EvaluationTemplate>;
@@ -1520,6 +1576,9 @@ export type QueryEmployeesNeedingFollowUpArgs = {
 export type QueryEmployeesWithoutEntraArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<EntraEmployeeSortField>;
+  sortDirection?: InputMaybe<SortDirection>;
 };
 
 
@@ -1532,6 +1591,13 @@ export type QueryEmploymentContractsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<EmploymentContractFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryEntraSsoStartArgs = {
+  codeChallenge: Scalars['String']['input'];
+  nonce: Scalars['String']['input'];
+  state: Scalars['String']['input'];
 };
 
 
@@ -1735,6 +1801,11 @@ export type RoleMenuEntry = {
 export type RoleStatus =
   | 'ACTIVE'
   | 'INACTIVE';
+
+/** Arah pengurutan daftar (FR-44). */
+export type SortDirection =
+  | 'ASC'
+  | 'DESC';
 
 export type TalentDashboard = {
   __typename?: 'TalentDashboard';

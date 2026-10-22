@@ -54,9 +54,6 @@ const CONFLICT_MESSAGE = "Nomor kontrak sudah dipakai. Periksa kembali isian ter
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data: contract, error } = useEmploymentContract(id);
-  // Chapter reads contracts of its own chapter only (2026-10-16 clarify 5):
-  // every manage surface — renew, cycle actions, edit form, per-record history
-  // (Operation/Admin only, FR-41) — stays hidden.
   const manage = canManage(useSessionRole(), "contracts");
 
   if (status === "loading") return <LoadingState />;
@@ -65,19 +62,19 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <section className="flex flex-col gap-4">
-      <Link href={CONTRACTS} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+      <Link className="w-fit text-sm text-zinc-500 hover:text-zinc-900" href={CONTRACTS}>
         ← Kembali ke daftar kontrak
       </Link>
       <PageHeader
-        title={contract.contractNo ?? "—"}
-        subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
         actions={
           manage && !isOpenEndedContractType(contract.contractType) ? (
-            <Link href={CONTRACT_RENEW(id)} className="no-underline">
+            <Link className="no-underline" href={CONTRACT_RENEW(id)}>
               <Button variant="primary">Perpanjang kontrak</Button>
             </Link>
           ) : undefined
         }
+        subtitle={`${contract.employee.fullName} · ${CONTRACT_TYPE_LABEL[contract.contractType]} · ${CONTRACT_STATUS_LABEL[contract.status]}`}
+        title={contract.contractNo ?? "—"}
       />
 
       <Card className="max-w-3xl">
@@ -87,8 +84,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Karyawan</dt>
             <dd className="text-zinc-900">
               <Link
-                href={EMPLOYEE_DETAIL(contract.employee.id)}
                 className="text-tp-brand-red-deep hover:underline"
+                href={EMPLOYEE_DETAIL(contract.employee.id)}
               >
                 {contract.employee.fullName}
               </Link>
@@ -157,7 +154,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Kontrak Pendahulu</dt>
             <dd className="text-zinc-900">
               {contract.predecessor ? (
-                <Link href={CONTRACT_DETAIL(contract.predecessor.id)} className="text-tp-brand-red-deep hover:underline">
+                <Link className="text-tp-brand-red-deep hover:underline" href={CONTRACT_DETAIL(contract.predecessor.id)}>
                   {contract.predecessor.contractNo}
                 </Link>
               ) : (
@@ -184,12 +181,12 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         <>
           <Card className="max-w-3xl">
             <h2 className="mb-3 text-sm font-semibold text-zinc-900">Ubah data kontrak</h2>
-            <ContractEditForm id={id} contract={contract} />
+            <ContractEditForm contract={contract} id={id} />
           </Card>
 
           <Card className="max-w-3xl">
             <h2 className="mb-3 text-sm font-semibold text-zinc-900">Riwayat perubahan</h2>
-            <RecordChangeHistory entityType="employment_contract" entityId={id} />
+            <RecordChangeHistory entityId={id} entityType="employment_contract" />
           </Card>
         </>
       ) : null}
@@ -275,44 +272,43 @@ function ContractEditForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex max-w-xl flex-col gap-4">
+    <form className="flex max-w-xl flex-col gap-4" onSubmit={onSubmit}>
       {formError ? <ErrorState message={formError} /> : null}
       {saved?.updateEmploymentContract ? (
         <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
           Perubahan kontrak berhasil disimpan.
         </div>
       ) : null}
-      <InputControl label="No. Kontrak" error={errors.contractNo}>
+      <InputControl error={errors.contractNo} label="No. Kontrak">
         <Input
+          onChange={(e) => set("contractNo", e.target.value)}
           type="text"
           value={values.contractNo}
-          onChange={(e) => set("contractNo", e.target.value)}
         />
       </InputControl>
-      <InputControl label="Email kantor" helper="(opsional)" error={errors.officeEmail}>
+      <InputControl error={errors.officeEmail} helper="(opsional)" label="Email kantor">
         <Input
+          onChange={(e) => set("officeEmail", e.target.value)}
           type="email"
           value={values.officeEmail}
-          onChange={(e) => set("officeEmail", e.target.value)}
         />
       </InputControl>
-      <InputControl label="Job title" helper="(opsional)" error={errors.jobTitle}>
+      <InputControl error={errors.jobTitle} helper="(opsional)" label="Job title">
         <Input
+          onChange={(e) => set("jobTitle", e.target.value)}
           type="text"
           value={values.jobTitle}
-          onChange={(e) => set("jobTitle", e.target.value)}
         />
       </InputControl>
-      <InputControl label="Job level" helper="(opsional)" error={errors.jobLevel}>
+      <InputControl error={errors.jobLevel} helper="(opsional)" label="Job level">
         <Input
+          onChange={(e) => set("jobLevel", e.target.value)}
           type="text"
           value={values.jobLevel}
-          onChange={(e) => set("jobLevel", e.target.value)}
         />
       </InputControl>
-      <InputControl label="Band position" error={errors.bandPosition}>
+      <InputControl error={errors.bandPosition} label="Band position">
         <Select
-          value={values.bandPosition}
           onChange={(e) => set("bandPosition", e.target.value)}
           options={[
             { value: "UNDEFINED", label: "Belum ditetapkan" },
@@ -323,30 +319,29 @@ function ContractEditForm({
             { value: "V", label: "V" },
             { value: "VI", label: "VI" },
           ]}
+          value={values.bandPosition}
         />
       </InputControl>
-      <InputControl label="Work location" error={errors.workLocation}>
+      <InputControl error={errors.workLocation} label="Work location">
         <Select
-          value={values.workLocation}
           onChange={(e) => set("workLocation", e.target.value)}
           options={[
-            // UNDEFINED marks legacy rows whose location was never recorded; keeping it
-            // avoids silently falling back to the select's first region.
             { value: "UNDEFINED", label: "Belum ditetapkan" },
             { value: "JAKARTA", label: "Jakarta" },
             { value: "BANDUNG", label: "Bandung" },
           ]}
+          value={values.workLocation}
         />
       </InputControl>
-      <InputControl label="Catatan" helper="(opsional)" error={errors.notes}>
+      <InputControl error={errors.notes} helper="(opsional)" label="Catatan">
         <Input
+          onChange={(e) => set("notes", e.target.value)}
           type="text"
           value={values.notes}
-          onChange={(e) => set("notes", e.target.value)}
         />
       </InputControl>
       <div className="flex gap-2">
-        <Button type="submit" disabled={saving}>
+        <Button disabled={saving} type="submit">
           Simpan perubahan
         </Button>
       </div>

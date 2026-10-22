@@ -5,12 +5,6 @@ import * as React from "react";
 
 type Variant = "primary" | "secondary" | "ghost";
 
-/**
- * Canon buttons (constitution design v4.0.0 §V): the shipped `.tp-btn` outline
- * is the default treatment, and `.tp-btn--primary` is the single strongest
- * action per area (§II). Canon ships no separate ghost treatment, so `ghost`
- * resolves to the same outline — its old borderless look is retired.
- */
 const VARIANTS: Record<Variant, string> = {
   primary: "tp-btn tp-btn--primary",
   secondary: "tp-btn",

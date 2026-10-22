@@ -21,40 +21,40 @@ export default function ProjectsPage() {
       await fn();
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan proyek.");
+      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan initiative.");
     }
   }
 
   return (
     <MasterDataSection<Project>
-      caption="Daftar proyek"
-      emptyMessage="Belum ada proyek. Tambahkan proyek pertama."
-      addLabel="Tambah Proyek"
-      nameLabel="Nama Proyek"
-      items={data}
-      status={status}
+      addLabel="Tambah Initiative"
+      caption="Daftar initiative"
+      emptyMessage="Belum ada initiative. Tambahkan initiative pertama."
       error={error}
+      extraColumn={{ label: "Unit", render: (project) => project.unit.name }}
+      items={data}
+      nameLabel="Nama Initiative"
+      onCreate={({ name, selectValue }) =>
+        detectError(() => projectMutations.create({ name, selectValue }), `Initiative "${name}" berhasil dibuat.`)
+      }
+      onToggleActive={(id, isActive) =>
+        detectError(
+          () => projectMutations.toggleActive(id, isActive),
+          isActive ? "Initiative berhasil diaktifkan." : "Initiative berhasil dinonaktifkan.",
+        )
+      }
+      onUpdate={(id, { name, selectValue }) =>
+        detectError(() => projectMutations.update(id, { name, selectValue }), "Initiative berhasil diubah.")
+      }
       searchable
       select={{
         label: "Unit",
         placeholder: "pilih unit pemilik —",
         options: (units.data ?? []).map((u) => ({ id: u.id, name: u.name })),
       }}
-      selectRequired
       selectIdOf={(project) => project.unit.id}
-      extraColumn={{ label: "Unit", render: (project) => project.unit.name }}
-      onCreate={({ name, selectValue }) =>
-        detectError(() => projectMutations.create({ name, selectValue }), `Proyek "${name}" berhasil dibuat.`)
-      }
-      onUpdate={(id, { name, selectValue }) =>
-        detectError(() => projectMutations.update(id, { name, selectValue }), "Proyek berhasil diubah.")
-      }
-      onToggleActive={(id, isActive) =>
-        detectError(
-          () => projectMutations.toggleActive(id, isActive),
-          isActive ? "Proyek berhasil diaktifkan." : "Proyek berhasil dinonaktifkan.",
-        )
-      }
+      selectRequired
+      status={status}
     />
   );
 }

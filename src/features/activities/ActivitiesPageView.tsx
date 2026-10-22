@@ -47,11 +47,6 @@ function toFilter(values: FilterValues): PersonalWorkActivityFilter {
   };
 }
 
-/**
- * The `/activities` workspace: filter bar, create/edit form, and the list.
- * Uses the feature hooks only — swapping the fixture store for GraphQL is
- * contained to `ActivitiesProvider`.
- */
 export function ActivitiesPageView() {
   const { currentTalentId } = useActivitiesStore();
   const [filter, setFilter] = React.useState<FilterValues>(EMPTY_FILTER);
@@ -109,10 +104,8 @@ export function ActivitiesPageView() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Aktivitas saya"
-        subtitle="Catat aktivitas kerja dan pelatihan yang menjadi sumber angka workload."
         actions={
-          <Button type="button" onClick={openCreate}>
+          <Button onClick={openCreate} type="button">
             + Catat aktivitas
           </Button>
         }
@@ -122,59 +115,61 @@ export function ActivitiesPageView() {
               <span>Jenis</span>
               <Select
                 aria-label="Filter jenis aktivitas"
-                value={filter.activityType}
                 onChange={(e) => setFilterValue("activityType", e.target.value as ActivityType | "")}
                 options={[
                   { value: "", label: "Semua" },
                   { value: "working", label: "Bekerja" },
                   { value: "training", label: "Pelatihan" },
                 ]}
+                value={filter.activityType}
               />
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-700">
               <span>Status</span>
               <Select
                 aria-label="Filter status aktivitas"
-                value={filter.statusId}
                 onChange={(e) => setFilterValue("statusId", e.target.value)}
                 options={[
                   { value: "", label: "Semua" },
                   ...ACTIVITY_STATUSES.map((status) => ({ value: status.id, label: status.name })),
                 ]}
+                value={filter.statusId}
               />
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-700">
               <span>Project</span>
               <Select
                 aria-label="Filter project aktivitas"
-                value={filter.projectId}
                 onChange={(e) => setFilterValue("projectId", e.target.value)}
                 options={[
                   { value: "", label: "Semua" },
                   ...ACTIVITY_PROJECTS.map((project) => ({ value: project.id, label: project.name })),
                 ]}
+                value={filter.projectId}
               />
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-700">
               <span>Dari tanggal</span>
               <Input
                 aria-label="Filter tanggal mulai dari"
+                onChange={(e) => setFilterValue("startDate", e.target.value)}
                 type="date"
                 value={filter.startDate}
-                onChange={(e) => setFilterValue("startDate", e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-700">
               <span>Sampai tanggal</span>
               <Input
                 aria-label="Filter tanggal mulai sampai"
+                onChange={(e) => setFilterValue("endDate", e.target.value)}
                 type="date"
                 value={filter.endDate}
-                onChange={(e) => setFilterValue("endDate", e.target.value)}
               />
             </div>
           </>
         }
+        subtitle="Catat aktivitas kerja dan pelatihan yang menjadi sumber angka workload."
+        title="Aktivitas saya"
       />
 
       {success ? (
@@ -197,28 +192,28 @@ export function ActivitiesPageView() {
             {editing ? "Ubah aktivitas" : "Catat aktivitas"}
           </h2>
           <ActivityForm
-            key={editing?.id ?? "new"}
             initial={editing}
-            projects={ACTIVITY_PROJECTS}
+            key={editing?.id ?? "new"}
+            onCancel={closeForm}
+            onSubmit={handleSubmit}
             priorities={ACTIVITY_PRIORITIES}
+            projects={ACTIVITY_PROJECTS}
+            serverError={editing ? updateError : createError}
             statuses={ACTIVITY_STATUSES}
             submitting={creating || updating}
-            serverError={editing ? updateError : createError}
-            onSubmit={handleSubmit}
-            onCancel={closeForm}
           />
         </Card>
       ) : null}
 
       <ActivityList
-        status={status}
         activities={data}
-        error={error}
-        currentTalentId={currentTalentId}
         busy={deleting}
-        onEdit={openEdit}
+        currentTalentId={currentTalentId}
+        error={error}
         onDelete={handleDelete}
+        onEdit={openEdit}
         onRetry={reload}
+        status={status}
       />
     </section>
   );

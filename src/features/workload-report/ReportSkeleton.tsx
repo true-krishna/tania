@@ -12,11 +12,6 @@ function CardSkeleton({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Loading skeleton berbentuk panel — setiap panel (KPI, chart, tabel) punya
- * bloknya (TAN-235). Static, tanpa shimmer, agar `prefers-reduced-motion`
- * terpenuhi; skeleton `aria-hidden`, teks status terlihat oleh assistive tech.
- */
 export function ReportSkeleton({
   variant = "executive",
   label = "Memuat data workload…",
@@ -26,7 +21,7 @@ export function ReportSkeleton({
 }) {
   return (
     <div aria-busy="true" className="flex flex-col gap-4">
-      <p role="status" className="text-sm text-tp-muted">
+      <p className="text-sm text-tp-muted" role="status">
         {label}
       </p>
       <div aria-hidden className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">

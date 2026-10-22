@@ -11,11 +11,6 @@ import {
   useWorkloadFixture,
 } from "@/features/workload";
 
-/**
- * Workload section of `/profile` (TAN-188) — the same "Workload saya" view as
- * `/workload`'s own tab, pinned to the current period (no selector here).
- * Still fixture-driven behind the same hook the workload page uses.
- */
 export function WorkloadSection() {
   const [reloadKey, setReloadKey] = React.useState(0);
   const retry = React.useCallback(() => setReloadKey((k) => k + 1), []);
@@ -37,7 +32,7 @@ export function WorkloadSection() {
         <WorkloadReflectionNotice hours={fixture.freshness.expectedReflectionHours} />
       ) : null}
       <WorkloadFreshnessNotice freshness={fixture.freshness} onRetry={retry} />
-      <WorkloadOwnView view={fixture.own} stale={stale} variant="self" onRetry={retry} />
+      <WorkloadOwnView onRetry={retry} stale={stale} variant="self" view={fixture.own} />
     </div>
   );
 }

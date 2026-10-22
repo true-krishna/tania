@@ -6,7 +6,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Sidebar } from "@/components/Sidebar";
 
 function renderSidebar(props: Partial<React.ComponentProps<typeof Sidebar>> = {}) {
-  return render(<Sidebar role="ADMIN" pathname="/dashboard" {...props} />);
+  return render(<Sidebar pathname="/dashboard" role="ADMIN" {...props} />);
 }
 
 function desktopNav() {
@@ -129,7 +129,7 @@ describe("Sidebar", () => {
 
   it("marks the most specific route active", () => {
     renderSidebar({ pathname: "/master-data/projects/new" });
-    expect(desktopNav().getByRole("link", { name: "Project" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("link", { name: "Initiative" })).toHaveAttribute("aria-current", "page");
     expect(desktopNav().getByRole("link", { name: "Unit" })).not.toHaveAttribute("aria-current");
   });
 

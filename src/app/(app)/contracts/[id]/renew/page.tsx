@@ -22,14 +22,14 @@ export default function RenewContractPage({ params }: { params: Promise<{ id: st
   return (
     <section className="flex flex-col gap-4">
       <Link
-        href={CONTRACT_DETAIL(id)}
         className="w-fit text-sm text-zinc-500 hover:text-zinc-900"
+        href={CONTRACT_DETAIL(id)}
       >
         ← Kembali ke detail kontrak
       </Link>
       <PageHeader
-        title="Perpanjang kontrak"
         subtitle={`${contract.employee.fullName} · kontrak pendahulu ${contract.contractNo}`}
+        title="Perpanjang kontrak"
       />
 
       <Card className="max-w-3xl">

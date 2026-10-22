@@ -412,3 +412,65 @@ test("T034 — gagal ramah lalu coba ulang idempoten dengan clientRequestId sama
   expect(sentRequestIds).toHaveLength(2);
   expect(sentRequestIds[1]).toBe(sentRequestIds[0]);
 });
+
+// ---------------------------------------------------------------------------
+// 006-entra-sso-login — U2 (T028): regresi jalur lokal & rute callback, tanpa
+// kredensial Entra. Stack sama dengan runbook `e2e/README.md`; backend hidup
+// **tanpa** `ENTRA_*` sehingga `entraSsoStart.enabled = false` (quickstart §A).
+// Mode `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` tidak merender form login sama sekali
+// (LoginForm langsung ke /dashboard), jadi skenario yang memeriksa form di-skip
+// di mode itu — ter-`skip` bukan lulus.
+// ---------------------------------------------------------------------------
+
+const loginFormNotRendered = "mode AUTH_LOCAL_ONLY tidak merender form login";
+
+test("T028 — tanpa SSO aktif, /login menampilkan form email langsung", async ({ page }) => {
+  test.skip(process.env.NEXT_PUBLIC_AUTH_LOCAL_ONLY === "1", loginFormNotRendered);
+
+  await page.goto("/login");
+
+  await expect(page.locator("#login-email")).toBeVisible();
+  await expect(page.locator("#login-password")).toBeVisible();
+  // Tidak ada tombol SSO menggantung saat `enabled=false`.
+  await expect(page.getByRole("button", { name: /masuk dengan microsoft/i })).toHaveCount(0);
+  // Beri waktu query entraSsoStart selesai: tidak boleh ada pengalihan otomatis.
+  await page.waitForTimeout(2000);
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("T028 — jalur email + kata sandi tetap masuk sampai /dashboard (SC-003)", async ({ page }) => {
+  await page.goto("/login");
+  const emailInput = page.locator("#login-email");
+  await emailInput.waitFor({ state: "visible", timeout: 15_000 });
+  await emailInput.fill(SEED_USERS.ADMIN);
+  await page.locator("#login-password").fill(SEED_PASSWORD);
+  await page.getByRole("button", { name: /masuk ke workspace/i }).click();
+
+  await page.waitForURL(/\/dashboard/);
+  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+});
+
+test("T028 — /login/callback tanpa parameter menampilkan pesan jelas", async ({ page }) => {
+  test.skip(process.env.NEXT_PUBLIC_AUTH_LOCAL_ONLY === "1", loginFormNotRendered);
+
+  await page.goto("/login/callback");
+
+  await expect(page.getByRole("alert")).toHaveText(
+    /sesi masuk tidak valid atau sudah kedaluwarsa\. silakan coba lagi\./i,
+  );
+  await expect(page.getByRole("link", { name: /kembali ke halaman masuk/i })).toBeVisible();
+  // Bukan halaman kosong dan bukan error mentah dari server.
+  await expect(page).toHaveURL(/\/login\/callback$/);
+});
+
+test("T028 — /login?sso=cancelled menampilkan form tanpa pengalihan otomatis", async ({ page }) => {
+  test.skip(process.env.NEXT_PUBLIC_AUTH_LOCAL_ONLY === "1", loginFormNotRendered);
+
+  await page.goto("/login?sso=cancelled");
+
+  await expect(page.getByRole("alert")).toHaveText(/masuk dengan microsoft dibatalkan/i);
+  await expect(page.locator("#login-email")).toBeVisible();
+  // Penanda fallback aktif → pengalihan otomatis tidak boleh berjalan lagi.
+  await page.waitForTimeout(2000);
+  await expect(page).toHaveURL(/\/login\?sso=cancelled$/);
+});

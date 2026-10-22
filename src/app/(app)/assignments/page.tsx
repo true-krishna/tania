@@ -31,20 +31,20 @@ const SUBTITLE: Partial<Record<AccessRole, string>> = {
 function TalentFilter({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const role = useSessionRole();
   return role === "CHAPTER" ? (
-    <ChapterTalentOptions value={value} onChange={onChange} />
+    <ChapterTalentOptions onChange={onChange} value={value} />
   ) : (
-    <EmployeeTalentOptions value={value} onChange={onChange} />
+    <EmployeeTalentOptions onChange={onChange} value={value} />
   );
 }
 
 function EmployeeTalentOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const employees = useEmployees();
-  return <TalentSelect value={value} onChange={onChange} options={employees.employees ?? []} />;
+  return <TalentSelect onChange={onChange} options={employees.employees ?? []} value={value} />;
 }
 
 function ChapterTalentOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const talents = useAssignableTalents();
-  return <TalentSelect value={value} onChange={onChange} options={talents.data ?? []} />;
+  return <TalentSelect onChange={onChange} options={talents.data ?? []} value={value} />;
 }
 
 function TalentSelect({
@@ -60,12 +60,12 @@ function TalentSelect({
     <label className="flex items-center gap-2 text-sm text-zinc-700">
       <span>Talent</span>
       <Select
-        value={value}
         onChange={(e) => onChange(e.target.value)}
         options={[
           { value: "", label: "Semua" },
           ...options.map((emp) => ({ value: emp.id, label: emp.fullName })),
         ]}
+        value={value}
       />
     </label>
   );
@@ -93,11 +93,9 @@ export default function AssignmentsPage() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Assignments"
-        subtitle={(role && SUBTITLE[role]) ?? "Penugasan talent ke project."}
         actions={
           manage ? (
-            <Link href={ASSIGNMENT_NEW} className="no-underline">
+            <Link className="no-underline" href={ASSIGNMENT_NEW}>
               <Button variant="primary">+ Buat Assignment</Button>
             </Link>
           ) : undefined
@@ -110,23 +108,24 @@ export default function AssignmentsPage() {
             panelId="assignment-filter-panel"
           />
         }
+        subtitle={(role && SUBTITLE[role]) ?? "Penugasan talent ke project."}
+        title="Assignments"
       />
 
       {filtersOpen ? (
-        <div id="assignment-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
+        <div className="tp-card flex flex-wrap items-end gap-4" id="assignment-filter-panel">
           {ownOnly ? null : (
             <TalentFilter
-              value={talentId}
               onChange={(value) => {
                 setTalentId(value);
                 resetPage();
               }}
+              value={talentId}
             />
           )}
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Project</span>
             <Select
-              value={projectId}
               onChange={(e) => {
                 setProjectId(e.target.value);
                 resetPage();
@@ -135,12 +134,12 @@ export default function AssignmentsPage() {
                 { value: "", label: "Semua" },
                 ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name })),
               ]}
+              value={projectId}
             />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
             <Select
-              value={status}
               onChange={(e) => {
                 setStatus(e.target.value as AssignmentStatus | "ALL");
                 resetPage();
@@ -150,6 +149,7 @@ export default function AssignmentsPage() {
                 { value: "ACTIVE", label: "Berjalan" },
                 { value: "COMPLETED", label: "Selesai" },
               ]}
+              value={status}
             />
           </label>
         </div>
@@ -164,9 +164,6 @@ export default function AssignmentsPage() {
       ) : (
         <Table
           caption="Daftar assignment"
-          rowKey={(assignment) => assignment.id}
-          dataSource={pageRows}
-          pagination={pagination}
           columns={[
             {
               key: "talent",
@@ -174,8 +171,8 @@ export default function AssignmentsPage() {
               render: (_value, assignment) => (
                 <>
                   <Link
-                    href={ASSIGNMENT_DETAIL(assignment.id)}
                     className="font-medium text-zinc-900 hover:underline"
+                    href={ASSIGNMENT_DETAIL(assignment.id)}
                   >
                     {assignment.talent.fullName}
                   </Link>
@@ -214,17 +211,20 @@ export default function AssignmentsPage() {
               className: "col-action",
               render: (_value, assignment) => (
                 <RowActionsMenu
-                  label={`Aksi ${assignment.talent.fullName}`}
                   actions={[
                     {
                       label: "Lihat detail",
                       onSelect: () => router.push(ASSIGNMENT_DETAIL(assignment.id)),
                     },
                   ]}
+                  label={`Aksi ${assignment.talent.fullName}`}
                 />
               ),
             },
           ]}
+          dataSource={pageRows}
+          pagination={pagination}
+          rowKey={(assignment) => assignment.id}
         />
       )}
     </section>

@@ -11,15 +11,9 @@ const EChart = dynamic(
   { ssr: false },
 );
 
-/**
- * Urutan intrinsik kategori ordinal (spek — Bentuk Visual). Label mengikuti
- * konstanta backend (D8 generasi, D11 jenjang) — label tak dikenal tetap tampil,
- * disusun setelah label terurut (stabil), sehingga total n tetap terjelaskan.
- */
 export const GENERATION_ORDER = ["Baby Boomer", "Gen X", "Milenial", "Gen Z"] as const;
 export const EDUCATION_ORDER = ["SMA/SMK Sederajat", "D3", "S1", "S2", "S3"] as const;
 
-/** "bar" = bar mendatar (V-1 role, V-4 lokasi); "column" = kolom (V-2, V-3). */
 export type DistributionOrientation = "bar" | "column";
 
 export interface DistributionDatum {
@@ -28,13 +22,6 @@ export interface DistributionDatum {
   isMissing: boolean;
 }
 
-/**
- * T020 — data-prep distribusi (aturan tampil spek):
- * - kategori tak berurut → nilai terbesar dulu (stabil; urutan backend untuk seri);
- * - kategori ordinal → urutan intrinsik dipertahankan;
- * - `OTHER` berlabel "Lainnya"; `MISSING` ("Belum diisi") selalu terakhir & abu-abu.
- * Hasil sudah dalam urutan tampil (index 0 = atas untuk bar mendatar, kiri untuk kolom).
- */
 export function prepareDistribution(
   data: readonly ReportCategoryCount[],
   ordinal?: readonly string[],
@@ -60,9 +47,6 @@ export function prepareDistribution(
   });
 }
 
-/** Opsi ECharts V-1…V-4: warna per-datum (MISSING abu-abu) dari tema (D1).
- * T034: judul & rentang dirender `TitleComponent` DI DALAM kanvas (plan §2)
- * agar PNG unduhan memuat judul + rentang — identik dengan tampilan (SC-03). */
 export function buildDistributionOption(
   data: readonly DistributionDatum[],
   orientation: DistributionOrientation,
@@ -117,11 +101,8 @@ interface DistributionChartProps {
   ordinal?: readonly string[];
   ariaLabel?: string;
   className?: string;
-  /** Judul grafik — dirender TitleComponent di dalam kanvas (T034/SC-03). */
   title?: string;
-  /** Label rentang periode — subtext judul di dalam kanvas (T034/FR-13). */
   periodLabel?: string;
-  /** Ref handle `getDataURL` untuk tombol Unduh PNG (T027). */
   chartRef?: React.Ref<import("./EChart").EChartHandle>;
 }
 
@@ -149,10 +130,10 @@ export function DistributionChart({
   );
   return (
     <EChart
-      ref={chartRef}
-      option={option}
       ariaLabel={ariaLabel}
       className={className ?? "h-64 w-full"}
+      option={option}
+      ref={chartRef}
     />
   );
 }

@@ -2,7 +2,9 @@ import type { EntraProvisionStatus } from "@/generated/graphql/types";
 
 export const ENTRA_PROVISION_STATUS_LABEL: Record<EntraProvisionStatus, string> = {
   INVITED: "Undangan terkirim",
-  CREATED: "Akun dibuat",
+  // Keputusan TAN-273 (Opsi A): akun hasil create lahir tanpa kredensial
+  // yang dapat dipakai dan menunggu aktivasi di luar aplikasi.
+  CREATED: "Menunggu aktivasi",
   FAILED: "Gagal",
   DISABLED: "Dinonaktifkan",
 };

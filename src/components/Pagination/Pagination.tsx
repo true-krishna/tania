@@ -57,9 +57,9 @@ export function Pagination({
           Baris per halaman
           <select
             className="page-size mx-2"
-            value={pageSize}
             disabled={disabled}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            value={pageSize}
           >
             {options.map((size) => (
               <option key={size} value={size}>
@@ -72,11 +72,11 @@ export function Pagination({
           <ul className="flex items-center gap-2">
             <li>
               <button
-                type="button"
                 aria-label="Halaman sebelumnya"
                 className={PAGE_ICON_BUTTON}
                 disabled={disabled || page <= 1}
                 onClick={() => onPageChange(page - 1)}
+                type="button"
               >
                 <IconChevronLeft aria-hidden size={18} stroke={2} />
               </button>
@@ -84,11 +84,11 @@ export function Pagination({
             {pages.map((n) => (
               <li key={n}>
                 <button
-                  type="button"
-                  className={cn("page-num", n === page && "page-num-active")}
                   aria-current={disabled || n !== page ? undefined : "page"}
+                  className={cn("page-num", n === page && "page-num-active")}
                   disabled={disabled || n === page}
                   onClick={() => onPageChange(n)}
+                  type="button"
                 >
                   {n}
                 </button>
@@ -96,11 +96,11 @@ export function Pagination({
             ))}
             <li>
               <button
-                type="button"
                 aria-label="Halaman berikutnya"
                 className={PAGE_ICON_BUTTON}
                 disabled={disabled || page >= totalPages}
                 onClick={() => onPageChange(page + 1)}
+                type="button"
               >
                 <IconChevronRight aria-hidden size={18} stroke={2} />
               </button>

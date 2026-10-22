@@ -20,6 +20,7 @@ import {
 } from "@/features/contracts/labels";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { EmployeeWorkloadTab } from "@/features/workload";
+import { EmployeeEntraProvisionCard } from "@/features/entra/EmployeeEntraProvisionCard";
 import {
   DeactivateEmployeeDocument,
   EmployeeDocument,
@@ -49,6 +50,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   const role = useSessionRole();
   const manage = canManage(role, "employees");
   const showHistory = role === "OPERATION" || role === "ADMIN";
+  const showEntra = canAccess(role, "entra");
   const linkContracts = canAccess(role, "contracts");
   const { status, data, error } = useEmployee(id);
   const [tab, setTab] = React.useState<DetailTab>("overview");
@@ -62,43 +64,43 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   return (
     <section className="flex flex-col gap-4">
       {role === "TALENT" ? null : (
-        <Link href={EMPLOYEES} className="w-fit text-sm text-zinc-500 hover:text-zinc-900">
+        <Link className="w-fit text-sm text-zinc-500 hover:text-zinc-900" href={EMPLOYEES}>
           ← Kembali ke daftar
         </Link>
       )}
       <PageHeader
-        title={employee?.fullName ?? "Detail karyawan"}
-        subtitle={
-          employee ? `${employee.nomorInduk ?? "Tanpa kontrak aktif"} · ${employee.email}` : undefined
-        }
         actions={
           employee && manage ? (
-            <Link href={EMPLOYEE_EDIT(id)} className="no-underline">
+            <Link className="no-underline" href={EMPLOYEE_EDIT(id)}>
               <Button variant="secondary">Ubah data</Button>
             </Link>
           ) : undefined
         }
+        subtitle={
+          employee ? `${employee.nomorInduk ?? "Tanpa kontrak aktif"} · ${employee.email}` : undefined
+        }
+        title={employee?.fullName ?? "Detail karyawan"}
       />
 
       <div
-        role="tablist"
         aria-label="Detail karyawan"
         className="flex gap-6 border-b border-board-border"
+        role="tablist"
       >
         {DETAIL_TABS.map((item) => {
           const selected = item.id === tab;
           return (
             <button
-              key={item.id}
-              type="button"
-              role="tab"
               aria-selected={selected}
-              onClick={() => setTab(item.id)}
               className={
                 selected
                   ? "-mb-px border-b-2 border-tp-brand-navy px-1 py-2 text-sm font-semibold text-zinc-900"
                   : "-mb-px border-b-2 border-transparent px-1 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900"
               }
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              role="tab"
+              type="button"
             >
               {item.label}
             </button>
@@ -186,13 +188,15 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             </dl>
           </Card>
 
+          {showEntra ? <EmployeeEntraProvisionCard employeeId={id} /> : null}
+
           <Card className="max-w-3xl">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-zinc-900">
                 Riwayat kontrak ({employee.contracts.totalCount})
               </h2>
               {manage ? (
-                <Link href={`${CONTRACT_NEW}?employeeId=${id}`} className="no-underline">
+                <Link className="no-underline" href={`${CONTRACT_NEW}?employeeId=${id}`}>
                   <Button variant="secondary">+ Tambah kontrak</Button>
                 </Link>
               ) : null}
@@ -202,7 +206,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             ) : (
               <div className="flex flex-col gap-3">
                 {employee.contracts.edges.map((edge) => (
-                  <ContractHistoryCard key={edge.node.id} contract={edge.node} linked={linkContracts} />
+                  <ContractHistoryCard contract={edge.node} key={edge.node.id} linked={linkContracts} />
                 ))}
               </div>
             )}
@@ -211,14 +215,14 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
           {showHistory ? (
             <Card className="max-w-3xl">
               <h2 className="mb-3 text-sm font-semibold text-zinc-900">Riwayat perubahan</h2>
-              <RecordChangeHistory entityType="employee" entityId={id} />
+              <RecordChangeHistory entityId={id} entityType="employee" />
             </Card>
           ) : null}
 
           {!manage ? null : isInactive ? (
             <Card
-              padded={false}
               className="w-fit border-red-200 bg-red-50 px-4 py-2 text-sm text-zinc-500"
+              padded={false}
             >
               Karyawan dinonaktifkan.
             </Card>
@@ -231,10 +235,10 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 </p>
                 <div className="flex gap-2">
                   <button
-                    type="button"
-                    onClick={() => deactivate({ variables: { id } })}
-                    disabled={deactivating}
                     className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                    disabled={deactivating}
+                    onClick={() => deactivate({ variables: { id } })}
+                    type="button"
                   >
                     Ya, nonaktifkan
                   </button>
@@ -254,15 +258,15 @@ function ContractHistoryCard({ contract, linked }: { contract: ContractRow; link
       <div className="flex flex-wrap items-center gap-2">
         {linked ? (
           <Link
-            href={CONTRACT_DETAIL(contract.id)}
             className="text-sm font-semibold text-zinc-900 hover:underline"
+            href={CONTRACT_DETAIL(contract.id)}
           >
             {contract.contractNo}
           </Link>
         ) : (
           <span className="text-sm font-semibold text-zinc-900">{contract.contractNo}</span>
         )}
-        <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
+        <Chip size="small" variant={CONTRACT_STATUS_VARIANT[contract.status]}>
           {CONTRACT_STATUS_LABEL[contract.status]}
         </Chip>
         {contract.endReason ? (

@@ -26,7 +26,6 @@ type FormValues = {
   institutionName: string;
   major: string;
   joinedAt: string;
-  autoCreateEntra: boolean;
 };
 
 const EMPTY: FormValues = {
@@ -41,7 +40,6 @@ const EMPTY: FormValues = {
   institutionName: "",
   major: "",
   joinedAt: "",
-  autoCreateEntra: true,
 };
 
 const CONFLICT_MESSAGE =
@@ -49,7 +47,7 @@ const CONFLICT_MESSAGE =
 
 export default function NewEmployeePage() {
   return (
-    <AuthGuard module="employees" manage>
+    <AuthGuard manage module="employees">
       <NewEmployeeForm />
     </AuthGuard>
   );
@@ -102,7 +100,6 @@ function NewEmployeeForm() {
       phone: values.phone.trim(),
       address: values.address.trim(),
       joinedAt: values.joinedAt,
-      autoCreateEntra: values.autoCreateEntra,
     };
     const optional = {
       latestEducation: values.latestEducation.trim(),
@@ -148,14 +145,14 @@ function NewEmployeeForm() {
             : error?.message ?? "Terjadi kesalahan saat membuat karyawan."}
         </div>
         <button
-          type="button"
+          className="w-fit rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
           onClick={() => {
             setValues(EMPTY);
             setErrors({});
             setFormError(null);
             setSubmitted(false);
           }}
-          className="w-fit rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+          type="button"
         >
           Tambah karyawan lain
         </button>
@@ -166,127 +163,109 @@ function NewEmployeeForm() {
   return (
     <section className="flex max-w-xl flex-col gap-4">
       <PageHeader
-        title="Tambah Karyawan"
         subtitle="Lengkapi data diri karyawan baru. Identitas kepegawaian (nomor induk) diisi pada kontrak."
+        title="Tambah Karyawan"
       />
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
         {formError ? <ErrorState message={formError} /> : null}
-        <InputControl label="NIK" error={errors.nik}>
+        <InputControl error={errors.nik} label="NIK">
           <Input
-            type="text"
-            value={values.nik}
+            inputMode="numeric"
             onChange={(e) => set("nik", e.target.value)}
             placeholder="16 digit nomor KTP"
-            inputMode="numeric"
+            type="text"
+            value={values.nik}
           />
         </InputControl>
-        <InputControl label="Nama lengkap" error={errors.fullName}>
+        <InputControl error={errors.fullName} label="Nama lengkap">
           <Input
-            type="text"
-            value={values.fullName}
             onChange={(e) => set("fullName", e.target.value)}
             placeholder="cth. Ahmad Fauzi"
+            type="text"
+            value={values.fullName}
           />
         </InputControl>
-        <InputControl label="Email" error={errors.email}>
+        <InputControl error={errors.email} label="Email">
           <Input
-            type="email"
-            value={values.email}
+            autoComplete="email"
             onChange={(e) => set("email", e.target.value)}
             placeholder="cth. ahmad.fauzi@tania.co.id"
-            autoComplete="email"
+            type="email"
+            value={values.email}
           />
         </InputControl>
-        <InputControl label="Tanggal lahir" error={errors.birthDate}>
+        <InputControl error={errors.birthDate} label="Tanggal lahir">
           <Input
+            onChange={(e) => set("birthDate", e.target.value)}
             type="date"
             value={values.birthDate}
-            onChange={(e) => set("birthDate", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Jenis kelamin" error={errors.gender}>
+        <InputControl error={errors.gender} label="Jenis kelamin">
           <Select
-            value={values.gender}
             onChange={(e) => set("gender", e.target.value)}
             options={[
               { value: "", label: "— pilih jenis kelamin —" },
               { value: "FEMALE", label: "Perempuan" },
               { value: "MALE", label: "Laki-laki" },
             ]}
+            value={values.gender}
           />
         </InputControl>
-        <InputControl label="Telepon" error={errors.phone}>
+        <InputControl error={errors.phone} label="Telepon">
           <Input
-            type="text"
-            value={values.phone}
             onChange={(e) => set("phone", e.target.value)}
             placeholder="cth. 081234567890"
+            type="text"
+            value={values.phone}
           />
         </InputControl>
-        <InputControl label="Alamat" error={errors.address}>
+        <InputControl error={errors.address} label="Alamat">
           <Input
-            type="text"
-            value={values.address}
             onChange={(e) => set("address", e.target.value)}
             placeholder="Alamat domisili"
+            type="text"
+            value={values.address}
           />
         </InputControl>
-        <InputControl label="Pendidikan terakhir" helper="(opsional)" error={errors.latestEducation}>
+        <InputControl error={errors.latestEducation} helper="(opsional)" label="Pendidikan terakhir">
           <Input
-            type="text"
-            value={values.latestEducation}
             onChange={(e) => set("latestEducation", e.target.value)}
             placeholder="cth. S1"
+            type="text"
+            value={values.latestEducation}
           />
         </InputControl>
-        <InputControl label="Nama institusi" helper="(opsional)" error={errors.institutionName}>
+        <InputControl error={errors.institutionName} helper="(opsional)" label="Nama institusi">
           <Input
-            type="text"
-            value={values.institutionName}
             onChange={(e) => set("institutionName", e.target.value)}
             placeholder="cth. Universitas Telkom"
+            type="text"
+            value={values.institutionName}
           />
         </InputControl>
-        <InputControl label="Jurusan" helper="(opsional)" error={errors.major}>
+        <InputControl error={errors.major} helper="(opsional)" label="Jurusan">
           <Input
-            type="text"
-            value={values.major}
             onChange={(e) => set("major", e.target.value)}
             placeholder="cth. Teknik Informatika"
+            type="text"
+            value={values.major}
           />
         </InputControl>
-        <InputControl label="Tanggal Bergabung" error={errors.joinedAt}>
+        <InputControl error={errors.joinedAt} label="Tanggal Bergabung">
           <Input
+            onChange={(e) => set("joinedAt", e.target.value)}
             type="date"
             value={values.joinedAt}
-            onChange={(e) => set("joinedAt", e.target.value)}
           />
         </InputControl>
 
-        <label className="flex items-start gap-2 text-sm font-medium text-zinc-800">
-          <input
-            type="checkbox"
-            checked={values.autoCreateEntra}
-            onChange={(e) =>
-              setValues((v) => ({ ...v, autoCreateEntra: e.target.checked }))
-            }
-            className="mt-0.5 h-4 w-4"
-          />
-          <span>
-            Buatkan akun Microsoft Entra
-            <span className="block text-xs font-normal text-zinc-500">
-              Dinonaktifkan bila akun dibuat manual. Karyawan tanpa akun Entra
-              dapat diprovisi dari halaman Provisi Akun Entra (FR-43).
-            </span>
-          </span>
-        </label>
-
         <div className="flex gap-2">
-          <Button type="submit" disabled={loading}>
+          <Button disabled={loading} type="submit">
             Simpan
           </Button>
-          <Link href={EMPLOYEES} className="no-underline">
+          <Link className="no-underline" href={EMPLOYEES}>
             <Button type="button" variant="secondary">
               Batal
             </Button>

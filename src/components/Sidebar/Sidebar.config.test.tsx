@@ -43,12 +43,12 @@ function withCell(
 describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
   it("konfigurasi default merender menu yang sama dengan daftar role statis", () => {
     for (const role of ACCESS_ROLES as readonly AccessRole[]) {
-      const plain = render(<Sidebar role={role} pathname="/dashboard" />);
+      const plain = render(<Sidebar pathname="/dashboard" role={role} />);
       const before = drawnMenu();
       plain.unmount();
 
       const configured = render(
-        <Sidebar role={null} pathname="/dashboard" menuConfig={DEFAULT_MENU_ACCESS} roleName={role} />,
+        <Sidebar menuConfig={DEFAULT_MENU_ACCESS} pathname="/dashboard" role={null} roleName={role} />,
       );
       expect(drawnMenu(), `role ${role}`).toEqual(before);
       configured.unmount();
@@ -57,7 +57,7 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
 
   it("menu yang ditutup hilang dari sidebar tanpa mengubah role lain", () => {
     const closed = withCell(DEFAULT_MENU_ACCESS, "TALENT", "idp", "NONE");
-    render(<Sidebar role={null} pathname="/dashboard" menuConfig={closed} roleName="TALENT" />);
+    render(<Sidebar menuConfig={closed} pathname="/dashboard" role={null} roleName="TALENT" />);
     const drawn = drawnMenu();
     expect(drawn.find((item) => item.label === "IDP")).toBeUndefined();
     // The rest of the Talent menu survives: closing one cell is surgical.
@@ -68,20 +68,20 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
   it("role kustom memakai konfigurasi role-nya sendiri", () => {
     // A custom role's name is in no NAV `roles` list, so only its configuration
     // can produce a menu — this is what makes a new role usable without a deploy.
-    const chapter = render(<Sidebar role="CHAPTER" pathname="/dashboard" />);
+    const chapter = render(<Sidebar pathname="/dashboard" role="CHAPTER" />);
     const chapterMenu = drawnMenu();
     chapter.unmount();
 
     const custom: MenuAccessConfig = { PM_CHAPTER: DEFAULT_MENU_ACCESS["CHAPTER"] };
     render(
-      <Sidebar role={null} pathname="/dashboard" menuConfig={custom} roleName="PM_CHAPTER" />,
+      <Sidebar menuConfig={custom} pathname="/dashboard" role={null} roleName="PM_CHAPTER" />,
     );
     expect(drawnMenu()).toEqual(chapterMenu);
   });
 
   it("konfigurasi untuk role yang tidak dikenal tidak menampilkan menu apa pun", () => {
     render(
-      <Sidebar role={null} pathname="/dashboard" menuConfig={DEFAULT_MENU_ACCESS} roleName="GHOST" />,
+      <Sidebar menuConfig={DEFAULT_MENU_ACCESS} pathname="/dashboard" role={null} roleName="GHOST" />,
     );
     // Absence of a configuration is not a reason to show a menu the server may deny.
     expect(drawnMenu()).toEqual([]);
@@ -91,7 +91,7 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
     // The sidebar hint and the authorization axis must agree: anything drawn is
     // readable per the same configuration (server denies the rest at the API).
     const config = withCell(DEFAULT_MENU_ACCESS, "CHAPTER", "employees", "NONE");
-    render(<Sidebar role={null} pathname="/dashboard" menuConfig={config} roleName="CHAPTER" />);
+    render(<Sidebar menuConfig={config} pathname="/dashboard" role={null} roleName="CHAPTER" />);
     const hrefs = drawnMenu().map((item) => item.href);
     expect(hrefs).not.toContain("/employees");
     // Data Karyawan is the only Employee page Chapter loses; the section stays.

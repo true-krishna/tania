@@ -11,16 +11,6 @@ import { roleLabel } from "@/features/accounts/roles";
 import type { AccessRole } from "@/generated/graphql/types";
 import type { Role } from "./useRoles";
 
-/**
- * Custom-role management (W3 AC5). Built-ins are immutable — no rename, no
- * deactivate, no delete — and the server refuses both that and deleting a role
- * that accounts still hold; the UI mirrors the refusal so an Admin sees why
- * before trying.
- *
- * A new role inherits a built-in template: the template decides the server-side
- * scope (chapter scope, admin-only surfaces), the role's own menu configuration
- * is edited in the grid above.
- */
 
 const TEMPLATES: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
 
@@ -72,19 +62,19 @@ export function CustomRolesPanel({
           <span className="flex items-center gap-2">
             <Input
               aria-label={`Label role ${role.name}`}
-              value={editLabel}
               onChange={(e) => setEditLabel(e.target.value)}
+              value={editLabel}
             />
             <Button
-              type="button"
               disabled={busy}
               onClick={() => {
                 void onRename(role.id, editLabel.trim()).finally(() => setEditingId(null));
               }}
+              type="button"
             >
               Simpan
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setEditingId(null)}>
+            <Button onClick={() => setEditingId(null)} type="button" variant="ghost">
               Batal
             </Button>
           </span>
@@ -120,39 +110,39 @@ export function CustomRolesPanel({
           <span className="flex items-center gap-2">
             <span className="text-xs text-zinc-600">Hapus role {role.label}?</span>
             <Button
-              type="button"
               disabled={busy}
               onClick={() => void onDelete(role.id).finally(() => setConfirmDeleteId(null))}
+              type="button"
             >
               Ya, hapus
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setConfirmDeleteId(null)}>
+            <Button onClick={() => setConfirmDeleteId(null)} type="button" variant="ghost">
               Batal
             </Button>
           </span>
         ) : (
           <span className="flex flex-wrap items-center gap-2">
             <Button
-              type="button"
-              variant="ghost"
               onClick={() => {
                 setEditingId(role.id);
                 setEditLabel(role.label);
               }}
+              type="button"
+              variant="ghost"
             >
               Ubah label
             </Button>
             <Button
-              type="button"
-              variant="ghost"
               disabled={busy}
               onClick={() =>
                 void onSetStatus(role.id, role.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")
               }
+              type="button"
+              variant="ghost"
             >
               {role.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setConfirmDeleteId(role.id)}>
+            <Button onClick={() => setConfirmDeleteId(role.id)} type="button" variant="ghost">
               Hapus
             </Button>
           </span>
@@ -165,7 +155,7 @@ export function CustomRolesPanel({
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-semibold text-zinc-900">Role Kustom</h2>
         {creating ? undefined : (
-          <Button type="button" onClick={() => setCreating(true)}>
+          <Button onClick={() => setCreating(true)} type="button">
             Tambah Role
           </Button>
         )}
@@ -173,36 +163,36 @@ export function CustomRolesPanel({
 
       {creating ? (
         <form
-          onSubmit={submit}
           className="flex max-w-2xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
+          onSubmit={submit}
         >
           <InputControl label="Nama mesin">
             <Input
-              value={name}
               onChange={(e) => setName(e.target.value.toUpperCase())}
               placeholder="cth: PM_CHAPTER"
+              value={name}
             />
           </InputControl>
           <InputControl label="Label">
             <Input
-              value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="cth: PM Chapter"
+              value={label}
             />
           </InputControl>
           <InputControl label="Template">
             <Select
-              value={template}
               onChange={(e) => setTemplate(e.target.value as AccessRole)}
               options={TEMPLATES.map((value) => ({ value, label: roleLabel[value] }))}
+              value={template}
             />
           </InputControl>
           {error ? <span className="text-xs text-red-600">{error}</span> : null}
           <div className="flex gap-2">
-            <Button type="submit" disabled={busy || !name.trim() || !label.trim()}>
+            <Button disabled={busy || !name.trim() || !label.trim()} type="submit">
               Simpan
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setCreating(false)}>
+            <Button onClick={() => setCreating(false)} type="button" variant="secondary">
               Batal
             </Button>
           </div>
@@ -213,8 +203,8 @@ export function CustomRolesPanel({
         caption="Daftar role"
         columns={columns}
         dataSource={roles}
-        rowKey={(role) => role.id}
         emptyText="Belum ada role."
+        rowKey={(role) => role.id}
       />
     </section>
   );

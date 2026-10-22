@@ -25,11 +25,6 @@ import { COST_REVENUE_ROLES, WORKLOAD_REPORT_ROLES } from "./types";
 
 type ExecutiveTab = "details" | "analytics" | "cost";
 
-/**
- * Halaman executive dashboard workload (TAN-227/229–232). Gate role UI-only —
- * penegakan sebenarnya di server; angka cost/revenue/RBV hanya untuk
- * `COST_REVENUE_ROLES`.
- */
 export function ExecutiveReportView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -82,7 +77,7 @@ export function ExecutiveReportView() {
           <>
             <ExecutiveWorkloadKpis summary={fixture.summary} />
             <ExecutiveCharts charts={fixture.charts} />
-            <DistributionSection tables={fixture.distribution} canSeeCost={canSeeCost} />
+            <DistributionSection canSeeCost={canSeeCost} tables={fixture.distribution} />
           </>
         ) : null}
         {selectedTab === "analytics" ? (
@@ -104,18 +99,18 @@ export function ExecutiveReportView() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Workload Executive"
         subtitle={`Pantau beban kerja organisasi dari data WAD — periode ${formatPeriodLabel(period)}.`}
+        title="Workload Executive"
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <WorkloadTabs
+          onChange={(id) => setActiveTab(id as ExecutiveTab)}
           tabs={tabs}
           value={selectedTab}
-          onChange={(id) => setActiveTab(id as ExecutiveTab)}
         />
         <div className="ml-auto">
-          <ReportPeriodSelector value={period} onChange={setPeriod} />
+          <ReportPeriodSelector onChange={setPeriod} value={period} />
         </div>
       </div>
 

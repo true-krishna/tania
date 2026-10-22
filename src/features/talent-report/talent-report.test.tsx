@@ -176,7 +176,7 @@ describe("EChart wrapper (T018)", () => {
   function renderEChart(option: Record<string, unknown> = {}) {
     const ref = React.createRef<EChartHandle>();
     const view = render(
-      <EChart ref={ref} option={option} className="h-64" ariaLabel="Grafik uji" />,
+      <EChart ariaLabel="Grafik uji" className="h-64" option={option} ref={ref} />,
     );
     return { ref, view };
   }
@@ -196,7 +196,7 @@ describe("EChart wrapper (T018)", () => {
   it("re-applies the option when it changes", () => {
     const { view } = renderEChart({ series: [] });
     const next = { series: [{ type: "line" }] };
-    view.rerender(<EChart option={next} className="h-64" ariaLabel="Grafik uji" />);
+    view.rerender(<EChart ariaLabel="Grafik uji" className="h-64" option={next} />);
     expect(echartsMock.instance.setOption).toHaveBeenLastCalledWith(next);
   });
 
@@ -232,7 +232,7 @@ describe("EChart wrapper (T018)", () => {
 describe("ChartCard (T019 / US1, US4)", () => {
   it("renders title, total subtitle and the chart slot", () => {
     render(
-      <ChartCard title="Talent per role" subtitle="n = 25">
+      <ChartCard subtitle="n = 25" title="Talent per role">
         <div data-testid="chart-slot" />
       </ChartCard>,
     );
@@ -243,7 +243,7 @@ describe("ChartCard (T019 / US1, US4)", () => {
 
   it("keeps the Unduh PNG action disabled until the handler is wired (T027)", () => {
     render(
-      <ChartCard title="Talent per role" subtitle="n = 25">
+      <ChartCard subtitle="n = 25" title="Talent per role">
         <div />
       </ChartCard>,
     );
@@ -253,7 +253,7 @@ describe("ChartCard (T019 / US1, US4)", () => {
   it("invokes the download handler per card (US4 AC-3)", () => {
     const onDownload = vi.fn();
     render(
-      <ChartCard title="Talent per role" subtitle="n = 25" onDownload={onDownload}>
+      <ChartCard onDownload={onDownload} subtitle="n = 25" title="Talent per role">
         <div />
       </ChartCard>,
     );
@@ -392,7 +392,7 @@ describe("PeriodFilter (T021 / FR-11)", () => {
   });
 
   it("defaults to the whole range and picks month and year separately (FR-11)", () => {
-    render(<PeriodFilter range={range} value={fullRange} onApply={vi.fn()} />);
+    render(<PeriodFilter onApply={vi.fn()} range={range} value={fullRange} />);
     expect(screen.getByLabelText("Bulan mulai")).toHaveValue("01");
     expect(screen.getByLabelText("Tahun mulai")).toHaveValue("2025");
     expect(screen.getByLabelText("Bulan akhir")).toHaveValue("10");
@@ -419,9 +419,9 @@ describe("PeriodFilter (T021 / FR-11)", () => {
     const bounded: TalentReportRange = { startMonth: "2025-03", endMonth: "2026-10" };
     render(
       <PeriodFilter
+        onApply={vi.fn()}
         range={bounded}
         value={{ startMonth: "2025-03", endMonth: "2026-10" }}
-        onApply={vi.fn()}
       />,
     );
     expect(options("Bulan mulai")).toHaveLength(10);
@@ -436,9 +436,9 @@ describe("PeriodFilter (T021 / FR-11)", () => {
     const bounded: TalentReportRange = { startMonth: "2025-03", endMonth: "2026-10" };
     render(
       <PeriodFilter
+        onApply={vi.fn()}
         range={bounded}
         value={{ startMonth: "2026-01", endMonth: "2026-10" }}
-        onApply={vi.fn()}
       />,
     );
     fireEvent.change(screen.getByLabelText("Tahun mulai"), { target: { value: "2025" } });
@@ -447,7 +447,7 @@ describe("PeriodFilter (T021 / FR-11)", () => {
 
   it("applies a changed period in one action (SC-04)", () => {
     const onApply = vi.fn();
-    render(<PeriodFilter range={range} value={fullRange} onApply={onApply} />);
+    render(<PeriodFilter onApply={onApply} range={range} value={fullRange} />);
     const apply = screen.getByRole("button", { name: "Terapkan" });
     expect(apply).toBeDisabled();
 
@@ -460,7 +460,7 @@ describe("PeriodFilter (T021 / FR-11)", () => {
 
   it("clamps the pair so start never exceeds end", () => {
     const onApply = vi.fn();
-    render(<PeriodFilter range={range} value={fullRange} onApply={onApply} />);
+    render(<PeriodFilter onApply={onApply} range={range} value={fullRange} />);
     fireEvent.change(screen.getByLabelText("Tahun mulai"), { target: { value: "2026" } });
     fireEvent.change(screen.getByLabelText("Bulan mulai"), { target: { value: "10" } });
     fireEvent.change(screen.getByLabelText("Bulan akhir"), { target: { value: "06" } });
@@ -481,8 +481,8 @@ describe("useTalentReport (T022 / FR-11, FR-12, FR-15)", () => {
         <span data-testid="top">{report?.roleDistribution[0]?.count ?? "none"}</span>
         <span data-testid="message">{message ?? ""}</span>
         <button
-          type="button"
           onClick={() => applyPeriod({ startMonth: "2026-01", endMonth: "2026-10" })}
+          type="button"
         >
           Ubah periode
         </button>
@@ -725,7 +725,7 @@ describe("MovementTrendChart (T026 / V-5)", () => {
   });
 
   it("wears the canon tab recipe, with aria-selected as the state source (V/VI)", () => {
-    render(<MovementTrendChart data={MOCK_MOVEMENT_TREND.slice(0, 12)} ariaLabel="Tren" />);
+    render(<MovementTrendChart ariaLabel="Tren" data={MOCK_MOVEMENT_TREND.slice(0, 12)} />);
 
     const tablist = screen.getByRole("tablist", { name: "Tampilan grafik tren" });
     expect(tablist).toHaveClass("tp-tabs");
@@ -747,7 +747,7 @@ describe("MovementTrendChart (T026 / V-5)", () => {
   });
 
   it("keeps the diverging tab reachable with its reason when the range is too long (V-5)", () => {
-    render(<MovementTrendChart data={MOCK_MOVEMENT_TREND} ariaLabel="Tren" />);
+    render(<MovementTrendChart ariaLabel="Tren" data={MOCK_MOVEMENT_TREND} />);
 
     const diverging = screen.getByRole("tab", { name: "Bar divergen" });
     expect(diverging).toHaveAttribute("aria-disabled", "true");

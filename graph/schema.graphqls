@@ -64,6 +64,19 @@ enum EntraProvisionAction {
   CREATE
 }
 
+"""Kolom yang dapat diurutkan pada daftar provisi Entra (FR-44)."""
+enum EntraEmployeeSortField {
+  FULL_NAME
+  EMAIL
+  PROVISION_STATUS
+}
+
+"""Arah pengurutan daftar (FR-44)."""
+enum SortDirection {
+  ASC
+  DESC
+}
+
 """Hasil provisioning akun Entra seorang talent (FR-44, FR-45)."""
 type EntraProvision {
   status: EntraProvisionStatus!
@@ -258,6 +271,26 @@ input LocalLoginInput {
   password: String!
 }
 
+"""Status permulaan alur SSO Microsoft Entra ID."""
+type EntraSsoStart {
+  """True bila backend siap menerima login SSO (kredensial Entra lengkap)."""
+  enabled: Boolean!
+  """
+  URL otorisasi Microsoft yang siap dibuka browser. Null bila enabled=false.
+  Berisi hanya nilai publik (authority, clientId, scope, redirectUri, PKCE challenge).
+  """
+  authorizationUrl: String
+}
+
+input EntraLoginInput {
+  """Authorization code dari query string /login/callback (sekali pakai, umur pendek)."""
+  code: String!
+  """PKCE code verifier yang dipakai saat meminta otorisasi (base64url, 43–128 char)."""
+  codeVerifier: String!
+  """Nonce yang dikirim pada permintaan otorisasi; dicocokkan dengan klaim nonce ID token."""
+  nonce: String!
+}
+
 # ------------------------------- Master data --------------------------------
 
 """Unit master data (FR-18)."""
@@ -304,6 +337,24 @@ type Project {
   isActive: Boolean!
   createdAt: Time!
   updatedAt: Time!
+}
+
+# ------------------------- Aktivitas (FR-008) -------------------------------
+
+"""Referensi prioritas aktivitas (FR-008); read-only, urut terendah → tertinggi."""
+type ActivityPriority {
+  id: ID!
+  name: String!
+  sortOrder: Int!
+}
+
+"""Referensi status aktivitas (FR-008); read-only, urut siklus hidup."""
+type ActivityStatus {
+  id: ID!
+  name: String!
+  sortOrder: Int!
+  """true untuk Done & Cancelled — hanya untuk gaya badge; transisi status ditegakkan server-side (FR-008)."""
+  isTerminal: Boolean!
 }
 
 # ------------------------------- Employee -----------------------------------
@@ -406,8 +457,6 @@ input CreateEmployeeInput {
   major: String
   joinedAt: Date!
   status: EmployeeStatus
-  """Auto-create akun Entra saat data tersimpan (FR-43); default true."""
-  autoCreateEntra: Boolean = true
 }
 
 input UpdateEmployeeInput {
@@ -1025,6 +1074,9 @@ type Query {
   """Profil user yang sedang login."""
   me: User!
 
+  """Publik. Dipakai halaman login untuk memutuskan redirect otomatis (FR-001)."""
+  entraSsoStart(codeChallenge: String!, state: String!, nonce: String!): EntraSsoStart!
+
   # --- Master data (Admin tulis; baca mengikuti matriks 002-tania-rbac §Matriks) ---
   """Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8."""
   units(includeInactive: Boolean = false): [Unit!]!
@@ -1034,6 +1086,12 @@ type Query {
   jobRoles(includeInactive: Boolean = false): [JobRole!]!
   """Referensi Project level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Assignment); 2026-10-16 clarify 8."""
   projects(unitId: ID, includeInactive: Boolean = false): [Project!]!
+
+  # --- Referensi aktivitas (FR-008; read-only, tanpa mutation) ---
+  """Referensi prioritas aktivitas, urut terendah → tertinggi."""
+  activityPriorities: [ActivityPriority!]!
+  """Referensi status aktivitas, urut siklus hidup."""
+  activityStatuses: [ActivityStatus!]!
 
   # --- Employee (Operation/Admin tulis; Chapter/Admin baca) ---
   employees(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
@@ -1051,8 +1109,14 @@ type Query {
   employeesNeedingFollowUp(first: Int = 25, after: String): EmployeeConnection!
   """Usia pensiun (tahun) dari setelan aplikasi Admin — default 55 (FR-40, T042)."""
   retirementAge: Int!
-  """Talent yang belum memiliki akun Entra (FR-44)."""
-  employeesWithoutEntra(first: Int = 25, after: String): EmployeeConnection!
+  """Talent yang belum memiliki akun Entra (FR-44), dengan pencarian nama dan pengurutan."""
+  employeesWithoutEntra(
+    search: String
+    sortBy: EntraEmployeeSortField = FULL_NAME
+    sortDirection: SortDirection = ASC
+    first: Int = 25
+    after: String
+  ): EmployeeConnection!
 
   # --- Assignment ---
   assignments(filter: AssignmentFilter, first: Int = 25, after: String): AssignmentConnection!
@@ -1115,6 +1179,9 @@ type Query {
 type Mutation {
   # --- Auth ---
   login(input: LocalLoginInput!): AuthPayload!
+
+  """Publik. Menukar authorization code dengan sesi Tania (FR-003/FR-004)."""
+  loginWithEntra(input: EntraLoginInput!): AuthPayload!
 
   """Exchange a refresh token for a new token pair (rotating)."""
   refreshSession(refreshToken: String!): AuthPayload!

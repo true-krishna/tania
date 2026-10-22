@@ -47,19 +47,6 @@ type AnswerLike = {
   valueText?: string | null;
 };
 
-/**
- * Evaluation form — US7 / FR-26, FR-28.
- * Scores one talent for one period following the period's pinned template
- * criteria. Upsert saves a draft; Submit finalizes it. While the period is
- * RUNNING a managing role (Chapter scoped, Admin company-wide) may revise
- * (revision history kept server-side, FR-28); Operation reads it, and once
- * CLOSED the page is read-only.
- *
- * The form is reached from the running-period roster, so a talent may not have
- * a score yet (`performanceEvaluations` returns an empty connection). In that
- * case the period + criteria come from `currentEvaluationPeriod` (the same
- * running period the roster navigates from).
- */
 export default function EvaluationFormPage() {
   const params = useParams<{ periodId: string; employeeId: string }>();
   const periodId = params?.periodId;
@@ -99,25 +86,23 @@ export default function EvaluationFormPage() {
     return (
       <section className="flex flex-col gap-4">
         <ErrorState message="Periode evaluasi tidak ditemukan atau akses ditolak." />
-        <Link href={EVALUATIONS} className="text-sm font-medium text-tp-brand-red-deep hover:underline">
+        <Link className="text-sm font-medium text-tp-brand-red-deep hover:underline" href={EVALUATIONS}>
           ← Kembali ke roster
         </Link>
       </section>
     );
   }
 
-  // Remount the form per (period, evaluation) so its seeded state is fresh
-  // without an effect (react-hooks/set-state-in-effect).
   return (
     <EvaluationForm
-      key={`${period.id}-${evaluation?.id ?? "new"}`}
-      period={period}
-      criteria={criteria}
-      talent={talent}
       answers={evaluation?.answers ?? []}
+      criteria={criteria}
+      employeeId={employeeId ?? ""}
       evaluationId={evaluation?.id ?? null}
       evaluationStatus={evaluation?.status ?? null}
-      employeeId={employeeId ?? ""}
+      key={`${period.id}-${evaluation?.id ?? "new"}`}
+      period={period}
+      talent={talent}
     />
   );
 }
@@ -144,10 +129,8 @@ function EvaluationForm({
   const { pushToast } = useToast();
   const role = useSessionRole();
 
-  // Only a managing role scores; Operation lands here read-only from the roster.
   const readOnly = period.state === "CLOSED" || !canManage(role, "evaluations");
 
-  // Seed once from the loaded evaluation (empty for a brand-new score).
   const [answersState, setAnswersState] = React.useState<Record<string, string>>(() =>
     Object.fromEntries(
       answers.map((a) => [a.criterion.id, answerToString(a.criterion.answerType, a)]),
@@ -190,7 +173,6 @@ function EvaluationForm({
 
   async function handleSubmit() {
     try {
-      // Save the draft first (upsert) so a bare submit persists the answers.
       const { data } = await upsert({ variables: { input: buildInput() } });
       const id = data?.upsertPerformanceEvaluation?.id ?? evaluationId;
       if (!id) throw new Error("Evaluasi belum tersimpan.");
@@ -205,16 +187,16 @@ function EvaluationForm({
   return (
     <section className="flex max-w-3xl flex-col gap-4">
       <PageHeader
-        title={talent?.fullName ?? "Evaluasi Talent"}
-        subtitle={`${period.name} · ${period.startDate} — ${period.endDate} · status: ${period.state}${readOnly ? " · hanya-baca" : ""}`}
         actions={
           <Link
-            href={EVALUATIONS}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
+            href={EVALUATIONS}
           >
             ← Kembali
           </Link>
         }
+        subtitle={`${period.name} · ${period.startDate} — ${period.endDate} · status: ${period.state}${readOnly ? " · hanya-baca" : ""}`}
+        title={talent?.fullName ?? "Evaluasi Talent"}
       />
 
       <div className="flex flex-col gap-3 rounded-lg border border-board-border bg-board p-4 shadow-sm">
@@ -227,13 +209,13 @@ function EvaluationForm({
             .slice()
             .sort((a, b) => a.position - b.position)
             .map((criterion) => (
-              <div key={criterion.id} className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1" key={criterion.id}>
                 <InputControl label={`${criterion.position}. ${criterion.label}`}>
                   <CriterionInput
                     answerType={criterion.answerType}
-                    value={answersState[criterion.id] ?? ""}
                     disabled={readOnly || busy}
                     onChange={(v) => setAnswer(criterion.id, v)}
+                    value={answersState[criterion.id] ?? ""}
                   />
                 </InputControl>
               </div>
@@ -243,26 +225,26 @@ function EvaluationForm({
         <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputControl label="Ringkasan pencapaian">
             <textarea
-              value={summary}
+              className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
               disabled={readOnly || busy}
-              rows={3}
               onChange={(e) => {
                 setSummary(e.target.value);
                 setTouched(true);
               }}
-              className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
+              rows={3}
+              value={summary}
             />
           </InputControl>
           <InputControl label="Catatan pengembangan">
             <textarea
-              value={notes}
+              className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
               disabled={readOnly || busy}
-              rows={3}
               onChange={(e) => {
                 setNotes(e.target.value);
                 setTouched(true);
               }}
-              className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
+              rows={3}
+              value={notes}
             />
           </InputControl>
         </div>
@@ -276,10 +258,10 @@ function EvaluationForm({
         </p>
       ) : (
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" onClick={handleUpsert} disabled={busy || !touched}>
+          <Button disabled={busy || !touched} onClick={handleUpsert} type="button" variant="secondary">
             Simpan draf
           </Button>
-          <Button type="button" onClick={handleSubmit} disabled={busy}>
+          <Button disabled={busy} onClick={handleSubmit} type="button">
             {evaluationStatus === "SUBMITTED" ? "Perbarui & serahkan" : "Serahkan"}
           </Button>
         </div>
@@ -302,10 +284,10 @@ function CriterionInput({
   if (answerType === "YES_NO") {
     return (
       <select
-        value={value}
+        className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
+        value={value}
       >
         <option value="">— pilih —</option>
         <option value="yes">Ya</option>
@@ -317,10 +299,10 @@ function CriterionInput({
     const max = answerType === "SCALE_1_5" ? 5 : 10;
     return (
       <select
-        value={value}
+        className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-surface-border bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-tp-brand-red focus:outline-none focus:ring-1 focus:ring-tp-brand-red disabled:bg-zinc-50 disabled:text-zinc-400"
+        value={value}
       >
         <option value="">— pilih —</option>
         {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
@@ -333,10 +315,10 @@ function CriterionInput({
   }
   return (
     <Input
-      value={value}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
       placeholder="Jawaban teks bebas"
+      value={value}
     />
   );
 }

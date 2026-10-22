@@ -9,11 +9,6 @@ import { useTablePagination } from "@/components/Pagination";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
 import { EVALUATION_TEMPLATE_NEW } from "@/lib/constants/routes";
 
-/**
- * Evaluation templates (Admin) — US7 / FR-31.
- * Lists every evaluation framework with its criteria (fixed answer types).
- * Changing a template only affects future periods (FR-31).
- */
 export default function EvaluationTemplatesPage() {
   const { status, data, error } = useEvaluationTemplates();
   const { pageRows, pagination } = useTablePagination(data);
@@ -24,13 +19,13 @@ export default function EvaluationTemplatesPage() {
     return (
       <section className="flex flex-col gap-4">
         <PageHeader
-          title="Template Evaluasi"
-          subtitle="Framework penilaian yang dikelola Admin (FR-31)."
           actions={
-            <Link href={EVALUATION_TEMPLATE_NEW} className="no-underline">
+            <Link className="no-underline" href={EVALUATION_TEMPLATE_NEW}>
             <Button variant="primary">+ Buat Template</Button>
           </Link>
           }
+          subtitle="Framework penilaian yang dikelola Admin (FR-31)."
+          title="Template Evaluasi"
         />
         <EmptyState message="Belum ada template evaluasi. Buat template pertama." />
       </section>
@@ -39,19 +34,16 @@ export default function EvaluationTemplatesPage() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Template Evaluasi"
-        subtitle="Framework penilaian yang dikelola Admin (FR-31)."
         actions={
-          <Link href={EVALUATION_TEMPLATE_NEW} className="no-underline">
+          <Link className="no-underline" href={EVALUATION_TEMPLATE_NEW}>
             <Button variant="primary">+ Buat Template</Button>
           </Link>
         }
+        subtitle="Framework penilaian yang dikelola Admin (FR-31)."
+        title="Template Evaluasi"
       />
       <Table
         caption="Daftar template evaluasi"
-        rowKey={(template) => template.id}
-        dataSource={pageRows}
-        pagination={pagination}
         columns={[
           {
             key: "name",
@@ -82,6 +74,9 @@ export default function EvaluationTemplatesPage() {
             render: (_value, template) => <StatusBadge active={template.isActive} />,
           },
         ]}
+        dataSource={pageRows}
+        pagination={pagination}
+        rowKey={(template) => template.id}
       />
     </section>
   );

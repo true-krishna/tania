@@ -14,9 +14,6 @@ type SelectProps = Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "children
 export function Select({ className = "", options, ...rest }: SelectProps) {
   return (
     <div className="relative">
-      {/* `pr-10!` memaksa ruang caret melewati `padding` unlayered `.tp-input`
-       * (pola `p-0!` pada Card). Ikon menggantikan caret native tanpa
-       * background-image, mengikuti gaya ikon outline 2px §V. */}
       <select className={cn("tp-input appearance-none pr-10!", className)} {...rest}>
         {options.map((option) => (
           <option key={option.value} value={option.value}>

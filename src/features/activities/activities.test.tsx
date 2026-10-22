@@ -110,7 +110,7 @@ describe("ActivityForm — training clears and disables the project field", () =
   });
 
   it("disables the submit button while a mutation is in flight", () => {
-    render(<ActivityForm {...FORM_PROPS} submitting onSubmit={vi.fn()} />);
+    render(<ActivityForm {...FORM_PROPS} onSubmit={vi.fn()} submitting />);
     expect(screen.getByRole("button", { name: "Menyimpan…" })).toBeDisabled();
   });
 });
@@ -119,12 +119,12 @@ describe("ActivityList — states and ownership", () => {
   it("renders the loading state", () => {
     render(
       <ActivityList
-        status="loading"
         activities={undefined}
-        error={null}
         currentTalentId={CURRENT_TALENT_ID}
-        onEdit={vi.fn()}
+        error={null}
         onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        status="loading"
       />,
     );
     expect(screen.getByText("Memuat aktivitas…")).toBeInTheDocument();
@@ -134,13 +134,13 @@ describe("ActivityList — states and ownership", () => {
     const onRetry = vi.fn();
     render(
       <ActivityList
-        status="error"
         activities={undefined}
-        error="Gagal memuat aktivitas."
         currentTalentId={CURRENT_TALENT_ID}
-        onEdit={vi.fn()}
+        error="Gagal memuat aktivitas."
         onDelete={vi.fn()}
+        onEdit={vi.fn()}
         onRetry={onRetry}
+        status="error"
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent("Gagal memuat aktivitas.");
@@ -151,12 +151,12 @@ describe("ActivityList — states and ownership", () => {
   it("renders the empty state", () => {
     render(
       <ActivityList
-        status="ready"
         activities={[]}
-        error={null}
         currentTalentId={CURRENT_TALENT_ID}
-        onEdit={vi.fn()}
+        error={null}
         onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        status="ready"
       />,
     );
     expect(screen.getByText("Belum ada aktivitas yang cocok dengan filter.")).toBeInTheDocument();
@@ -166,12 +166,12 @@ describe("ActivityList — states and ownership", () => {
     const foreign: PersonalWorkActivity = { ...SEED_ACTIVITIES[0], id: "act-x", talentId: "emp-999" };
     render(
       <ActivityList
-        status="ready"
         activities={[SEED_ACTIVITIES[0], foreign]}
-        error={null}
         currentTalentId={CURRENT_TALENT_ID}
-        onEdit={vi.fn()}
+        error={null}
         onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        status="ready"
       />,
     );
     const kebabs = screen.getAllByRole("button", { name: /^Aksi / });

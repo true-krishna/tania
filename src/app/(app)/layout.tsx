@@ -19,22 +19,15 @@ import { ACTIVITIES, LOGIN, PROFILE, WORKLOAD } from "@/lib/constants/routes";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const role = useSessionRole();
-  // Active menu configuration of the signed-in role (FR-03 amandemen): the
-  // sidebar follows it, so an Admin's change shows up on the next load without
-  // a re-deploy. Absent while it loads — the sidebar then keeps its static
-  // role lists rather than rendering empty.
   const { config: menuConfig, roleName } = useMyMenuConfig();
   const pathname = usePathname();
   const [logout] = useMutation(LogoutDocument);
 
-  // Session expiry while the app is open (refresh link failed and cleared the
-  // session) routes back to sign-in; AuthGuard only covers the initial mount.
   React.useEffect(() => {
     if (authConfig.localOnly) return;
     return onSessionExpired(() => router.replace(LOGIN));
   }, [router]);
 
-  // Profile shown in the top-bar avatar; read once at mount, like `useSessionRole`.
   const [session] = React.useState(() => getSession());
   const displayName =
     session?.fullName?.trim() || session?.email?.split("@")[0] || (role ? roleLabel[role] : "Tania");
@@ -42,8 +35,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   async function handleLogout() {
     const refreshToken = getSession()?.refreshToken;
     try {
-      // Best-effort: the backend revokes the refresh token. The local session
-      // is cleared regardless so the user can sign back in.
       if (refreshToken) await logout({ variables: { refreshToken } });
     } finally {
       clearSession();
@@ -53,26 +44,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthGuard>
-      {/* Shell per constitution-design v4.3.0 §VIII: 268px sticky sidebar,
-       * topbar 16px 24px, main 24px fluid with no content cap — the content
-       * fills the viewport minus the sidebar and adapts to large viewports;
-       * ≤860px the sidebar strip is static and paddings tighten. */}
       <div className="flex min-h-screen flex-col min-[861px]:flex-row">
-        <Sidebar role={role} pathname={pathname} menuConfig={menuConfig} roleName={roleName} />
+        <Sidebar menuConfig={menuConfig} pathname={pathname} role={role} roleName={roleName} />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-tp-line bg-tp-surface px-4 py-3 min-[861px]:px-6 min-[861px]:py-4">
             <p className="truncate text-sm font-semibold text-zinc-700">{sectionForPath(pathname)}</p>
             <div className="flex items-center gap-3">
               <UserMenu
-                name={displayName}
                 email={session?.email}
-                roleLabel={role ? roleLabel[role] : null}
                 items={[
                   { href: PROFILE, label: "Profil saya", icon: IconUser },
                   { href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3 },
                   { href: WORKLOAD, label: "Workload", icon: IconChartBar },
                 ]}
+                name={displayName}
                 onLogout={handleLogout}
+                roleLabel={role ? roleLabel[role] : null}
               />
             </div>
           </header>
@@ -81,9 +68,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
-      {/* Asisten data (FR-01): bubble + panel dirender sekali di shell, hanya
-       * untuk CHAPTER/OPERATION. Guard ini kenyamanan UI — otorisasi ada di
-       * server (ChatService). */}
       {(role === "CHAPTER" || role === "OPERATION") && <AssistantBubble />}
     </AuthGuard>
   );

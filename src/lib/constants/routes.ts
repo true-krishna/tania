@@ -1,6 +1,10 @@
 // PUBLIC
 export const HOME = "/";
 export const LOGIN = "/login";
+// OIDC redirect target of the Entra SSO flow; the value the browser actually
+// returns to is configured server-side (`ENTRA_REDIRECT_URI`) and must match a
+// Redirect URI registered on the Entra application (contracts/sso-entra.md §7).
+export const LOGIN_CALLBACK = "/login/callback";
 export const TERMS_CONDITIONS = "/terms-and-conditions";
 export const PRIVACY_POLICY = "/privacy-and-policy";
 export const REDIRECT = "/redirect";

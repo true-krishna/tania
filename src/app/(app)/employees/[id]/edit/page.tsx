@@ -45,7 +45,7 @@ const CONFLICT_MESSAGE =
 
 export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <AuthGuard module="employees" manage>
+    <AuthGuard manage module="employees">
       <EditEmployeeLoader params={params} />
     </AuthGuard>
   );
@@ -62,10 +62,10 @@ function EditEmployeeLoader({ params }: { params: Promise<{ id: string }> }) {
   return (
     <>
       <PageHeader
-        title={`Ubah Data — ${employee.fullName}`}
         subtitle="NIK selalu tampil tersamar; isi NIK baru hanya bila ingin menggantinya."
+        title={`Ubah Data — ${employee.fullName}`}
       />
-      <EditEmployeeForm id={id} employee={employee} />
+      <EditEmployeeForm employee={employee} id={id} />
     </>
   );
 }
@@ -166,7 +166,7 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
         <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           Perubahan data {saved.updateEmployee.fullName} berhasil disimpan.
         </div>
-        <Link href={EMPLOYEE_DETAIL(id)} className="w-fit">
+        <Link className="w-fit" href={EMPLOYEE_DETAIL(id)}>
           <Button type="button" variant="secondary">
             Kembali ke detail karyawan
           </Button>
@@ -177,41 +177,40 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
 
   return (
     <section className="flex max-w-xl flex-col gap-4">
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
         {formError ? <ErrorState message={formError} /> : null}
         <div className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
           <span>NIK saat ini</span>
           <span className="font-mono text-sm font-normal text-zinc-700">{employee.nikMasked}</span>
         </div>
-        <InputControl label="NIK baru" helper="(opsional — kosongkan bila tidak berubah)" error={errors.nikBaru}>
+        <InputControl error={errors.nikBaru} helper="(opsional — kosongkan bila tidak berubah)" label="NIK baru">
           <Input
-            type="text"
-            value={values.nikBaru}
+            inputMode="numeric"
             onChange={(e) => set("nikBaru", e.target.value)}
             placeholder="16 digit nomor KTP"
-            inputMode="numeric"
+            type="text"
+            value={values.nikBaru}
           />
         </InputControl>
-        <InputControl label="Nama lengkap" error={errors.fullName}>
+        <InputControl error={errors.fullName} label="Nama lengkap">
           <Input
+            onChange={(e) => set("fullName", e.target.value)}
             type="text"
             value={values.fullName}
-            onChange={(e) => set("fullName", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Email" error={errors.email}>
-          <Input type="email" value={values.email} onChange={(e) => set("email", e.target.value)} />
+        <InputControl error={errors.email} label="Email">
+          <Input onChange={(e) => set("email", e.target.value)} type="email" value={values.email} />
         </InputControl>
-        <InputControl label="Tanggal lahir" error={errors.birthDate}>
+        <InputControl error={errors.birthDate} label="Tanggal lahir">
           <Input
+            onChange={(e) => set("birthDate", e.target.value)}
             type="date"
             value={values.birthDate}
-            onChange={(e) => set("birthDate", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Jenis kelamin" error={errors.gender}>
+        <InputControl error={errors.gender} label="Jenis kelamin">
           <Select
-            value={values.gender}
             onChange={(e) => set("gender", e.target.value)}
             options={[
               { value: "", label: "— pilih jenis kelamin —" },
@@ -220,53 +219,54 @@ function EditEmployeeForm({ id, employee }: { id: string; employee: EmployeeData
                 label: GENDER_LABEL[value],
               })),
             ]}
+            value={values.gender}
           />
         </InputControl>
-        <InputControl label="Telepon" error={errors.phone}>
-          <Input type="text" value={values.phone} onChange={(e) => set("phone", e.target.value)} />
+        <InputControl error={errors.phone} label="Telepon">
+          <Input onChange={(e) => set("phone", e.target.value)} type="text" value={values.phone} />
         </InputControl>
-        <InputControl label="Alamat" error={errors.address}>
-          <Input type="text" value={values.address} onChange={(e) => set("address", e.target.value)} />
+        <InputControl error={errors.address} label="Alamat">
+          <Input onChange={(e) => set("address", e.target.value)} type="text" value={values.address} />
         </InputControl>
-        <InputControl label="Pendidikan terakhir" helper="(opsional)" error={errors.latestEducation}>
+        <InputControl error={errors.latestEducation} helper="(opsional)" label="Pendidikan terakhir">
           <Input
+            onChange={(e) => set("latestEducation", e.target.value)}
             type="text"
             value={values.latestEducation}
-            onChange={(e) => set("latestEducation", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Nama institusi" helper="(opsional)" error={errors.institutionName}>
+        <InputControl error={errors.institutionName} helper="(opsional)" label="Nama institusi">
           <Input
+            onChange={(e) => set("institutionName", e.target.value)}
             type="text"
             value={values.institutionName}
-            onChange={(e) => set("institutionName", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Jurusan" helper="(opsional)" error={errors.major}>
-          <Input type="text" value={values.major} onChange={(e) => set("major", e.target.value)} />
+        <InputControl error={errors.major} helper="(opsional)" label="Jurusan">
+          <Input onChange={(e) => set("major", e.target.value)} type="text" value={values.major} />
         </InputControl>
-        <InputControl label="Tanggal Bergabung" error={errors.joinedAt}>
+        <InputControl error={errors.joinedAt} label="Tanggal Bergabung">
           <Input
+            onChange={(e) => set("joinedAt", e.target.value)}
             type="date"
             value={values.joinedAt}
-            onChange={(e) => set("joinedAt", e.target.value)}
           />
         </InputControl>
         <InputControl label="Status kepegawaian">
           <Select
-            value={values.status}
             onChange={(e) => set("status", e.target.value)}
             options={(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
               keyof typeof EMPLOYEE_STATUS_LABEL
             >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] }))}
+            value={values.status}
           />
         </InputControl>
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={saving}>
+          <Button disabled={saving} type="submit">
             Simpan
           </Button>
-          <Link href={EMPLOYEE_DETAIL(id)} className="no-underline">
+          <Link className="no-underline" href={EMPLOYEE_DETAIL(id)}>
             <Button type="button" variant="secondary">
               Batal
             </Button>
