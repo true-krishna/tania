@@ -188,8 +188,10 @@ describe("pembatalan di halaman Microsoft", () => {
     params = new URLSearchParams("error=access_denied");
     renderCallback([]);
 
+    // The Entra error code travels back with the visitor so the cause is
+    // visible without the network log.
     await waitFor(() =>
-      expect(routerReplace).toHaveBeenCalledWith("/login?sso=cancelled"),
+      expect(routerReplace).toHaveBeenCalledWith("/login?sso=cancelled&entra=access_denied"),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
