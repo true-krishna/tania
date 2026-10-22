@@ -35,6 +35,24 @@ export type ActionStatusCount = {
   status: DevelopmentActionStatus;
 };
 
+/** Referensi prioritas aktivitas (FR-008); read-only, urut terendah → tertinggi. */
+export type ActivityPriority = {
+  __typename?: 'ActivityPriority';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
+/** Referensi status aktivitas (FR-008); read-only, urut siklus hidup. */
+export type ActivityStatus = {
+  __typename?: 'ActivityStatus';
+  id: Scalars['ID']['output'];
+  /** true untuk Done & Cancelled — hanya untuk gaya badge; transisi status ditegakkan server-side (FR-008). */
+  isTerminal: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
 export type AddIdpReviewInput = {
   followUp?: InputMaybe<Scalars['String']['input']>;
   reviewDate: Scalars['Date']['input'];
@@ -296,8 +314,6 @@ export type CreateDevelopmentActionInput = {
 
 export type CreateEmployeeInput = {
   address?: InputMaybe<Scalars['String']['input']>;
-  /** Auto-create akun Entra saat data tersimpan (FR-43); default true. */
-  autoCreateEntra?: InputMaybe<Scalars['Boolean']['input']>;
   birthDate: Scalars['Date']['input'];
   email: Scalars['String']['input'];
   fullName: Scalars['String']['input'];
@@ -608,6 +624,12 @@ export type EmploymentContractStatus =
   | 'ACTIVE'
   | 'ENDED'
   | 'TERMINATED';
+
+/** Kolom yang dapat diurutkan pada daftar provisi Entra (FR-44). */
+export type EntraEmployeeSortField =
+  | 'EMAIL'
+  | 'FULL_NAME'
+  | 'PROVISION_STATUS';
 
 export type EntraLoginInput = {
   /** Authorization code dari query string /login/callback (sekali pakai, umur pendek). */
@@ -1415,6 +1437,10 @@ export type Project = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Referensi prioritas aktivitas, urut terendah → tertinggi. */
+  activityPriorities: Array<ActivityPriority>;
+  /** Referensi status aktivitas, urut siklus hidup. */
+  activityStatuses: Array<ActivityStatus>;
   /** Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35). */
   assignableTalents: EmployeeConnection;
   assignments: AssignmentConnection;
@@ -1433,7 +1459,7 @@ export type Query = {
   employees: EmployeeConnection;
   /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation/Admin (US10 skenario 4). */
   employeesNeedingFollowUp: EmployeeConnection;
-  /** Talent yang belum memiliki akun Entra (FR-44). */
+  /** Talent yang belum memiliki akun Entra (FR-44), dengan pencarian nama dan pengurutan. */
   employeesWithoutEntra: EmployeeConnection;
   employmentContract?: Maybe<EmploymentContract>;
   employmentContracts: EmploymentContractConnection;
@@ -1550,6 +1576,9 @@ export type QueryEmployeesNeedingFollowUpArgs = {
 export type QueryEmployeesWithoutEntraArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<EntraEmployeeSortField>;
+  sortDirection?: InputMaybe<SortDirection>;
 };
 
 
@@ -1772,6 +1801,11 @@ export type RoleMenuEntry = {
 export type RoleStatus =
   | 'ACTIVE'
   | 'INACTIVE';
+
+/** Arah pengurutan daftar (FR-44). */
+export type SortDirection =
+  | 'ASC'
+  | 'DESC';
 
 export type TalentDashboard = {
   __typename?: 'TalentDashboard';

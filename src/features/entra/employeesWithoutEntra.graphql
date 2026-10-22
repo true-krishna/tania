@@ -1,5 +1,17 @@
-query EmployeesWithoutEntra($first: Int = 25, $after: String) {
-  employeesWithoutEntra(first: $first, after: $after) {
+query EmployeesWithoutEntra(
+  $search: String
+  $sortBy: EntraEmployeeSortField
+  $sortDirection: SortDirection
+  $first: Int = 25
+  $after: String
+) {
+  employeesWithoutEntra(
+    search: $search
+    sortBy: $sortBy
+    sortDirection: $sortDirection
+    first: $first
+    after: $after
+  ) {
     totalCount
     edges {
       node {

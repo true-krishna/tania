@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@apollo/client";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { LoginWithEntraDocument } from "@/generated/graphql";
-import { clearSsoHints, markSsoFallback, markSsoUnlinked } from "@/lib/auth/config";
 import { takeEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/entra-pkce";
 import { setSession } from "@/lib/auth/token-store";
 import { DASHBOARD, LOGIN } from "@/lib/constants/routes";
@@ -49,10 +48,8 @@ export default function CallbackView() {
         fullName: user.fullName,
         email: user.email,
       });
-      clearSsoHints();
       router.replace(DASHBOARD);
     } catch (err) {
-      if (isUnlinkedRejection(err)) markSsoUnlinked();
       const message =
         err instanceof Error && err.message
           ? err.message
@@ -62,9 +59,9 @@ export default function CallbackView() {
   }
 
   async function settle() {
-    if (searchParams.get("error")) {
-      markSsoFallback();
-      router.replace(`${LOGIN}?sso=cancelled`);
+    const returnedError = searchParams.get("error");
+    if (returnedError) {
+      router.replace(`${LOGIN}?sso=cancelled&entra=${encodeURIComponent(returnedError)}`);
       return;
     }
 
@@ -117,14 +114,5 @@ export default function CallbackView() {
         </Link>
       </div>
     </main>
-  );
-}
-
-function isUnlinkedRejection(err: unknown): boolean {
-  const graphQLErrors = (err as { graphQLErrors?: { extensions?: { code?: string } }[] })
-    .graphQLErrors;
-  return (
-    Array.isArray(graphQLErrors) &&
-    graphQLErrors.some((e) => e?.extensions?.code === "UNAUTHENTICATED")
   );
 }

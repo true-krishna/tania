@@ -22,7 +22,7 @@ pnpm install && pnpm dev
 2. **Harapan**: form email + kata sandi tampil langsung — **tidak ada** pengalihan ke Microsoft (karena `entraSsoStart.enabled = false`), tidak ada tombol SSO yang menggantung.
 3. Masuk dengan akun lokal → masuk ke `/dashboard` seperti biasa.
 4. Buka `http://localhost:3000/login/callback` langsung (tanpa parameter) → **harapan**: pesan Bahasa Indonesia yang jelas ("Sesi masuk tidak valid atau sudah kedaluwarsa. Silakan coba lagi."), bukan halaman kosong atau error mentah.
-5. Buka `http://localhost:3000/login?sso=cancelled` → **harapan**: form tampil, **tidak** ada pengalihan otomatis (pintu fallback berfungsi).
+5. Buka `http://localhost:3000/login?sso=cancelled` → **harapan**: halaman login tampil apa adanya (tombol "Continue with Microsoft" + tautan "Login by Email") dengan pesan pembatalan, **tidak** ada pengalihan otomatis; menekan tautan "Login by Email" menampilkan form email + kata sandi.
 
 Verifikasi backend ikut hidup tanpa Entra: `curl -s localhost:8080/healthz`, lalu jalankan mutation `login` seperti biasa.
 
@@ -58,8 +58,8 @@ SELECT occurred_at, action, after FROM audit_logs WHERE action = 'LOGIN' ORDER B
 ```
 
 5. Panggil `refreshSession` dengan refresh token hasil SSO → **harapan**: token baru terbit dan `refresh_tokens.auth_method` baris baru tetap `entra_sso` (pewarisan metode — kalau berubah menjadi `local`, SC-005 salah hitung).
-6. Tekan pintu fallback ("Masuk dengan email & kata sandi") → **harapan**: form tampil, tidak ada pengalihan, masuk lokal berhasil, dan sesi lokal tercatat `auth_method='local'`.
-7. Uji **opsi A**: masuk dengan akun korporat yang **belum** tertaut ke akun Tania → kembali ke `/login` dengan pesan "belum tertaut" dan tautan "Masuk dengan email & kata sandi" yang menonjol (tautan ini juga terlihat sebelum ada kegagalan). Tutup tab, buka `/login` lagi di browser yang sama → **harapan**: form email tampil **langsung**, tanpa memutar ulang pengalihan ke Microsoft (penanda 7 hari). Untuk mengulang dari awal, hapus kunci `tania:sso:unlinked` dari Local Storage.
+6. Klik tautan "Login by Email" → **harapan**: form email + kata sandi tampil di halaman yang sama, tidak ada pengalihan, masuk lokal berhasil, dan sesi lokal tercatat `auth_method='local'`.
+7. Uji akun yang **belum** tertaut ke akun Tania: tekan tombol "Continue with Microsoft" → kembali ke `/login` dengan pesan "belum tertaut" dan tautan "Login by Email" sebagai jalan keluar. Tutup tab lalu buka `/login` lagi → **harapan**: halaman tetap menampilkan tombol Microsoft + tautan email (tidak ada pengalihan otomatis yang memutar ulang kegagalan, jadi tidak ada penanda browser yang perlu dihapus).
 
 ## B. UAT ke tenant Telkom (butuh akun sungguhan)
 

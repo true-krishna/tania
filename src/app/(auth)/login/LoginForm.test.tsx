@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 //
-// Component tests for the SSO-first `/login` (T026 · FR-001/FR-002/FR-009 · D8).
+// Component tests for the SSO-first `/login` (T026 · FR-001/FR-002/FR-009 · D8′).
 // The PKCE primitives themselves are covered in
 // `src/features/auth/entra-pkce.test.ts`; here the subject is the page's
-// decision: redirect once, or show the email door and never redirect again.
+// decision: offer Microsoft as the main door, never navigate on mount, and put
+// the email + password form behind "Login by Email".
 
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,13 +12,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { EntraSsoStartDocument, LoginDocument } from "@/generated/graphql";
 import * as tokenStore from "@/lib/auth/token-store";
-import { SSO_UNLINKED_TTL_MS, markSsoFallback, markSsoUnlinked } from "@/lib/auth/config";
-import { SSO_FALLBACK_KEY } from "@/lib/constants/storage";
 import { ENTRA_ATTEMPT_KEY } from "@/features/auth/entra-pkce";
 import LoginForm from "./LoginForm";
 
 const routerReplace = vi.fn();
-const locationReplace = vi.fn();
+const locationAssign = vi.fn();
 let params = new URLSearchParams();
 
 vi.mock("next/navigation", () => ({
@@ -50,69 +49,88 @@ function renderLogin(mocks: unknown[]) {
   );
 }
 
+const EMAIL_LABEL = /email kerja/i;
+const MICROSOFT = { name: /continue with microsoft/i };
+const EMAIL_DOOR = { name: /login by email/i };
+
 beforeEach(() => {
   process.env.NEXT_PUBLIC_AUTH_LOCAL_ONLY = "0";
   delete process.env.NEXT_PUBLIC_DEFAULT_ACCESS_ROLE;
   params = new URLSearchParams();
   routerReplace.mockClear();
-  locationReplace.mockClear();
+  locationAssign.mockClear();
   sessionStorage.clear();
   localStorage.clear();
   tokenStore.clearSession();
-  // jsdom cannot navigate; swapping `location` keeps `replace` observable.
+  // jsdom cannot navigate; swapping `location` keeps `assign` observable.
   const original = window.location;
   Object.defineProperty(window, "location", {
     configurable: true,
     writable: true,
-    value: { ...original, replace: locationReplace, search: "" },
+    value: { ...original, assign: locationAssign, search: "" },
   });
 });
 
-describe("auto-redirect sekali ke Microsoft (D8)", () => {
-  it("hands the browser to the authorization URL when SSO is active and no hint is set", async () => {
+describe("tombol Microsoft selalu tampil, tanpa pengalihan otomatis (D8′)", () => {
+  it("offers the Microsoft button and never navigates while the page is open", async () => {
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    await waitFor(() => expect(locationReplace).toHaveBeenCalledTimes(1));
-    expect(locationReplace).toHaveBeenCalledWith(AUTHORIZATION_URL);
+    expect(await screen.findByRole("button", MICROSOFT)).toBeInTheDocument();
+    expect(screen.queryByLabelText(EMAIL_LABEL)).not.toBeInTheDocument();
+    // The authorization URL is ready, but the browser stays put until a click.
+    await waitFor(() => expect(sessionStorage.getItem(ENTRA_ATTEMPT_KEY)).not.toBeNull());
+    expect(locationAssign).not.toHaveBeenCalled();
+  });
+
+  it("hands the browser to Microsoft on click", async () => {
+    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
+
+    fireEvent.click(await screen.findByRole("button", MICROSOFT));
+
+    expect(locationAssign).toHaveBeenCalledWith(AUTHORIZATION_URL);
     // The attempt must survive the navigation: the callback page reads it back.
     expect(sessionStorage.getItem(ENTRA_ATTEMPT_KEY)).not.toBeNull();
-    // SSO is the main door: the email form is not what the visitor sees first.
-    expect(screen.queryByLabelText(/email kerja/i)).not.toBeInTheDocument();
   });
 
-  it("shows the email form and does not redirect when the fallback hint is set", async () => {
-    markSsoFallback();
+  it("opens the email + password form in place from the Login by Email link", async () => {
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    expect(await screen.findByLabelText(/email kerja/i)).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
-    expect(locationReplace).not.toHaveBeenCalled();
-  });
+    fireEvent.click(await screen.findByRole("button", EMAIL_DOOR));
 
-  it("shows the email form and does not redirect when the unlinked hint is set", async () => {
-    markSsoUnlinked();
+    expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(locationAssign).not.toHaveBeenCalled();
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
+});
+
+describe("selagi opsi masuk diperiksa (tanpa tombol nonaktif)", () => {
+  it("shows a neutral placeholder instead of a disabled Microsoft button", async () => {
+    // Staging feedback (TAN-287): a button that is disabled and then vanishes
+    // when SSO turns out to be off reads as a glitch. While the answer is in
+    // flight, show a status line and no door at all.
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    expect(await screen.findByLabelText(/email kerja/i)).toBeInTheDocument();
-    expect(locationReplace).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent(/memeriksa opsi masuk/i);
+    expect(screen.queryByRole("button", MICROSOFT)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", EMAIL_DOOR)).not.toBeInTheDocument();
+
+    expect(await screen.findByRole("button", MICROSOFT)).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
+});
 
-  it("ignores an unlinked hint older than 7 days", async () => {
-    markSsoUnlinked(Date.now() - SSO_UNLINKED_TTL_MS - 1);
-    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
-
-    await waitFor(() => expect(locationReplace).toHaveBeenCalledTimes(1));
-  });
-
-  it("shows the email form directly when SSO is inactive — no dangling SSO button", async () => {
+describe("SSO tidak aktif atau gagal (tanpa tombol menggantung)", () => {
+  it("shows only the email form when entraSsoStart answers enabled=false", async () => {
     renderLogin([ssoStartMock(false)]);
 
-    expect(await screen.findByLabelText(/email kerja/i)).toBeInTheDocument();
-    expect(locationReplace).not.toHaveBeenCalled();
-    expect(screen.queryByRole("button", { name: /masuk dengan microsoft/i })).not.toBeInTheDocument();
+    expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
+    expect(screen.queryByRole("button", MICROSOFT)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", EMAIL_DOOR)).not.toBeInTheDocument();
+    expect(locationAssign).not.toHaveBeenCalled();
   });
 
-  it("shows the email form and reports the failure when the SSO query fails", async () => {
+  it("falls back to the email form and says so when the SSO query fails", async () => {
     renderLogin([
       {
         request: { query: EntraSsoStartDocument },
@@ -121,57 +139,52 @@ describe("auto-redirect sekali ke Microsoft (D8)", () => {
       },
     ]);
 
-    expect(await screen.findByLabelText(/email kerja/i)).toBeInTheDocument();
-    expect(await screen.findByText(/masuk dengan microsoft sedang tidak tersedia/i)).toBeInTheDocument();
-    expect(locationReplace).not.toHaveBeenCalled();
-  });
-});
-
-describe("pintu email selalu terlihat dan menghentikan pengalihan (D8 (i))", () => {
-  it("offers the email door while SSO is active, and choosing it sets the hint", async () => {
-    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
-
-    const door = await screen.findByRole("button", { name: /masuk dengan email & kata sandi/i });
-    fireEvent.click(door);
-
-    expect(await screen.findByLabelText(/email kerja/i)).toBeInTheDocument();
-    expect(sessionStorage.getItem(SSO_FALLBACK_KEY)).toBe("1");
-  });
-
-  it("lets the visitor retry Microsoft from the email form", async () => {
-    markSsoFallback();
-    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
-
-    fireEvent.click(await screen.findByRole("button", { name: /masuk dengan microsoft/i }));
-
-    expect(locationReplace).toHaveBeenCalledWith(AUTHORIZATION_URL);
+    expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/masuk dengan microsoft sedang tidak tersedia/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", MICROSOFT)).not.toBeInTheDocument();
+    expect(locationAssign).not.toHaveBeenCalled();
   });
 });
 
 describe("kembali dari Microsoft (?sso=)", () => {
-  it("sets the hint, explains the cancellation and does not redirect again", async () => {
+  it("explains a cancellation without navigating anywhere", async () => {
     params = new URLSearchParams("sso=cancelled");
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/masuk dengan microsoft dibatalkan/i);
-    expect(screen.getByLabelText(/email kerja/i)).toBeInTheDocument();
-    expect(sessionStorage.getItem(SSO_FALLBACK_KEY)).toBe("1");
-    expect(locationReplace).not.toHaveBeenCalled();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /masuk dengan microsoft dibatalkan/i,
+    );
+    expect(await screen.findByRole("button", MICROSOFT)).toBeInTheDocument();
+    expect(screen.queryByLabelText(EMAIL_LABEL)).not.toBeInTheDocument();
+    expect(locationAssign).not.toHaveBeenCalled();
   });
 
-  it("explains an error return the same way", async () => {
+  it("names the Microsoft error code and points at the admin", async () => {
+    params = new URLSearchParams("sso=cancelled&entra=access_denied");
+    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/access_denied/);
+    expect(screen.getByRole("alert")).toHaveTextContent(/hubungi admin/i);
+    expect(locationAssign).not.toHaveBeenCalled();
+  });
+
+  it("explains an error return and still lets the visitor open the email form", async () => {
     params = new URLSearchParams("sso=error");
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/masuk dengan microsoft gagal/i);
-    expect(locationReplace).not.toHaveBeenCalled();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /masuk dengan microsoft gagal/i,
+    );
+    fireEvent.click(await screen.findByRole("button", EMAIL_DOOR));
+    expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
+    expect(locationAssign).not.toHaveBeenCalled();
   });
 });
 
 describe("jalur email + kata sandi (FR-002 — tidak boleh teregresi)", () => {
-  it("signs in, clears the SSO hints and goes to the dashboard", async () => {
-    markSsoFallback();
-    markSsoUnlinked();
+  it("signs in and goes to the dashboard", async () => {
     renderLogin([
       ssoStartMock(true, AUTHORIZATION_URL),
       {
@@ -199,7 +212,8 @@ describe("jalur email + kata sandi (FR-002 — tidak boleh teregresi)", () => {
       },
     ]);
 
-    fireEvent.change(await screen.findByLabelText(/email kerja/i), {
+    fireEvent.click(await screen.findByRole("button", EMAIL_DOOR));
+    fireEvent.change(await screen.findByLabelText(EMAIL_LABEL), {
       target: { value: "ada@tania.id" },
     });
     fireEvent.change(screen.getByLabelText(/password/i), {
@@ -211,7 +225,6 @@ describe("jalur email + kata sandi (FR-002 — tidak boleh teregresi)", () => {
       expect(tokenStore.getSession()?.accessToken).toBe("token-abc");
       expect(routerReplace).toHaveBeenCalledWith("/dashboard");
     });
-    expect(sessionStorage.getItem(SSO_FALLBACK_KEY)).toBeNull();
-    expect(localStorage.getItem("tania:sso:unlinked")).toBeNull();
+    expect(locationAssign).not.toHaveBeenCalled();
   });
 });

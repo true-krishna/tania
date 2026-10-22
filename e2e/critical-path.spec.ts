@@ -417,7 +417,10 @@ test("T034 — gagal ramah lalu coba ulang idempoten dengan clientRequestId sama
 // 006-entra-sso-login — U2 (T028): regresi jalur lokal & rute callback, tanpa
 // kredensial Entra. Stack sama dengan runbook `e2e/README.md`; backend hidup
 // **tanpa** `ENTRA_*` sehingga `entraSsoStart.enabled = false` (quickstart §A).
-// Mode `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` tidak merender form login sama sekali
+// Sejak revisi D8′ (2026-10-22) halaman login tidak pernah mengalihkan sendiri:
+// tombol "Continue with Microsoft" baru membuka Microsoft saat ditekan, dan form
+// email terbuka lewat tautan "Login by Email". Mode
+// `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` tidak merender form login sama sekali
 // (LoginForm langsung ke /dashboard), jadi skenario yang memeriksa form di-skip
 // di mode itu — ter-`skip` bukan lulus.
 // ---------------------------------------------------------------------------
@@ -431,8 +434,12 @@ test("T028 — tanpa SSO aktif, /login menampilkan form email langsung", async (
 
   await expect(page.locator("#login-email")).toBeVisible();
   await expect(page.locator("#login-password")).toBeVisible();
-  // Tidak ada tombol SSO menggantung saat `enabled=false`.
-  await expect(page.getByRole("button", { name: /masuk dengan microsoft/i })).toHaveCount(0);
+  // Tidak ada tombol SSO menggantung saat `enabled=false`, dan tanpa SSO tidak
+  // ada tautan "Login by Email" yang tidak ada gunanya.
+  await expect(
+    page.getByRole("button", { name: /continue with microsoft/i }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /login by email/i })).toHaveCount(0);
   // Beri waktu query entraSsoStart selesai: tidak boleh ada pengalihan otomatis.
   await page.waitForTimeout(2000);
   await expect(page).toHaveURL(/\/login$/);
@@ -469,8 +476,8 @@ test("T028 — /login?sso=cancelled menampilkan form tanpa pengalihan otomatis",
   await page.goto("/login?sso=cancelled");
 
   await expect(page.getByRole("alert")).toHaveText(/masuk dengan microsoft dibatalkan/i);
+  // Tanpa SSO aktif form email langsung tampil; halaman tetap di /login.
   await expect(page.locator("#login-email")).toBeVisible();
-  // Penanda fallback aktif → pengalihan otomatis tidak boleh berjalan lagi.
   await page.waitForTimeout(2000);
   await expect(page).toHaveURL(/\/login\?sso=cancelled$/);
 });

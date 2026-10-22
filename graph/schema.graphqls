@@ -64,6 +64,19 @@ enum EntraProvisionAction {
   CREATE
 }
 
+"""Kolom yang dapat diurutkan pada daftar provisi Entra (FR-44)."""
+enum EntraEmployeeSortField {
+  FULL_NAME
+  EMAIL
+  PROVISION_STATUS
+}
+
+"""Arah pengurutan daftar (FR-44)."""
+enum SortDirection {
+  ASC
+  DESC
+}
+
 """Hasil provisioning akun Entra seorang talent (FR-44, FR-45)."""
 type EntraProvision {
   status: EntraProvisionStatus!
@@ -326,6 +339,24 @@ type Project {
   updatedAt: Time!
 }
 
+# ------------------------- Aktivitas (FR-008) -------------------------------
+
+"""Referensi prioritas aktivitas (FR-008); read-only, urut terendah → tertinggi."""
+type ActivityPriority {
+  id: ID!
+  name: String!
+  sortOrder: Int!
+}
+
+"""Referensi status aktivitas (FR-008); read-only, urut siklus hidup."""
+type ActivityStatus {
+  id: ID!
+  name: String!
+  sortOrder: Int!
+  """true untuk Done & Cancelled — hanya untuk gaya badge; transisi status ditegakkan server-side (FR-008)."""
+  isTerminal: Boolean!
+}
+
 # ------------------------------- Employee -----------------------------------
 
 type Employee {
@@ -426,8 +457,6 @@ input CreateEmployeeInput {
   major: String
   joinedAt: Date!
   status: EmployeeStatus
-  """Auto-create akun Entra saat data tersimpan (FR-43); default true."""
-  autoCreateEntra: Boolean = true
 }
 
 input UpdateEmployeeInput {
@@ -1058,6 +1087,12 @@ type Query {
   """Referensi Project level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Assignment); 2026-10-16 clarify 8."""
   projects(unitId: ID, includeInactive: Boolean = false): [Project!]!
 
+  # --- Referensi aktivitas (FR-008; read-only, tanpa mutation) ---
+  """Referensi prioritas aktivitas, urut terendah → tertinggi."""
+  activityPriorities: [ActivityPriority!]!
+  """Referensi status aktivitas, urut siklus hidup."""
+  activityStatuses: [ActivityStatus!]!
+
   # --- Employee (Operation/Admin tulis; Chapter/Admin baca) ---
   employees(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
   employee(id: ID!): Employee
@@ -1074,8 +1109,14 @@ type Query {
   employeesNeedingFollowUp(first: Int = 25, after: String): EmployeeConnection!
   """Usia pensiun (tahun) dari setelan aplikasi Admin — default 55 (FR-40, T042)."""
   retirementAge: Int!
-  """Talent yang belum memiliki akun Entra (FR-44)."""
-  employeesWithoutEntra(first: Int = 25, after: String): EmployeeConnection!
+  """Talent yang belum memiliki akun Entra (FR-44), dengan pencarian nama dan pengurutan."""
+  employeesWithoutEntra(
+    search: String
+    sortBy: EntraEmployeeSortField = FULL_NAME
+    sortDirection: SortDirection = ASC
+    first: Int = 25
+    after: String
+  ): EmployeeConnection!
 
   # --- Assignment ---
   assignments(filter: AssignmentFilter, first: Int = 25, after: String): AssignmentConnection!

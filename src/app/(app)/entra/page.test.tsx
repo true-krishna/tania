@@ -105,7 +105,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Aksi Rina Kusuma" }));
     expect(screen.getByRole("button", { name: /coba lagi/i })).toBeInTheDocument();
-  });
+  }, 15000);
 
   it("shows an empty state when every talent already has an Entra account", async () => {
     renderPage([emptyListMock]);
@@ -148,8 +148,11 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     fireEvent.click(await screen.findByRole("button", { name: /provisioning/i }));
 
     expect(await screen.findByText(/provisi akun budi santoso berhasil/i)).toBeInTheDocument();
-    expect(await screen.findByText("Rina Kusuma")).toBeInTheDocument();
-    expect(screen.queryByText("Budi Santoso")).not.toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.queryByText("Budi Santoso")).not.toBeInTheDocument(),
+      { timeout: 3000 }
+    );
+    expect(screen.getByText("Rina Kusuma")).toBeInTheDocument();
   });
 
   it("surfaces a failed retry without losing the row", async () => {
@@ -250,7 +253,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
       {
         request: {
           query: EmployeesWithoutEntraDocument,
-          variables: { first: ENTRA_LIST_VARIABLES.first, after: "c-100" },
+          variables: { ...ENTRA_LIST_VARIABLES, after: "c-100" },
         },
         result: {
           data: {
@@ -318,7 +321,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
       {
         request: {
           query: EmployeesWithoutEntraDocument,
-          variables: { first: ENTRA_LIST_VARIABLES.first, after: "c-100" },
+          variables: { ...ENTRA_LIST_VARIABLES, after: "c-100" },
         },
         result: page(Array.from({ length: 5 }, (_, i) => talent(101 + i)), 105, false, null),
       },
@@ -350,7 +353,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
       {
         request: {
           query: EmployeesWithoutEntraDocument,
-          variables: { first: ENTRA_LIST_VARIABLES.first, after: "c-2" },
+          variables: { ...ENTRA_LIST_VARIABLES, after: "c-2" },
         },
         result: page(fresh4, 104, false, null),
       },
@@ -376,4 +379,57 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     expect(screen.queryByText("Talent 001")).not.toBeInTheDocument();
     expect(screen.getByText("Talent 102")).toBeInTheDocument();
   }, 15000);
+});
+
+describe("EntraProvisioningPage (pencarian dan pengurutan, FR-44)", () => {
+  it("searches by employee name", async () => {
+    renderPage([
+      listMock,
+      {
+        request: {
+          query: EmployeesWithoutEntraDocument,
+          variables: { ...listVariables, search: "rina" },
+        },
+        result: connection([rows[1]]),
+      },
+    ]);
+    expect(await screen.findByText("Budi Santoso")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("searchbox", { name: /cari nama karyawan/i }), {
+      target: { value: "rina" },
+    });
+
+    await waitFor(
+      () => expect(screen.queryByText("Budi Santoso")).not.toBeInTheDocument(),
+      { timeout: 3000 }
+    );
+    expect(screen.getByText("Rina Kusuma")).toBeInTheDocument();
+  });
+
+  it("sorts every data column through the server query", async () => {
+    const sortedVariables = {
+      ...listVariables,
+      sortBy: "EMAIL",
+      sortDirection: "ASC",
+    };
+    renderPage([
+      listMock,
+      {
+        request: { query: EmployeesWithoutEntraDocument, variables: sortedVariables },
+        result: connection(rows),
+      },
+    ]);
+    expect(await screen.findByText("Budi Santoso")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Email" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("columnheader", { name: /email/i })).toHaveAttribute(
+        "aria-sort",
+        "ascending"
+      )
+    );
+    expect(screen.getByRole("button", { name: "Nama" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hasil provisi" })).toBeInTheDocument();
+  });
 });

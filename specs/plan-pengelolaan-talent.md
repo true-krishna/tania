@@ -14,7 +14,7 @@
 
 ## Summary
 
-Pemisahan data diri karyawan dari data kepegawaian: tabel `employees` dipangkas menjadi data diri (termasuk **NIK** terenkripsi), seluruh identitas & penugasan kerja pindah ke tabel baru **`employment_contracts`** (atribut selaras TMS: email kantor, nomor induk, band_position, jobRole, jobTitle, jobLevel, work location, unit, periode). Di atasnya dibangun **siklus kerja** (US9–US13): CRUD kontrak, perpanjangan PKWT (termasuk perpindahan unit), resign, mutasi (kontrak lama berakhir + kontrak baru efektif tanggal mutasi), pensiun — plus turunan "kontrak habis tanpa perpanjangan" (non-assignable, status tetap `active`, daftar "perlu tindak lanjut"). Sumber kebenaran chapter/keter-assign-an berpindah ke `kontrak aktif → jobRole → chapter`. Ditutup dengan **provisi akun Microsoft Entra** (US14: auto-create saat create talent, UI daftar "belum ada Entra", aturan domain `telkom.co.id` → invitation / lainnya → create account dengan UPN `nama-depan.nama-belakang@digitaltelkom.id`, penonaktifan saat terminasi).
+Pemisahan data diri karyawan dari data kepegawaian: tabel `employees` dipangkas menjadi data diri (termasuk **NIK** terenkripsi), seluruh identitas & penugasan kerja pindah ke tabel baru **`employment_contracts`** (atribut selaras TMS: email kantor, nomor induk, band_position, jobRole, jobTitle, jobLevel, work location, unit, periode). Di atasnya dibangun **siklus kerja** (US9–US13): CRUD kontrak, perpanjangan PKWT (termasuk perpindahan unit), resign, mutasi (kontrak lama berakhir + kontrak baru efektif tanggal mutasi), pensiun — plus turunan "kontrak habis tanpa perpanjangan" (non-assignable, status tetap `active`, daftar "perlu tindak lanjut"). Sumber kebenaran chapter/keter-assign-an berpindah ke `kontrak aktif → jobRole → chapter`. Ditutup dengan **provisi akun Microsoft Entra** (US14: provisioning manual dari menu Provisi Akun Entra tanpa auto-create saat create talent, UI daftar "belum ada Entra" dengan pencarian nama dan pengurutan, aturan domain `telkom.co.id` → invitation / lainnya → create account dengan UPN `nama-depan.nama-belakang@digitaltelkom.id`, penonaktifan saat terminasi).
 
 Pendekatan teknis: **skema & API baru di atas infra eksisting** — tabel `employment_contracts` + perluasan `employees`, mutasi lifecycle yang memakai pola `recordChange` (persist + audit satu transaksi), derivasi status/assignability turunan tanggal (tanpa cron), dan integrasi Graph API Entra pasca-commit. Tidak ada dependensi runtime baru kecuali klien HTTP Graph API untuk Entra (justifikasi di bawah). Eksekusi mengikuti 6 sub-issue yang sudah dibuat di TAN-98 (TAN-127 → TAN-126 → TAN-128/TAN-129/TAN-131 → TAN-130).
 
@@ -80,7 +80,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 | FR-40 dashboard H-90/H-30 + pra-pensiun | **Gap G8** | Widget belum ada; data turunan tanggal (indeks `end_date`), usia pensiun dari setelan Admin (default 56, keputusan 2026-10-10) berbasis `birth_date` |
 | FR-41 jejak audit lifecycle + riwayat per record | **Partial** | `recordChange` siap dipakai; cakupan perlu entity `employment_contract` + aksi lifecycle (RENEW/RESIGN/MUTATE/RETIRE/END); UI riwayat per record untuk Operation belum ada (baca `auditLogs` filter `entityType`+`entityId`) |
 | FR-42 enkripsi & masking NIK | **Gap G9** | Greenfield: `nik_hash` (unik) + `nik_enc`, masking 4 digit akhir di API (resolver) & UI untuk semua peran — nilai penuh tidak pernah diekspos (keputusan 2026-10-10), audit menyimpan NIK tersamar |
-| FR-43 auto-create Entra di form | **Gap G10** | Greenfield — toggle di form create; provisioning pasca-commit; gagal tidak menggagalkan penyimpanan karyawan |
+| FR-43 provisioning hanya dari menu Entra | **Gap G10** | Greenfield — form create tidak memicu provisioning; seluruh aksi ada di menu Provisi Akun Entra |
 | FR-44 UI daftar "belum ada Entra" + provisioning manual | **Gap G11** | Greenfield — query status provisi + halaman khusus Operation |
 | FR-45 aturan domain + UPN | **Gap G12** | `telkom.co.id` → invitation; selain itu → create account UPN `nama-depan.nama-belakang@digitaltelkom.id` (sufiks angka bila bentrok); hasil tercatat |
 | FR-46 nonaktifkan Entra saat terminasi | **Gap G13** | Hook pada resign/pensiun — ganti `entra_object_id` (kolom dorman sudah ada) |
@@ -127,7 +127,7 @@ Hampir seluruh amandemen adalah **pekerjaan baru**; infra audit, derivasi assign
 
 ### Provisi Entra (FR-43–FR-46)
 
-- **Alur**: form create mengirim `autoCreateEntra` (default `true`); setelah transaksi karyawan commit, provisioning dijalankan best-of-effort **di luar transaksi DB** (fail tidak membatalkan penyimpanan karyawan — edge case spec) dan hasilnya (jenis aksi, status berhasil/gagal, UPN/object-id) dicatat + masuk audit. Kegagalan → tampil di daftar FR-44 untuk retry manual.
+- **Alur**: form create **tidak** mengirim opsi provisioning; penyimpanan karyawan tidak memicu provisioning otomatis. Seluruh provisioning dijalankan Operation dari menu Provisi Akun Entra (FR-44), dan hasilnya (jenis aksi, status berhasil/gagal, UPN/object-id) dicatat + masuk audit. Kegagalan tampil di daftar FR-44 untuk retry manual; daftar dapat dicari berdasarkan nama dan diurutkan pada seluruh kolom data.
 - **Aturan**: domain email data diri `telkom.co.id` → **invitation**; selain itu → **create account** dengan UPN `nama-depan.nama-belakang@digitaltelkom.id` (titik; `nama-depan` = kata pertama, `nama-belakang` = kata kedua nama lengkap — kata ke-3 dst diabaikan, mis. `Rina Kusuma Wardani` → `rina.kusuma@…`); partikel (`bin`, `binti`, `van`, `de`, `al`) tidak dihitung sebagai kata (`Muhammad bin Abdullah` → `muhammad.abdullah@…`); nama satu kata tanpa titik (`Sukarno` → `sukarno@…`); setiap kandidat UPN wajib dicek terhadap daftar email yang ada (anti-duplikat); bentrok → angka mulai dari `1` di belakang bagian akhir UPN (`rina.kusuma1`, `sukarno1`, …) sampai unik. Karyawan yang sudah terlink `entra_object_id` tidak diprovisi ulang.
 - **Terminasi**: resign/pensiun memanggil penonaktifan akun Entra yang dikelola (`FR-46`) + audit; akun lokal terkait tetap nonaktif seperti pola `SetStatus` eksisting.
 - **Konfigurasi**: tenant ID, client ID, client secret lewat environment/secret store (konstitusi III — tidak pernah di-commit); klien Graph API modular (`internal/platform/entra/`) agar lifecycle tetap teruji via fake tanpa jaringan.
@@ -190,7 +190,7 @@ tania-backend/
 tania-dashboard/
 ├── src/app/(app)/employees/
 │   ├── page.tsx                               # + filter unit/posisi/status & pencarian nomor induk, kolom data diri (NIK masked)
-│   ├── new/page.tsx                           # form data diri baru + toggle auto-create Entra
+│   ├── new/page.tsx                           # form data diri baru (tanpa toggle auto-create Entra)
 │   ├── [id]/page.tsx                          # detail: data diri + riwayat kontrak + riwayat perubahan
 │   └── [id]/edit/page.tsx                     # form ubah data diri (gap form ubah — K3)
 ├── src/app/(app)/contracts/                   # daftar/form/detail kontrak + wizard perpanjangan
@@ -235,7 +235,7 @@ tania-dashboard/
 | **K2 — API kontrak & siklus kerja** | GraphQL CRUD kontrak, perpanjangan, resign, mutasi, pensiun, "perlu tindak lanjut"; derivasi assignability; audit tiap aksi; hook nonaktif-akun untuk Entra | **TAN-126** (stage 2) | G2, G4–G7, FR-41 (server) |
 | **K3 — UI data diri & kontrak** | Form data diri (+NIK masked, tanpa employee ID), form ubah data diri (gap), daftar/filter karyawan, daftar/form/detail kontrak, riwayat kontrak & riwayat perubahan per record | **TAN-128** (stage 3) | G1, G2, G14 (UI), bagian FR-41 (UI) |
 | **K4 — UI alur siklus & dashboard** | Wizard perpanjangan (+pindah unit), aksi resign/mutasi/pensiun + peringatan dependensi, widget "segera berakhir" (H-90/H-30) & pra-pensiun (usia dari setelan Admin, default 56) | **TAN-129** (stage 3) | G4–G8 (UI) |
-| **K5 — Provisi Entra** | Klien Graph API (invitation vs create per domain, UPN + sufiks), toggle auto-create di form, UI daftar "belum ada Entra" + retry, penonaktifan saat terminasi | **TAN-131** (stage 3) | G10–G13 |
+| **K5 — Provisi Entra** | Klien Graph API (invitation vs create per domain, UPN + sufiks), UI daftar "belum ada Entra" + pencarian/pengurutan + retry, penonaktifan saat terminasi | **TAN-131** (stage 3) | G10–G13 |
 | **K6 — Jejak audit** | Audit diperluas ke entitas kontrak + aksi lifecycle; tampilan riwayat per record untuk Operation (baca `auditLogs` per entitas); job anonimisasi retensi 5 tahun (T041) | **TAN-130** (stage 4) | FR-41 (tampilan) |
 
 K1 menjadi prasyarat K2; K2 menjadi prasyarat K3–K5 (kontrak API); K6 menyusul namun dependensi skemanya sudah ikut K1. K3, K4, dan K5 dapat berjalan paralel setelah K2.

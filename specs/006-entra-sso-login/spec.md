@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-20
 
-**Status**: Clarified & direvisi — seluruh butir klarifikasi (NC-01..NC-03) ditutup dengan keputusan pemilik produk (2026-10-20); **direvisi 2026-10-20** menyusul `/speckit.plan` & diskusi TAN-269 dan **direvisi 2026-10-21** (penyederhanaan penyebut SC-005, TAN-267) — rincian pada baris `**Revisi**` di bawah. Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
+**Status**: Clarified & direvisi — seluruh butir klarifikasi (NC-01..NC-03) ditutup dengan keputusan pemilik produk (2026-10-20); **direvisi 2026-10-20** menyusul `/speckit.plan` & diskusi TAN-269 dan **direvisi 2026-10-21** (penyederhanaan penyebut SC-005, TAN-267) dan **direvisi 2026-10-22** (halaman login tanpa auto-redirect: tombol "Continue with Microsoft" selalu tampil, form email di balik tautan "Login by Email") — rincian pada baris `**Revisi**` di bawah. **Status pelaksanaan** (diperbarui 2026-10-21): `/speckit.plan` (TAN-269) dan `/speckit.tasks` (TAN-275) selesai; issue implementasi **TAN-285–TAN-288** (gelombang U0–U3) dibuat atas persetujuan pemilik produk.
 
 **Input**: `/speckit.specify` (TAN-267) — "Tambahkan opsi login menggunakan Microsoft Entra SSO sebagai opsi utama, selain email & password. Credentials (CLIENT_ID, CLIENT_SECRET, TENANT_ID) sudah disiapkan." (perintah: "/speckit.specify Sesuai issue ini" — deskripsi diambil dari TAN-267)
 
@@ -17,6 +17,8 @@
 **Revisi**: 2026-10-21 (keputusan pemilik produk — **penyederhanaan SC-005**, TAN-267) — dalam lingkup **Login**, sistem hanya perlu memastikan **pengguna ada di dalam tenant atau tidak**; perkara `INVITE`/`CREATE` adalah ranah kemampuan **Provisi Entra**, bukan fitur ini. Penyebut SC-005 diganti dari "pengguna yang sudah memiliki akun korporat" (diukur lewat `users.entra_object_id` — kolom yang justru diisi oleh keberhasilan SSO itu sendiri, sehingga **sirkular**) menjadi **"pengguna yang ada di dalam tenant"**, dibaca saat pengukuran dari daftar akun tenant. Angka/target (≥ 80%, 1 bulan) dan seluruh FR tidak berubah.
 
 **Revisi**: 2026-10-21 (remediasi temuan `/speckit.analyze` **I1/I2** — redaksi, TAN-267/TAN-269) — **FR-004 jalur (a)** diperjelas: keterkaitan provisi hanya memetakan bila **tercatat pada baris provisi karyawan tersebut** (hasil pembuatan akun maupun sinkronisasi akun korporat yang sudah ada); akun korporat yang diundang lewat jalur "sudah guest di tenant" **tidak** mencatat keterkaitannya, sehingga dipetakan lewat jalur (b) — alamat masuknya sama dengan alamat undangannya. Perilaku kode tidak berubah; yang diperbaiki hanya keakuratan klaim spec. Ikut diselaraskan: penomoran **langkah (1)(2)(3)** (bukan "jalur (2)/(3)") pada `quickstart.md` §B dan acuan penyebut SC-005 pada `quickstart.md` §C + `contracts/sso-entra.md` §6 — temuan **I2** dan turunan **C2/C3** pada artefak plan.
+
+**Revisi**: 2026-10-22 (keputusan pemilik produk — **halaman login tanpa auto-redirect**, `/speckit.clarify` TAN-267) — susunan halaman login **dibalik** dari keputusan `/speckit.clarify` 2026-10-20: **tombol "Continue with Microsoft" selalu tampil** di halaman login (di atas, sebagai aksi utama) dan **baru memanggil alur Microsoft saat ditekan**; halaman login **tidak** berpindah otomatis ke Microsoft saat dibuka. Jalur email + kata sandi disajikan sebagai **tautan "Login by Email"** di bawah tombol; menekannya **menampilkan form email + kata sandi di halaman yang sama**. Setelah proses Microsoft berhasil, pengguna **diarahkan masuk ke aplikasi Tania**. Yang berubah: **FR-001**, **FR-002**, Acceptance Scenario **US1** butir 1–2, satu **Edge Case**, dan jawaban klarifikasi "Makna opsi utama" (digantikan). Sifat auto-redirect pada **NC-03** ikut digantikan; isi NC-01/NC-02, **FR-003–FR-012**, **SC-001–SC-005**, serta US1–US4 selebihnya **tidak berubah**.
 
 **Relasi ke spesifikasi lain**:
 
@@ -36,7 +38,8 @@ Spesifikasi ini menambahkan **masuk Single Sign-On (SSO) dengan akun korporat Mi
 - Q: Cakupan akun Microsoft — hanya akun organisasi tenant Telkom (single-tenant), atau perlu mendukung akun personal Microsoft / tenant lain (multi-tenant)? → A: **Tenant Telkom saja**.
 - Q: Pemetaan & provisioning akun — pengguna yang sudah ada dicocokkan otomatis lewat email; pengguna baru (belum punya akun Tania) dibuat otomatis dengan peran default, atau ditolak? → A: **Work email** — pemetaan otomatis berdasarkan email korporat; tanpa pembuatan akun otomatis.
 - Q: Pembatasan akses — semua akun dalam tenant boleh login, atau dibatasi ke domain/grup tertentu? → A: **Boleh login** — semua akun dalam tenant, tanpa pembatasan domain/grup tambahan.
-- Q: Makna "opsi utama" — tombol Microsoft ditonjolkan di atas form email, atau auto-redirect ke halaman login Microsoft dengan pintu "masuk dengan email" sebagai fallback? → A: **Email sebagai fallback** (auto-redirect ke Microsoft; email + kata sandi tetap dapat dijangkau).
+- Q: Makna "opsi utama" — tombol Microsoft ditonjolkan di atas form email, atau auto-redirect ke halaman login Microsoft dengan pintu "masuk dengan email" sebagai fallback? → A: **Email sebagai fallback** (auto-redirect ke Microsoft; email + kata sandi tetap dapat dijangkau). — **Digantikan pada sesi 2026-10-22 di bawah.**
+- Q: (2026-10-22) Susunan halaman login — pengalihan otomatis ke Microsoft begitu halaman dibuka, atau tombol yang selalu tampil? → A: **Tombol selalu tampil** — "Continue with Microsoft" tampil di atas sebagai aksi utama dan **baru memanggil alur Microsoft saat ditekan** (tanpa auto-redirect); jalur email + kata sandi disajikan sebagai tautan **"Login by Email"** yang **menampilkan form email di halaman yang sama** saat diklik; setelah proses Microsoft berhasil, pengguna **diarahkan masuk ke aplikasi Tania**.
 - Q: Prioritas & target rilis — priority (urgent/high/medium) dan tanggal target? → A: **High** (tanpa tanggal target).
 
 ## User Scenarios & Testing *(mandatory)*
@@ -51,8 +54,8 @@ Sebagai **pengguna Tania**, saya dapat masuk ke aplikasi dengan akun korporat Mi
 
 **Acceptance Scenarios**:
 
-1. **Given** pengguna dengan akun korporat yang terhubung membuka halaman login, **When** mengikuti proses masuk yang diarahkan otomatis ke Microsoft dan menyelesaikan autentikasi dengan akun korporat tersebut, **Then** sesi Tania terbentuk dan pengguna masuk ke aplikasi.
-2. **Given** pengguna membatalkan proses autentikasi di sisi Microsoft atau proses gagal di tengah jalan, **When** kembali ke halaman login, **Then** tidak ada sesi yang terbentuk dan pintu fallback email + kata sandi dapat langsung dipakai tanpa dipaksa kembali ke SSO.
+1. **Given** pengguna dengan akun korporat yang terhubung membuka halaman login, **When** menekan tombol "Continue with Microsoft" dan menyelesaikan autentikasi dengan akun korporat tersebut, **Then** sesi Tania terbentuk dan pengguna diarahkan masuk ke aplikasi Tania.
+2. **Given** pengguna membatalkan proses autentikasi di sisi Microsoft atau proses gagal di tengah jalan, **When** kembali ke halaman login, **Then** tidak ada sesi yang terbentuk dan form email + kata sandi dapat dibuka lewat tautan "Login by Email" tanpa dipaksa kembali ke SSO.
 3. **Given** autentikasi di sisi Microsoft berhasil tetapi identitas korporat tidak cocok dengan akun Tania aktif mana pun melalui kedua jalur pemetaan, **When** proses berakhir, **Then** akses ditolak dengan pesan yang jelas dan tidak ada akun baru yang dibuat (kebijakan pemetaan — NC-02).
 4. **Given** pengguna mencoba masuk dengan akun personal Microsoft atau akun tenant lain (NC-01), **When** proses berakhir, **Then** permintaan ditolak dengan pesan yang jelas dan tidak ada sesi yang terbentuk.
 
@@ -107,8 +110,8 @@ Sebagai **Admin/auditor**, setiap upaya masuk via SSO terekam pada jejak audit s
 
 ### Edge Cases
 
-- Pengguna menutup atau membatalkan jendela autentikasi Microsoft di tengah proses → kembali ke halaman login tanpa sesi, dengan pintu fallback email + kata sandi yang tetap dapat dipakai.
-- Pengguna sengaja memilih pintu email + kata sandi tidak dipaksa kembali ke SSO secara berulang (tidak ada lingkaran pengalihan).
+- Pengguna menutup atau membatalkan jendela autentikasi Microsoft di tengah proses → kembali ke halaman login tanpa sesi, dengan tautan "Login by Email" yang tetap membuka form email + kata sandi.
+- Pengguna membuka halaman login lalu memilih tautan "Login by Email" → form email + kata sandi tampil di halaman yang sama; tidak ada pengalihan otomatis ke Microsoft, baik saat halaman dibuka maupun setelah pilihan itu — sehingga lingkaran pengalihan tidak mungkin terjadi.
 - Layanan Microsoft lambat/tidak tersedia saat proses masuk → pesan yang jelas ("coba lagi / gunakan email & kata sandi"), aplikasi tidak menggantung tanpa umpan balik.
 - Bukti keberhasilan autentikasi dipakai ulang atau sudah kedaluwarsa → ditolak; tidak ada sesi yang terbentuk.
 - Identitas korporat mengubah alamat email/UPN-nya setelah terhubung → keterkaitan tidak boleh otomatis berpindah ke akun Tania lain; penanganan kasus lanjutan mengikuti kebijakan admin (dirinci pada fase plan).
@@ -123,8 +126,8 @@ Sebagai **Admin/auditor**, setiap upaya masuk via SSO terekam pada jejak audit s
 
 ### Functional Requirements
 
-- **FR-001**: Halaman login MUST menjadikan masuk dengan akun korporat Microsoft Entra ID sebagai **opsi utama**: pengunjung halaman login diarahkan otomatis ke proses masuk Microsoft Entra ID, dengan jalur email + kata sandi tetap dapat dijangkau sebagai pintu fallback (tanpa lingkaran pengalihan yang memaksa kembali ke SSO).
-- **FR-002**: Sistem MUST mempertahankan jalur masuk email + kata sandi sepenuhnya berfungsi dan selalu dapat dijangkau sebagai fallback dari halaman login — termasuk setelah pembatalan atau kegagalan SSO.
+- **FR-001**: Halaman login MUST menjadikan masuk dengan akun korporat Microsoft Entra ID sebagai **opsi utama yang selalu tampil**: tombol **"Continue with Microsoft"** ditampilkan di halaman login — di atas jalur lain, sebagai aksi utama halaman — dan **baru memanggil proses masuk Microsoft Entra ID ketika pengguna menekannya**; halaman login **tidak boleh** berpindah atau mengarahkan otomatis ke Microsoft saat dibuka. Setelah proses Microsoft berhasil, pengguna MUST diarahkan masuk ke aplikasi Tania.
+- **FR-002**: Sistem MUST mempertahankan jalur masuk email + kata sandi sepenuhnya berfungsi dan selalu dapat dijangkau dari halaman login sebagai fallback: disajikan sebagai **tautan "Login by Email"** di bawah tombol Microsoft, yang **menampilkan form email + kata sandi di halaman yang sama ketika ditekan** — termasuk setelah pembatalan atau kegagalan SSO.
 - **FR-003**: Sistem MUST memverifikasi keabsahan bukti hasil autentikasi dari Microsoft Entra ID sebelum sesi Tania terbentuk; sesi tidak boleh terbentuk dari bukti yang tidak valid, kedaluwarsa, atau dipakai ulang.
 - **FR-004**: Sistem MUST mencocokkan identitas korporat secara otomatis dengan akun Tania melalui **dua jalur berurutan**: **(a)** identitas korporat yang sudah diberikan kepada seorang karyawan melalui kemampuan provisi Entra (FR-43–FR-46 spesifikasi 001) **dan keterkaitannya tercatat pada baris provisi karyawan tersebut** (hasil pembuatan akun maupun sinkronisasi akun korporat yang sudah ada) — terhubung ke akun Tania karyawan tersebut; akun korporat yang diundang lewat jalur "sudah guest di tenant" tidak mencatat keterkaitan pada baris provisinya, sehingga dipetakan lewat jalur (b) — alamat masuknya sama dengan alamat undangannya; **(b)** work email identitas korporat **identik** dengan alamat email akun Tania. Kecocokan ditemukan → sesi terbentuk untuk akun tersebut; tidak ada kecocokan → akses ditolak dengan pesan yang jelas, **tanpa membuat akun baru** (akun tetap dikelola melalui provisi/kelola Admin — FR-43–FR-46 spesifikasi 001).
 - **FR-005**: Sistem MUST hanya menerima identitas dari **tenant korporat Telkom** (single-tenant); akun personal Microsoft atau tenant lain ditolak dengan pesan yang jelas. Semua akun dalam tenant Telkom boleh mencoba masuk — tanpa pembatasan domain/grup tambahan; terbentuknya sesi tetap mengikuti FR-004 (harus ada akun Tania aktif yang cocok).
