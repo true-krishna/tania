@@ -7,11 +7,6 @@ import { Chip } from "@/components/Chip";
 import { useMyPerformanceEvaluations } from "@/features/evaluations/useMyPerformanceEvaluations";
 import type { EvaluationAnswerType } from "@/generated/graphql/types";
 
-/**
- * Talent's own evaluations (read-only) — US7 / FR-27.
- * Renders every evaluation for the logged-in talent; answers are formatted per
- * answer type. Read-only by construction (no mutations here).
- */
 export default function MyEvaluationsPage() {
   const { status, data, error } = useMyPerformanceEvaluations();
 
@@ -25,7 +20,7 @@ export default function MyEvaluationsPage() {
   return (
     <section className="flex flex-col gap-4">
       {data.map((evaluation) => (
-        <Card key={evaluation.id} className="flex flex-col gap-3">
+        <Card className="flex flex-col gap-3" key={evaluation.id}>
           <header className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="text-base font-semibold text-zinc-900">{evaluation.period.name}</h2>
@@ -34,8 +29,8 @@ export default function MyEvaluationsPage() {
               </p>
             </div>
             <Chip
-              variant={evaluation.status === "SUBMITTED" ? "success" : "warning"}
               size="small"
+              variant={evaluation.status === "SUBMITTED" ? "success" : "warning"}
             >
               {evaluation.status === "SUBMITTED" ? "Diserahkan" : "Draf"}
             </Chip>
@@ -54,7 +49,7 @@ export default function MyEvaluationsPage() {
 
           <ul className="flex flex-col gap-1.5">
             {evaluation.answers.map((answer) => (
-              <li key={answer.criterion.id} className="flex items-start justify-between gap-3 text-sm">
+              <li className="flex items-start justify-between gap-3 text-sm" key={answer.criterion.id}>
                 <span className="text-zinc-700">{answer.criterion.label}</span>
                 <span className="font-medium text-zinc-900">
                   {formatAnswer(answer.criterion.answerType, answer)}

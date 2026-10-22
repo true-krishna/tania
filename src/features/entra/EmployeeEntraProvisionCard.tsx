@@ -10,12 +10,6 @@ import {
 } from "@/features/entra/labels";
 import { orDash } from "@/lib/cell";
 
-// Hasil provisi akun Entra pada detail karyawan (FR-44/FR-45, TAN-272 U1):
-// daftar FR-44 hanya memuat talent tanpa akun Entra, jadi hasil yang berhasil
-// hilang dari daftar — di sini nilai tercatatnya tetap terlihat. Field
-// `entraProvision` dijaga `permEntraRead` di backend, jadi query ini hanya
-// dijalankan untuk peran yang berhak; halaman detail untuk peran lain tidak
-// menyertakannya sama sekali.
 export function EmployeeEntraProvisionCard({ employeeId }: { employeeId: string }) {
   const { loading, error, data } = useQuery(EmployeeEntraProvisionDocument, {
     variables: { id: employeeId },

@@ -10,11 +10,6 @@ import { useEvaluationPeriods } from "@/features/evaluations/useEvaluationPeriod
 import { PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
 import { EVALUATION_PERIOD_NEW } from "@/lib/constants/routes";
 
-/**
- * Evaluation periods (Admin) — US7 / FR-25.
- * Lists every evaluation period with its pinned template and derived state
- * (SCHEDULED/RUNNING/CLOSED); Admin can deactivate a period via the toggle.
- */
 export default function EvaluationPeriodsPage() {
   const { status, data, error } = useEvaluationPeriods();
   const { pageRows, pagination } = useTablePagination(data);
@@ -25,13 +20,13 @@ export default function EvaluationPeriodsPage() {
     return (
       <section className="flex flex-col gap-4">
         <PageHeader
-          title="Periode Evaluasi"
-          subtitle="Kelola periode evaluasi performa (Admin)."
           actions={
-            <Link href={EVALUATION_PERIOD_NEW} className="no-underline">
+            <Link className="no-underline" href={EVALUATION_PERIOD_NEW}>
             <Button variant="primary">+ Buat Periode</Button>
           </Link>
           }
+          subtitle="Kelola periode evaluasi performa (Admin)."
+          title="Periode Evaluasi"
         />
         <EmptyState message="Belum ada periode evaluasi. Buat periode pertama." />
       </section>
@@ -40,19 +35,16 @@ export default function EvaluationPeriodsPage() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Periode Evaluasi"
-        subtitle="Kelola periode evaluasi performa (Admin)."
         actions={
-          <Link href={EVALUATION_PERIOD_NEW} className="no-underline">
+          <Link className="no-underline" href={EVALUATION_PERIOD_NEW}>
             <Button variant="primary">+ Buat Periode</Button>
           </Link>
         }
+        subtitle="Kelola periode evaluasi performa (Admin)."
+        title="Periode Evaluasi"
       />
       <Table
         caption="Daftar periode evaluasi"
-        rowKey={(period) => period.id}
-        dataSource={pageRows}
-        pagination={pagination}
         columns={[
           {
             key: "name",
@@ -87,6 +79,9 @@ export default function EvaluationPeriodsPage() {
             render: (_value, period) => <StatusBadge active={period.isActive} />,
           },
         ]}
+        dataSource={pageRows}
+        pagination={pagination}
+        rowKey={(period) => period.id}
       />
     </section>
   );

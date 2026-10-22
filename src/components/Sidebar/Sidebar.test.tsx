@@ -6,7 +6,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Sidebar } from "@/components/Sidebar";
 
 function renderSidebar(props: Partial<React.ComponentProps<typeof Sidebar>> = {}) {
-  return render(<Sidebar role="ADMIN" pathname="/dashboard" {...props} />);
+  return render(<Sidebar pathname="/dashboard" role="ADMIN" {...props} />);
 }
 
 function desktopNav() {

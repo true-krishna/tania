@@ -30,7 +30,6 @@ export interface ChartImageOptions {
 }
 
 export interface EChartHandle {
-  /** Kanvas → data URL (T027 memakai `pixelRatio: 2` untuk PNG ≥2×). */
   getDataURL(options?: ChartImageOptions): string;
 }
 
@@ -40,11 +39,6 @@ interface EChartProps {
   ariaLabel?: string;
 }
 
-/**
- * T018 — wrapper klien ECharts (D1): init/setOption/dispose + ResizeObserver,
- * registrasi selektif di atas, ref `getDataURL` untuk ekspor PNG.
- * Dimuat client-side tanpa SSR — konsumen memakai `next/dynamic(..., { ssr: false })`.
- */
 export const EChart = React.forwardRef<EChartHandle, EChartProps>(function EChart(
   { option, className, ariaLabel },
   ref,
@@ -78,5 +72,5 @@ export const EChart = React.forwardRef<EChartHandle, EChartProps>(function EChar
     [],
   );
 
-  return <div ref={containerRef} className={className} role="img" aria-label={ariaLabel} />;
+  return <div aria-label={ariaLabel} className={className} ref={containerRef} role="img" />;
 });

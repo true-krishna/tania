@@ -15,11 +15,6 @@ import { useSessionRole } from "@/lib/auth/guard";
 import { CONTRACT_DETAIL } from "@/lib/constants/routes";
 import type { ProfileContract } from "./useProfile";
 
-/**
- * Contract-history section of `/profile` (TAN-188) — the user's own contracts,
- * read-only. Links into the contract module only for roles that can open it;
- * final authorization stays server-side.
- */
 export function ContractsSection({
   contracts,
 }: {
@@ -38,7 +33,7 @@ export function ContractsSection({
       </h2>
       <div className="flex flex-col gap-3">
         {contracts.map((contract) => (
-          <ContractRow key={contract.id} contract={contract} linked={linked} />
+          <ContractRow contract={contract} key={contract.id} linked={linked} />
         ))}
       </div>
     </Card>
@@ -51,15 +46,15 @@ function ContractRow({ contract, linked }: { contract: ProfileContract; linked: 
       <div className="flex flex-wrap items-center gap-2">
         {linked ? (
           <Link
-            href={CONTRACT_DETAIL(contract.id)}
             className="text-sm font-semibold text-zinc-900 hover:underline"
+            href={CONTRACT_DETAIL(contract.id)}
           >
             {contract.contractNo}
           </Link>
         ) : (
           <span className="text-sm font-semibold text-zinc-900">{contract.contractNo}</span>
         )}
-        <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
+        <Chip size="small" variant={CONTRACT_STATUS_VARIANT[contract.status]}>
           {CONTRACT_STATUS_LABEL[contract.status]}
         </Chip>
         {contract.endReason ? (

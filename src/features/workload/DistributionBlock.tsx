@@ -31,14 +31,14 @@ function StackedBar({ row }: { row: DistributionRowData }) {
   const aria = `${row.counts.optimal} optimal, ${row.counts.underload} beban kurang, ${row.counts.overload} kelebihan beban, ${row.counts.undefined} data tidak lengkap`;
 
   return (
-    <div role="img" aria-label={aria} className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-tp-bg">
+    <div aria-label={aria} className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-tp-bg" role="img">
       {LEGEND.map((segment) => {
         const count = row.counts[segment.key];
         if (count === 0) return null;
         return (
           <span
-            key={segment.key}
             className={`block h-full ${SEGMENT_CLASS[segment.key]}`}
+            key={segment.key}
             style={{ width: `${(count / total) * 100}%` }}
           />
         );
@@ -63,12 +63,12 @@ function DistributionRow({ row }: { row: DistributionRowData }) {
         </div>
         <p className="text-[13px] text-tp-muted">{row.talentCount} talent</p>
         <button
-          type="button"
-          aria-expanded={expanded}
           aria-controls={panelId}
+          aria-expanded={expanded}
           aria-label={`${expanded ? "Sembunyikan" : "Lihat"} talent ${row.label}`}
-          onClick={() => setExpanded((v) => !v)}
           className="min-h-10 justify-self-start rounded-full border-[1.5px] border-tp-text px-4 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg"
+          onClick={() => setExpanded((v) => !v)}
+          type="button"
         >
           Lihat talent
         </button>
@@ -76,10 +76,10 @@ function DistributionRow({ row }: { row: DistributionRowData }) {
 
       {expanded ? (
         <div
-          id={panelId}
-          role="region"
           aria-label={`Talent dalam ${row.label}`}
           className="flex flex-col gap-3 rounded-[14px] border border-tp-line bg-tp-bg p-3.5"
+          id={panelId}
+          role="region"
         >
           <p className="flex flex-wrap justify-between gap-2.5 text-[13px] text-tp-muted">
             <span>Talent dalam {row.label} — komponen agregat</span>
@@ -90,7 +90,7 @@ function DistributionRow({ row }: { row: DistributionRowData }) {
           {row.talents.length ? (
             <div className="flex flex-col gap-2.5">
               {row.talents.map((talent) => (
-                <TalentRow key={talent.id} talent={talent} secondary="role" />
+                <TalentRow key={talent.id} secondary="role" talent={talent} />
               ))}
             </div>
           ) : (
@@ -99,8 +99,8 @@ function DistributionRow({ row }: { row: DistributionRowData }) {
           <p className="flex flex-wrap items-center justify-between gap-2.5 text-[13px] text-tp-muted">
             <span>Rincian talent adalah komponen dari agregat {row.label} di atas</span>
             <button
-              type="button"
               className="min-h-10 rounded-full border-[1.5px] border-tp-text px-4 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-surface"
+              type="button"
             >
               Muat lagi
             </button>
@@ -111,7 +111,6 @@ function DistributionRow({ row }: { row: DistributionRowData }) {
   );
 }
 
-/** Organisation distribution with dimension tabs and drill-down (FR-023; design §4). */
 export function DistributionBlock({
   rows,
 }: {
@@ -123,24 +122,24 @@ export function DistributionBlock({
   return (
     <div className="flex flex-col gap-3.5">
       <div
-        role="tablist"
         aria-label="Dimensi distribusi"
         className="flex gap-1 overflow-x-auto rounded-[14px] border border-tp-line bg-tp-bg p-1"
+        role="tablist"
       >
         {DIMENSIONS.map((dim) => {
           const selected = dim.key === dimension;
           return (
             <button
-              key={dim.key}
-              type="button"
-              role="tab"
               aria-selected={selected}
-              onClick={() => setDimension(dim.key)}
               className={
                 selected
                   ? "flex-none rounded-[10px] bg-tp-surface px-3.5 py-2 text-sm font-semibold text-tp-text shadow-[0_0_0_1px_var(--tp-line)]"
                   : "flex-none rounded-[10px] px-3.5 py-2 text-sm font-medium text-tp-muted"
               }
+              key={dim.key}
+              onClick={() => setDimension(dim.key)}
+              role="tab"
+              type="button"
             >
               {dim.label}
             </button>
@@ -160,7 +159,7 @@ export function DistributionBlock({
 
       <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-tp-muted">
         {LEGEND.map((item) => (
-          <span key={item.key} className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1.5" key={item.key}>
             <i
               aria-hidden
               className="h-2.5 w-2.5 shrink-0 rounded-[3px]"

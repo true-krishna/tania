@@ -6,12 +6,6 @@ import type { Role } from "./useRoles";
 import type { MenuAccessConfig } from "@/lib/auth/menuAccess";
 import { gridOf, type GridCell } from "./menuGrid";
 
-/**
- * Sidebar preview of one role (W3 AC3): the real `NAV` rendered through the same
- * filter the sidebar uses (`visibleNavEntries`), on the *draft* configuration —
- * so an Admin sees the effect of a cell before saving it, and the preview cannot
- * disagree with what the sidebar will show after the save.
- */
 
 export interface SidebarPreviewProps {
   role: Role | null;

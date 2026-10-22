@@ -7,17 +7,11 @@ import { Card } from "@/components/Card";
 
 interface ChartCardProps {
   title: string;
-  /** Subjudul total — mis. `n = 25` (FR-16). */
   subtitle: string;
-  /** Aksi "Unduh PNG" — disambungkan ke `downloadChart` (T027); tanpa handler, tombol nonaktif. */
   onDownload?: () => void;
   children: React.ReactNode;
 }
 
-/**
- * T019 — kartu grafik laporan: judul + subjudul total (n = …), slot chart,
- * tombol "Unduh PNG" (US4; aksi di T027 — unduh satu per satu per grafik).
- */
 export function ChartCard({ title, subtitle, onDownload, children }: ChartCardProps) {
   return (
     <Card className="flex flex-col gap-3">
@@ -27,12 +21,12 @@ export function ChartCard({ title, subtitle, onDownload, children }: ChartCardPr
           <p className="tp-label">{subtitle}</p>
         </div>
         <Button
+          disabled={!onDownload}
+          onClick={onDownload}
           type="button"
           variant="secondary"
-          onClick={onDownload}
-          disabled={!onDownload}
         >
-          <IconDownload size={16} aria-hidden="true" />
+          <IconDownload aria-hidden="true" size={16} />
           Unduh PNG
         </Button>
       </div>

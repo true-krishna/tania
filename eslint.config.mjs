@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import noComments from "./eslint-local-rules/no-comments.mjs";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -16,6 +17,25 @@ const eslintConfig = defineConfig([
     // generated clients), so it is excluded from lint (T031, zero warnings).
     "src/generated/**",
   ]),
+  {
+    rules: {
+      "react/jsx-sort-props": ["error", { ignoreCase: true }],
+    },
+  },
+  {
+    files: ["src/**/*.{tsx,jsx}", "design/**/*.{tsx,jsx}"],
+    ignores: ["**/*.test.{tsx,jsx}", "src/generated/**"],
+    plugins: {
+      tania: {
+        rules: {
+          "no-comments": noComments,
+        },
+      },
+    },
+    rules: {
+      "tania/no-comments": "error",
+    },
+  },
 ]);
 
 export default eslintConfig;

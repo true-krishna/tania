@@ -23,16 +23,6 @@ function movementTotal(report: TalentReport): number {
   return report.movementTrend.reduce((sum, m) => sum + m.newTalent + m.churn, 0);
 }
 
-/**
- * T023 + amandemen penempatan (2026-10-12, keputusan pemilik produk pada
- * TAN-154): konten laporan TIDAK lagi menjadi halaman tersendiri — ia
- * MENGKANTIKAN konten Dashboard untuk Operation & Chapter; entri nav
- * "Laporan Talent" dihapus dan `/reports/talent` hanya redirect ke
- * `/dashboard`. `TalentReportContent` = lima kartu + filter rentang + state
- * loading/empty/FORBIDDEN/error, tanpa PageHeader (Dashboard sudah punya).
- * FORBIDDEN (SC-05) tetap sebagai state defensif — penegakan authz di server
- * (FR-01); Dashboard memilih konten ini hanya untuk Operation/Chapter.
- */
 export function TalentReportContent() {
   const { range, period, applyPeriod, status, report, message } = useTalentReport();
   const roleRef = React.useRef<EChartHandle>(null);
@@ -46,8 +36,6 @@ export function TalentReportContent() {
     downloadChart(chartRef.current, chartFileName(chartName, period.startMonth, period.endMonth));
   };
 
-  // T034: judul & rentang ikut dirender TitleComponent DI DALAM kanvas
-  // sehingga PNG unduhan memuat keduanya (SC-03/FR-13).
   const periodLabel = period ? `${formatMonthLabel(period.startMonth)} – ${formatMonthLabel(period.endMonth)}` : undefined;
 
   return (
@@ -64,81 +52,81 @@ export function TalentReportContent() {
 
       {(status === "ready" || status === "empty") && report && period ? (
         <>
-          <PeriodFilter range={range} value={period} onApply={applyPeriod} />
+          <PeriodFilter onApply={applyPeriod} range={range} value={period} />
           {status === "empty" ? (
             <EmptyState message="Tidak ada data pada rentang ini. Pilih rentang bulan lain untuk melihat laporan." />
           ) : (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <ChartCard
-                title="Talent per role"
-                subtitle={`n = ${total(report.roleDistribution)}`}
                 onDownload={() => download(roleRef, "talent-per-role")}
+                subtitle={`n = ${total(report.roleDistribution)}`}
+                title="Talent per role"
               >
                 <DistributionChart
+                  ariaLabel="Talent per role"
+                  chartRef={roleRef}
                   data={report.roleDistribution}
                   orientation="bar"
-                  ariaLabel="Talent per role"
+                  periodLabel={periodLabel}
                   title="Talent per role"
-                  periodLabel={periodLabel}
-                  chartRef={roleRef}
                 />
               </ChartCard>
               <ChartCard
-                title="Talent per generasi"
-                subtitle={`n = ${total(report.generationDistribution)}`}
                 onDownload={() => download(generationRef, "talent-per-generasi")}
+                subtitle={`n = ${total(report.generationDistribution)}`}
+                title="Talent per generasi"
               >
                 <DistributionChart
-                  data={report.generationDistribution}
-                  orientation="column"
-                  ordinal={GENERATION_ORDER}
                   ariaLabel="Talent per generasi"
-                  title="Talent per generasi"
-                  periodLabel={periodLabel}
                   chartRef={generationRef}
-                />
-              </ChartCard>
-              <ChartCard
-                title="Talent per jenjang pendidikan"
-                subtitle={`n = ${total(report.educationDistribution)}`}
-                onDownload={() => download(educationRef, "talent-per-jenjang-pendidikan")}
-              >
-                <DistributionChart
-                  data={report.educationDistribution}
+                  data={report.generationDistribution}
+                  ordinal={GENERATION_ORDER}
                   orientation="column"
-                  ordinal={EDUCATION_ORDER}
-                  ariaLabel="Talent per jenjang pendidikan"
-                  title="Talent per jenjang pendidikan"
                   periodLabel={periodLabel}
-                  chartRef={educationRef}
+                  title="Talent per generasi"
                 />
               </ChartCard>
               <ChartCard
-                title="Talent per lokasi kerja"
-                subtitle={`n = ${total(report.workLocationDistribution)}`}
-                onDownload={() => download(workLocationRef, "talent-per-lokasi-kerja")}
+                onDownload={() => download(educationRef, "talent-per-jenjang-pendidikan")}
+                subtitle={`n = ${total(report.educationDistribution)}`}
+                title="Talent per jenjang pendidikan"
               >
                 <DistributionChart
+                  ariaLabel="Talent per jenjang pendidikan"
+                  chartRef={educationRef}
+                  data={report.educationDistribution}
+                  ordinal={EDUCATION_ORDER}
+                  orientation="column"
+                  periodLabel={periodLabel}
+                  title="Talent per jenjang pendidikan"
+                />
+              </ChartCard>
+              <ChartCard
+                onDownload={() => download(workLocationRef, "talent-per-lokasi-kerja")}
+                subtitle={`n = ${total(report.workLocationDistribution)}`}
+                title="Talent per lokasi kerja"
+              >
+                <DistributionChart
+                  ariaLabel="Talent per lokasi kerja"
+                  chartRef={workLocationRef}
                   data={report.workLocationDistribution}
                   orientation="bar"
-                  ariaLabel="Talent per lokasi kerja"
-                  title="Talent per lokasi kerja"
                   periodLabel={periodLabel}
-                  chartRef={workLocationRef}
+                  title="Talent per lokasi kerja"
                 />
               </ChartCard>
               <div className="lg:col-span-2">
                 <ChartCard
-                  title="Tren churn vs new talent"
-                  subtitle={`n = ${movementTotal(report)}`}
                   onDownload={() => download(movementRef, "tren-churn-vs-new-talent")}
+                  subtitle={`n = ${movementTotal(report)}`}
+                  title="Tren churn vs new talent"
                 >
                   <MovementTrendChart
-                    data={report.movementTrend}
                     ariaLabel="Tren churn vs new talent"
-                    title="Tren churn vs new talent"
-                    periodLabel={periodLabel}
                     chartRef={movementRef}
+                    data={report.movementTrend}
+                    periodLabel={periodLabel}
+                    title="Tren churn vs new talent"
                   />
                 </ChartCard>
               </div>

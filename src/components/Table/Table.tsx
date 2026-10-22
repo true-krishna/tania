@@ -97,7 +97,7 @@ export function Table<T>({
           <thead>
             <tr>
               {expandable ? (
-                <th scope="col" className={expandable.columnClassName} aria-label={expandable.columnAriaLabel} />
+                <th aria-label={expandable.columnAriaLabel} className={expandable.columnClassName} scope="col" />
               ) : null}
               {columns.map((column) => (
                 <th
@@ -122,11 +122,11 @@ export function Table<T>({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={colSpan} className="empty-row">
+                <td className="empty-row" colSpan={colSpan}>
                   <span className="flex items-center justify-center gap-2 text-sm text-tp-muted">
                     <span
-                      className="h-4 w-4 animate-spin rounded-full border-2 border-tp-neutral border-t-transparent"
                       aria-hidden
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-tp-neutral border-t-transparent"
                     />
                     {loadingText}
                   </span>
@@ -134,7 +134,7 @@ export function Table<T>({
               </tr>
             ) : records.length === 0 ? (
               <tr>
-                <td colSpan={colSpan} className="empty-row">
+                <td className="empty-row" colSpan={colSpan}>
                   {emptyText}
                 </td>
               </tr>
@@ -151,12 +151,12 @@ export function Table<T>({
                       {expandable ? (
                         <td>
                           <button
-                            type="button"
-                            aria-expanded={expanded}
                             aria-controls={expandable.expandedRowId?.(record, index)}
+                            aria-expanded={expanded}
                             aria-label={expandable.toggleLabel(record, index)}
-                            onClick={() => expandable.onExpand(record, index, !expanded)}
                             className={TOGGLE_BUTTON}
+                            onClick={() => expandable.onExpand(record, index, !expanded)}
+                            type="button"
                           >
                             {expanded ? (
                               <IconChevronDown aria-hidden size={16} stroke={2} />
@@ -173,11 +173,11 @@ export function Table<T>({
                         );
                         const content = readCell(column, record, index);
                         return column.rowHeader ? (
-                          <th key={column.key} scope="row" className={cellClassName}>
+                          <th className={cellClassName} key={column.key} scope="row">
                             {content}
                           </th>
                         ) : (
-                          <td key={column.key} className={cellClassName}>
+                          <td className={cellClassName} key={column.key}>
                             {content}
                           </td>
                         );
@@ -185,7 +185,7 @@ export function Table<T>({
                     </tr>
                     {expandable && expanded ? (
                       <tr id={expandable.expandedRowId?.(record, index)}>
-                        <td colSpan={colSpan} className="bg-tp-bg">
+                        <td className="bg-tp-bg" colSpan={colSpan}>
                           <div className="px-2 py-3">{expandable.expandedRowRender(record, index)}</div>
                         </td>
                       </tr>

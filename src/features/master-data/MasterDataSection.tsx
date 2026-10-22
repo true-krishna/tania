@@ -24,35 +24,20 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   items: T[] | undefined;
   status: "loading" | "ready" | "error";
   error: string | null;
-  // Optional select on the create/edit form, e.g. Project -> Unit or JobRole -> Chapter.
   select?: { label: string; placeholder: string; options: { id: string; name: string }[] };
-  // Whether that select must be chosen before submit (FR-006 for Project -> Unit).
-  // Defaults to false so an optional reference (JobRole -> Chapter, FR-022) stays optional.
   selectRequired?: boolean;
-  // Current select value of an item (for pre-filling the edit form), e.g. project.unit.id.
   selectIdOf?: (item: T) => string | undefined;
-  // Optional "Kode" field for entities whose served contract requires it (Unit.code).
   codeLabel?: string;
   codePlaceholder?: string;
   codeOf?: (item: T) => string | undefined;
 
   extraColumn?: { label: string; render: (item: T) => React.ReactNode };
-  // Opt-in search over the already-served rows (FR-001). Chapter deliberately
-  // does not pass this — see spec Out of Scope.
   searchable?: boolean;
   onCreate: (values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
   onUpdate: (id: string, values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
 };
 
-// Shared master-data surface. Chapter and Operation read the reference data
-// (Talent has no access, 2026-10-16 clarify 6) and Admin manages it (FR-15,
-// FR-20, FR-24) — so the edit surface only
-// renders for the manage roles and the rest get the same list read-only.
-// One list + create form + inline edit + activate/deactivate per entity.
-// There is deliberately NO delete operation (FR-21): master data is only
-// deactivated, and the server rejects deactivation while the row is still
-// referenced. Invalid submissions surface the server message (T054).
 export function MasterDataSection<T extends MasterDataItem>({
   caption,
   emptyMessage,
@@ -84,12 +69,9 @@ export function MasterDataSection<T extends MasterDataItem>({
   const [codeError, setCodeError] = React.useState<string | undefined>();
   const [selectError, setSelectError] = React.useState<string | undefined>();
   const [busy, setBusy] = React.useState(false);
-  // Search keyword lives in local component state — never in the URL (D6).
   const [query, setQuery] = React.useState("");
 
   const needle = query.trim().toLowerCase();
-  // Filter BEFORE pagination so the existing `safePage` clamp covers FR-005
-  // (D2): a shrinking result set never strands the Admin on an empty page.
   const visibleItems = React.useMemo(
     () =>
       searchable && needle
@@ -99,7 +81,6 @@ export function MasterDataSection<T extends MasterDataItem>({
   );
   const { pageRows, pagination } = useTablePagination(visibleItems);
 
-  // Search wording derives from the page's own label (D5).
   const searchLabel = `Cari ${nameLabel.toLowerCase()}`;
 
   if (status === "loading") return <LoadingState />;
@@ -197,7 +178,6 @@ export function MasterDataSection<T extends MasterDataItem>({
                 <span className="text-xs text-zinc-400">Mengedit…</span>
               ) : (
                 <RowActionsMenu
-                  label={`Aksi ${item.name}`}
                   actions={[
                     { label: "Ubah", onSelect: () => startEdit(item) },
                     {
@@ -205,6 +185,7 @@ export function MasterDataSection<T extends MasterDataItem>({
                       onSelect: () => void onToggleActive(item.id, !item.isActive),
                     },
                   ]}
+                  label={`Aksi ${item.name}`}
                 />
               ),
           } satisfies TableColumn<T>,
@@ -215,15 +196,9 @@ export function MasterDataSection<T extends MasterDataItem>({
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Master Data"
-        subtitle={
-          manage
-            ? "Reference data for the talent ecosystem, managed by Admin."
-            : "Reference data for the talent ecosystem (hanya baca)."
-        }
         actions={
           !manage || editing ? undefined : (
-            <Button type="button" onClick={openCreate}>
+            <Button onClick={openCreate} type="button">
               {addLabel}
             </Button>
           )
@@ -232,56 +207,62 @@ export function MasterDataSection<T extends MasterDataItem>({
           searchable && items && items.length > 0 ? (
             <div className="relative w-full max-w-sm">
               <IconSearch
-                className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
                 aria-hidden
+                className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
               />
               <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={`${searchLabel}…`}
                 aria-label={searchLabel}
                 className="h-11 w-full rounded-full border border-tp-line bg-tp-surface pl-11 pr-4 text-sm text-tp-text placeholder:text-tp-muted"
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={`${searchLabel}…`}
+                type="search"
+                value={query}
               />
             </div>
           ) : undefined
         }
+        subtitle={
+          manage
+            ? "Reference data for the talent ecosystem, managed by Admin."
+            : "Reference data for the talent ecosystem (hanya baca)."
+        }
+        title="Master Data"
       />
 
       {manage && editing ? (
         <form
-          onSubmit={handleSubmit}
           className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
+          onSubmit={handleSubmit}
         >
-          <InputControl label={nameLabel} error={nameError}>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Digital Business" />
+          <InputControl error={nameError} label={nameLabel}>
+            <Input onChange={(e) => setName(e.target.value)} placeholder="cth: Digital Business" value={name} />
           </InputControl>
           {codeLabel ? (
-            <InputControl label={codeLabel} error={codeError}>
+            <InputControl error={codeError} label={codeLabel}>
               <Input
-                value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder={codePlaceholder ?? "cth: DBT"}
+                value={code}
               />
             </InputControl>
           ) : null}
           {select ? (
-            <InputControl label={select.label} error={selectError}>
+            <InputControl error={selectError} label={select.label}>
               <Select
-                value={selectValue}
                 onChange={(e) => setSelectValue(e.target.value)}
                 options={[
                   { value: "", label: `— ${select.placeholder} —` },
                   ...select.options.map((o) => ({ value: o.id, label: o.name })),
                 ]}
+                value={selectValue}
               />
             </InputControl>
           ) : null}
           <div className="flex gap-2">
-            <Button type="submit" disabled={busy}>
+            <Button disabled={busy} type="submit">
               Simpan
             </Button>
-            <Button type="button" variant="secondary" onClick={reset} disabled={busy}>
+            <Button disabled={busy} onClick={reset} type="button" variant="secondary">
               Batal
             </Button>
           </div>
@@ -291,16 +272,14 @@ export function MasterDataSection<T extends MasterDataItem>({
       {!items || items.length === 0 ? (
         <EmptyState message={emptyMessage} />
       ) : visibleItems && visibleItems.length === 0 ? (
-        // No match is its own message, distinct from the "no data yet"
-        // empty state (FR-006).
         <p className="text-sm text-tp-muted">Tidak ada hasil yang cocok dengan pencarian.</p>
       ) : (
         <Table
           caption={caption}
           columns={columns}
           dataSource={pageRows}
-          rowKey={(item) => item.id}
           pagination={pagination}
+          rowKey={(item) => item.id}
         />
       )}
     </div>

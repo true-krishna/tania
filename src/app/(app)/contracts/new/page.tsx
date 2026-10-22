@@ -181,18 +181,18 @@ export default function NewContractPage({
         </div>
         <div className="flex gap-2">
           <button
-            type="button"
+            className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
             onClick={() => {
               setValues(EMPTY);
               setErrors({});
               setFormError(null);
               setSubmitted(false);
             }}
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            type="button"
           >
             Tambah kontrak lain
           </button>
-          <Link href={CONTRACTS} className="no-underline">
+          <Link className="no-underline" href={CONTRACTS}>
             <Button type="button" variant="secondary">
               Ke daftar kontrak
             </Button>
@@ -205,15 +205,14 @@ export default function NewContractPage({
   return (
     <section className="flex max-w-xl flex-col gap-4">
       <PageHeader
-        title="Tambah Kontrak"
         subtitle="Kontrak kerja dengan atribut TMS. Nomor induk wajib dan unik antar kontrak aktif."
+        title="Tambah Kontrak"
       />
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
         {formError ? <ErrorState message={formError} /> : null}
-        <InputControl label="Karyawan" error={errors.employeeId}>
+        <InputControl error={errors.employeeId} label="Karyawan">
           <Select
-            value={values.employeeId}
             onChange={(e) => set("employeeId", e.target.value)}
             options={[
               { value: "", label: "— pilih karyawan —" },
@@ -222,19 +221,19 @@ export default function NewContractPage({
                 label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
               })),
             ]}
+            value={values.employeeId}
           />
         </InputControl>
-        <InputControl label="No. Kontrak" error={errors.contractNo}>
+        <InputControl error={errors.contractNo} label="No. Kontrak">
           <Input
-            type="text"
-            value={values.contractNo}
             onChange={(e) => set("contractNo", e.target.value)}
             placeholder="cth. PKWT/2026/001"
+            type="text"
+            value={values.contractNo}
           />
         </InputControl>
-        <InputControl label="Jenis kontrak" error={errors.contractType}>
+        <InputControl error={errors.contractType} label="Jenis kontrak">
           <Select
-            value={values.contractType}
             onChange={(e) => {
               const next = e.target.value as ContractType;
               setValues((v) => ({ ...v, contractType: next, endDate: "" }));
@@ -244,60 +243,60 @@ export default function NewContractPage({
               value: type,
               label: CONTRACT_TYPE_LABEL[type],
             }))}
+            value={values.contractType}
           />
         </InputControl>
-        <InputControl label="Nomor induk karyawan" error={errors.nomorInduk}>
+        <InputControl error={errors.nomorInduk} label="Nomor induk karyawan">
           <Input
-            type="text"
-            value={values.nomorInduk}
             onChange={(e) => set("nomorInduk", e.target.value)}
             placeholder="cth. EMP-0100"
+            type="text"
+            value={values.nomorInduk}
           />
         </InputControl>
-        <InputControl label="Email kantor" helper="(opsional)" error={errors.officeEmail}>
+        <InputControl error={errors.officeEmail} helper="(opsional)" label="Email kantor">
           <Input
+            onChange={(e) => set("officeEmail", e.target.value)}
             type="email"
             value={values.officeEmail}
-            onChange={(e) => set("officeEmail", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Unit" error={errors.unitId}>
+        <InputControl error={errors.unitId} label="Unit">
           <Select
-            value={values.unitId}
             onChange={(e) => set("unitId", e.target.value)}
             options={[
               { value: "", label: "— pilih unit —" },
               ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
             ]}
+            value={values.unitId}
           />
         </InputControl>
-        <InputControl label="Posisi / Job Role" error={errors.jobRoleId}>
+        <InputControl error={errors.jobRoleId} label="Posisi / Job Role">
           <Select
-            value={values.jobRoleId}
             onChange={(e) => set("jobRoleId", e.target.value)}
             options={[
               { value: "", label: "— pilih job role —" },
               ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
             ]}
+            value={values.jobRoleId}
           />
         </InputControl>
-        <InputControl label="Job title" helper="(opsional)" error={errors.jobTitle}>
+        <InputControl error={errors.jobTitle} helper="(opsional)" label="Job title">
           <Input
+            onChange={(e) => set("jobTitle", e.target.value)}
             type="text"
             value={values.jobTitle}
-            onChange={(e) => set("jobTitle", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Job level" helper="(opsional)" error={errors.jobLevel}>
+        <InputControl error={errors.jobLevel} helper="(opsional)" label="Job level">
           <Input
+            onChange={(e) => set("jobLevel", e.target.value)}
             type="text"
             value={values.jobLevel}
-            onChange={(e) => set("jobLevel", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Band position" error={errors.bandPosition}>
+        <InputControl error={errors.bandPosition} label="Band position">
           <Select
-            value={values.bandPosition}
             onChange={(e) => set("bandPosition", e.target.value)}
             options={[
               { value: "UNDEFINED", label: "Belum ditetapkan" },
@@ -308,44 +307,45 @@ export default function NewContractPage({
               { value: "V", label: "V" },
               { value: "VI", label: "VI" },
             ]}
+            value={values.bandPosition}
           />
         </InputControl>
-        <InputControl label="Work location" error={errors.workLocation}>
+        <InputControl error={errors.workLocation} label="Work location">
           <Select
-            value={values.workLocation}
             onChange={(e) => set("workLocation", e.target.value)}
             options={[
               { value: "", label: "— pilih lokasi kerja —" },
               { value: "JAKARTA", label: "Jakarta" },
               { value: "BANDUNG", label: "Bandung" },
             ]}
+            value={values.workLocation}
           />
         </InputControl>
-        <InputControl label="Tanggal mulai" error={errors.startDate}>
+        <InputControl error={errors.startDate} label="Tanggal mulai">
           <Input
+            onChange={(e) => set("startDate", e.target.value)}
             type="date"
             value={values.startDate}
-            onChange={(e) => set("startDate", e.target.value)}
           />
         </InputControl>
         {!isOpenEndedContractType(values.contractType) ? (
-          <InputControl label="Tanggal selesai" error={errors.endDate}>
+          <InputControl error={errors.endDate} label="Tanggal selesai">
             <Input
+              onChange={(e) => set("endDate", e.target.value)}
               type="date"
               value={values.endDate}
-              onChange={(e) => set("endDate", e.target.value)}
             />
           </InputControl>
         ) : null}
-        <InputControl label="Catatan" helper="(opsional)" error={errors.notes}>
-          <Input type="text" value={values.notes} onChange={(e) => set("notes", e.target.value)} />
+        <InputControl error={errors.notes} helper="(opsional)" label="Catatan">
+          <Input onChange={(e) => set("notes", e.target.value)} type="text" value={values.notes} />
         </InputControl>
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={loading}>
+          <Button disabled={loading} type="submit">
             Simpan
           </Button>
-          <Link href={CONTRACTS} className="no-underline">
+          <Link className="no-underline" href={CONTRACTS}>
             <Button type="button" variant="secondary">
               Batal
             </Button>

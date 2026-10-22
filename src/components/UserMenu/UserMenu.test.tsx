@@ -10,9 +10,9 @@ function renderMenu() {
   const onLogout = vi.fn();
   const view = render(
     <UserMenu
-      name="Yudi Krisnandi"
       email="yudi.krisnandi@digitaltelkom.id"
       items={[{ href: "/activities", label: "Aktivitas saya", icon: IconClockHour3 }]}
+      name="Yudi Krisnandi"
       onLogout={onLogout}
     />,
   );
@@ -44,7 +44,7 @@ describe("UserMenu", () => {
 
   it("falls back to the role label when there is no email", () => {
     render(
-      <UserMenu name="Admin" roleLabel="Administrator" onLogout={() => {}} />,
+      <UserMenu name="Admin" onLogout={() => {}} roleLabel="Administrator" />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Menu akun: Admin" }));
     expect(screen.getAllByText("Administrator").length).toBeGreaterThan(0);

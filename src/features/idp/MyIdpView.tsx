@@ -31,15 +31,6 @@ const METHOD_LABEL: Record<DevelopmentMethod, string> = {
 
 type ToastItem = { id: number; variant: "error" | "success"; message: string };
 
-/**
- * Talent's own IDP — read-only view plus action status updates (FR-14) — US3.
- * Rendered by `/idp/my` and, since the 2026-10-16 activation (klarifikasi 9), by
- * the shared `/idp` menu entry when the session role is TALENT — the menu is
- * visible for every role, only what it opens differs.
- * `myIdp` returns null until the Chapter creates an IDP for this talent; that
- * maps to an empty state, not an error. Only the action status is mutable here
- * (authorization enforced server-side, FR-16).
- */
 export function MyIdpView() {
   const { status, data, error } = useMyIdp();
 
@@ -96,7 +87,7 @@ export function MyIdpView() {
               Rencana pengembangan individu Anda ({idp.id}).
             </p>
           </div>
-          <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
+          <Chip size="small" variant={IDP_STATUS_VARIANT[idp.status]}>
             {IDP_STATUS_LABEL[idp.status]}
           </Chip>
         </div>
@@ -126,8 +117,8 @@ export function MyIdpView() {
             <ul className="flex flex-col gap-2">
               {idp.actions.map((action) => (
                 <li
-                  key={action.id}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-board-border px-3 py-2"
+                  key={action.id}
                 >
                   <div>
                     <p className="text-sm font-medium text-zinc-900">{action.description}</p>
@@ -137,9 +128,9 @@ export function MyIdpView() {
                   </div>
                   <select
                     aria-label={`Status aksi: ${action.description}`}
-                    value={action.status}
-                    onChange={(e) => handleUpdateStatus(action.id, e.target.value as DevelopmentActionStatus)}
                     className="rounded-md border border-surface-border bg-white px-2 py-1 text-xs font-medium text-zinc-700 shadow-sm focus:border-tp-brand-red"
+                    onChange={(e) => handleUpdateStatus(action.id, e.target.value as DevelopmentActionStatus)}
+                    value={action.status}
                   >
                     {(Object.keys(ACTION_STATUS_LABEL) as DevelopmentActionStatus[]).map((s) => (
                       <option key={s} value={s}>
@@ -160,7 +151,7 @@ export function MyIdpView() {
           {idp.reviews.length ? (
             <ul className="flex flex-col gap-2">
               {idp.reviews.map((review) => (
-                <li key={review.id} className="rounded-md border border-board-border px-3 py-2 text-sm">
+                <li className="rounded-md border border-board-border px-3 py-2 text-sm" key={review.id}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium text-zinc-900">
                       {review.reviewDate} · {review.createdBy?.fullName ?? "—"}
@@ -183,7 +174,7 @@ export function MyIdpView() {
           {idp.revisions.length ? (
             <ul className="flex flex-col gap-2">
               {idp.revisions.map((rev) => (
-                <li key={rev.id} className="rounded-md border border-board-border px-3 py-2 text-sm">
+                <li className="rounded-md border border-board-border px-3 py-2 text-sm" key={rev.id}>
                   <span className="font-medium text-zinc-900">Revisi {rev.revisionNo}</span>
                   <p className="mt-1 text-zinc-700">{rev.changeNote}</p>
                   <p className="mt-1 text-xs text-zinc-500">
@@ -197,7 +188,7 @@ export function MyIdpView() {
           )}
         </Card>
 
-        <ToastStack toasts={toasts} onDismiss={dismissToast} />
+        <ToastStack onDismiss={dismissToast} toasts={toasts} />
       </section>
     </AuthGuard>
   );

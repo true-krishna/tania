@@ -20,10 +20,6 @@ function compare(a: TalentSummary, b: TalentSummary, key: SortKey): number {
   return key === "load-desc" ? bv - av : av - bv;
 }
 
-/**
- * Chapter talent list (design §4). Overload first by default so SC-003 holds on
- * a single screen. Search and sort are presentational — no metric is computed.
- */
 export function TalentList({
   talents,
   totalCount,
@@ -49,26 +45,26 @@ export function TalentList({
       <div className="flex flex-wrap gap-2.5">
         <div className="relative min-w-[220px] max-w-[340px] flex-1">
           <IconSearch
-            className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
             aria-hidden
+            className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
           />
           <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari nama talent…"
             aria-label="Cari nama talent"
             className="h-11 w-full rounded-full border border-tp-line bg-tp-surface pl-11 pr-4 text-sm text-tp-text placeholder:text-tp-muted"
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Cari nama talent…"
+            type="search"
+            value={query}
           />
         </div>
         <label className="sr-only" htmlFor="workload-talent-sort">
           Urutkan
         </label>
         <select
-          id="workload-talent-sort"
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
           className="h-11 rounded-full border border-tp-line bg-tp-surface px-4 text-sm font-medium text-tp-text"
+          id="workload-talent-sort"
+          onChange={(e) => setSort(e.target.value as SortKey)}
+          value={sort}
         >
           {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
             <option key={key} value={key}>
@@ -81,7 +77,7 @@ export function TalentList({
       {visible.length ? (
         <div className="flex flex-col gap-2.5">
           {visible.map((talent) => (
-            <TalentRow key={talent.id} talent={talent} secondary={secondary} />
+            <TalentRow key={talent.id} secondary={secondary} talent={talent} />
           ))}
         </div>
       ) : (
@@ -93,8 +89,8 @@ export function TalentList({
           Menampilkan {visible.length} dari {totalCount} talent
         </span>
         <button
-          type="button"
           className="min-h-10 rounded-full border-[1.5px] border-tp-text px-4 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg"
+          type="button"
         >
           Muat lagi
         </button>

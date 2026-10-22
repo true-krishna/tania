@@ -24,8 +24,8 @@ export function InputControl(props: InputControlProps) {
 
   return (
     <label
-      htmlFor={htmlFor}
       className={cn("flex flex-col gap-1 text-sm font-medium text-zinc-700", className)}
+      htmlFor={htmlFor}
     >
       <span>
         {label}

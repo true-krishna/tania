@@ -16,16 +16,6 @@ import {
   type MenuGridRow,
 } from "./menuGrid";
 
-/**
- * Menu × role grid (W3 AC1/AC2). Rows come from `NAV` through `MENU_ROWS`, so
- * the grid always covers exactly the menus the sidebar renders; each cell is one
- * level, saved by the column's Simpan button.
- *
- * A locked cell is *shown* disabled with the reason next to it: hiding it would
- * leave an Admin wondering where the setting went, and the server refuses the
- * same change anyway (`validateMenuUpdates`). Cells outside a role's template
- * scope (master data) keep their configurable choices minus the locked one.
- */
 
 export type GridDraft = Record<string, RoleGrid>;
 
@@ -75,8 +65,6 @@ export function MenuGrid({
             aria-label={`${row.label} untuk ${role.label}`}
             className="w-full"
             disabled={rule.disabled || busyRoleId === role.id}
-            title={rule.reason}
-            value={value}
             onChange={(e) =>
               onChangeCell(role.id, row.id, e.target.value as MenuAccessLevel)
             }
@@ -84,6 +72,8 @@ export function MenuGrid({
               value: level,
               label: LEVEL_LABEL[level],
             }))}
+            title={rule.reason}
+            value={value}
           />
         );
       },
@@ -117,25 +107,25 @@ function roleHeader(
       <span className="text-xs text-tp-muted">{role.name}</span>
       <span className="flex gap-1">
         <Button
-          type="button"
-          variant={dirty ? "primary" : "secondary"}
           disabled={!dirty || busyRoleId === role.id}
           onClick={() => onSaveRole(role)}
+          type="button"
+          variant={dirty ? "primary" : "secondary"}
         >
           Simpan
         </Button>
         <Button
-          type="button"
-          variant="ghost"
           disabled={busyRoleId === role.id}
           onClick={() => onResetRole(role)}
+          type="button"
+          variant="ghost"
         >
           Reset
         </Button>
         <Button
+          onClick={() => onPreviewRole(role)}
           type="button"
           variant="ghost"
-          onClick={() => onPreviewRole(role)}
         >
           Pratinjau
         </Button>

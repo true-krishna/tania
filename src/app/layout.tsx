@@ -15,8 +15,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Product typeface (constitution v4.0.0, Principle III — binary weights).
-// The shipped --tp-font-* tokens consume the variable via globals.css.
 const nunitoSans = Nunito_Sans({
   variable: "--font-nunito-sans",
   subsets: ["latin"],
@@ -32,8 +30,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${nunitoSans.variable} h-full antialiased`}
+      lang="en"
     >
       <body className="min-h-full flex flex-col">
         <ApolloProvider>

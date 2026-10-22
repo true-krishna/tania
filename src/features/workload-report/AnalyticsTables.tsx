@@ -3,11 +3,6 @@ import { Table, type TableColumn } from "@/components/Table";
 import { GRAND_TOTAL } from "./types";
 import type { AnalyticsTablesData, LoggedVsEstimatedRow, TtdComplianceRow } from "./types";
 
-/**
- * Dua tabel analitik executive (TAN-232): Logged vs Estimated dan TTD
- * Compliance. Baris tanpa data tampil sebagai 0 (bukan kosong), baris Grand
- * Total ikut dari data.
- */
 const ESTIMATE_COLUMNS = [
   { key: "overload", header: "Overload" },
   { key: "stretch", header: "Stretch" },
@@ -67,11 +62,11 @@ export function AnalyticsTables({ analytics }: { analytics: AnalyticsTablesData 
         </div>
         <Table
           caption="Tabel actual dan estimated workload"
-          rowKey={(row) => row.statusLoad}
+          columns={LOGGED_COLUMNS}
           dataSource={analytics.loggedVsEstimated}
           minWidth={640}
           rowClassName={ROW_CLASSNAME}
-          columns={LOGGED_COLUMNS}
+          rowKey={(row) => row.statusLoad}
         />
       </Card>
 
@@ -82,10 +77,10 @@ export function AnalyticsTables({ analytics }: { analytics: AnalyticsTablesData 
         </div>
         <Table
           caption="Tabel kepatuhan TTD"
-          rowKey={(row) => row.statusLoad}
+          columns={TTD_TABLE_COLUMNS}
           dataSource={analytics.ttdCompliance}
           rowClassName={ROW_CLASSNAME}
-          columns={TTD_TABLE_COLUMNS}
+          rowKey={(row) => row.statusLoad}
         />
       </Card>
     </div>

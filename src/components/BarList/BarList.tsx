@@ -5,11 +5,9 @@ export interface BarItem {
 
 interface BarListProps {
   items: BarItem[];
-  /** Denominator for the bar width; defaults to the sum of all values (share). */
   total?: number;
 }
 
-/** Dependency-free horizontal bars for count distributions. */
 export function BarList({ items, total }: BarListProps) {
   const denominator = total ?? items.reduce((sum, item) => sum + item.value, 0);
 
