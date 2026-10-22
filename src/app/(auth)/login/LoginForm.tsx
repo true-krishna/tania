@@ -20,7 +20,7 @@ import { Input } from "@/components/Input";
 import { Brand } from "@/components/Brand";
 import { BrandPanel } from "./BrandPanel";
 
-type View = "sso" | "email";
+type View = "pending" | "sso" | "email";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -76,7 +76,13 @@ export default function LoginForm() {
         ? "Masuk dengan Microsoft gagal. Silakan coba lagi atau masuk dengan email & kata sandi."
         : null;
   const ssoPending = !authConfig.localOnly && !startFailed && !data && !ssoError;
-  const view: View = emailFormOpen ? "email" : authorizationUrl || ssoPending ? "sso" : "email";
+  const view: View = emailFormOpen
+    ? "email"
+    : authorizationUrl
+      ? "sso"
+      : ssoPending
+        ? "pending"
+        : "email";
 
   function continueWithMicrosoft() {
     if (!authorizationUrl) return;
@@ -144,6 +150,12 @@ export default function LoginForm() {
             </p>
           ) : null}
 
+          {view === "pending" ? (
+            <p className="mt-8 text-sm text-tp-muted" role="status">
+              Memeriksa opsi masuk…
+            </p>
+          ) : null}
+
           {view === "sso" ? (
             <>
               <p className="mt-4 text-sm leading-[1.6] text-tp-muted">
@@ -154,7 +166,6 @@ export default function LoginForm() {
               <div className="mt-8 flex flex-col gap-4">
                 <Button
                   className="h-13 w-full justify-center bg-tp-brand-red! border-tp-brand-red! hover:bg-tp-brand-red-deep! hover:border-tp-brand-red-deep! active:bg-tp-brand-red-deep! active:border-tp-brand-red-deep!"
-                  disabled={!authorizationUrl}
                   onClick={continueWithMicrosoft}
                   type="button"
                 >
@@ -170,11 +181,6 @@ export default function LoginForm() {
                   Login by Email
                 </button>
 
-                {ssoPending ? (
-                  <p className="text-center text-sm text-tp-muted" role="status">
-                    Memeriksa opsi masuk…
-                  </p>
-                ) : null}
               </div>
             </>
           ) : null}
