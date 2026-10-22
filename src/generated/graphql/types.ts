@@ -35,6 +35,24 @@ export type ActionStatusCount = {
   status: DevelopmentActionStatus;
 };
 
+/** Referensi prioritas aktivitas (FR-008); read-only, urut terendah → tertinggi. */
+export type ActivityPriority = {
+  __typename?: 'ActivityPriority';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
+/** Referensi status aktivitas (FR-008); read-only, urut siklus hidup. */
+export type ActivityStatus = {
+  __typename?: 'ActivityStatus';
+  id: Scalars['ID']['output'];
+  /** true untuk Done & Cancelled — hanya untuk gaya badge; transisi status ditegakkan server-side (FR-008). */
+  isTerminal: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
 export type AddIdpReviewInput = {
   followUp?: InputMaybe<Scalars['String']['input']>;
   reviewDate: Scalars['Date']['input'];
@@ -1419,6 +1437,10 @@ export type Project = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Referensi prioritas aktivitas, urut terendah → tertinggi. */
+  activityPriorities: Array<ActivityPriority>;
+  /** Referensi status aktivitas, urut siklus hidup. */
+  activityStatuses: Array<ActivityStatus>;
   /** Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35). */
   assignableTalents: EmployeeConnection;
   assignments: AssignmentConnection;
