@@ -2,6 +2,8 @@
 
 **Input**: Design documents dari `/specs/006-entra-sso-login/`
 
+**Revisi**: 2026-10-22 (keputusan pemilik produk, TAN-267) — halaman login **tanpa auto-redirect**: tombol "Continue with Microsoft" selalu tampil, form email di balik tautan "Login by Email" (plan **D8′**, menggantikan D8 opsi A). Berdampak pada **T024**, **T025/T027** (pesan pembatalan tanpa penanda fallback), **T026** (assertion), **T028** (e2e), dan **Checkpoint U2**.
+
 **Prerequisites**: `plan.md` (wajib — D1–D12 + **D5b**, Open Item 1–6, Risks R1–R10, roadmap **U0–U3**, struktur sumber) · `spec.md` (wajib — US1–US4, FR-001–FR-012, SC-001–SC-005; **revisi 2026-10-20**: FR-004 dua jalur pemetaan, SC-005 penyebut = keanggotaan tenant, lihat T032, Assumptions & Edge Cases, 4 skenario penerimaan) · `research.md` (R-1–R-12) · `data-model.md` (indeks unik parsial `users.entra_object_id` + kolom `refresh_tokens.auth_method`; klasifikasi & lawful basis data pribadi) · `contracts/sso-entra.md` (§1 skema GraphQL · §2 parameter OIDC · §3 aturan pemetaan · §4 kode kesalahan · §5 rate limit · §6 jejak audit · §7 konfigurasi · §8 alur · §9 batas yang tidak boleh dilanggar) · `quickstart.md` (§A/§A2 lokal · §B UAT U1–U10 · §C gerbang mutu & cara mengukur SC-001…SC-005)
 
 **Kontrak yang sudah final dan TIDAK dibuka di fase ini**: `spec.md` (milik TAN-267) · seluruh keputusan plan D1–D12 + D5b · skema GraphQL `contracts/sso-entra.md` §1 (`EntraSsoStart`, `EntraLoginInput`, `entraSsoStart`, `loginWithEntra`) · kode kesalahan §4 · penanda audit §6 · kunci/nilai rate limit §5 · nama variabel konfigurasi §7 · stack existing (nol dependensi Go/npm baru). `spec.md` **tidak** diubah dan artefak plan (`plan.md`, `research.md`, `data-model.md`, `quickstart.md`, `contracts/`) **tidak** disentuh di fase ini — bila ditemukan ketidaksesuaian antar-artefak, **laporkan**, jangan putuskan sendiri.
@@ -32,7 +34,7 @@
 | --- | --- | --- | --- |
 | **U0** — Prasyarat pemilik produk | Daftarkan **redirect URI** aplikasi Entra + pasang `ENTRA_REDIRECT_URI` di tiap lingkungan, sehingga `entraSsoStart.enabled = true` | T001 | plan Open Item 2 · prasyarat US1/SC-001 |
 | **U1** — Fondasi backend | Migrasi `0017` · domain & repo (keterkaitan `oid`, `auth_method`, repo provisi `FindByObjectID`) · klien OIDC + JWKS · `EntraLoginService` (D4/D5/D5b/D11/D12) · `issueSession(+authMethod)` (D6) · SDL + gqlgen + resolver · config & gerbang production (D7) · wiring · test unit/contract/security/e2e | T002–T019 | US3, US4, FR-003–FR-012 |
-| **U2** — Frontend | Salin ulang SDL → codegen → PKCE (Web Crypto) → `/login` auto-redirect + pintu fallback (D8) → `/login/callback` → Vitest/RTL + Playwright | T020–T028 | US1, US2, FR-001/002/009 |
+| **U2** — Frontend | Salin ulang SDL → codegen → PKCE (Web Crypto) → `/login` tombol Microsoft + tautan "Login by Email" (D8′) → `/login/callback` → Vitest/RTL + Playwright | T020–T028 | US1, US2, FR-001/002/009 |
 | **U3** — UAT & pengukuran | Gerbang mesin · UAT tenant Telkom U1–U10 · probe keamanan · pengukuran SC-001–SC-005 · DAMP pra-rilis | T029–T033 | SC-001–SC-005 |
 
 ---
@@ -195,7 +197,7 @@
 
 ## Phase U2 — Frontend (tania-dashboard) — plan.md §Roadmap U2 · R-8
 
-**Purpose**: Halaman login menjadikan SSO opsi utama (auto-redirect sekali) tanpa pernah mengunci pengguna di luar jalur email, dan rute callback menukar kode menjadi sesi Tania. Tanpa dependensi npm baru — PKCE memakai Web Crypto.
+**Purpose**: Halaman login menjadikan SSO opsi utama lewat tombol yang selalu tampil (tanpa auto-redirect), tanpa pernah mengunci pengguna di luar jalur email, dan rute callback menukar kode menjadi sesi Tania. Tanpa dependensi npm baru — PKCE memakai Web Crypto.
 
 **Dependensi gelombang**: U2 **hanya** bergantung pada **T011** (SDL SSO sudah masuk backend) untuk penyalinan SDL, dan pada kontrak final `contracts/sso-entra.md` §1/§4/§8 untuk seluruh UI. U2 **tidak** menunggu T010/T012/T013 selesai: codegen + komponen dapat dikerjakan paralel dengan sisa U1; yang belum dapat dibuktikan di U2 adalah pertukaran kode sungguhan (itu milik U3/T030).
 
@@ -217,21 +219,21 @@
       **Verifikasi**: `pnpm run typecheck`; unit `entra-pkce.test.ts` (T026) — panjang/alfabet verifier, challenge = SHA-256 base64url, nilai tersimpan & terhapus.
       **Menutup**: FR-001/FR-003 · D1/D3 · contracts §2 · R-11 · Technical V.
 
-- [ ] T023 [US1] [US2] **Penanda browser (opsi A) — fallback & "belum tertaut" 7 hari**
+- [ ] T023 [US1] [US2] **Penanda browser (opsi A) — fallback & "belum tertaut" 7 hari** — ⚠️ **tidak lagi diperlukan sejak revisi pemilik produk 2026-10-22 (D8′)**: tanpa auto-redirect tidak ada lingkaran pengalihan maupun kegagalan berulang, jadi penanda ini tidak punya pemakai. Task ini sudah terlanjur dikerjakan di U2; tindak lanjutnya hanya **melepas pemakaian**-nya dari `LoginForm.tsx` — bukan menambah perilaku baru.
       → `src/lib/auth/config.ts` · `src/lib/constants/storage.ts`
       Tambah kunci penanda (`tania:sso:fallback` di `sessionStorage`; `tania:sso:unlinked` di `localStorage`) + helper baca/tulis/hapus, termasuk masa berlaku 7 hari untuk penanda "belum tertaut" dan pembersihan keduanya setelah login berhasil di jalur mana pun. Penanda **murni petunjuk tampilan** di browser — tidak pernah otoritatif; keputusan menerima/menolak tetap di server (D8/§9 butir 6).
       **Verifikasi**: `pnpm run typecheck`; unit (T026) — penanda kedaluwarsa tidak dihormati, penanda dibersihkan setelah login sukses.
-      **Menutup**: FR-001/FR-002 · US2 · D8 (ii) · R5.
+      **Menutup**: FR-001/FR-002 · US2 · D8 (ii) · R5. — *D8 (ii) digantikan D8′ (2026-10-22).*
 
-- [ ] T024 [US1] [US2] **`/login` — auto-redirect sekali + pintu fallback yang selalu terlihat (D8 opsi A)**
+- [ ] T024 [US1] [US2] **`/login` — tombol "Continue with Microsoft" selalu tampil + tautan "Login by Email" yang membuka form (D8′)**
       → `src/app/(auth)/login/LoginForm.tsx` · `src/lib/constants/routes.ts`
-      Panggil `entraSsoStart` saat mount; bila `enabled` **dan** mode normal **dan** tidak ada penanda fallback → `window.location.replace(authorizationUrl)`. Tautan **"Masuk dengan email & kata sandi" selalu terlihat** (bukan hanya setelah gagal) sehingga akun Tania tanpa akun korporat — yang pasti gagal di auto-redirect — punya jalan keluar jelas; menekannya menyalakan penanda fallback sehingga auto-redirect berhenti (mustahil ada lingkaran pengalihan). Kembali dengan `?sso=error|cancelled` juga menyalakan penanda + menampilkan pesan Bahasa Indonesia yang jelas. `enabled=false` (atau `AUTH_LOCAL_ONLY`) → form email langsung tampil, tanpa tombol SSO menggantung. Tombol "Masuk dengan Microsoft" memakai peran aksi primer halaman (brand-red, arah desain TAN-191) dan tautan fallback sebagai sekunder; state memuat/gagal ber-ARIA + teks (Design §VI/VIII).
+      Panggil `entraSsoStart` saat mount untuk mengetahui `enabled` dan menyiapkan PKCE, tetapi **jangan** menavigasi otomatis: tombol **"Continue with Microsoft"** tampil sebagai aksi utama (di atas) bila `enabled=true`, dan pada kliknya jalankan `window.location.assign(authorizationUrl)` — alur Microsoft baru dipanggil saat tombol ditekan. Di bawah tombol, tautan **"Login by Email"** selalu terlihat; menekannya **menampilkan form email + kata sandi di halaman yang sama** (tanpa pindah rute, tanpa memanggil Microsoft). Karena tidak ada pengalihan otomatis, penanda `sessionStorage` fallback dan penanda `localStorage` "belum tertaut" 7 hari **tidak dipakai**. Kembali dengan `?sso=error|cancelled` → halaman login tampil apa adanya (tombol + tautan) dengan pesan Bahasa Indonesia yang jelas. `enabled=false` (atau `AUTH_LOCAL_ONLY`) → hanya form email yang tampil, tanpa tombol SSO menggantung. Tombol Microsoft memakai peran aksi primer halaman (brand-red, arah desain TAN-191), tautan email sebagai sekunder; state memuat/gagal ber-ARIA + teks (Design §VI/VIII). Setelah masuk via Microsoft berhasil, pengguna diarahkan ke aplikasi Tania (`/dashboard`).
       **Verifikasi**: `pnpm run lint && pnpm run typecheck` + `pnpm test` (T026); e2e T028 (tanpa SSO aktif, form tampil langsung).
-      **Menutup**: FR-001/FR-002/FR-009 · US1/US2 · D8 (i) · contracts §4 · R5 · Design I/II/VI.
+      **Menutup**: FR-001/FR-002/FR-009 · US1/US2 · D8′ · contracts §4 · R5 · Design I/II/VI.
 
 - [ ] T025 [US1] **Rute `/login/callback`**
       → `src/app/(auth)/login/callback/page.tsx` (baru)
-      Baca `code`/`state` (dan `error`) dari query string. `state` tidak cocok/tidak ada → pesan `"Sesi masuk tidak valid atau sudah kedaluwarsa. Silakan coba lagi."` **tanpa** memanggil mutation. `error=access_denied`/pembatalan → kembali ke `/login` dengan penanda fallback + pesan jelas. Sukses → `loginWithEntra({ code, codeVerifier, nonce })` → `setSession(...)` → `router.replace(DASHBOARD)`. Galat mutation ditampilkan dari `err.message` apa adanya (sudah Bahasa Indonesia dari backend, D11); penolakan "belum tertaut" menyalakan penanda 7 hari. Rute sudah publik lewat `isPublicRoute` (`/login/*`) — **jangan** mengubah gate/proxy.
+      Baca `code`/`state` (dan `error`) dari query string. `state` tidak cocok/tidak ada → pesan `"Sesi masuk tidak valid atau sudah kedaluwarsa. Silakan coba lagi."` **tanpa** memanggil mutation. `error=access_denied`/pembatalan → kembali ke `/login` dengan pesan jelas. Sukses → `loginWithEntra({ code, codeVerifier, nonce })` → `setSession(...)` → `router.replace(DASHBOARD)`. Galat mutation ditampilkan dari `err.message` apa adanya (sudah Bahasa Indonesia dari backend, D11); penolakan "belum tertaut" menyalakan penanda 7 hari. Rute sudah publik lewat `isPublicRoute` (`/login/*`) — **jangan** mengubah gate/proxy.
       **Verifikasi**: `pnpm run lint && pnpm run typecheck` + `pnpm test` (T027); manual quickstart §A butir 4.
       **Menutup**: US1 AC1–AC3 · FR-003/FR-009 · contracts §4/§8 · D8.
 
@@ -239,13 +241,13 @@
 
 - [ ] T026 [P] [US1] [US2] **Komponen — `/login` & PKCE**
       → `src/app/(auth)/login/LoginForm.test.tsx` (baru; pola `page.test.tsx` existing) · `src/features/auth/entra-pkce.test.ts` (baru)
-      Vitest + RTL + `MockedProvider`: `enabled=true` tanpa penanda → `window.location.replace` dipanggil dengan URL otorisasi; penanda fallback aktif → form tampil & **tidak** redirect; `enabled=false` → form tampil tanpa redirect; kembali `?sso=error|cancelled` → form + pesan, tidak memutar ulang; tautan fallback **selalu** terlihat dan menyalakan penanda; PKCE — verifier 43–128 base64url, challenge S256 benar, state/nonce tersimpan; penanda kedaluwarsa (7 hari) tidak dihormati.
+      Vitest + RTL + `MockedProvider`: `enabled=true` → tombol "Continue with Microsoft" tampil dan **tidak ada** navigasi saat mount; klik tombol → `window.location.assign` dipanggil dengan URL otorisasi; tautan "Login by Email" → form email + kata sandi tampil tanpa navigasi; `enabled=false` → hanya form email, tanpa tombol; kembali `?sso=error|cancelled` → halaman login + pesan; PKCE — verifier 43–128 base64url, challenge S256 benar, state/nonce tersimpan sebelum tombol ditekan.
       **Verifikasi**: `pnpm test` hijau.
       **Menutup**: US1/US2 · FR-001/FR-002/FR-009 · D8 · Design §VI.
 
 - [ ] T027 [P] [US1] **Komponen — `/login/callback`**
       → `src/app/(auth)/login/callback/callback.test.tsx` (baru)
-      Vitest + RTL + `MockedProvider`: `state` tidak cocok → pesan tampil & mutation **tidak** dipanggil; galat mutation → pesan Bahasa Indonesia tampil; sukses → `setSession` dipanggil + `router.replace(DASHBOARD)`; pembatalan (`error=access_denied`) → kembali ke `/login` dengan penanda fallback.
+      Vitest + RTL + `MockedProvider`: `state` tidak cocok → pesan tampil & mutation **tidak** dipanggil; galat mutation → pesan Bahasa Indonesia tampil; sukses → `setSession` dipanggil + `router.replace(DASHBOARD)`; pembatalan (`error=access_denied`) → kembali ke `/login` dengan pesan jelas (tanpa penanda fallback)lback.
       **Verifikasi**: `pnpm test` hijau.
       **Menutup**: US1 AC1–AC3 · FR-003/FR-009 · contracts §4/§8.
 
@@ -255,7 +257,7 @@
       **Verifikasi**: `pnpm run test:e2e` — skenario baru lulus, skenario existing tidak regresi. Alur yang benar-benar menyentuh tenant ada di T030/T031.
       **Menutup**: US2 · FR-001/FR-002/FR-009 · SC-003 · quickstart §A.
 
-**Checkpoint U2**: `pnpm run lint` + `pnpm run typecheck` + `pnpm test` + `pnpm run generate:check` + `pnpm run schema:drift` hijau; `/login` mengarahkan sekali ke Microsoft bila aktif dan selalu menyediakan pintu email; `/login/callback` menukar kode → sesi tanpa pernah memanggil backend saat `state` tidak cocok.
+**Checkpoint U2**: `pnpm run lint` + `pnpm run typecheck` + `pnpm test` + `pnpm run generate:check` + `pnpm run schema:drift` hijau; `/login` menampilkan tombol Microsoft (bila aktif) atau form email, dengan tautan "Login by Email" yang selalu tersedia; `/login/callback` menukar kode → sesi tanpa pernah memanggil backend saat `state` tidak cocok.
 
 ---
 
@@ -394,7 +396,7 @@ Urutan minimum yang membuat US1 dapat dipakai pengguna nyata:
 
 1. **T001** — tenant siap (redirect URI + `ENTRA_REDIRECT_URI`).
 2. **T002 + T003 + T004 + T004b + T005 + T006 + T007 + T008 + T009 + T010 + T011 + T012 + T013** — backend dapat menukar kode menjadi sesi Tania lewat `loginWithEntra`.
-3. **T020 + T021 + T022 + T023 + T024 + T025** — `/login` mengarahkan sekali, `/login/callback` menutup alur, pintu email selalu tersedia.
+3. **T020 + T021 + T022 + T023 + T024 + T025** — `/login` menampilkan tombol Microsoft + tautan "Login by Email", `/login/callback` menutup alur, jalur email selalu tersedia.
 4. **T029** — gerbang mesin.
 
 T014–T019 dan T026–T028 **wajib ikut MVP**: US2 (zero-regression) dan SC-002/SC-003 adalah syarat peluncuran, bukan penyempurnaan — dan tanpa test matriks pemetaan, R3 (kesalahan pemetaan membuka akun yang salah) tidak terjaga. T030–T033 adalah gerbang penerimaan & kepatuhan; T033 (DAMP) wajib sebelum rilis.
