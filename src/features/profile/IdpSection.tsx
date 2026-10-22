@@ -29,10 +29,6 @@ const METHOD_LABEL: Record<DevelopmentMethod, string> = {
   SELF_STUDY: "Belajar mandiri",
 };
 
-/**
- * Personal IDP plan section of `/profile` (TAN-188) — read-only summary of
- * `myIdp`; the mutable view stays on `/idp/my` (US3).
- */
 export function IdpSection() {
   const { status, data, error } = useMyIdp();
 
@@ -73,8 +69,8 @@ export function IdpSection() {
           <ul className="flex flex-col gap-2">
             {data.actions.map((action) => (
               <li
-                key={action.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-board-border px-3 py-2"
+                key={action.id}
               >
                 <div>
                   <p className="text-sm font-medium text-zinc-900">{action.description}</p>
@@ -82,7 +78,7 @@ export function IdpSection() {
                     {METHOD_LABEL[action.method]} · Tenggat {action.dueDate ?? "—"}
                   </p>
                 </div>
-                <Chip variant={ACTION_STATUS_VARIANT[action.status]} size="small">
+                <Chip size="small" variant={ACTION_STATUS_VARIANT[action.status]}>
                   {ACTION_STATUS_LABEL[action.status]}
                 </Chip>
               </li>
@@ -91,7 +87,7 @@ export function IdpSection() {
         ) : (
           <p className="text-sm text-zinc-500">Belum ada aksi pengembangan.</p>
         )}
-        <Link href={IDP_MY} className="text-sm font-medium text-zinc-900 hover:underline">
+        <Link className="text-sm font-medium text-zinc-900 hover:underline" href={IDP_MY}>
           Kelola IDP saya →
         </Link>
       </Card>
@@ -101,7 +97,7 @@ export function IdpSection() {
 
 function IdpStatusChip({ status }: { status: IdpStatus }) {
   return (
-    <Chip variant={IDP_STATUS_VARIANT[status]} size="small">
+    <Chip size="small" variant={IDP_STATUS_VARIANT[status]}>
       {IDP_STATUS_LABEL[status]}
     </Chip>
   );

@@ -26,22 +26,22 @@ export default function ChaptersPage() {
 
   return (
     <MasterDataSection<Chapter>
+      addLabel="Tambah Chapter"
       caption="Daftar chapter"
       emptyMessage="Belum ada chapter. Tambahkan chapter pertama."
-      addLabel="Tambah Chapter"
-      nameLabel="Nama Chapter"
-      items={data}
-      status={status}
       error={error}
       extraColumn={{ label: "Job Role", render: (chapter) => chapter.jobRoles.length }}
+      items={data}
+      nameLabel="Nama Chapter"
       onCreate={({ name }) => detectError(() => chapterMutations.create({ name }), `Chapter "${name}" berhasil dibuat.`)}
-      onUpdate={(id, { name }) => detectError(() => chapterMutations.update(id, { name }), "Chapter berhasil diubah.")}
       onToggleActive={(id, isActive) =>
         detectError(
           () => chapterMutations.toggleActive(id, isActive),
           isActive ? "Chapter berhasil diaktifkan." : "Chapter berhasil dinonaktifkan.",
         )
       }
+      onUpdate={(id, { name }) => detectError(() => chapterMutations.update(id, { name }), "Chapter berhasil diubah.")}
+      status={status}
     />
   );
 }

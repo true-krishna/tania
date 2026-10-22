@@ -56,8 +56,8 @@ function normalizedMarker(row: DistributionRow): React.ReactNode {
   if (!row.isNormalized) return null;
   return (
     <span
-      title="Ada aktivitas ternormalisasi"
       className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-tp-tint-sun px-1 text-[10px] font-bold text-tp-ink-sun"
+      title="Ada aktivitas ternormalisasi"
     >
       N
     </span>
@@ -181,7 +181,6 @@ function sortRows(rows: DistributionRow[], sort: SortState): DistributionRow[] {
   });
 }
 
-/** Opsi filter unit code — satu entri per nilai unitcode, bukan per baris. */
 function unitcodeFilterOptions(rows: DistributionRow[], filter: DistributionFilter) {
   const options = new Map<string, { value: string; label: string }>();
   for (const row of rows) {
@@ -208,11 +207,11 @@ function TalentDrillDownList({ row, tables }: { row: DistributionRow; tables: Di
   }
 
   return (
-    <ul className="flex flex-col divide-y divide-tp-line" aria-label={`Talent dalam ${row.nama}`}>
+    <ul aria-label={`Talent dalam ${row.nama}`} className="flex flex-col divide-y divide-tp-line">
       {talents.map((talent) => (
         <li
-          key={talent.id}
           className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm first:pt-0 last:pb-0"
+          key={talent.id}
         >
           <span className="font-medium text-tp-text">{talent.nama}</span>
           <span className="flex items-center gap-3 text-tp-muted">
@@ -238,9 +237,9 @@ function SortHeader({
   const active = sort?.key === column.sortKey;
   return (
     <button
-      type="button"
-      onClick={() => onToggle(column.sortKey!)}
       className="inline-flex items-center gap-1 hover:text-tp-text"
+      onClick={() => onToggle(column.sortKey!)}
+      type="button"
     >
       {column.header}
       {active ? (
@@ -254,11 +253,6 @@ function SortHeader({
   );
 }
 
-/**
- * Tabel distribusi beban per dimensi (TAN-231) dengan varian ternormalisasi,
- * drill-down talent, filter per dimensi, sort, dan pagination. Semua angka
- * berasal dari data; filter/sort/pagination hanya memilih baris yang tampil.
- */
 export function DistributionSection({
   tables,
   canSeeCost,
@@ -354,7 +348,7 @@ export function DistributionSection({
 
   const standardTableColumns: TableColumn<DistributionRow>[] = standardCols.map((col) => ({
     key: col.key,
-    title: <SortHeader column={col} sort={sort} onToggle={toggleSort} />,
+    title: <SortHeader column={col} onToggle={toggleSort} sort={sort} />,
     headerProps: {
       "aria-sort":
         sort && col.sortKey === sort.key
@@ -404,9 +398,9 @@ export function DistributionSection({
             <Select
               aria-label="Dimensi distribusi"
               className="h-10 w-40"
-              value={dimension}
               onChange={(e) => changeDimension(e.target.value as DistributionDimension)}
               options={DISTRIBUTION_DIMENSIONS.map((d) => ({ value: d, label: DIMENSION_LABELS[d] }))}
+              value={dimension}
             />
           </label>
           <label className="flex items-center gap-2 text-[13px] font-semibold text-tp-muted">
@@ -414,12 +408,12 @@ export function DistributionSection({
             <Select
               aria-label="Varian tabel distribusi"
               className="h-10 w-44"
-              value={normalized ? "normalized" : "standard"}
               onChange={(e) => changeNormalized(e.target.value === "normalized")}
               options={[
                 { value: "standard", label: "Standar" },
                 { value: "normalized", label: "Ternormalisasi" },
               ]}
+              value={normalized ? "normalized" : "standard"}
             />
           </label>
         </div>
@@ -432,9 +426,9 @@ export function DistributionSection({
             <Select
               aria-label="Filter tribe"
               className="h-9 w-44"
-              value={filter.tribeId ?? ""}
               onChange={(e) => updateFilter("tribeId", e.target.value)}
               options={[{ value: "", label: "Semua tribe" }, ...uniqueOptions(tables.rows.tribe)]}
+              value={filter.tribeId ?? ""}
             />
           </label>
         ) : null}
@@ -444,9 +438,9 @@ export function DistributionSection({
             <Select
               aria-label="Filter product"
               className="h-9 w-44"
-              value={filter.productId ?? ""}
               onChange={(e) => updateFilter("productId", e.target.value)}
               options={[{ value: "", label: "Semua product" }, ...productOptions]}
+              value={filter.productId ?? ""}
             />
           </label>
         ) : null}
@@ -456,9 +450,9 @@ export function DistributionSection({
             <Select
               aria-label="Filter squad"
               className="h-9 w-44"
-              value={filter.squadId ?? ""}
               onChange={(e) => updateFilter("squadId", e.target.value)}
               options={[{ value: "", label: "Semua squad" }, ...squadOptions]}
+              value={filter.squadId ?? ""}
             />
           </label>
         ) : null}
@@ -468,9 +462,9 @@ export function DistributionSection({
             <Select
               aria-label="Filter unit code"
               className="h-9 w-44"
-              value={filter.unitcode ?? ""}
               onChange={(e) => updateFilter("unitcode", e.target.value)}
               options={[{ value: "", label: "Semua unit code" }, ...unitcodeOptions]}
+              value={filter.unitcode ?? ""}
             />
           </label>
         ) : null}
@@ -480,9 +474,9 @@ export function DistributionSection({
             <Select
               aria-label="Filter status beban"
               className="h-9 w-48"
-              value={filter.statusLoad ?? ""}
               onChange={(e) => updateFilter("statusLoad", e.target.value)}
               options={statusOptions}
+              value={filter.statusLoad ?? ""}
             />
           </label>
         ) : null}
@@ -491,23 +485,23 @@ export function DistributionSection({
       {normalized ? (
         <Table
           caption={`Tabel distribusi beban ternormalisasi dimensi ${DIMENSION_LABELS[dimension]}`}
-          rowKey={(row) => row.id}
-          dataSource={shownRows as DistributionNormalizedRow[]}
-          minWidth={640}
-          emptyText="Tidak ada baris yang cocok dengan filter atau dimensi ini."
-          pagination={visibleRows > 0 ? pagination : undefined}
           columns={normalizedTableColumns}
+          dataSource={shownRows as DistributionNormalizedRow[]}
+          emptyText="Tidak ada baris yang cocok dengan filter atau dimensi ini."
+          minWidth={640}
+          pagination={visibleRows > 0 ? pagination : undefined}
+          rowKey={(row) => row.id}
         />
       ) : (
         <Table
           caption={`Tabel distribusi beban dimensi ${DIMENSION_LABELS[dimension]}`}
-          rowKey={(row) => row.id}
-          dataSource={shownRows as DistributionRow[]}
-          minWidth={1400}
-          emptyText="Tidak ada baris yang cocok dengan filter atau dimensi ini."
-          pagination={visibleRows > 0 ? pagination : undefined}
-          expandable={drillDownEnabled ? expandable : undefined}
           columns={standardTableColumns}
+          dataSource={shownRows as DistributionRow[]}
+          emptyText="Tidak ada baris yang cocok dengan filter atau dimensi ini."
+          expandable={drillDownEnabled ? expandable : undefined}
+          minWidth={1400}
+          pagination={visibleRows > 0 ? pagination : undefined}
+          rowKey={(row) => row.id}
         />
       )}
     </Card>

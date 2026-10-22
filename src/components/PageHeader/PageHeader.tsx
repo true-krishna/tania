@@ -8,11 +8,6 @@ interface PageHeaderProps {
   filters?: React.ReactNode;
 }
 
-/**
- * Header halaman utama (TAN-184): judul di kiri, aksi utama di kanan; baris
- * kontrol di bawahnya menampatkan searchbox di kiri dan filter di kanan.
- * Page-title role (constitution design v4.0.0 §III): `.tp-h1` — 700 clamp(30px,5vw,40px)/1.1.
- */
 export function PageHeader({ title, subtitle, actions, search, filters }: PageHeaderProps) {
   return (
     <div className="flex flex-col gap-4">

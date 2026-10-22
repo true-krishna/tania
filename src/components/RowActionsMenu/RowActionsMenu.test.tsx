@@ -10,11 +10,11 @@ describe("RowActionsMenu", () => {
     const onDelete = vi.fn();
     render(
       <RowActionsMenu
-        label="Aksi Unit A"
         actions={[
           { label: "Ubah", onSelect: onEdit },
           { label: "Hapus", onSelect: onDelete, danger: true },
         ]}
+        label="Aksi Unit A"
       />,
     );
 
@@ -32,7 +32,7 @@ describe("RowActionsMenu", () => {
   });
 
   it("closes on Escape and returns focus to the trigger", () => {
-    render(<RowActionsMenu label="Aksi Unit A" actions={[{ label: "Ubah", onSelect: vi.fn() }]} />);
+    render(<RowActionsMenu actions={[{ label: "Ubah", onSelect: vi.fn() }]} label="Aksi Unit A" />);
     const trigger = screen.getByRole("button", { name: "Aksi Unit A" });
 
     fireEvent.click(trigger);
@@ -44,7 +44,7 @@ describe("RowActionsMenu", () => {
   });
 
   it("closes when pressing outside the menu", () => {
-    render(<RowActionsMenu label="Aksi Unit A" actions={[{ label: "Ubah", onSelect: vi.fn() }]} />);
+    render(<RowActionsMenu actions={[{ label: "Ubah", onSelect: vi.fn() }]} label="Aksi Unit A" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Aksi Unit A" }));
     fireEvent.pointerDown(document.body);
@@ -55,9 +55,9 @@ describe("RowActionsMenu", () => {
   it("keeps a disabled trigger closed", () => {
     render(
       <RowActionsMenu
-        label="Aksi Unit A"
-        disabled
         actions={[{ label: "Ubah", onSelect: vi.fn() }]}
+        disabled
+        label="Aksi Unit A"
       />,
     );
 
@@ -70,8 +70,8 @@ describe("RowActionsMenu", () => {
   it("renders custom panel content above the actions", () => {
     render(
       <RowActionsMenu
-        label="Aksi Unit A"
         actions={[{ label: "Nonaktifkan", onSelect: vi.fn() }]}
+        label="Aksi Unit A"
       >
         <select aria-label="Ubah peran Unit A" defaultValue="ADMIN">
           <option value="ADMIN">Admin</option>

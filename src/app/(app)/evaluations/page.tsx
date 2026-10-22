@@ -21,14 +21,6 @@ import {
   EVALUATION_DETAIL,
 } from "@/lib/constants/routes";
 
-/**
- * Evaluations home — US7 roster, open to Admin, Operation and Chapter since the
- * 2026-10-16 activation (klarifikasi 9). Rooted on the current/selected
- * evaluation period; shows every talent in the chapter's scope with an
- * NOT_EVALUATED/EVALUATED flag (FR-28). The period must be RUNNING *and* the
- * role must manage (Chapter scoped, Admin company-wide) to score; Operation
- * reads the roster, and a CLOSED period is read-only for everyone.
- */
 export default function EvaluationsPage() {
   const role = useSessionRole();
   const router = useRouter();
@@ -37,10 +29,7 @@ export default function EvaluationsPage() {
   const period = current.data;
   const { pageRows, pagination } = useTablePagination(roster.data);
 
-  // Talent lands on their read-only view; Chapter/Admin see the roster.
   if (role === "TALENT") {
-    // Lazy-import is overkill for a demo route; the Talent view lives at
-    // /evaluations/my. For a direct hit on /evaluations show a pointer.
     return (
       <div className="flex flex-col gap-4">
         <p className="text-sm text-zinc-600">
@@ -48,8 +37,8 @@ export default function EvaluationsPage() {
         </p>
         <p className="text-sm text-zinc-600">Gunakan menu Evaluations untuk membuka daftar evaluasi Anda.</p>
         <Link
-          href={EVALUATIONS_MY}
           className="inline-flex w-fit items-center rounded-md bg-tp-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-tp-brand-navy-deep active:bg-tp-brand-navy-deep"
+          href={EVALUATIONS_MY}
         >
           Lihat evaluasi saya
         </Link>
@@ -71,7 +60,7 @@ export default function EvaluationsPage() {
         {role === "ADMIN" ? (
           <p className="text-sm text-zinc-600">
             Buat periode di tab{" "}
-            <Link href={EVALUATION_PERIODS} className="font-medium text-tp-brand-red-deep hover:underline">
+            <Link className="font-medium text-tp-brand-red-deep hover:underline" href={EVALUATION_PERIODS}>
               Periode
             </Link>
             .
@@ -108,9 +97,6 @@ export default function EvaluationsPage() {
       ) : (
         <Table
           caption="Roster evaluasi periode"
-          rowKey={(entry) => entry.talent.id}
-          dataSource={pageRows}
-          pagination={pagination}
           columns={[
             {
               key: "talent",
@@ -145,7 +131,6 @@ export default function EvaluationsPage() {
                 const already = entry.fillState === "EVALUATED";
                 return (
                   <RowActionsMenu
-                    label={`Aksi ${entry.talent.fullName}`}
                     actions={[
                       {
                         label: readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai",
@@ -153,11 +138,15 @@ export default function EvaluationsPage() {
                           router.push(EVALUATION_DETAIL(period.id, entry.talent.id)),
                       },
                     ]}
+                    label={`Aksi ${entry.talent.fullName}`}
                   />
                 );
               },
             },
           ]}
+          dataSource={pageRows}
+          pagination={pagination}
+          rowKey={(entry) => entry.talent.id}
         />
       )}
     </section>

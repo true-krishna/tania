@@ -27,27 +27,15 @@ export default function ProjectsPage() {
 
   return (
     <MasterDataSection<Project>
+      addLabel="Tambah Initiative"
       caption="Daftar initiative"
       emptyMessage="Belum ada initiative. Tambahkan initiative pertama."
-      addLabel="Tambah Initiative"
-      nameLabel="Nama Initiative"
-      items={data}
-      status={status}
       error={error}
-      searchable
-      select={{
-        label: "Unit",
-        placeholder: "pilih unit pemilik —",
-        options: (units.data ?? []).map((u) => ({ id: u.id, name: u.name })),
-      }}
-      selectRequired
-      selectIdOf={(project) => project.unit.id}
       extraColumn={{ label: "Unit", render: (project) => project.unit.name }}
+      items={data}
+      nameLabel="Nama Initiative"
       onCreate={({ name, selectValue }) =>
         detectError(() => projectMutations.create({ name, selectValue }), `Initiative "${name}" berhasil dibuat.`)
-      }
-      onUpdate={(id, { name, selectValue }) =>
-        detectError(() => projectMutations.update(id, { name, selectValue }), "Initiative berhasil diubah.")
       }
       onToggleActive={(id, isActive) =>
         detectError(
@@ -55,6 +43,18 @@ export default function ProjectsPage() {
           isActive ? "Initiative berhasil diaktifkan." : "Initiative berhasil dinonaktifkan.",
         )
       }
+      onUpdate={(id, { name, selectValue }) =>
+        detectError(() => projectMutations.update(id, { name, selectValue }), "Initiative berhasil diubah.")
+      }
+      searchable
+      select={{
+        label: "Unit",
+        placeholder: "pilih unit pemilik —",
+        options: (units.data ?? []).map((u) => ({ id: u.id, name: u.name })),
+      }}
+      selectIdOf={(project) => project.unit.id}
+      selectRequired
+      status={status}
     />
   );
 }

@@ -22,12 +22,6 @@ export interface ActivityListProps {
   onRetry?: () => void;
 }
 
-/**
- * Own-activity list with loading / empty / error / success states.
- *
- * Edit and delete are offered on owned rows only; ownership is enforced
- * server-side regardless — this is UX, not a security boundary (SC-002).
- */
 export function ActivityList({
   status,
   activities,
@@ -47,7 +41,7 @@ export function ActivityList({
       <div className="flex flex-col items-start gap-3">
         <ErrorState message={error ?? "Gagal memuat aktivitas."} />
         {onRetry ? (
-          <Button type="button" variant="secondary" onClick={onRetry}>
+          <Button onClick={onRetry} type="button" variant="secondary">
             Coba lagi
           </Button>
         ) : null}
@@ -62,9 +56,6 @@ export function ActivityList({
   return (
     <Table
       caption="Daftar aktivitas saya"
-      rowKey={(activity) => activity.id}
-      dataSource={pageRows}
-      pagination={pagination}
       columns={[
         {
           key: "title",
@@ -113,18 +104,21 @@ export function ActivityList({
             const owned = activity.talentId === currentTalentId;
             return owned ? (
               <RowActionsMenu
-                label={`Aksi ${activity.title}`}
                 actions={[
                   { label: "Ubah", onSelect: () => onEdit(activity), disabled: busy },
                   { label: "Hapus", onSelect: () => onDelete(activity), danger: true, disabled: busy },
                 ]}
+                label={`Aksi ${activity.title}`}
               />
             ) : (
-              <RowActionsMenu label={`Aksi ${activity.title}`} disabled />
+              <RowActionsMenu disabled label={`Aksi ${activity.title}`} />
             );
           },
         },
       ]}
+      dataSource={pageRows}
+      pagination={pagination}
+      rowKey={(activity) => activity.id}
     />
   );
 }

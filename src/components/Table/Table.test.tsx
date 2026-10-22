@@ -109,7 +109,6 @@ describe("Table", () => {
       <Table
         columns={COLUMNS}
         dataSource={ROWS}
-        rowKey={(row) => row.id}
         pagination={{
           page: 1,
           pageSize: 10,
@@ -117,6 +116,7 @@ describe("Table", () => {
           onPageChange: vi.fn(),
           onPageSizeChange: vi.fn(),
         }}
+        rowKey={(row) => row.id}
       />,
     );
     expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeDisabled();
@@ -126,7 +126,6 @@ describe("Table", () => {
       <Table
         columns={COLUMNS}
         dataSource={ROWS}
-        rowKey={(row) => row.id}
         pagination={{
           page: 6,
           pageSize: 10,
@@ -134,6 +133,7 @@ describe("Table", () => {
           onPageChange: vi.fn(),
           onPageSizeChange: vi.fn(),
         }}
+        rowKey={(row) => row.id}
       />,
     );
     expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeEnabled();

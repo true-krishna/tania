@@ -21,21 +21,19 @@ const COPY: Record<EmptyStateVariant, { lead: string; body: string }> = {
   },
 };
 
-/** Arc motif shipped with the empty state (design §5.5, FR-016). */
 function EmptyIllustration() {
   return (
-    <svg viewBox="0 0 72 56" width="72" height="56" aria-hidden className="shrink-0">
-      <g fill="none" strokeWidth="5" strokeLinecap="round">
+    <svg aria-hidden className="shrink-0" height="56" viewBox="0 0 72 56" width="72">
+      <g fill="none" strokeLinecap="round" strokeWidth="5">
         <path d="M10 26a36 36 0 0 1 52 0" stroke="var(--tp-line)" />
         <path d="M20 36a22 22 0 0 1 32 0" stroke="var(--tp-line)" />
         <path d="M29 46a8 8 0 0 1 14 0" stroke="var(--tp-line)" />
       </g>
-      <circle cx="36" cy="50" r="4" fill="var(--tp-brand-navy)" />
+      <circle cx="36" cy="50" fill="var(--tp-brand-navy)" r="4" />
     </svg>
   );
 }
 
-/** Empty / no-data state (FR-016; design §5.5). Never a fabricated zero. */
 export function WorkloadEmptyState({ variant }: { variant: EmptyStateVariant }) {
   const { lead, body } = COPY[variant];
 
@@ -49,10 +47,10 @@ export function WorkloadEmptyState({ variant }: { variant: EmptyStateVariant }) 
         {variant === "no-data" ? (
           <>
             <Link
-              href={ACTIVITIES}
               className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-brand-navy bg-tp-brand-navy px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-brand-navy-deep"
+              href={ACTIVITIES}
             >
-              <IconClockHour3 className="h-5 w-5" aria-hidden />
+              <IconClockHour3 aria-hidden className="h-5 w-5" />
               Catat aktivitas
             </Link>
             <p className="mt-2 text-[13px] text-tp-muted">Anda juga dapat memilih periode lain.</p>

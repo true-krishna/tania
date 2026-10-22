@@ -13,7 +13,7 @@ const PERIOD_STATE: Record<
 export function PeriodStateBadge({ state }: { state: "SCHEDULED" | "RUNNING" | "CLOSED" }) {
   const { label, variant } = PERIOD_STATE[state];
   return (
-    <Chip variant={variant} size="small">
+    <Chip size="small" variant={variant}>
       {label}
     </Chip>
   );
@@ -22,7 +22,7 @@ export function PeriodStateBadge({ state }: { state: "SCHEDULED" | "RUNNING" | "
 export function FillStateBadge({ fillState }: { fillState: EvaluationFillState }) {
   const evaluated = fillState === "EVALUATED";
   return (
-    <Chip variant={evaluated ? "success" : "warning"} size="small">
+    <Chip size="small" variant={evaluated ? "success" : "warning"}>
       {evaluated ? "Dinilai" : "Belum dinilai"}
     </Chip>
   );

@@ -12,18 +12,10 @@ import type { ActivityInput, PersonalWorkActivity } from "./types";
 
 export type ActivitiesStatus = "loading" | "ready" | "error";
 
-/**
- * The `/activities` data source for the mock-data-first slice.
- *
- * The GraphQL wiring (TAN-108/T005) will swap the fixture store behind this same
- * context, so the components never change. State is in-memory only — no
- * localStorage, per data-model §1.
- */
 export interface ActivitiesStoreValue {
   status: ActivitiesStatus;
   error: string | null;
   activities: PersonalWorkActivity[];
-  /** Session talent id; ownership-gated actions compare against it. */
   currentTalentId: string;
   reload: () => void;
   create: (input: ActivityInput) => Promise<PersonalWorkActivity>;
@@ -43,12 +35,9 @@ export function useActivitiesStore(): ActivitiesStoreValue {
 
 interface ActivitiesProviderProps {
   children: React.ReactNode;
-  /** Fixture rows. Must be a stable reference (default and tests use constants). */
   seed?: PersonalWorkActivity[];
-  /** Force the initial load to fail — test seam for the error state. */
   loadError?: string | null;
   currentTalentId?: string;
-  /** Simulated read latency in ms; `0` in tests. */
   delayMs?: number;
 }
 
@@ -94,7 +83,6 @@ export function ActivitiesProvider({
         activityType: input.activityType,
         startDate: input.startDate,
         endDate: input.endDate,
-        // Conditionally required: training never has a project (FR-004).
         project: input.activityType === "training" ? null : findProject(input.projectId),
         priority: findPriority(input.priorityId) ?? { id: input.priorityId, name: input.priorityId },
         status: findStatus(input.statusId) ?? { id: input.statusId, name: input.statusId },

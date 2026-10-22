@@ -24,11 +24,6 @@ const PROFILE_TABS: { id: ProfileTab; label: string; module?: "idp" }[] = [
   { id: "idp", label: "IDP Saya", module: "idp" },
 ];
 
-/**
- * `/profile` (TAN-188): the signed-in user's information on one page — personal
- * data, contract history, assignments, workload and the personal IDP plan.
- * Read-only; capture and editing stay in their own modules.
- */
 export default function ProfilePage() {
   const role = useSessionRole();
   const { status, data, error, session } = useProfile();
@@ -41,31 +36,31 @@ export default function ProfilePage() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title={employee?.fullName ?? session?.fullName ?? "Profil saya"}
         subtitle={
           employee ? `${employee.nomorInduk ?? "Tanpa nomor induk"} · ${employee.email}` : undefined
         }
+        title={employee?.fullName ?? session?.fullName ?? "Profil saya"}
       />
 
       <div
-        role="tablist"
         aria-label="Detail profil"
         className="flex gap-6 overflow-x-auto border-b border-board-border"
+        role="tablist"
       >
         {tabs.map((item) => {
           const selected = item.id === selectedTab;
           return (
             <button
-              key={item.id}
-              type="button"
-              role="tab"
               aria-selected={selected}
-              onClick={() => setTab(item.id)}
               className={
                 selected
                   ? "-mb-px border-b-2 border-tp-brand-navy px-1 py-2 text-sm font-semibold text-zinc-900"
                   : "-mb-px border-b-2 border-transparent px-1 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900"
               }
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              role="tab"
+              type="button"
             >
               {item.label}
             </button>

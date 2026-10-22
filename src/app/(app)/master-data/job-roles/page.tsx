@@ -27,29 +27,15 @@ export default function JobRolesPage() {
 
   return (
     <MasterDataSection<JobRole>
+      addLabel="Tambah Job Role"
       caption="Daftar job role"
       emptyMessage="Belum ada job role. Tambahkan job role pertama."
-      addLabel="Tambah Job Role"
-      nameLabel="Nama Job Role"
-      items={data}
-      status={status}
       error={error}
-      searchable
-      select={{
-        label: "Chapter",
-        placeholder: "pilih chapter (boleh kosong) —",
-        options: (chapters.data ?? []).map((c) => ({ id: c.id, name: c.name })),
-      }}
-      selectIdOf={(role) => role.chapter?.id}
       extraColumn={{ label: "Chapter", render: (role) => role.chapter?.name ?? "Tanpa chapter" }}
+      items={data}
+      nameLabel="Nama Job Role"
       onCreate={({ name, selectValue }) =>
         detectError(() => jobRoleMutations.create({ name, selectValue }), `Job role "${name}" berhasil dibuat.`)
-      }
-      onUpdate={(id, { name, selectValue }) =>
-        detectError(async () => {
-          await jobRoleMutations.update(id, { name });
-          await jobRoleMutations.changeChapter(id, selectValue || null);
-        }, "Job role berhasil diubah.")
       }
       onToggleActive={(id, isActive) =>
         detectError(
@@ -57,6 +43,20 @@ export default function JobRolesPage() {
           isActive ? "Job role berhasil diaktifkan." : "Job role berhasil dinonaktifkan.",
         )
       }
+      onUpdate={(id, { name, selectValue }) =>
+        detectError(async () => {
+          await jobRoleMutations.update(id, { name });
+          await jobRoleMutations.changeChapter(id, selectValue || null);
+        }, "Job role berhasil diubah.")
+      }
+      searchable
+      select={{
+        label: "Chapter",
+        placeholder: "pilih chapter (boleh kosong) —",
+        options: (chapters.data ?? []).map((c) => ({ id: c.id, name: c.name })),
+      }}
+      selectIdOf={(role) => role.chapter?.id}
+      status={status}
     />
   );
 }

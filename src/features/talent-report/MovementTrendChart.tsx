@@ -12,12 +12,10 @@ const EChart = dynamic(
   { ssr: false },
 );
 
-/** T026 — V-5: line dua seri default; bar divergen hanya untuk rentang ≤12 bulan (plan §7). */
 export type MovementView = "line" | "diverging";
 
 export const MAX_DIVERGING_MONTHS = 12;
 
-/** Opsi toggle tampilan (V-5) — urutan tampil di tablist. */
 const VIEWS: readonly { id: MovementView; label: string }[] = [
   { id: "line", label: "Line" },
   { id: "diverging", label: "Bar divergen" },
@@ -27,7 +25,6 @@ export function canUseDivergingBars(data: readonly ReportMonthlyMovement[]): boo
   return data.length > 0 && data.length <= MAX_DIVERGING_MONTHS;
 }
 
-/** Opsi ECharts V-5. `"diverging"`: new talent di atas nol, churn di bawah nol (churn tampil sebagai nilai negatif). */
 export function buildMovementOption(
   data: readonly ReportMonthlyMovement[],
   view: MovementView,
@@ -39,7 +36,6 @@ export function buildMovementOption(
   const axisLabel = { color: theme.textColor, fontFamily: theme.fontFamily };
   const common = {
     textStyle: { fontFamily: theme.fontFamily, color: theme.textColor },
-    // T034: judul & rentang di dalam kanvas (plan §2) — PNG identik tampilan (SC-03).
     title: title
       ? {
           text: title,
@@ -68,7 +64,6 @@ export function buildMovementOption(
       type: "value" as const,
       axisLabel: {
         ...axisLabel,
-        // Sumbu divergen memakai nilai negatif untuk churn; label tampil absolut.
         formatter: (value: number) => String(Math.abs(value)),
       },
       splitLine: { lineStyle: { color: theme.lineColor } },
@@ -122,18 +117,11 @@ interface MovementTrendChartProps {
   data: readonly ReportMonthlyMovement[];
   ariaLabel?: string;
   className?: string;
-  /** Judul grafik — dirender TitleComponent di dalam kanvas (T034/SC-03). */
   title?: string;
-  /** Label rentang periode — subtext judul di dalam kanvas (T034/FR-13). */
   periodLabel?: string;
   chartRef?: React.Ref<EChartHandle>;
 }
 
-/**
- * T026 — grafik tren bulanan churn vs new talent (V-5): line dua seri default,
- * toggle bar divergen aktif hanya untuk rentang ≤12 bulan (spesifikasi bentuk
- * visual V-5). Warna: hijau new talent, merah churn (D1/O-R4).
- */
 export function MovementTrendChart({
   data,
   ariaLabel,
@@ -153,7 +141,6 @@ export function MovementTrendChart({
     [data, effectiveView, theme, title, periodLabel],
   );
 
-  /** V-5: pilihan bar divergen hanya sah bila rentangnya ≤12 bulan. */
   const selectView = (next: MovementView) => {
     if (next === "diverging" && !divergingAvailable) return;
     setView(next);
@@ -161,43 +148,41 @@ export function MovementTrendChart({
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Toggle tampilan memakai resep tab kanon (.tp-tabs/.tp-tab) dengan
-          aria-selected sebagai sumber status (VI), bukan warna saja. */}
-      <div className="tp-tabs" role="tablist" aria-label="Tampilan grafik tren">
+      <div aria-label="Tampilan grafik tren" className="tp-tabs" role="tablist">
         {VIEWS.map((item) => {
           const selected = effectiveView === item.id;
           const disabled = item.id === "diverging" && !divergingAvailable;
           return (
             <button
-              key={item.id}
-              type="button"
-              role="tab"
-              id={tabId(item.id)}
-              className={`tp-tab${disabled ? " cursor-not-allowed opacity-50" : ""}`}
-              aria-selected={selected}
               aria-controls={panelId}
               aria-disabled={disabled || undefined}
-              title={
-                disabled ? "Bar divergen hanya untuk rentang maksimal 12 bulan" : undefined
-              }
+              aria-selected={selected}
+              className={`tp-tab${disabled ? " cursor-not-allowed opacity-50" : ""}`}
+              id={tabId(item.id)}
+              key={item.id}
               onClick={() => selectView(item.id)}
               onKeyDown={(event) => {
                 if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
                 event.preventDefault();
                 selectView(effectiveView === "line" ? "diverging" : "line");
               }}
+              role="tab"
+              title={
+                disabled ? "Bar divergen hanya untuk rentang maksimal 12 bulan" : undefined
+              }
+              type="button"
             >
               {item.label}
             </button>
           );
         })}
       </div>
-      <div role="tabpanel" id={panelId} aria-labelledby={tabId(effectiveView)}>
+      <div aria-labelledby={tabId(effectiveView)} id={panelId} role="tabpanel">
         <EChart
-          ref={chartRef}
-          option={option}
           ariaLabel={ariaLabel}
           className={className ?? "h-64 w-full"}
+          option={option}
+          ref={chartRef}
         />
       </div>
     </div>

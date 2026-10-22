@@ -1,6 +1,5 @@
 import type { ActivitySplit } from "./types";
 
-/** Work-vs-training split (design spec §5.3). Server values only. */
 export function ActivitySplitChart({ split }: { split: ActivitySplit | null }) {
   if (!split) {
     return (
@@ -15,9 +14,9 @@ export function ActivitySplitChart({ split }: { split: ActivitySplit | null }) {
   return (
     <div>
       <div
-        role="img"
         aria-label={`Bekerja ${workingPercentage} persen, pelatihan ${trainingPercentage} persen`}
         className="flex h-3.5 gap-0.5 overflow-hidden rounded-full bg-tp-bg"
+        role="img"
       >
         <span className="block h-full bg-tp-brand-navy" style={{ width: `${workingPercentage}%` }} />
         <span

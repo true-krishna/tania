@@ -14,9 +14,7 @@ export interface RowAction {
 interface RowActionsMenuProps {
   label: string;
   actions?: readonly RowAction[];
-  /** Matikan trigger (mis. baris tanpa aksi untuk pengguna saat ini). */
   disabled?: boolean;
-  /** Konten tambahan di atas daftar aksi (mis. kontrol ubah peran). */
   children?: React.ReactNode;
 }
 
@@ -26,12 +24,6 @@ interface MenuPosition {
   right: number;
 }
 
-/**
- * Menu aksi baris tabel (TAN-184): ikon tiga titik yang membuka daftar opsi.
- * Pola disclosure seperti UserMenu (bukan role="menu"). Panel memakai
- * `position: fixed` mengikuti posisi trigger karena `.table-scroll` memotong
- * dropdown absolut, dan menutup saat scroll/resize agar posisinya tak pernah basi.
- */
 export function RowActionsMenu({ label, actions = [], disabled = false, children }: RowActionsMenuProps) {
   const [open, setOpen] = React.useState(false);
   const [position, setPosition] = React.useState<MenuPosition | null>(null);
@@ -60,7 +52,6 @@ export function RowActionsMenu({ label, actions = [], disabled = false, children
     if (!open) return;
     function onPointerDown(event: PointerEvent) {
       if (rootRef.current?.contains(event.target as Node)) return;
-      // Interaksi popup native <select> kadang dilaporkan di luar root.
       if (event.target instanceof Element && event.target.closest("select, option")) return;
       setOpen(false);
     }
@@ -86,29 +77,29 @@ export function RowActionsMenu({ label, actions = [], disabled = false, children
   }, [open]);
 
   return (
-    <div ref={rootRef} className="relative inline-flex">
+    <div className="relative inline-flex" ref={rootRef}>
       <button
+        aria-controls={open ? menuId : undefined}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label={label}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-tp-muted transition-colors hover:bg-tp-bg hover:text-tp-text disabled:pointer-events-none disabled:opacity-40"
+        disabled={disabled}
+        onClick={toggle}
         ref={triggerRef}
         type="button"
-        disabled={disabled}
-        aria-label={label}
-        aria-haspopup="true"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
-        onClick={toggle}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-tp-muted transition-colors hover:bg-tp-bg hover:text-tp-text disabled:pointer-events-none disabled:opacity-40"
       >
         <IconDotsVertical aria-hidden size={18} stroke={2} />
       </button>
 
       {open ? (
         <div
-          id={menuId}
-          style={position ? { position: "fixed", top: position.top, bottom: position.bottom, right: position.right } : undefined}
           className={cn(
             "z-30 min-w-56 max-w-64 overflow-hidden rounded-tp-lg border border-tp-line bg-tp-surface shadow-card",
             !position && "absolute right-0 top-full mt-1",
           )}
+          id={menuId}
+          style={position ? { position: "fixed", top: position.top, bottom: position.bottom, right: position.right } : undefined}
         >
           {children ? <div className="border-b border-tp-line p-3">{children}</div> : null}
           {actions.length > 0 ? (
@@ -116,17 +107,17 @@ export function RowActionsMenu({ label, actions = [], disabled = false, children
               {actions.map((action) => (
                 <li key={action.label}>
                   <button
-                    type="button"
-                    disabled={action.disabled}
-                    onClick={() => {
-                      setOpen(false);
-                      action.onSelect();
-                    }}
                     className={cn(
                       "flex w-full items-center rounded-tp-sm px-3 py-2 text-left text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg",
                       "disabled:pointer-events-none disabled:opacity-50",
                       action.danger && "text-tp-ink-peach hover:bg-tp-tint-peach",
                     )}
+                    disabled={action.disabled}
+                    onClick={() => {
+                      setOpen(false);
+                      action.onSelect();
+                    }}
+                    type="button"
                   >
                     {action.label}
                   </button>

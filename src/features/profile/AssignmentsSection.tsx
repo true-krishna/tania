@@ -4,10 +4,6 @@ import { Table } from "@/components/Table";
 import { Card } from "@/components/Card";
 import type { ProfileAssignment } from "./useProfile";
 
-/**
- * Assignment section of `/profile` (TAN-188) — the user's own placements,
- * newest first (server-ordered), read-only.
- */
 export function AssignmentsSection({
   assignments,
 }: {
@@ -18,11 +14,9 @@ export function AssignmentsSection({
   }
 
   return (
-    <Card padded={false} className="max-w-3xl">
+    <Card className="max-w-3xl" padded={false}>
       <Table
         caption="Riwayat assignment saya"
-        rowKey={(assignment) => assignment.id}
-        dataSource={assignments}
         columns={[
           {
             key: "project",
@@ -48,6 +42,8 @@ export function AssignmentsSection({
             ),
           },
         ]}
+        dataSource={assignments}
+        rowKey={(assignment) => assignment.id}
       />
     </Card>
   );

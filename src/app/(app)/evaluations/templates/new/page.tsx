@@ -15,11 +15,6 @@ import { EVALUATION_TEMPLATES } from "@/lib/constants/routes";
 
 type CriterionRow = { label: string; answerType: EvaluationAnswerType };
 
-/**
- * Create evaluation template (Admin) — US7 / FR-31.
- * A template is a named list of criteria, each with a fixed answer type and an
- * implicit order (array index). Answer types come from the served enum.
- */
 export default function NewEvaluationTemplatePage() {
   const [createTemplate, { loading }] = useMutation(CreateEvaluationTemplateDocument);
   const { pushToast } = useToast();
@@ -78,10 +73,10 @@ export default function NewEvaluationTemplatePage() {
 
   return (
     <section className="flex max-w-2xl flex-col gap-4">
-      <PageHeader title="Buat Template Evaluasi" subtitle="Daftar kriteria dengan tipe jawaban fixed (Admin)." />
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <InputControl label="Nama Template" error={errors.name}>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Framework Performa 2025" />
+      <PageHeader subtitle="Daftar kriteria dengan tipe jawaban fixed (Admin)." title="Buat Template Evaluasi" />
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <InputControl error={errors.name} label="Nama Template">
+          <Input onChange={(e) => setName(e.target.value)} placeholder="cth: Framework Performa 2025" value={name} />
         </InputControl>
 
         <fieldset className="flex flex-col gap-3">
@@ -90,19 +85,18 @@ export default function NewEvaluationTemplatePage() {
             <p className="text-xs font-normal text-red-600">{errors.criteria}</p>
           ) : null}
           {criteria.map((criterion, index) => (
-            <div key={index} className="flex items-end gap-2">
+            <div className="flex items-end gap-2" key={index}>
               <div className="flex-1">
                 <span className="mb-1 block text-xs text-zinc-500">Kriteria {index + 1}</span>
                 <Input
-                  value={criterion.label}
                   onChange={(e) => setCriterion(index, { label: e.target.value })}
                   placeholder="Label kriteria"
+                  value={criterion.label}
                 />
               </div>
               <div className="w-44">
                 <span className="mb-1 block text-xs text-zinc-500">Tipe jawaban</span>
                 <Select
-                  value={criterion.answerType}
                   onChange={(e) => setCriterion(index, { answerType: e.target.value as EvaluationAnswerType })}
                   options={[
                     { value: "SCALE_1_5", label: "Skala 1–5" },
@@ -110,14 +104,15 @@ export default function NewEvaluationTemplatePage() {
                     { value: "YES_NO", label: "Ya / Tidak" },
                     { value: "FREE_TEXT", label: "Teks bebas" },
                   ]}
+                  value={criterion.answerType}
                 />
               </div>
               <button
-                type="button"
-                onClick={() => removeCriterion(index)}
-                disabled={criteria.length === 1}
-                className="mb-1 inline-flex h-9 items-center rounded-md border border-surface-border px-3 text-sm text-zinc-600 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
                 aria-label={`Hapus kriteria ${index + 1}`}
+                className="mb-1 inline-flex h-9 items-center rounded-md border border-surface-border px-3 text-sm text-zinc-600 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
+                disabled={criteria.length === 1}
+                onClick={() => removeCriterion(index)}
+                type="button"
               >
                 Hapus
               </button>
@@ -126,18 +121,18 @@ export default function NewEvaluationTemplatePage() {
         </fieldset>
 
         <div>
-          <Button type="button" variant="secondary" onClick={addCriterion}>
+          <Button onClick={addCriterion} type="button" variant="secondary">
             + Tambah Kriteria
           </Button>
         </div>
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={loading}>
+          <Button disabled={loading} type="submit">
             Simpan
           </Button>
           <Link
-            href={EVALUATION_TEMPLATES}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
+            href={EVALUATION_TEMPLATES}
           >
             Batal
           </Link>

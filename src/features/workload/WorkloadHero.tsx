@@ -3,28 +3,27 @@ import type { LoadClassification } from "./types";
 
 function Gauge({ loadPercentage }: { loadPercentage: number }) {
   const capped = Math.min(Math.max(loadPercentage, 0), 100);
-  // Half-circle arc length ≈ π·r with r = 44 (see design §3 gauge recipe).
   const arc = 138;
   const filled = (capped / 100) * arc;
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <svg width="120" height="70" viewBox="0 0 120 70" aria-hidden>
+      <svg aria-hidden height="70" viewBox="0 0 120 70" width="120">
         <path
           d="M16 62 A44 44 0 0 1 104 62"
           fill="none"
           stroke="var(--tp-on-nav)"
+          strokeLinecap="round"
           strokeOpacity={0.25}
           strokeWidth={10}
-          strokeLinecap="round"
         />
         <path
           d="M16 62 A44 44 0 0 1 104 62"
           fill="none"
           stroke="var(--tp-on-nav)"
-          strokeWidth={10}
-          strokeLinecap="round"
           strokeDasharray={`${filled} ${arc}`}
+          strokeLinecap="round"
+          strokeWidth={10}
         />
       </svg>
       <span className="text-[12.5px] text-tp-on-nav" style={{ opacity: 0.72 }}>
@@ -56,7 +55,6 @@ function Chips({
   );
 }
 
-/** Own-view hero: the one dark indigo card per screen (design §3 item 4). */
 export function WorkloadHero({
   label,
   loadPercentage,
@@ -93,7 +91,7 @@ export function WorkloadHero({
             {capacityUsedHours} dari {capacityTotalHours} jam kapasitas terisi
           </p>
         ) : null}
-        <Chips classification={classification} stale={stale} caption={caption} />
+        <Chips caption={caption} classification={classification} stale={stale} />
       </div>
       {loadPercentage !== null ? <Gauge loadPercentage={loadPercentage} /> : null}
     </section>
@@ -105,7 +103,6 @@ export interface HeroKpi {
   caption: string;
 }
 
-/** Multi-KPI hero for the chapter list and org distribution (design §4). */
 export function WorkloadKpiHero({ label, kpis }: { label: string; kpis: HeroKpi[] }) {
   return (
     <section

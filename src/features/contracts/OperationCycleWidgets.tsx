@@ -68,12 +68,6 @@ function Counts({ urgent, total }: { urgent: number; total: number }) {
   );
 }
 
-/**
- * Operation dashboard cycle indicators (FR-40) — T027.
- * Contract expiry uses the served `expiringContracts(days)` query (H-90/H-30),
- * follow-up uses `employeesNeedingFollowUp`, and pre-retirement is derived from
- * each active employee's birth date and the Admin-managed retirement age.
- */
 export function OperationCycleWidgets() {
   const expiring90 = useExpiringContracts(90);
   const expiring30 = useExpiringContracts(30);
@@ -99,14 +93,14 @@ export function OperationCycleWidgets() {
           <EmptyNote>Gagal memuat kontrak segera berakhir.</EmptyNote>
         ) : (
           <>
-            <Counts urgent={expiring30.data?.length ?? 0} total={expiring90List.length} />
+            <Counts total={expiring90List.length} urgent={expiring30.data?.length ?? 0} />
             {expiring90List.length ? (
               <ul className="flex flex-col gap-2">
                 {expiring90List.map((contract) => (
-                  <li key={contract.id} className="rounded-lg border border-surface-border px-3 py-2">
+                  <li className="rounded-lg border border-surface-border px-3 py-2" key={contract.id}>
                     <Link
-                      href={CONTRACT_DETAIL(contract.id)}
                       className="text-sm font-medium text-zinc-900 hover:underline"
+                      href={CONTRACT_DETAIL(contract.id)}
                     >
                       {contract.employee.fullName}
                     </Link>
@@ -140,12 +134,12 @@ export function OperationCycleWidgets() {
                   const last = employee.contracts.edges[0]?.node;
                   return (
                     <li
-                      key={employee.id}
                       className="rounded-lg border border-surface-border px-3 py-2"
+                      key={employee.id}
                     >
                       <Link
-                        href={EMPLOYEE_DETAIL(employee.id)}
                         className="text-sm font-medium text-zinc-900 hover:underline"
+                        href={EMPLOYEE_DETAIL(employee.id)}
                       >
                         {employee.fullName}
                       </Link>
@@ -173,17 +167,17 @@ export function OperationCycleWidgets() {
         ) : (
           <>
             <p className="text-xs text-zinc-500">Usia pensiun: {age} tahun</p>
-            <Counts urgent={preRetirementUrgent} total={preRetirement.length} />
+            <Counts total={preRetirement.length} urgent={preRetirementUrgent} />
             {preRetirement.length ? (
               <ul className="flex flex-col gap-2">
                 {preRetirement.map((hit) => (
                   <li
-                    key={hit.node.id}
                     className="rounded-lg border border-surface-border px-3 py-2"
+                    key={hit.node.id}
                   >
                     <Link
-                      href={EMPLOYEE_DETAIL(hit.node.id)}
                       className="text-sm font-medium text-zinc-900 hover:underline"
+                      href={EMPLOYEE_DETAIL(hit.node.id)}
                     >
                       {hit.node.fullName}
                     </Link>

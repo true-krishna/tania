@@ -9,11 +9,6 @@ type RecordChangeHistoryProps = {
   entityId: string;
 };
 
-/**
- * Per-record change history for Operation (FR-41) — reads `auditLogs` scoped to
- * one entity. Full audit remains Admin-only; this panel shows only the
- * before/after trail of the record being viewed.
- */
 export function RecordChangeHistory({ entityType, entityId }: RecordChangeHistoryProps) {
   const { status, logs, error, hasNextPage, loadingMore, loadMore } = useAuditLogs({
     entityType,
@@ -32,7 +27,7 @@ export function RecordChangeHistory({ entityType, entityId }: RecordChangeHistor
     <div className="flex flex-col gap-3">
       <ul className="flex flex-col gap-2">
         {logs.map((log) => (
-          <li key={log.id} className="rounded-md border border-board-border bg-white px-3 py-2">
+          <li className="rounded-md border border-board-border bg-white px-3 py-2" key={log.id}>
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ACTION_PILL[log.action]}`}
@@ -55,10 +50,10 @@ export function RecordChangeHistory({ entityType, entityId }: RecordChangeHistor
       </ul>
       {hasNextPage ? (
         <button
-          type="button"
-          onClick={loadMore}
-          disabled={loadingMore}
           className="w-fit rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+          disabled={loadingMore}
+          onClick={loadMore}
+          type="button"
         >
           {loadingMore ? "Memuat…" : "Muat lebih banyak"}
         </button>

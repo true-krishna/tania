@@ -69,36 +69,36 @@ export default function NewEvaluationPeriodPage() {
 
   return (
     <section className="flex max-w-xl flex-col gap-4">
-      <PageHeader title="Buat Periode Evaluasi" subtitle="Periode terpinned ke satu template (Admin)." />
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <InputControl label="Nama Periode" error={errors.name}>
-          <Input value={values.name} onChange={(e) => set("name", e.target.value)} placeholder="cth: Q3 2025" />
+      <PageHeader subtitle="Periode terpinned ke satu template (Admin)." title="Buat Periode Evaluasi" />
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <InputControl error={errors.name} label="Nama Periode">
+          <Input onChange={(e) => set("name", e.target.value)} placeholder="cth: Q3 2025" value={values.name} />
         </InputControl>
-        <InputControl label="Template Evaluasi" error={errors.templateId}>
+        <InputControl error={errors.templateId} label="Template Evaluasi">
           <Select
-            value={values.templateId}
             onChange={(e) => set("templateId", e.target.value)}
             options={[
               { value: "", label: "— pilih template —" },
               ...(templates.data ?? []).map((t) => ({ value: t.id, label: t.name })),
             ]}
+            value={values.templateId}
           />
         </InputControl>
         <div className="grid grid-cols-2 gap-3">
-          <InputControl label="Tanggal Mulai" error={errors.startDate}>
-            <Input type="date" value={values.startDate} onChange={(e) => set("startDate", e.target.value)} />
+          <InputControl error={errors.startDate} label="Tanggal Mulai">
+            <Input onChange={(e) => set("startDate", e.target.value)} type="date" value={values.startDate} />
           </InputControl>
-          <InputControl label="Tanggal Selesai" error={errors.endDate}>
-            <Input type="date" value={values.endDate} onChange={(e) => set("endDate", e.target.value)} />
+          <InputControl error={errors.endDate} label="Tanggal Selesai">
+            <Input onChange={(e) => set("endDate", e.target.value)} type="date" value={values.endDate} />
           </InputControl>
         </div>
         <div className="flex gap-2">
-          <Button type="submit" disabled={loading}>
+          <Button disabled={loading} type="submit">
             Simpan
           </Button>
           <Link
-            href={EVALUATION_PERIODS}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
+            href={EVALUATION_PERIODS}
           >
             Batal
           </Link>

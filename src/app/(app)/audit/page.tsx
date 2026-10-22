@@ -14,19 +14,14 @@ import { orDash } from "@/lib/cell";
 
 const ROLE_LABEL: Record<AccessRole, string> = roleLabel;
 
-/**
- * Admin audit trail viewer (FR-17) — US5.
- * Cursor pagination over `auditLogs` (connection). Admin-only route (FR-17);
- * auth enforced server-side (FR-16), this gates the view at the UI layer.
- */
 export default function AuditPage() {
   const role = useSessionRole();
   if (role !== "ADMIN") {
     return (
       <section className="flex flex-col gap-4">
         <PageHeader
-          title="Jejak Audit"
           subtitle="Jejak audit hanya dapat diakses oleh peran Admin (FR-17)."
+          title="Jejak Audit"
         />
       </section>
     );
@@ -49,16 +44,13 @@ function AuditViewer() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Jejak Audit"
         subtitle={`Mutasi & aktivitas sistem (${totalCount} catatan).`}
+        title="Jejak Audit"
       />
 
       {logs && logs.length ? (
         <Table
           caption="Jejak audit"
-          rowKey={(log) => log.id}
-          dataSource={pageRows}
-          pagination={pagination}
           columns={[
             {
               key: "waktu",
@@ -137,6 +129,9 @@ function AuditViewer() {
               ),
             },
           ]}
+          dataSource={pageRows}
+          pagination={pagination}
+          rowKey={(log) => log.id}
         />
       ) : (
         <EmptyState message="Belum ada catatan audit." />

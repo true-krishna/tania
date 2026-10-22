@@ -94,7 +94,7 @@ function appCache() {
 
 function renderDirectory(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
   return render(
-    <MockedProvider mocks={mocks} cache={appCache()}>
+    <MockedProvider cache={appCache()} mocks={mocks}>
       <EmployeesPage />
     </MockedProvider>
   );

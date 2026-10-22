@@ -30,12 +30,6 @@ import { useExecutiveReport } from "./useExecutiveReport";
 import { useTalentWorkload } from "./useTalentWorkload";
 import { WORKLOAD_REPORT_ROLES } from "./types";
 
-/**
- * Halaman workload per talent (TAN-227/233/234 + umpan balik pemilik produk):
- * pintu masuk berupa tabel talent dengan workload; memilih talent membuka
- * laporan individunya. Konteks talent tidak pernah ditaruh di URL atau query
- * string (TAN-233) — hanya `?period=` yang menjelajah URL.
- */
 export function TalentWorkloadView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,8 +41,6 @@ export function TalentWorkloadView() {
 
   const periodParam = searchParams.get("period");
   const period = isReportPeriod(periodParam) ? periodParam : DEFAULT_REPORT_PERIOD;
-  // Sumber tabel talent pada mode daftar: baris talent dari tabel distribusi
-  // WAD — stand-in untuk query tabel talent sampai GraphQL tersedia.
   const listState = useExecutiveReport(period, reloadKey);
   const detailState = useTalentWorkload(period, talentId, reloadKey);
 
@@ -77,7 +69,7 @@ export function TalentWorkloadView() {
         />
       );
     } else {
-      content = <TalentTable rows={listFixture.distribution.rows.talent} onView={setTalentId} />;
+      content = <TalentTable onView={setTalentId} rows={listFixture.distribution.rows.talent} />;
     }
   } else if (detailState.status === "loading") {
     content = <ReportSkeleton variant="talent" />;
@@ -89,9 +81,9 @@ export function TalentWorkloadView() {
     content = (
       <div className="flex flex-col gap-4">
         <button
-          type="button"
-          onClick={() => setTalentId(null)}
           className="w-fit rounded-full border-[1.5px] border-tp-text px-4 py-2 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg"
+          onClick={() => setTalentId(null)}
+          type="button"
         >
           Kembali ke daftar talent
         </button>
@@ -104,9 +96,9 @@ export function TalentWorkloadView() {
     content = (
       <div className="flex flex-col gap-4">
         <button
-          type="button"
-          onClick={() => setTalentId(null)}
           className="w-fit rounded-full border-[1.5px] border-tp-text px-4 py-2 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg"
+          onClick={() => setTalentId(null)}
+          type="button"
         >
           Kembali ke daftar talent
         </button>
@@ -119,9 +111,6 @@ export function TalentWorkloadView() {
             </div>
             <Table
               caption="Tabel assignment project talent"
-              rowKey={(row) => `${row.projectKey}-${row.squad}`}
-              dataSource={detailFixture.assignedProjects}
-              minWidth={720}
               columns={[
                 {
                   key: "projectKey",
@@ -151,6 +140,9 @@ export function TalentWorkloadView() {
                   render: (_value, row) => row.category,
                 },
               ]}
+              dataSource={detailFixture.assignedProjects}
+              minWidth={720}
+              rowKey={(row) => `${row.projectKey}-${row.squad}`}
             />
           </Card>
         ) : null}
@@ -177,7 +169,6 @@ export function TalentWorkloadView() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Workload Talent"
         subtitle={
           talentId === null
             ? `Tabel talent dengan workload — periode ${formatPeriodLabel(period)}.`
@@ -185,6 +176,7 @@ export function TalentWorkloadView() {
               ? `Laporan per talent — ${selectedTalent.name} · ${selectedTalent.tribe} · ${selectedTalent.squad} · periode ${formatPeriodLabel(period)}.`
               : "Laporan workload per talent."
         }
+        title="Workload Talent"
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -194,16 +186,16 @@ export function TalentWorkloadView() {
             <Select
               aria-label="Pilih talent"
               className="h-11 w-64"
-              value={talentId}
               onChange={(e) => setTalentId(e.target.value)}
               options={REPORT_TALENT_OPTIONS.map((t) => ({ value: t.talentId, label: t.name }))}
+              value={talentId}
             />
           </label>
         )}
         <ReportPeriodSelector
-          value={period}
-          onChange={setPeriod}
           ariaLabel={talentId === null ? "Pilih periode tabel talent" : "Pilih periode laporan talent"}
+          onChange={setPeriod}
+          value={period}
         />
       </div>
 

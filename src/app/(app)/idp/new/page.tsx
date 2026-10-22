@@ -151,14 +151,14 @@ export default function NewIdpPage() {
             : error?.message ?? "Terjadi kesalahan saat membuat IDP."}
         </div>
         <Button
-          type="button"
-          variant="secondary"
           onClick={() => {
             setValues(EMPTY);
             setErrors({});
             setActions([]);
             setSubmitted(false);
           }}
+          type="button"
+          variant="secondary"
         >
           Buat IDP lain
         </Button>
@@ -168,13 +168,12 @@ export default function NewIdpPage() {
 
   return (
     <section className="flex max-w-3xl flex-col gap-4">
-      <ToastStack toasts={toasts} onDismiss={dismissToast} />
-      <PageHeader title="Buat IDP" subtitle="Rancang Individual Development Plan untuk talent (Chapter)." />
+      <ToastStack onDismiss={dismissToast} toasts={toasts} />
+      <PageHeader subtitle="Rancang Individual Development Plan untuk talent (Chapter)." title="Buat IDP" />
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <InputControl label="Talent" error={errors.employeeId}>
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <InputControl error={errors.employeeId} label="Talent">
           <Select
-            value={values.employeeId}
             onChange={(e) => set("employeeId", e.target.value)}
             options={[
               { value: "", label: "— pilih talent (assignable) —" },
@@ -183,53 +182,54 @@ export default function NewIdpPage() {
                 label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
               })),
             ]}
+            value={values.employeeId}
           />
         </InputControl>
 
         <Card className="flex flex-col gap-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Komponen Plan</h2>
-          <InputControl label="Development Objective" error={errors.developmentObjective}>
+          <InputControl error={errors.developmentObjective} label="Development Objective">
             <textarea
               className={BLOCK}
-              rows={3}
-              value={values.developmentObjective}
               onChange={(e) => set("developmentObjective", e.target.value)}
               placeholder="Target peran/kapabilitas spesifik yang ingin dicapai…"
+              rows={3}
+              value={values.developmentObjective}
             />
           </InputControl>
-          <InputControl label="Penilaian Kondisi Saat Ini" error={errors.currentAssessment}>
+          <InputControl error={errors.currentAssessment} label="Penilaian Kondisi Saat Ini">
             <textarea
               className={BLOCK}
-              rows={3}
-              value={values.currentAssessment}
               onChange={(e) => set("currentAssessment", e.target.value)}
               placeholder="Kekuatan & keterbatasan talent saat ini…"
+              rows={3}
+              value={values.currentAssessment}
             />
           </InputControl>
-          <InputControl label="Identifikasi Gap" error={errors.gapAnalysis}>
+          <InputControl error={errors.gapAnalysis} label="Identifikasi Gap">
             <textarea
               className={BLOCK}
-              rows={3}
-              value={values.gapAnalysis}
               onChange={(e) => set("gapAnalysis", e.target.value)}
               placeholder="Selisih kondisi saat ini vs kebutuhan peran…"
+              rows={3}
+              value={values.gapAnalysis}
             />
           </InputControl>
-          <InputControl label="Success Indicators" error={errors.successIndicators}>
+          <InputControl error={errors.successIndicators} label="Success Indicators">
             <textarea
               className={BLOCK}
-              rows={3}
-              value={values.successIndicators}
               onChange={(e) => set("successIndicators", e.target.value)}
               placeholder="Kriteria yang menunjukkan pengembangan berhasil…"
+              rows={3}
+              value={values.successIndicators}
             />
           </InputControl>
           <div className="grid grid-cols-2 gap-4">
-            <InputControl label="Timeline Mulai" error={errors.timelineStart}>
-              <Input type="date" value={values.timelineStart} onChange={(e) => set("timelineStart", e.target.value)} />
+            <InputControl error={errors.timelineStart} label="Timeline Mulai">
+              <Input onChange={(e) => set("timelineStart", e.target.value)} type="date" value={values.timelineStart} />
             </InputControl>
-            <InputControl label="Timeline Selesai" error={errors.timelineEnd}>
-              <Input type="date" value={values.timelineEnd} onChange={(e) => set("timelineEnd", e.target.value)} />
+            <InputControl error={errors.timelineEnd} label="Timeline Selesai">
+              <Input onChange={(e) => set("timelineEnd", e.target.value)} type="date" value={values.timelineEnd} />
             </InputControl>
           </div>
         </Card>
@@ -242,39 +242,39 @@ export default function NewIdpPage() {
             <p className="text-sm text-zinc-500">Belum ada aksi. Tambahkan di bawah, atau lewati dan tambahkan nanti.</p>
           ) : null}
           {actions.map((action, index) => (
-            <div key={index} className="flex flex-col gap-3 rounded-md border border-zinc-100 p-3">
+            <div className="flex flex-col gap-3 rounded-md border border-zinc-100 p-3" key={index}>
               <InputControl label="Deskripsi / tindakan">
                 <Input
-                  value={action.description}
                   onChange={(e) => updateAction(index, { description: e.target.value })}
                   placeholder="Mis. Ikuti training Go lanjutan"
+                  value={action.description}
                 />
               </InputControl>
               <div className="grid grid-cols-2 gap-3">
                 <InputControl label="Metode">
                   <Select
-                    value={action.method}
                     onChange={(e) => updateAction(index, { method: e.target.value as DevelopmentMethod })}
                     options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
                       value: m,
                       label: METHOD_LABEL[m],
                     }))}
+                    value={action.method}
                   />
                 </InputControl>
                 <InputControl label="Tenggat (opsional)">
                   <Input
+                    onChange={(e) => updateAction(index, { dueDate: e.target.value })}
                     type="date"
                     value={action.dueDate}
-                    onChange={(e) => updateAction(index, { dueDate: e.target.value })}
                   />
                 </InputControl>
               </div>
               <div>
                 <Button
-                  type="button"
-                  variant="ghost"
                   className="text-red-600 hover:bg-red-50"
                   onClick={() => setActions((rows) => rows.filter((_, i) => i !== index))}
+                  type="button"
+                  variant="ghost"
                 >
                   Hapus aksi
                 </Button>
@@ -283,14 +283,14 @@ export default function NewIdpPage() {
           ))}
           <div>
             <Button
-              type="button"
-              variant="secondary"
               onClick={() =>
                 setActions((rows) => [
                   ...rows,
                   { description: "", method: "TRAINING", dueDate: "" },
                 ])
               }
+              type="button"
+              variant="secondary"
             >
               + Tambah aksi
             </Button>
@@ -298,12 +298,12 @@ export default function NewIdpPage() {
         </Card>
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={loading}>
+          <Button disabled={loading} type="submit">
             Simpan
           </Button>
           <Link
-            href={IDP}
             className="inline-flex items-center rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50"
+            href={IDP}
           >
             Batal
           </Link>

@@ -12,11 +12,6 @@ import type { OwnWorkloadView } from "./types";
 
 const HERO_LABEL = "Beban kerja periode ini";
 
-/**
- * `Workload saya` body (design §3 item 5). `variant="self"` is the employee's
- * own screen; `variant="employee"` is the same components inside the employee
- * profile tab, with the project-context card swapped in — no forks (TAN-117).
- */
 export function WorkloadOwnView({
   view,
   stale,
@@ -46,32 +41,32 @@ export function WorkloadOwnView({
   return (
     <div className="flex flex-col gap-4">
       <WorkloadHero
-        label={HERO_LABEL}
-        loadPercentage={metrics.loadPercentage}
-        classification={metrics.classification}
-        capacityUsedHours={metrics.capacityUsedHours}
         capacityTotalHours={metrics.capacityTotalHours}
-        stale={stale}
+        capacityUsedHours={metrics.capacityUsedHours}
         caption={
           variant === "employee"
             ? "Sesuai angka yang dilihat talent bersangkutan"
             : "Klasifikasi dari WAD"
         }
+        classification={metrics.classification}
+        label={HERO_LABEL}
+        loadPercentage={metrics.loadPercentage}
+        stale={stale}
       />
 
       <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3">
         <WorkloadCard
-          title="Alokasi aktivitas"
           action={stale ? <DataLamaChip /> : <CardCaption>Periode ini</CardCaption>}
+          title="Alokasi aktivitas"
         >
           <ActivitySplitChart split={metrics.split} />
         </WorkloadCard>
 
         <WorkloadCard
-          title="Tren beban kerja"
           action={stale ? <DataLamaChip /> : <CardCaption>6 periode terakhir</CardCaption>}
+          title="Tren beban kerja"
         >
-          <WorkloadTrendChart trend={metrics.trend} stale={stale} />
+          <WorkloadTrendChart stale={stale} trend={metrics.trend} />
         </WorkloadCard>
 
         {variant === "self" ? (
@@ -80,8 +75,8 @@ export function WorkloadOwnView({
               Aktivitas kerja dan pelatihan yang Anda catat adalah sumber angka workload.
             </p>
             <Link
-              href={ACTIVITIES}
               className="mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-tp-brand-navy bg-tp-brand-navy px-[18px] text-sm font-semibold text-white transition-colors hover:bg-tp-brand-navy-deep"
+              href={ACTIVITIES}
             >
               Buka aktivitas
             </Link>
@@ -89,8 +84,8 @@ export function WorkloadOwnView({
         ) : (
           <>
             <WorkloadCard
-              title="Konteks penempatan proyek"
               action={<CardCaption>Kontribusi terhadap beban</CardCaption>}
+              title="Konteks penempatan proyek"
             >
               <ProjectContextCard placements={view.projectPlacements} />
             </WorkloadCard>
@@ -101,8 +96,8 @@ export function WorkloadOwnView({
                 lingkup chapter.
               </p>
               <button
-                type="button"
                 className="mt-3.5 inline-flex min-h-10 items-center rounded-full border-[1.5px] border-tp-text px-4 text-sm font-semibold text-tp-text transition-colors hover:bg-tp-bg"
+                type="button"
               >
                 Lihat aktivitas
               </button>

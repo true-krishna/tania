@@ -41,13 +41,6 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/**
- * Lifecycle actions on the contract detail page (FR-37..39 / US11–13) — T026.
- * One door for resign / mutation / retirement. Termination actions surface the
- * dependency warning via the server's `acknowledgeActiveWork` precondition:
- * the first attempt is unacknowledged, and a rejection with
- * `PRECONDITION_FAILED` turns into a confirm step that retries acknowledged.
- */
 export function ContractCycleActions({ contract }: { contract: Contract }) {
   return (
     <Card className="max-w-3xl">
@@ -128,31 +121,31 @@ function ResignAction({ contract }: { contract: Contract }) {
         <div className="flex flex-col gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <p>{DEPENDENCY_WARNING}</p>
           <div className="flex gap-2">
-            <Button type="button" variant="primary" onClick={() => run(true)} disabled={loading}>
+            <Button disabled={loading} onClick={() => run(true)} type="button" variant="primary">
               Ya, lanjutkan resign
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setNeedsAck(false)}>
+            <Button onClick={() => setNeedsAck(false)} type="button" variant="secondary">
               Batal
             </Button>
           </div>
         </div>
       ) : (
         <>
-          <InputControl label="Tanggal efektif" error={dateError ?? undefined}>
+          <InputControl error={dateError ?? undefined} label="Tanggal efektif">
             <Input
-              type="date"
-              value={effectiveDate}
               onChange={(e) => {
                 setEffectiveDate(e.target.value);
                 setDateError(null);
               }}
+              type="date"
+              value={effectiveDate}
             />
           </InputControl>
-          <InputControl label="Alasan" helper="(opsional)">
-            <Input type="text" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <InputControl helper="(opsional)" label="Alasan">
+            <Input onChange={(e) => setReason(e.target.value)} type="text" value={reason} />
           </InputControl>
           <div>
-            <Button type="button" variant="secondary" onClick={() => run(false)} disabled={loading}>
+            <Button disabled={loading} onClick={() => run(false)} type="button" variant="secondary">
               Catat resign
             </Button>
           </div>
@@ -277,7 +270,7 @@ function MutationAction({ contract }: { contract: Contract }) {
           Mutasi tercatat. Kontrak baru <strong>{created.contractNo}</strong> efektif{" "}
           {created.startDate}; kontrak lama tetap tersimpan sebagai riwayat.
         </p>
-        <Link href={CONTRACT_DETAIL(created.id)} className="w-fit no-underline">
+        <Link className="w-fit no-underline" href={CONTRACT_DETAIL(created.id)}>
           <Button type="button" variant="secondary">
             Buka kontrak baru
           </Button>
@@ -293,63 +286,62 @@ function MutationAction({ contract }: { contract: Contract }) {
         {MUTATION_NOTICE}
       </p>
       {formError ? <ErrorState message={formError} /> : null}
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <InputControl label="Tanggal efektif" error={errors.effectiveDate}>
+      <form className="flex flex-col gap-3" onSubmit={onSubmit}>
+        <InputControl error={errors.effectiveDate} label="Tanggal efektif">
           <Input
+            onChange={(e) => set("effectiveDate", e.target.value)}
             type="date"
             value={values.effectiveDate}
-            onChange={(e) => set("effectiveDate", e.target.value)}
           />
         </InputControl>
-        <InputControl label="No. Kontrak baru" error={errors.contractNo}>
+        <InputControl error={errors.contractNo} label="No. Kontrak baru">
           <Input
-            type="text"
-            value={values.contractNo}
             onChange={(e) => set("contractNo", e.target.value)}
             placeholder="cth. PKWT/2026/MUT-01"
+            type="text"
+            value={values.contractNo}
           />
         </InputControl>
-        <InputControl label="Nomor induk karyawan" error={errors.nomorInduk}>
+        <InputControl error={errors.nomorInduk} label="Nomor induk karyawan">
           <Input
+            onChange={(e) => set("nomorInduk", e.target.value)}
             type="text"
             value={values.nomorInduk}
-            onChange={(e) => set("nomorInduk", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Unit baru" error={errors.unitId}>
+        <InputControl error={errors.unitId} label="Unit baru">
           <Select
-            value={values.unitId}
             onChange={(e) => set("unitId", e.target.value)}
             options={[
               { value: "", label: "— pilih unit —" },
               ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
             ]}
+            value={values.unitId}
           />
         </InputControl>
-        <InputControl label="Posisi / Job Role baru" error={errors.jobRoleId}>
+        <InputControl error={errors.jobRoleId} label="Posisi / Job Role baru">
           <Select
-            value={values.jobRoleId}
             onChange={(e) => set("jobRoleId", e.target.value)}
             options={[
               { value: "", label: "— pilih job role —" },
               ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
             ]}
+            value={values.jobRoleId}
           />
         </InputControl>
-        <InputControl label="Work location" error={errors.workLocation}>
+        <InputControl error={errors.workLocation} label="Work location">
           <Select
-            value={values.workLocation}
             onChange={(e) => set("workLocation", e.target.value)}
             options={[
               { value: "", label: "— pilih lokasi kerja —" },
               { value: "JAKARTA", label: "Jakarta" },
               { value: "BANDUNG", label: "Bandung" },
             ]}
+            value={values.workLocation}
           />
         </InputControl>
-        <InputControl label="Band position" error={errors.bandPosition}>
+        <InputControl error={errors.bandPosition} label="Band position">
           <Select
-            value={values.bandPosition}
             onChange={(e) => set("bandPosition", e.target.value)}
             options={[
               { value: "UNDEFINED", label: "Belum ditetapkan" },
@@ -360,34 +352,35 @@ function MutationAction({ contract }: { contract: Contract }) {
               { value: "V", label: "V" },
               { value: "VI", label: "VI" },
             ]}
+            value={values.bandPosition}
           />
         </InputControl>
-        <InputControl label="Job title" helper="(opsional)">
+        <InputControl helper="(opsional)" label="Job title">
           <Input
+            onChange={(e) => set("jobTitle", e.target.value)}
             type="text"
             value={values.jobTitle}
-            onChange={(e) => set("jobTitle", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Job level" helper="(opsional)">
+        <InputControl helper="(opsional)" label="Job level">
           <Input
+            onChange={(e) => set("jobLevel", e.target.value)}
             type="text"
             value={values.jobLevel}
-            onChange={(e) => set("jobLevel", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Tanggal selesai" helper="(opsional)">
+        <InputControl helper="(opsional)" label="Tanggal selesai">
           <Input
+            onChange={(e) => set("endDate", e.target.value)}
             type="date"
             value={values.endDate}
-            onChange={(e) => set("endDate", e.target.value)}
           />
         </InputControl>
-        <InputControl label="Catatan" helper="(opsional)">
-          <Input type="text" value={values.notes} onChange={(e) => set("notes", e.target.value)} />
+        <InputControl helper="(opsional)" label="Catatan">
+          <Input onChange={(e) => set("notes", e.target.value)} type="text" value={values.notes} />
         </InputControl>
         <div>
-          <Button type="submit" disabled={loading}>
+          <Button disabled={loading} type="submit">
             {loading ? "Menyimpan…" : "Catat mutasi"}
           </Button>
         </div>
@@ -460,28 +453,28 @@ function RetireAction({ contract }: { contract: Contract }) {
         <div className="flex flex-col gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <p>{DEPENDENCY_WARNING}</p>
           <div className="flex gap-2">
-            <Button type="button" variant="primary" onClick={() => run(true)} disabled={loading}>
+            <Button disabled={loading} onClick={() => run(true)} type="button" variant="primary">
               Ya, lanjutkan pensiun
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setNeedsAck(false)}>
+            <Button onClick={() => setNeedsAck(false)} type="button" variant="secondary">
               Batal
             </Button>
           </div>
         </div>
       ) : (
         <>
-          <InputControl label="Tanggal efektif" error={dateError ?? undefined}>
+          <InputControl error={dateError ?? undefined} label="Tanggal efektif">
             <Input
-              type="date"
-              value={effectiveDate}
               onChange={(e) => {
                 setEffectiveDate(e.target.value);
                 setDateError(null);
               }}
+              type="date"
+              value={effectiveDate}
             />
           </InputControl>
           <div>
-            <Button type="button" variant="secondary" onClick={() => run(false)} disabled={loading}>
+            <Button disabled={loading} onClick={() => run(false)} type="button" variant="secondary">
               Catat pensiun
             </Button>
           </div>

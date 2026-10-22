@@ -22,14 +22,6 @@ import {
   type RoleGrid,
 } from "./menuGrid";
 
-/**
- * Admin configuration page body (W3 / TAN-264, FR-03 amandemen).
- *
- * One screen, three parts: the menu × role grid, the custom-role manager, and
- * the sidebar preview of a role's draft. Saving a column writes that role's
- * configuration; the server invalidates the permission snapshot, so the change
- * reaches an open session on its next request — no re-deploy (AC4).
- */
 export function RolesAdminSection() {
   const roles = useRoles(true);
   const config = useRoleMenuConfig();
@@ -42,10 +34,6 @@ export function RolesAdminSection() {
   const [confirmReset, setConfirmReset] = React.useState<Role | null>(null);
   const [previewRole, setPreviewRole] = React.useState<Role | null>(null);
 
-  // The server's grids are the baseline: every draft starts from them, and a
-  // refetch (after save, reset, or a role change) re-seeds it. Resetting during
-  // render — the documented "adjusting state when a prop changes" pattern — keeps
-  // the draft and the fetched grid in step without a cascading render.
   const saved = React.useMemo<GridDraft>(() => {
     const cells = config.data ?? [];
     const next: GridDraft = {};
@@ -112,8 +100,8 @@ export function RolesAdminSection() {
   return (
     <section className="flex flex-col gap-6">
       <PageHeader
-        title="Menu & Akses per Role"
         subtitle="Atur menu yang tampil dan tingkat akses tiap role. Perubahan berlaku tanpa deploy ulang."
+        title="Menu & Akses per Role"
       />
 
       <Card className="flex flex-col gap-4">
@@ -129,14 +117,14 @@ export function RolesAdminSection() {
         </div>
 
         <MenuGrid
-          roles={allRoles}
-          draft={draft}
-          saved={saved}
           busyRoleId={busyRoleId}
+          draft={draft}
           onChangeCell={changeCell}
-          onSaveRole={(role) => void saveRole(role)}
-          onResetRole={(role) => setConfirmReset(role)}
           onPreviewRole={(role) => setPreviewRole(role)}
+          onResetRole={(role) => setConfirmReset(role)}
+          onSaveRole={(role) => void saveRole(role)}
+          roles={allRoles}
+          saved={saved}
         />
 
         {allRoles.length ? (
@@ -155,10 +143,10 @@ export function RolesAdminSection() {
             matriks default FR-03? Semua penyesuaian role ini akan hilang.
           </p>
           <div className="flex gap-2">
-            <Button type="button" disabled={saving} onClick={() => void resetRole(confirmReset)}>
+            <Button disabled={saving} onClick={() => void resetRole(confirmReset)} type="button">
               Ya, reset ke default
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setConfirmReset(null)}>
+            <Button onClick={() => setConfirmReset(null)} type="button" variant="secondary">
               Batal
             </Button>
           </div>
@@ -166,15 +154,15 @@ export function RolesAdminSection() {
       ) : null}
 
       <Card>
-        <SidebarPreview role={previewRole} cells={previewCells} />
+        <SidebarPreview cells={previewCells} role={previewRole} />
       </Card>
 
       <CustomRolesPanel
-        roles={allRoles}
         busy={saving}
         onCreate={(name, label, templateRole: AccessRole) =>
           report(() => mutations.createRole(name, label, templateRole), `Role "${label}" dibuat.`)
         }
+        onDelete={(id) => report(() => mutations.deleteRole(id), "Role dihapus.")}
         onRename={(id, label) =>
           report(() => mutations.renameRole(id, label), "Label role diperbarui.")
         }
@@ -184,7 +172,7 @@ export function RolesAdminSection() {
             status === "ACTIVE" ? "Role diaktifkan." : "Role dinonaktifkan.",
           )
         }
-        onDelete={(id) => report(() => mutations.deleteRole(id), "Role dihapus.")}
+        roles={allRoles}
       />
     </section>
   );

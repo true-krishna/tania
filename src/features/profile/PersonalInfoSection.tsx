@@ -3,11 +3,6 @@ import { EmptyState } from "@/components/DataState";
 import { EMPLOYEE_STATUS_LABEL, GENDER_LABEL } from "@/features/employees/labels";
 import type { ProfileEmployee } from "./useProfile";
 
-/**
- * Personal-information section of `/profile` (TAN-188) — the same field set as
- * the employee detail page's "Data diri" card, read-only and scoped to the
- * signed-in user.
- */
 export function PersonalInfoSection({ employee }: { employee: ProfileEmployee | undefined }) {
   if (!employee) {
     return <EmptyState message="Data karyawan tidak ditemukan untuk akun ini." />;
@@ -17,7 +12,7 @@ export function PersonalInfoSection({ employee }: { employee: ProfileEmployee | 
     <Card className="max-w-3xl">
       <h2 className="mb-3 text-sm font-semibold text-zinc-900">Data diri</h2>
       <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-        <Field label="NIK" value={employee.nikMasked} mono />
+        <Field label="NIK" mono value={employee.nikMasked} />
         <Field label="Email" value={employee.email} />
         <Field label="Tanggal Lahir" value={employee.birthDate ?? "—"} />
         <Field
