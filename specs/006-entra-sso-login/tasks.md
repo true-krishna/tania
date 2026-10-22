@@ -2,7 +2,7 @@
 
 **Input**: Design documents dari `/specs/006-entra-sso-login/`
 
-**Revisi**: 2026-10-22 (keputusan pemilik produk, TAN-267) — halaman login **tanpa auto-redirect**: tombol "Continue with Microsoft" selalu tampil, form email di balik tautan "Login by Email" (plan **D8′**, menggantikan D8 opsi A). Berdampak pada **T024**, **T025/T027** (pesan pembatalan tanpa penanda fallback), **T026** (assertion), **T028** (e2e), dan **Checkpoint U2**.
+**Revisi**: 2026-10-22 (keputusan pemilik produk, TAN-267) — halaman login **tanpa auto-redirect**: tombol "Continue with Microsoft" selalu tampil, form email di balik tautan "Login by Email" (plan **D8′**, menggantikan D8 opsi A). Berdampak pada **T024**, **T025/T027** (pesan pembatalan tanpa penanda fallback), **T026** (assertion), **T028** (e2e), dan **Checkpoint U2**; **T023** tidak lagi diperlukan.
 
 **Prerequisites**: `plan.md` (wajib — D1–D12 + **D5b**, Open Item 1–6, Risks R1–R10, roadmap **U0–U3**, struktur sumber) · `spec.md` (wajib — US1–US4, FR-001–FR-012, SC-001–SC-005; **revisi 2026-10-20**: FR-004 dua jalur pemetaan, SC-005 penyebut = keanggotaan tenant, lihat T032, Assumptions & Edge Cases, 4 skenario penerimaan) · `research.md` (R-1–R-12) · `data-model.md` (indeks unik parsial `users.entra_object_id` + kolom `refresh_tokens.auth_method`; klasifikasi & lawful basis data pribadi) · `contracts/sso-entra.md` (§1 skema GraphQL · §2 parameter OIDC · §3 aturan pemetaan · §4 kode kesalahan · §5 rate limit · §6 jejak audit · §7 konfigurasi · §8 alur · §9 batas yang tidak boleh dilanggar) · `quickstart.md` (§A/§A2 lokal · §B UAT U1–U10 · §C gerbang mutu & cara mengukur SC-001…SC-005)
 
@@ -221,7 +221,7 @@
 
 - [ ] T023 [US1] [US2] **Penanda browser (opsi A) — fallback & "belum tertaut" 7 hari** — ⚠️ **tidak lagi diperlukan sejak revisi pemilik produk 2026-10-22 (D8′)**: tanpa auto-redirect tidak ada lingkaran pengalihan maupun kegagalan berulang, jadi penanda ini tidak punya pemakai. Task ini sudah terlanjur dikerjakan di U2; tindak lanjutnya hanya **melepas pemakaian**-nya dari `LoginForm.tsx` — bukan menambah perilaku baru.
       → `src/lib/auth/config.ts` · `src/lib/constants/storage.ts`
-      Tambah kunci penanda (`tania:sso:fallback` di `sessionStorage`; `tania:sso:unlinked` di `localStorage`) + helper baca/tulis/hapus, termasuk masa berlaku 7 hari untuk penanda "belum tertaut" dan pembersihan keduanya setelah login berhasil di jalur mana pun. Penanda **murni petunjuk tampilan** di browser — tidak pernah otoritatif; keputusan menerima/menolak tetap di server (D8/§9 butir 6).
+      ⚠️ **Jangan dikerjakan lagi sejak D8′ (2026-10-22)** — penanda ini tidak punya pemakai tanpa auto-redirect; bila penanda sudah terlanjur ada di kode, cukup **lepaskan pemakaian**-nya (lihat T024), jangan tambah perilaku baru. Rincian asli task di bawah disimpan untuk arsip: Tambah kunci penanda (`tania:sso:fallback` di `sessionStorage`; `tania:sso:unlinked` di `localStorage`) + helper baca/tulis/hapus, termasuk masa berlaku 7 hari untuk penanda "belum tertaut" dan pembersihan keduanya setelah login berhasil di jalur mana pun. Penanda **murni petunjuk tampilan** di browser — tidak pernah otoritatif; keputusan menerima/menolak tetap di server (D8/§9 butir 6).
       **Verifikasi**: `pnpm run typecheck`; unit (T026) — penanda kedaluwarsa tidak dihormati, penanda dibersihkan setelah login sukses.
       **Menutup**: FR-001/FR-002 · US2 · D8 (ii) · R5. — *D8 (ii) digantikan D8′ (2026-10-22).*
 
@@ -247,7 +247,7 @@
 
 - [ ] T027 [P] [US1] **Komponen — `/login/callback`**
       → `src/app/(auth)/login/callback/callback.test.tsx` (baru)
-      Vitest + RTL + `MockedProvider`: `state` tidak cocok → pesan tampil & mutation **tidak** dipanggil; galat mutation → pesan Bahasa Indonesia tampil; sukses → `setSession` dipanggil + `router.replace(DASHBOARD)`; pembatalan (`error=access_denied`) → kembali ke `/login` dengan pesan jelas (tanpa penanda fallback)lback.
+      Vitest + RTL + `MockedProvider`: `state` tidak cocok → pesan tampil & mutation **tidak** dipanggil; galat mutation → pesan Bahasa Indonesia tampil; sukses → `setSession` dipanggil + `router.replace(DASHBOARD)`; pembatalan (`error=access_denied`) → kembali ke `/login` dengan pesan jelas (tanpa penanda fallback).
       **Verifikasi**: `pnpm test` hijau.
       **Menutup**: US1 AC1–AC3 · FR-003/FR-009 · contracts §4/§8.
 

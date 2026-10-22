@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-20
 
-**Status**: Clarified & direvisi — seluruh butir klarifikasi (NC-01..NC-03) ditutup dengan keputusan pemilik produk (2026-10-20); **direvisi 2026-10-20** menyusul `/speckit.plan` & diskusi TAN-269 dan **direvisi 2026-10-21** (penyederhanaan penyebut SC-005, TAN-267) dan **direvisi 2026-10-22** (halaman login tanpa auto-redirect: tombol "Continue with Microsoft" selalu tampil, form email di balik tautan "Login by Email") — rincian pada baris `**Revisi**` di bawah. Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
+**Status**: Clarified & direvisi — seluruh butir klarifikasi (NC-01..NC-03) ditutup dengan keputusan pemilik produk (2026-10-20); **direvisi 2026-10-20** menyusul `/speckit.plan` & diskusi TAN-269 dan **direvisi 2026-10-21** (penyederhanaan penyebut SC-005, TAN-267) dan **direvisi 2026-10-22** (halaman login tanpa auto-redirect: tombol "Continue with Microsoft" selalu tampil, form email di balik tautan "Login by Email") — rincian pada baris `**Revisi**` di bawah. **Status pelaksanaan** (diperbarui 2026-10-21): `/speckit.plan` (TAN-269) dan `/speckit.tasks` (TAN-275) selesai; issue implementasi **TAN-285–TAN-288** (gelombang U0–U3) dibuat atas persetujuan pemilik produk.
 
 **Input**: `/speckit.specify` (TAN-267) — "Tambahkan opsi login menggunakan Microsoft Entra SSO sebagai opsi utama, selain email & password. Credentials (CLIENT_ID, CLIENT_SECRET, TENANT_ID) sudah disiapkan." (perintah: "/speckit.specify Sesuai issue ini" — deskripsi diambil dari TAN-267)
 
@@ -110,7 +110,7 @@ Sebagai **Admin/auditor**, setiap upaya masuk via SSO terekam pada jejak audit s
 
 ### Edge Cases
 
-- Pengguna menutup atau membatalkan jendela autentikasi Microsoft di tengah proses → kembali ke halaman login tanpa sesi, dengan pintu fallback email + kata sandi yang tetap dapat dipakai.
+- Pengguna menutup atau membatalkan jendela autentikasi Microsoft di tengah proses → kembali ke halaman login tanpa sesi, dengan tautan "Login by Email" yang tetap membuka form email + kata sandi.
 - Pengguna membuka halaman login lalu memilih tautan "Login by Email" → form email + kata sandi tampil di halaman yang sama; tidak ada pengalihan otomatis ke Microsoft, baik saat halaman dibuka maupun setelah pilihan itu — sehingga lingkaran pengalihan tidak mungkin terjadi.
 - Layanan Microsoft lambat/tidak tersedia saat proses masuk → pesan yang jelas ("coba lagi / gunakan email & kata sandi"), aplikasi tidak menggantung tanpa umpan balik.
 - Bukti keberhasilan autentikasi dipakai ulang atau sudah kedaluwarsa → ditolak; tidak ada sesi yang terbentuk.

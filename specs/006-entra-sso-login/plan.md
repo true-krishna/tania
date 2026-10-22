@@ -38,7 +38,7 @@ Stack dipin dari konstitusi v1.2.0 (Additional Constraints); **tidak ada penamba
 | UI system | TANIA Pulse (`src/components`, token `--tp-*`); halaman login mengikuti TANIA Pulse + arah desain TAN-191 yang sudah tercatat (brand-red sebagai aksi primer halaman ini) |
 | Testing | Backend: Go unit/contract (`usecase` + fake exchange/verifier, `authz_test`, `security_test`, `e2e_test`, `regression_test`); Frontend: Vitest + RTL (`MockedProvider`) + Playwright e2e |
 | Constraints | Rahasia hanya dari env/secret store dan tidak pernah di-commit/di-log/ke issue (FR-010, Security III); tanpa PII pada log & URL; otorisasi tetap server-side (FR-006, Security III); jalur email + kata sandi **zero-regression** (FR-002/SC-003) |
-| Scale/Scope | 2 penyesuaian skema (1 kolom baru + 1 indeks unik parsial; 3 kolom existing diaktifkan); 1 modul backend baru (usecase SSO + klien OIDC); 1 query + 1 mutation GraphQL; 2 rute UI (`/login` auto-redirect + `/login/callback`) |
+| Scale/Scope | 2 penyesuaian skema (1 kolom baru + 1 indeks unik parsial; 3 kolom existing diaktifkan); 1 modul backend baru (usecase SSO + klien OIDC); 1 query + 1 mutation GraphQL; 2 rute UI (`/login`, `/login/callback`) |
 
 ## Constitution Check
 
