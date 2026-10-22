@@ -32,8 +32,6 @@ import { CONTRACT_NEW, CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/
 
 export default function ContractsPage() {
   const router = useRouter();
-  // Chapter reads the contracts of its own chapter (2026-10-16 clarify 5); only
-  // Operation and Admin manage them, so the create action is theirs alone.
   const manage = canManage(useSessionRole(), "contracts");
   const [search, setSearch] = React.useState("");
   const [contractType, setContractType] = React.useState<ContractType | "ALL">("ALL");
@@ -65,32 +63,12 @@ export default function ContractsPage() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Kontrak Kerja"
-        subtitle={
-          manage
-            ? "Kelola kontrak kerja karyawan."
-            : "Daftar kontrak kerja karyawan dalam cakupan chapter Anda (hanya baca)."
-        }
         actions={
           manage ? (
-            <Link href={CONTRACT_NEW} className="no-underline">
+            <Link className="no-underline" href={CONTRACT_NEW}>
               <Button variant="primary">+ Tambah Kontrak</Button>
             </Link>
           ) : undefined
-        }
-        search={
-          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
-            <span className="sr-only">Cari kontrak</span>
-            <Input
-              type="search"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                resetPage();
-              }}
-              placeholder="Cari nama karyawan, no kontrak, atau nomor induk…"
-            />
-          </label>
         }
         filters={
           <FilterButton
@@ -100,19 +78,38 @@ export default function ContractsPage() {
             panelId="contract-filter-panel"
           />
         }
+        search={
+          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
+            <span className="sr-only">Cari kontrak</span>
+            <Input
+              onChange={(e) => {
+                setSearch(e.target.value);
+                resetPage();
+              }}
+              placeholder="Cari nama karyawan, no kontrak, atau nomor induk…"
+              type="search"
+              value={search}
+            />
+          </label>
+        }
+        subtitle={
+          manage
+            ? "Kelola kontrak kerja karyawan."
+            : "Daftar kontrak kerja karyawan dalam cakupan chapter Anda (hanya baca)."
+        }
+        title="Kontrak Kerja"
       />
 
       {filtersOpen ? (
-        <div id="contract-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
+        <div className="tp-card flex flex-wrap items-end gap-4" id="contract-filter-panel">
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Jenis</span>
             <Select
-              value={contractType}
+              className="w-auto"
               onChange={(e) => {
                 setContractType(e.target.value as ContractType | "ALL");
                 resetPage();
               }}
-              className="w-auto"
               options={[
                 { value: "ALL", label: "Semua" },
                 ...CONTRACT_TYPE_ORDER.map((type) => ({
@@ -120,23 +117,24 @@ export default function ContractsPage() {
                   label: CONTRACT_TYPE_LABEL[type],
                 })),
               ]}
+              value={contractType}
             />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
             <Select
-              value={status}
+              className="w-auto"
               onChange={(e) => {
                 setStatus(e.target.value as EmploymentContractStatus | "ALL");
                 resetPage();
               }}
-              className="w-auto"
               options={[
                 { value: "ALL", label: "Semua" },
                 ...(Object.keys(CONTRACT_STATUS_LABEL) as Array<
                   keyof typeof CONTRACT_STATUS_LABEL
                 >).map((value) => ({ value, label: CONTRACT_STATUS_LABEL[value] })),
               ]}
+              value={status}
             />
           </label>
         </div>
@@ -151,17 +149,14 @@ export default function ContractsPage() {
       ) : (
         <Table
           caption="Daftar kontrak kerja"
-          rowKey={(contract) => contract.id}
-          dataSource={pageRows}
-          pagination={pagination}
           columns={[
             {
               key: "contractNo",
               title: "No Kontrak",
               render: (_value, contract) => (
                 <Link
-                  href={CONTRACT_DETAIL(contract.id)}
                   className="font-medium text-zinc-900 hover:underline"
+                  href={CONTRACT_DETAIL(contract.id)}
                 >
                   {orDash(contract.contractNo)}
                 </Link>
@@ -172,8 +167,8 @@ export default function ContractsPage() {
               title: "Karyawan",
               render: (_value, contract) => (
                 <Link
-                  href={EMPLOYEE_DETAIL(contract.employee.id)}
                   className="text-zinc-900 hover:underline"
+                  href={EMPLOYEE_DETAIL(contract.employee.id)}
                 >
                   {contract.employee.fullName}
                 </Link>
@@ -217,7 +212,7 @@ export default function ContractsPage() {
               key: "status",
               title: "Status",
               render: (_value, contract) => (
-                <Chip variant={CONTRACT_STATUS_VARIANT[contract.status]} size="small">
+                <Chip size="small" variant={CONTRACT_STATUS_VARIANT[contract.status]}>
                   {CONTRACT_STATUS_LABEL[contract.status]}
                 </Chip>
               ),
@@ -228,17 +223,20 @@ export default function ContractsPage() {
               className: "col-action",
               render: (_value, contract) => (
                 <RowActionsMenu
-                  label={`Aksi ${contract.contractNo}`}
                   actions={[
                     {
                       label: "Lihat detail",
                       onSelect: () => router.push(CONTRACT_DETAIL(contract.id)),
                     },
                   ]}
+                  label={`Aksi ${contract.contractNo}`}
                 />
               ),
             },
           ]}
+          dataSource={pageRows}
+          pagination={pagination}
+          rowKey={(contract) => contract.id}
         />
       )}
     </section>

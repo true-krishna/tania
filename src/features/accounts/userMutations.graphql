@@ -1,29 +1,34 @@
+# Role assignment reads and writes `roleName` — the machine name stored in
+# `users.role`, which is a built-in name (ADMIN, OPERATION, ...) or a custom
+# role's name (W1/W3, FR-03 amandemen). `accessRole` remains the role's template.
 mutation CreateUserAccount(
   $employeeId: ID!
   $email: String!
-  $accessRole: AccessRole!
+  $roleName: String!
   $temporaryPassword: String
 ) {
   createUserAccount(
     employeeId: $employeeId
     email: $email
-    accessRole: $accessRole
+    roleName: $roleName
     temporaryPassword: $temporaryPassword
   ) {
     id
     fullName
     email
     accessRole
+    roleName
     status
   }
 }
 
-mutation UpdateUserAccessRole($userId: ID!, $accessRole: AccessRole!) {
-  updateUserAccessRole(userId: $userId, accessRole: $accessRole) {
+mutation UpdateUserAccessRole($userId: ID!, $roleName: String!) {
+  updateUserAccessRole(userId: $userId, roleName: $roleName) {
     id
     fullName
     email
     accessRole
+    roleName
     status
   }
 }
@@ -34,6 +39,7 @@ mutation SetUserAccountStatus($userId: ID!, $status: AccountStatus!) {
     fullName
     email
     accessRole
+    roleName
     status
   }
 }

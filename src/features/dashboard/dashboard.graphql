@@ -56,10 +56,6 @@ query Dashboard {
           id
           name
         }
-        jobRole {
-          id
-          name
-        }
       }
     }
   }

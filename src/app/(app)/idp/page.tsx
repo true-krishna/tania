@@ -38,14 +38,6 @@ function actionProgress(row: IdpListRow) {
   return { total, done, donePct };
 }
 
-/**
- * `/idp` — the IDP menu entry, open for every role since the 2026-10-16
- * activation (klarifikasi 9); only what it opens differs:
- * - CHAPTER / ADMIN: manage (create, actions, review, close) — Chapter scoped to
- *   its chapter, Admin company-wide;
- * - OPERATION: read-only roster;
- * - TALENT: its own plan (`MyIdpView`), no roster scope.
- */
 export default function IdpPage() {
   const role = useSessionRole();
   if (role === "TALENT") return <MyIdpView />;
@@ -64,15 +56,9 @@ function IdpRosterView({ managing }: { managing: boolean }) {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="IDP"
-        subtitle={
-          managing
-            ? "Kelola Individual Development Plan talent dalam chapter Anda."
-            : "Individual Development Plan talent (hanya baca)."
-        }
         actions={
           managing ? (
-            <Link href={IDP_NEW} className="no-underline">
+            <Link className="no-underline" href={IDP_NEW}>
               <Button variant="primary">+ Buat IDP</Button>
             </Link>
           ) : undefined
@@ -85,14 +71,19 @@ function IdpRosterView({ managing }: { managing: boolean }) {
             panelId="idp-filter-panel"
           />
         }
+        subtitle={
+          managing
+            ? "Kelola Individual Development Plan talent dalam chapter Anda."
+            : "Individual Development Plan talent (hanya baca)."
+        }
+        title="IDP"
       />
 
       {filtersOpen ? (
-        <div id="idp-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
+        <div className="tp-card flex flex-wrap items-end gap-4" id="idp-filter-panel">
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
             <Select
-              value={status}
               onChange={(e) => {
                 setStatus(e.target.value as IdpStatus | "ALL");
                 resetPage();
@@ -103,6 +94,7 @@ function IdpRosterView({ managing }: { managing: boolean }) {
                 { value: "NEEDS_REVIEW", label: "Perlu review" },
                 { value: "COMPLETED", label: "Selesai" },
               ]}
+              value={status}
             />
           </label>
         </div>
@@ -117,9 +109,6 @@ function IdpRosterView({ managing }: { managing: boolean }) {
       ) : (
         <Table
           caption="Daftar IDP"
-          rowKey={(idp) => idp.id}
-          dataSource={pageRows}
-          pagination={pagination}
           columns={[
             {
               key: "talent",
@@ -127,8 +116,8 @@ function IdpRosterView({ managing }: { managing: boolean }) {
               render: (_value, idp) => (
                 <>
                   <Link
-                    href={IDP_DETAIL(idp.id)}
                     className="text-sm font-medium text-tp-brand-red-deep hover:underline"
+                    href={IDP_DETAIL(idp.id)}
                   >
                     {idp.talent.fullName}
                   </Link>
@@ -166,13 +155,13 @@ function IdpRosterView({ managing }: { managing: boolean }) {
                     </span>
                     <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200">
                       <div
-                        className="h-full rounded-full bg-tp-neutral"
-                        style={{ width: `${donePct}%` }}
-                        role="progressbar"
-                        aria-valuenow={donePct}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
                         aria-label={index === 0 ? "Progres aksi" : undefined}
+                        aria-valuemax={100}
+                        aria-valuemin={0}
+                        aria-valuenow={donePct}
+                        className="h-full rounded-full bg-tp-neutral"
+                        role="progressbar"
+                        style={{ width: `${donePct}%` }}
                       />
                     </div>
                   </div>
@@ -183,7 +172,7 @@ function IdpRosterView({ managing }: { managing: boolean }) {
               key: "status",
               title: "Status",
               render: (_value, idp) => (
-                <Chip variant={IDP_STATUS_VARIANT[idp.status]} size="small">
+                <Chip size="small" variant={IDP_STATUS_VARIANT[idp.status]}>
                   {IDP_STATUS_LABEL[idp.status]}
                 </Chip>
               ),
@@ -194,17 +183,20 @@ function IdpRosterView({ managing }: { managing: boolean }) {
               className: "col-action",
               render: (_value, idp) => (
                 <RowActionsMenu
-                  label={`Aksi ${idp.talent.fullName}`}
                   actions={[
                     {
                       label: "Lihat detail",
                       onSelect: () => router.push(IDP_DETAIL(idp.id)),
                     },
                   ]}
+                  label={`Aksi ${idp.talent.fullName}`}
                 />
               ),
             },
           ]}
+          dataSource={pageRows}
+          pagination={pagination}
+          rowKey={(idp) => idp.id}
         />
       )}
     </section>

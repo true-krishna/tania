@@ -46,7 +46,6 @@ const assignments = [
     periodStart: "2025-02-01",
     periodEnd: null,
     project: { __typename: "Project", id: "prj-1", name: "Migrasi Billing Core" },
-    jobRole: { __typename: "JobRole", id: "jr-1", name: "Backend Engineer" },
   },
 ];
 
@@ -173,6 +172,10 @@ describe("ProfilePage (TAN-188)", () => {
 
     expect(await screen.findByText("Migrasi Billing Core")).toBeInTheDocument();
     expect(screen.getByText("2025-02-01 — sekarang")).toBeInTheDocument();
+    // TAN-133 — tab Assignment profil tidak lagi menampilkan kolom Job Role:
+    // "Backend Engineer" pada tab ini berasal dari assignment jobRole yang
+    // dihapus (jobTitle/jobRole kontrak hanya tampil di tab Kontrak).
+    expect(screen.queryByText("Backend Engineer")).toBeNull();
     // O4 — label status assignment seragam juga di tab Assignment profil.
     expect(screen.getByText("Berjalan")).toBeInTheDocument();
   });

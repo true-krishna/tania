@@ -64,9 +64,9 @@ function SortHeader({
 }) {
   return (
     <button
-      type="button"
-      onClick={() => onToggle(sortKey)}
       className="inline-flex items-center gap-1 hover:text-tp-text"
+      onClick={() => onToggle(sortKey)}
+      type="button"
     >
       {label}
       {sort?.key === sortKey ? (
@@ -83,10 +83,6 @@ function SortHeader({
 const NORMALIZED_BADGE =
   "ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-tp-tint-sun px-1 text-[10px] font-bold text-tp-ink-sun";
 
-/**
- * Tabel detail backlog per talent (TAN-234) dengan varian ternormalisasi,
- * search, sort, dan pagination. Konteks talent tidak pernah ada di URL.
- */
 export function BacklogTable({
   backlog,
   backlogNormalized,
@@ -153,14 +149,14 @@ export function BacklogTable({
   const detailColumns: TableColumn<IndividualBacklogRow>[] = [
     {
       key: "issueKey",
-      title: <SortHeader label="Activity Key" sortKey="issueKey" sort={sort} onToggle={toggleSort} />,
+      title: <SortHeader label="Activity Key" onToggle={toggleSort} sort={sort} sortKey="issueKey" />,
       headerProps: sortHeaderProps(sort, "issueKey"),
       className: "font-medium text-tp-text",
       render: (_value, row) => (
         <>
           {row.issueKey}
           {row.isNormalized ? (
-            <span title="Timespent dinormalisasi" className={NORMALIZED_BADGE}>
+            <span className={NORMALIZED_BADGE} title="Timespent dinormalisasi">
               N
             </span>
           ) : null}
@@ -183,13 +179,13 @@ export function BacklogTable({
     { key: "priority", title: "Priority", render: (_value, row) => row.priority ?? "—" },
     {
       key: "updated",
-      title: <SortHeader label="Activity Time" sortKey="updated" sort={sort} onToggle={toggleSort} />,
+      title: <SortHeader label="Activity Time" onToggle={toggleSort} sort={sort} sortKey="updated" />,
       headerProps: sortHeaderProps(sort, "updated"),
       render: (_value, row) => formatTimestamp(row.updated),
     },
     {
       key: "timespent",
-      title: <SortHeader label="Time Spent" sortKey="timespent" sort={sort} onToggle={toggleSort} />,
+      title: <SortHeader label="Time Spent" onToggle={toggleSort} sort={sort} sortKey="timespent" />,
       headerProps: sortHeaderProps(sort, "timespent"),
       align: "right",
       render: (_value, row) => (row.timespent === null ? "—" : `${row.timespent} jam`),
@@ -199,7 +195,7 @@ export function BacklogTable({
   const normalizedColumns: TableColumn<IndividualBacklogNormalizedRow>[] = [
     {
       key: "issueKey",
-      title: <SortHeader label="Activity Key" sortKey="issueKey" sort={sort} onToggle={toggleSort} />,
+      title: <SortHeader label="Activity Key" onToggle={toggleSort} sort={sort} sortKey="issueKey" />,
       headerProps: sortHeaderProps(sort, "issueKey"),
       className: "font-medium text-tp-text",
       render: (_value, row) => row.issueKey ?? "—",
@@ -213,13 +209,13 @@ export function BacklogTable({
     },
     {
       key: "updated",
-      title: <SortHeader label="Activity Time" sortKey="updated" sort={sort} onToggle={toggleSort} />,
+      title: <SortHeader label="Activity Time" onToggle={toggleSort} sort={sort} sortKey="updated" />,
       headerProps: sortHeaderProps(sort, "updated"),
       render: (_value, row) => formatTimestamp(row.updated),
     },
     {
       key: "timespent",
-      title: <SortHeader label="Filled Time Spent" sortKey="timespent" sort={sort} onToggle={toggleSort} />,
+      title: <SortHeader label="Filled Time Spent" onToggle={toggleSort} sort={sort} sortKey="timespent" />,
       headerProps: sortHeaderProps(sort, "timespent"),
       align: "right",
       className: "font-medium text-tp-ink-peach",
@@ -253,16 +249,16 @@ export function BacklogTable({
             ] as const
           ).map((tab) => (
             <button
-              key={tab.id}
-              type="button"
-              role="tab"
               aria-selected={variant === tab.id}
-              onClick={() => changeVariant(tab.id)}
               className={
                 variant === tab.id
                   ? "flex-none rounded-[10px] bg-tp-brand-navy px-4 py-2 text-sm font-semibold text-white"
                   : "flex-none rounded-[10px] px-4 py-2 text-sm font-medium text-tp-muted transition-colors hover:text-tp-text"
               }
+              key={tab.id}
+              onClick={() => changeVariant(tab.id)}
+              role="tab"
+              type="button"
             >
               {tab.label}
             </button>
@@ -273,34 +269,34 @@ export function BacklogTable({
       <label className="flex items-center gap-2 text-[13px] font-semibold text-tp-muted">
         Cari
         <Input
-          type="search"
           aria-label="Cari aktivitas"
-          placeholder="Issue key, project, atau judul aktivitas…"
-          value={search}
-          onChange={(e) => changeSearch(e.target.value)}
           className="h-10 max-w-80 flex-1"
+          onChange={(e) => changeSearch(e.target.value)}
+          placeholder="Issue key, project, atau judul aktivitas…"
+          type="search"
+          value={search}
         />
       </label>
 
       {variant === "detail" ? (
         <Table
           caption="Tabel detail aktivitas per individu"
-          rowKey={(row) => `${row.issueKey}-${row.updated ?? ""}`}
-          dataSource={pageRows as IndividualBacklogRow[]}
-          minWidth={900}
-          emptyText="Tidak ada aktivitas yang cocok dengan pencarian."
-          pagination={rows.length > 0 ? pagination : undefined}
           columns={detailColumns}
+          dataSource={pageRows as IndividualBacklogRow[]}
+          emptyText="Tidak ada aktivitas yang cocok dengan pencarian."
+          minWidth={900}
+          pagination={rows.length > 0 ? pagination : undefined}
+          rowKey={(row) => `${row.issueKey}-${row.updated ?? ""}`}
         />
       ) : (
         <Table
           caption="Tabel aktivitas ternormalisasi"
-          rowKey={(row) => `${row.issueKey}-${row.updated ?? ""}`}
-          dataSource={pageRows as IndividualBacklogNormalizedRow[]}
-          minWidth={820}
-          emptyText="Tidak ada aktivitas ternormalisasi pada periode ini."
-          pagination={rows.length > 0 ? pagination : undefined}
           columns={normalizedColumns}
+          dataSource={pageRows as IndividualBacklogNormalizedRow[]}
+          emptyText="Tidak ada aktivitas ternormalisasi pada periode ini."
+          minWidth={820}
+          pagination={rows.length > 0 ? pagination : undefined}
+          rowKey={(row) => `${row.issueKey}-${row.updated ?? ""}`}
         />
       )}
     </Card>

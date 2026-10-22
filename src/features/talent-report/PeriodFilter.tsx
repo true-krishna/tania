@@ -8,7 +8,6 @@ import type {
   TalentReportRange,
 } from "@/generated/graphql/types";
 
-/** Bulan format `YYYY-MM` (scalar `String` di SDL). */
 type YearMonth = string;
 
 const MONTH_NAMES = [
@@ -26,59 +25,58 @@ const MONTH_NAMES = [
   "Desember",
 ] as const;
 
-/** Daftar bulan inklusif `YYYY-MM` dari `startMonth` s.d. `endMonth`. */
-export function monthRange(startMonth: YearMonth, endMonth: YearMonth): YearMonth[] {
-  const months: YearMonth[] = [];
-  let [year, month] = startMonth.split("-").map(Number);
-  const [endYear, endMonthNumber] = endMonth.split("-").map(Number);
-  while (year < endYear || (year === endYear && month <= endMonthNumber)) {
-    months.push(`${year}-${String(month).padStart(2, "0")}`);
-    month += 1;
-    if (month > 12) {
-      month = 1;
-      year += 1;
-    }
-  }
-  return months;
-}
+const MONTH_OPTIONS = MONTH_NAMES.map((name, index) => ({
+  value: String(index + 1).padStart(2, "0"),
+  label: name,
+}));
 
-/** `2025-01` → "Januari 2025" (label bulan-tahun, FR-11). */
 export function formatMonthLabel(month: YearMonth): string {
   const [year, monthNumber] = month.split("-").map(Number);
   return `${MONTH_NAMES[monthNumber - 1] ?? month} ${year}`;
 }
 
+const yearOf = (month: YearMonth) => month.slice(0, 4);
+const monthOf = (month: YearMonth) => month.slice(5, 7);
+
+function monthOptions(bound: YearMonth | undefined, current: YearMonth, edge: "min" | "max") {
+  if (bound === undefined || yearOf(bound) !== yearOf(current)) return MONTH_OPTIONS;
+  const limit = Number(monthOf(bound));
+  return MONTH_OPTIONS.filter((option) =>
+    edge === "min" ? Number(option.value) >= limit : Number(option.value) <= limit,
+  );
+}
+
 interface PeriodFilterProps {
-  /** Batas filter `talentReportRange` (FR-11); `null` = belum tersedia. */
   range: TalentReportRange | null;
-  /** Periode terpakai (default: seluruh rentang — diatur `useTalentReport`). */
   value: TalentReportPeriod;
   onApply: (period: TalentReportPeriod) => void;
 }
 
-/**
- * T021 — filter rentang bulan-tahun (FR-11). Pilihan dibatasi
- * `talentReportRange`; "Terapkan" memicu satu refetch (FR-12/SC-04).
- */
 export function PeriodFilter({ range, value, onApply }: PeriodFilterProps) {
   const [draft, setDraft] = React.useState<TalentReportPeriod>(value);
 
-  const months = React.useMemo(
-    () => (range ? monthRange(range.startMonth, range.endMonth) : []),
-    [range],
-  );
+  const years = React.useMemo(() => {
+    if (!range) return [];
+    const first = Number(yearOf(range.startMonth));
+    const last = Number(yearOf(range.endMonth));
+    return Array.from({ length: last - first + 1 }, (_, index) => String(first + index));
+  }, [range]);
+
+  const yearOptions = years.map((year) => ({ value: year, label: year }));
 
   function setStartMonth(startMonth: YearMonth) {
+    const floored = range && startMonth < range.startMonth ? range.startMonth : startMonth;
     setDraft((prev) => ({
-      startMonth,
-      endMonth: startMonth > prev.endMonth ? startMonth : prev.endMonth,
+      startMonth: floored,
+      endMonth: floored > prev.endMonth ? floored : prev.endMonth,
     }));
   }
 
   function setEndMonth(endMonth: YearMonth) {
+    const capped = range && endMonth > range.endMonth ? range.endMonth : endMonth;
     setDraft((prev) => ({
-      startMonth: endMonth < prev.startMonth ? endMonth : prev.startMonth,
-      endMonth,
+      startMonth: capped < prev.startMonth ? capped : prev.startMonth,
+      endMonth: capped,
     }));
   }
 
@@ -88,29 +86,43 @@ export function PeriodFilter({ range, value, onApply }: PeriodFilterProps) {
     <div className="flex flex-wrap items-end gap-3">
       <label className="flex flex-col gap-1 text-sm font-semibold text-tp-text">
         Mulai
-        <Select
-          value={draft.startMonth}
-          onChange={(e) => setStartMonth(e.target.value)}
-          disabled={!range}
-          aria-label="Bulan mulai"
-          options={months.map((month) => ({ value: month, label: formatMonthLabel(month) }))}
-        />
+        <span className="flex items-center gap-2">
+          <Select
+            aria-label="Bulan mulai"
+            disabled={!range}
+            onChange={(e) => setStartMonth(`${yearOf(draft.startMonth)}-${e.target.value}`)}
+            options={monthOptions(range?.startMonth, draft.startMonth, "min")}
+            value={monthOf(draft.startMonth)}
+          />
+          <Select
+            aria-label="Tahun mulai"
+            disabled={!range}
+            onChange={(e) => setStartMonth(`${e.target.value}-${monthOf(draft.startMonth)}`)}
+            options={yearOptions}
+            value={yearOf(draft.startMonth)}
+          />
+        </span>
       </label>
       <label className="flex flex-col gap-1 text-sm font-semibold text-tp-text">
         Sampai
-        <Select
-          value={draft.endMonth}
-          onChange={(e) => setEndMonth(e.target.value)}
-          disabled={!range}
-          aria-label="Bulan akhir"
-          options={months.map((month) => ({ value: month, label: formatMonthLabel(month) }))}
-        />
+        <span className="flex items-center gap-2">
+          <Select
+            aria-label="Bulan akhir"
+            disabled={!range}
+            onChange={(e) => setEndMonth(`${yearOf(draft.endMonth)}-${e.target.value}`)}
+            options={monthOptions(range?.endMonth, draft.endMonth, "max")}
+            value={monthOf(draft.endMonth)}
+          />
+          <Select
+            aria-label="Tahun akhir"
+            disabled={!range}
+            onChange={(e) => setEndMonth(`${e.target.value}-${monthOf(draft.endMonth)}`)}
+            options={yearOptions}
+            value={yearOf(draft.endMonth)}
+          />
+        </span>
       </label>
-      <Button
-        type="button"
-        onClick={() => onApply(draft)}
-        disabled={!range || !dirty}
-      >
+      <Button disabled={!range || !dirty} onClick={() => onApply(draft)} type="button">
         Terapkan
       </Button>
     </div>

@@ -12,7 +12,13 @@ export type Scalars = {
   Time: { input: string; output: string; }
 };
 
-/** Application access roles (fixed set, FR-15). */
+/**
+ * Application access roles (fixed set, FR-15).
+ *
+ * The four built-in roles of the dynamic RBAC configuration (FR-03 amandemen
+ * 2026-10-19); a role built on one of them as its template keeps this enum as the
+ * value of AccessRoleDefinition.templateRole.
+ */
 export type AccessRole =
   | 'ADMIN'
   | 'CHAPTER'
@@ -49,7 +55,6 @@ export type Assignment = {
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   id: Scalars['ID']['output'];
-  jobRole: JobRole;
   periodEnd?: Maybe<Scalars['Date']['output']>;
   periodStart: Scalars['Date']['output'];
   project: Project;
@@ -278,7 +283,6 @@ export type ContractType =
 
 export type CreateAssignmentInput = {
   employeeId: Scalars['ID']['input'];
-  jobRoleId: Scalars['ID']['input'];
   periodEnd?: InputMaybe<Scalars['Date']['input']>;
   periodStart: Scalars['Date']['input'];
   projectId: Scalars['ID']['input'];
@@ -348,6 +352,14 @@ export type CreateIdpInput = {
   successIndicators: Scalars['String']['input'];
   timelineEnd: Scalars['Date']['input'];
   timelineStart: Scalars['Date']['input'];
+};
+
+/** Input pembuatan role kustom: template menentukan cakupan servernya. */
+export type CreateRoleInput = {
+  label: Scalars['String']['input'];
+  /** Nama mesin, ^[A-Z][A-Z0-9_]{2,49}$, unik, dan immutable setelah dibuat. */
+  name: Scalars['String']['input'];
+  templateRole: AccessRole;
 };
 
 export type CvCertification = {
@@ -597,6 +609,15 @@ export type EmploymentContractStatus =
   | 'ENDED'
   | 'TERMINATED';
 
+export type EntraLoginInput = {
+  /** Authorization code dari query string /login/callback (sekali pakai, umur pendek). */
+  code: Scalars['String']['input'];
+  /** PKCE code verifier yang dipakai saat meminta otorisasi (base64url, 43–128 char). */
+  codeVerifier: Scalars['String']['input'];
+  /** Nonce yang dikirim pada permintaan otorisasi; dicocokkan dengan klaim nonce ID token. */
+  nonce: Scalars['String']['input'];
+};
+
 /** Hasil provisioning akun Entra seorang talent (FR-44, FR-45). */
 export type EntraProvision = {
   __typename?: 'EntraProvision';
@@ -626,6 +647,18 @@ export type EntraProvisionStatus =
   | 'FAILED'
   /** Undangan Entra terkirim (email telkom.co.id, FR-45). */
   | 'INVITED';
+
+/** Status permulaan alur SSO Microsoft Entra ID. */
+export type EntraSsoStart = {
+  __typename?: 'EntraSsoStart';
+  /**
+   * URL otorisasi Microsoft yang siap dibuka browser. Null bila enabled=false.
+   * Berisi hanya nilai publik (authority, clientId, scope, redirectUri, PKCE challenge).
+   */
+  authorizationUrl?: Maybe<Scalars['String']['output']>;
+  /** True bila backend siap menerima login SSO (kredensial Entra lengkap). */
+  enabled: Scalars['Boolean']['output'];
+};
 
 export type EvaluationAnswer = {
   __typename?: 'EvaluationAnswer';
@@ -800,6 +833,12 @@ export type MasterDataCount = {
   kind: Scalars['String']['output'];
 };
 
+/** Tingkat akses satu sel menu × role; cakupan data diwarisi dari template_role. */
+export type MenuAccessLevel =
+  | 'MANAGE'
+  | 'NONE'
+  | 'READ';
+
 export type Mutation = {
   __typename?: 'Mutation';
   addCvCertification: CvCertification;
@@ -819,15 +858,27 @@ export type Mutation = {
   createIdp: Idp;
   createJobRole: JobRole;
   createProject: Project;
+  /** Buat role kustom dari salah satu template bawaan. Khusus Admin. */
+  createRole: Role;
   createUnit: Unit;
+  /**
+   * Buat akun untuk seorang karyawan (Khusus Admin).
+   *
+   * `accessRole` (bawaan) atau `roleName` (bawaan maupun kustom) menunjuk role
+   * tersimpan; keduanya opsional tetapi tepat satu harus diisi.
+   */
   createUserAccount: User;
   deactivateEmployee: Employee;
   deleteCvCertification: Scalars['Boolean']['output'];
   deleteCvEducation: Scalars['Boolean']['output'];
   deleteCvSkill: Scalars['Boolean']['output'];
   deleteDevelopmentAction: Scalars['Boolean']['output'];
+  /** Hapus role kustom yang tidak dipakai akun mana pun. Khusus Admin. */
+  deleteRole: Scalars['Boolean']['output'];
   endAssignment: Assignment;
   login: AuthPayload;
+  /** Publik. Menukar authorization code dengan sesi Tania (FR-003/FR-004). */
+  loginWithEntra: AuthPayload;
   /** Revoke the current access token and, when supplied, the refresh token. */
   logout: Scalars['Boolean']['output'];
   /**
@@ -841,6 +892,8 @@ export type Mutation = {
   refreshSession: AuthPayload;
   /** Perpanjangan kontrak berbatas waktu — kontrak baru terkait predecessor (FR-36). */
   renewEmploymentContract: EmploymentContract;
+  /** Kembalikan konfigurasi menu satu role ke matriks default FR-03. Khusus Admin. */
+  resetRoleMenuConfig: Array<RoleMenuEntry>;
   /** Resign: akhiri kontrak aktif (end_reason=resign), status → RESIGNED, nonaktifkan akun (FR-37, FR-46). */
   resignEmployee: Employee;
   /** Pensiun: akhiri kontrak aktif (end_reason=retirement), status → RETIRED (FR-39). */
@@ -860,6 +913,16 @@ export type Mutation = {
   setProjectActive: Project;
   /** Ubah usia pensiun (tahun); hanya Admin (T042). */
   setRetirementAge: Scalars['Int']['output'];
+  /**
+   * Simpan konfigurasi menu satu role.
+   *
+   * Hanya sel yang benar-benar berbeda dari matriks default FR-03 yang ditulis dan
+   * dicatat audit. Sel khusus Admin (Accounts, Audit, kelola Master Data) divalidasi
+   * di server. Khusus Admin.
+   */
+  setRoleMenuAccess: Array<RoleMenuEntry>;
+  /** Aktifkan/nonaktifkan role kustom. Khusus Admin. */
+  setRoleStatus: Role;
   setUnitActive: Unit;
   setUserAccountStatus: User;
   submitPerformanceEvaluation: PerformanceEvaluation;
@@ -878,7 +941,15 @@ export type Mutation = {
   updateIdp: Idp;
   updateJobRole: JobRole;
   updateProject: Project;
+  /** Ubah label role kustom; nama mesin immutable. Khusus Admin. */
+  updateRole: Role;
   updateUnit: Unit;
+  /**
+   * Ubah peran akses sebuah akun (Khusus Admin).
+   *
+   * `accessRole` (bawaan) atau `roleName` (bawaan maupun kustom) menunjuk role
+   * tersimpan; keduanya opsional tetapi tepat satu harus diisi.
+   */
   updateUserAccessRole: User;
   upsertCvProfile: CvProfile;
   upsertPerformanceEvaluation: PerformanceEvaluation;
@@ -964,6 +1035,11 @@ export type MutationCreateProjectArgs = {
 };
 
 
+export type MutationCreateRoleArgs = {
+  input: CreateRoleInput;
+};
+
+
 export type MutationCreateUnitArgs = {
   code: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -971,9 +1047,10 @@ export type MutationCreateUnitArgs = {
 
 
 export type MutationCreateUserAccountArgs = {
-  accessRole: AccessRole;
+  accessRole?: InputMaybe<AccessRole>;
   email: Scalars['String']['input'];
   employeeId: Scalars['ID']['input'];
+  roleName?: InputMaybe<Scalars['String']['input']>;
   temporaryPassword?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1004,6 +1081,11 @@ export type MutationDeleteDevelopmentActionArgs = {
 };
 
 
+export type MutationDeleteRoleArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationEndAssignmentArgs = {
   id: Scalars['ID']['input'];
   periodEnd: Scalars['Date']['input'];
@@ -1012,6 +1094,11 @@ export type MutationEndAssignmentArgs = {
 
 export type MutationLoginArgs = {
   input: LocalLoginInput;
+};
+
+
+export type MutationLoginWithEntraArgs = {
+  input: EntraLoginInput;
 };
 
 
@@ -1037,6 +1124,11 @@ export type MutationRefreshSessionArgs = {
 
 export type MutationRenewEmploymentContractArgs = {
   input: RenewContractInput;
+};
+
+
+export type MutationResetRoleMenuConfigArgs = {
+  roleId: Scalars['ID']['input'];
 };
 
 
@@ -1105,6 +1197,18 @@ export type MutationSetProjectActiveArgs = {
 
 export type MutationSetRetirementAgeArgs = {
   years: Scalars['Int']['input'];
+};
+
+
+export type MutationSetRoleMenuAccessArgs = {
+  entries: Array<RoleMenuAccessInput>;
+  roleId: Scalars['ID']['input'];
+};
+
+
+export type MutationSetRoleStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: RoleStatus;
 };
 
 
@@ -1215,6 +1319,12 @@ export type MutationUpdateProjectArgs = {
 };
 
 
+export type MutationUpdateRoleArgs = {
+  id: Scalars['ID']['input'];
+  label: Scalars['String']['input'];
+};
+
+
 export type MutationUpdateUnitArgs = {
   code: Scalars['String']['input'];
   id: Scalars['ID']['input'];
@@ -1223,7 +1333,8 @@ export type MutationUpdateUnitArgs = {
 
 
 export type MutationUpdateUserAccessRoleArgs = {
-  accessRole: AccessRole;
+  accessRole?: InputMaybe<AccessRole>;
+  roleName?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['ID']['input'];
 };
 
@@ -1326,6 +1437,8 @@ export type Query = {
   employeesWithoutEntra: EmployeeConnection;
   employmentContract?: Maybe<EmploymentContract>;
   employmentContracts: EmploymentContractConnection;
+  /** Publik. Dipakai halaman login untuk memutuskan redirect otomatis (FR-001). */
+  entraSsoStart: EntraSsoStart;
   evaluationPeriods: Array<EvaluationPeriod>;
   evaluationRoster: Array<EvaluationPeriodRosterEntry>;
   evaluationTemplates: Array<EvaluationTemplate>;
@@ -1342,6 +1455,13 @@ export type Query = {
   myCvProfile?: Maybe<CvProfile>;
   /** IDP milik Talent yang sedang login; null = belum ada IDP (FR-14). */
   myIdp?: Maybe<Idp>;
+  /**
+   * Grid menu efektif milik role pemanggil — sumber sidebar dinamis.
+   *
+   * Tidak khusus Admin: pemanggil hanya menerima baris role-nya sendiri, yang
+   * memang sudah tercermin di sidebar dan sesinya.
+   */
+  myMenuConfig: Array<RoleMenuEntry>;
   /** Evaluasi milik Talent yang sedang login (FR-27). */
   myPerformanceEvaluations: Array<PerformanceEvaluation>;
   performanceEvaluations: PerformanceEvaluationConnection;
@@ -1349,6 +1469,14 @@ export type Query = {
   projects: Array<Project>;
   /** Usia pensiun (tahun) dari setelan aplikasi Admin — default 55 (FR-40, T042). */
   retirementAge: Scalars['Int']['output'];
+  /**
+   * Grid menu × role efektif: sel tanpa baris tersimpan memakai default FR-03.
+   *
+   * `roleId` kosong = seluruh role; terisi = role itu saja. Khusus Admin.
+   */
+  roleMenuConfig: Array<RoleMenuEntry>;
+  /** Daftar access role: built-in + custom (FR-01 amandemen). Khusus Admin. */
+  roles: Array<Role>;
   talentReport: TalentReport;
   talentReportRange: TalentReportRange;
   /** Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8. */
@@ -1437,6 +1565,13 @@ export type QueryEmploymentContractsArgs = {
 };
 
 
+export type QueryEntraSsoStartArgs = {
+  codeChallenge: Scalars['String']['input'];
+  nonce: Scalars['String']['input'];
+  state: Scalars['String']['input'];
+};
+
+
 export type QueryEvaluationPeriodsArgs = {
   includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -1489,6 +1624,16 @@ export type QueryPerformanceEvaluationsArgs = {
 export type QueryProjectsArgs = {
   includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
   unitId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryRoleMenuConfigArgs = {
+  roleId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryRolesArgs = {
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -1578,11 +1723,55 @@ export type ReviewLog = {
   summary: Scalars['String']['output'];
 };
 
+/** Definisi access role sebagai data — built-in atau custom (FR-01 amandemen). */
+export type Role = {
+  __typename?: 'Role';
+  /** True untuk empat peran bawaan: tidak dapat diubah maupun dihapus. */
+  builtIn: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  /** Nama mesin, unik; built-in memakai nama AccessRole (ADMIN, OPERATION, ...). */
+  name: Scalars['String']['output'];
+  status: RoleStatus;
+  /** Peran yang diwarisi cakupan servernya; built-in mewarisi dirinya sendiri. */
+  templateRole: AccessRole;
+};
+
 export type RoleCount = {
   __typename?: 'RoleCount';
   count: Scalars['Int']['output'];
   role: AccessRole;
 };
+
+/**
+ * Satu sel menu × role pada `setRoleMenuAccess`.
+ *
+ * `accessLevel` adalah sumbu otorisasi server; `visible` hanya tampilan sidebar.
+ */
+export type RoleMenuAccessInput = {
+  accessLevel: MenuAccessLevel;
+  /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`. */
+  menuEntryId: Scalars['String']['input'];
+  /** Visibilitas entri di sidebar; tidak pernah mengubah otorisasi server. */
+  visible: Scalars['Boolean']['input'];
+};
+
+/** Sel menu × role: visibilitas menu dan tingkat akses di dalamnya. */
+export type RoleMenuEntry = {
+  __typename?: 'RoleMenuEntry';
+  accessLevel: MenuAccessLevel;
+  /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`. */
+  menuEntryId: Scalars['String']['output'];
+  roleId: Scalars['ID']['output'];
+  /** Nama mesin role pemilik sel ini (bawaan atau kustom) — kunci kolom grid. */
+  roleName: Scalars['String']['output'];
+  visible: Scalars['Boolean']['output'];
+};
+
+/** Status sebuah access role. */
+export type RoleStatus =
+  | 'ACTIVE'
+  | 'INACTIVE';
 
 export type TalentDashboard = {
   __typename?: 'TalentDashboard';
@@ -1610,7 +1799,7 @@ export type TalentReportPeriodInput = {
   startMonth: Scalars['String']['input'];
 };
 
-/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest (tidak lebih awal dari 2022) s.d. Desember tahun berjalan. */
+/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest s.d. Desember tahun berjalan. */
 export type TalentReportRange = {
   __typename?: 'TalentReportRange';
   endMonth: Scalars['String']['output'];
@@ -1639,7 +1828,6 @@ export type UnitCount = {
 };
 
 export type UpdateAssignmentInput = {
-  jobRoleId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd?: InputMaybe<Scalars['Date']['input']>;
   periodStart?: InputMaybe<Scalars['Date']['input']>;
   projectId?: InputMaybe<Scalars['ID']['input']>;
@@ -1703,6 +1891,11 @@ export type User = {
   fullName: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   lastLoginAt?: Maybe<Scalars['Time']['output']>;
+  /**
+   * Nama mesin role di `users.role`: nama bawaan (ADMIN, OPERATION, ...) atau
+   * nama role kustom. Sumbu yang dipakai pemilih peran di halaman Accounts.
+   */
+  roleName: Scalars['String']['output'];
   status: AccountStatus;
   updatedAt: Scalars['Time']['output'];
 };

@@ -14,6 +14,11 @@ import {
 } from "@tabler/icons-react";
 import type { AccessRole } from "@/generated/graphql";
 import {
+  menuEntryIdForHref,
+  visibleByConfig,
+  type MenuAccessConfig,
+} from "@/lib/auth/menuAccess";
+import {
   ACCOUNTS,
   ACTIVITIES,
   AUDIT,
@@ -150,11 +155,44 @@ export const NAV: readonly NavEntry[] = [
       { href: MASTER_DATA_UNITS, label: "Unit", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
       { href: MASTER_DATA_CHAPTERS, label: "Chapter", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
       { href: MASTER_DATA_JOB_ROLES, label: "Job Role", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: MASTER_DATA_PROJECTS, label: "Project", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      // Submenu dilabeli "Initiative" (keputusan produk, D5 004-master-data-create);
+      // entitas & rutenya tetap Project.
+      { href: MASTER_DATA_PROJECTS, label: "Initiative", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
     ],
   },
   { kind: "link", href: AUDIT, label: "Audit", icon: IconClock, roles: ["ADMIN"] },
 ];
+
+/**
+ * Entries a role sees under the active configuration, in sidebar order.
+ *
+ * A group survives only while it has a visible child, so an Admin who hides
+ * every page of a section hides the section too. With no configuration (still
+ * loading, or a session the server has not answered for yet) the caller keeps
+ * the static `roles` filter of `NAV`, which is today's behaviour — the sidebar
+ * never flickers empty while the configuration is in flight.
+ *
+ * The server is the enforcement point (US-C): this only decides what is drawn,
+ * and `nav.test.ts` asserts that nothing drawn is denied by the active config.
+ */
+export function visibleNavEntries(
+  config: MenuAccessConfig | null,
+  roleName: string | null,
+): readonly NavEntry[] {
+  if (!config || !roleName) return NAV;
+  const entries: NavEntry[] = [];
+  for (const entry of NAV) {
+    if (entry.kind === "link") {
+      if (visibleByConfig(config, roleName, menuEntryIdForHref(entry.href))) entries.push(entry);
+      continue;
+    }
+    const children = entry.children.filter((child) =>
+      visibleByConfig(config, roleName, menuEntryIdForHref(child.href)),
+    );
+    if (children.length > 0) entries.push({ ...entry, children });
+  }
+  return entries;
+}
 
 /** Sidebar section label for the current route, shown in the top bar. */
 export function sectionForPath(pathname: string): string {

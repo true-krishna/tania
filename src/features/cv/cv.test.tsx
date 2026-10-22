@@ -63,7 +63,6 @@ const cv = {
       periodEnd: null,
       status: "ACTIVE",
       project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
-      jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
     },
   ],
 };
@@ -350,7 +349,6 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
       periodEnd: "2022-02-28",
       status: "COMPLETED",
       project: { __typename: "Project", id: "prj-0", name: "Legacy Platform" },
-      jobRole: { __typename: "JobRole", id: "jr-0", name: "Junior Engineer" },
     };
 
     render(
@@ -369,8 +367,12 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
     );
 
     expect(await screen.findByText("Legacy Platform")).toBeInTheDocument();
-    expect(screen.getByText(/Junior Engineer · 2020-01-06 — 2022-02-28/)).toBeInTheDocument();
-    expect(screen.getByText(/Engineer · 2022-03-01 — sekarang/)).toBeInTheDocument();
+    // TAN-133 — pengalaman kerja CV menampilkan project + periode saja,
+    // tanpa peran assignment.
+    expect(screen.getByText("2020-01-06 — 2022-02-28")).toBeInTheDocument();
+    expect(screen.getByText("2022-03-01 — sekarang")).toBeInTheDocument();
+    expect(screen.queryByText(/Junior Engineer ·/)).toBeNull();
+    expect(screen.queryByText(/Engineer ·/)).toBeNull();
     expect(screen.getByText("Selesai")).toBeInTheDocument();
     expect(screen.getByText("Berjalan")).toBeInTheDocument();
     // Derived section: no manual input controls are offered for work experience.

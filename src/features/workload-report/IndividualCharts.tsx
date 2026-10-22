@@ -10,7 +10,6 @@ import type {
   IndividualTrendBacklogPoint,
 } from "./types";
 
-/** Chart per-talent (TAN-233): trend, timespent per project, status backlog. */
 export function IndividualCharts({
   statusBacklog,
   timespentPerProject,
@@ -25,22 +24,22 @@ export function IndividualCharts({
   return (
     <div className="flex flex-col gap-3.5">
       <ReportChartCard
-        title="Workload & Activity Trends"
-        subtitle="12 periode terakhir"
+        ariaLabel="Grafik garis tren backlog dan persentase beban"
         className="h-64 w-full"
         option={buildTrendOption(trendBacklog, theme)}
-        ariaLabel="Grafik garis tren backlog dan persentase beban"
+        subtitle="12 periode terakhir"
+        title="Workload & Activity Trends"
       />
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
         <ReportChartCard
-          title="Time Spent by Assignment"
-          option={buildTimespentBarOption(timespentPerProject, theme)}
           ariaLabel="Grafik batang time spent per project"
+          option={buildTimespentBarOption(timespentPerProject, theme)}
+          title="Time Spent by Assignment"
         />
         <ReportChartCard
-          title="Status Progress Activity"
-          option={buildBacklogPieOption(statusBacklog, theme)}
           ariaLabel="Grafik pie status progress aktivitas"
+          option={buildBacklogPieOption(statusBacklog, theme)}
+          title="Status Progress Activity"
         />
       </div>
     </div>

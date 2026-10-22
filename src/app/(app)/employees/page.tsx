@@ -52,8 +52,8 @@ function ChapterTalentList() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Data Karyawan"
         subtitle="Talent dalam cakupan chapter Anda yang siap ditugaskan (hanya baca)."
+        title="Data Karyawan"
       />
       {status === "loading" ? (
         <LoadingState />
@@ -64,16 +64,14 @@ function ChapterTalentList() {
       ) : (
         <Table
           caption="Talent dalam cakupan chapter"
-          rowKey={(talent) => talent.id}
-          dataSource={data}
           columns={[
             {
               key: "name",
               title: "Nama",
               render: (_value, talent) => (
                 <Link
-                  href={EMPLOYEE_DETAIL(talent.id)}
                   className="font-medium text-zinc-900 hover:underline"
+                  href={EMPLOYEE_DETAIL(talent.id)}
                 >
                   {talent.fullName}
                 </Link>
@@ -91,17 +89,19 @@ function ChapterTalentList() {
               className: "col-action",
               render: (_value, talent) => (
                 <RowActionsMenu
-                  label={`Aksi ${talent.fullName}`}
                   actions={[
                     {
                       label: "Lihat detail",
                       onSelect: () => router.push(EMPLOYEE_DETAIL(talent.id)),
                     },
                   ]}
+                  label={`Aksi ${talent.fullName}`}
                 />
               ),
             },
           ]}
+          dataSource={data}
+          rowKey={(talent) => talent.id}
         />
       )}
     </section>
@@ -115,7 +115,6 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   const [unitId, setUnitId] = React.useState("");
   const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
-  // The chosen page size drives the query's first (API default 25, speckit §5).
   const [pageSize, setPageSize] = React.useState(25);
   const units = useUnits();
   const {
@@ -152,32 +151,12 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Data Karyawan"
-        subtitle={
-          manage
-            ? "Kelola data karyawan, pencarian, dan filter."
-            : "Data karyawan untuk konteks penautan akun (hanya baca)."
-        }
         actions={
           manage ? (
-            <Link href={EMPLOYEE_NEW} className="no-underline">
+            <Link className="no-underline" href={EMPLOYEE_NEW}>
               <Button variant="primary">+ Tambah Karyawan</Button>
             </Link>
           ) : undefined
-        }
-        search={
-          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
-            <span className="sr-only">Cari karyawan</span>
-            <Input
-              type="search"
-              value={searchInput}
-              onChange={(e) => {
-                setSearchInput(e.target.value);
-                resetPage();
-              }}
-              placeholder="Cari nama, email, atau nomor induk…"
-            />
-          </label>
         }
         filters={
           <FilterButton
@@ -187,40 +166,60 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             panelId="employee-filter-panel"
           />
         }
+        search={
+          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
+            <span className="sr-only">Cari karyawan</span>
+            <Input
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                resetPage();
+              }}
+              placeholder="Cari nama, email, atau nomor induk…"
+              type="search"
+              value={searchInput}
+            />
+          </label>
+        }
+        subtitle={
+          manage
+            ? "Kelola data karyawan, pencarian, dan filter."
+            : "Data karyawan untuk konteks penautan akun (hanya baca)."
+        }
+        title="Data Karyawan"
       />
 
       {filtersOpen ? (
-        <div id="employee-filter-panel" className="tp-card flex flex-wrap items-end gap-4">
+        <div className="tp-card flex flex-wrap items-end gap-4" id="employee-filter-panel">
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Divisi</span>
             <Select
-              value={unitId}
+              className="w-auto"
               onChange={(e) => {
                 setUnitId(e.target.value);
                 resetPage();
               }}
-              className="w-auto"
               options={[
                 { value: "", label: "Semua" },
                 ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
               ]}
+              value={unitId}
             />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <span>Status</span>
             <Select
-              value={status}
+              className="w-auto"
               onChange={(e) => {
                 setStatus(e.target.value as EmployeeStatus | "ALL");
                 resetPage();
               }}
-              className="w-auto"
               options={[
                 { value: "ALL", label: "Semua" },
                 ...(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
                   keyof typeof EMPLOYEE_STATUS_LABEL
                 >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] })),
               ]}
+              value={status}
             />
           </label>
         </div>
@@ -230,11 +229,11 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         <div className="tp-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-amber-800">
           <span>Sebagian data belum berhasil dimuat dari server.</span>
           <Button
-            variant="secondary"
             onClick={() => {
               reload();
               resetPage();
             }}
+            variant="secondary"
           >
             Muat ulang
           </Button>
@@ -250,15 +249,6 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       ) : (
         <Table
           caption="Daftar karyawan"
-          rowKey={(employee) => employee.id}
-          dataSource={pageRows}
-          loading={loadingMoreRow}
-          loadingText={
-            <>
-              Memuat baris {hintFrom}–{hintTo} dari {totalCount}…
-            </>
-          }
-          pagination={pagination}
           columns={[
             {
               key: "name",
@@ -266,8 +256,8 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
               render: (_value, employee) => (
                 <>
                   <Link
-                    href={EMPLOYEE_DETAIL(employee.id)}
                     className="font-medium text-zinc-900 hover:underline"
+                    href={EMPLOYEE_DETAIL(employee.id)}
                   >
                     {employee.fullName}
                   </Link>
@@ -303,7 +293,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
               key: "status",
               title: "Status",
               render: (_value, employee) => (
-                <Chip variant={EMPLOYEE_STATUS_VARIANT[employee.status]} size="small">
+                <Chip size="small" variant={EMPLOYEE_STATUS_VARIANT[employee.status]}>
                   {EMPLOYEE_STATUS_LABEL[employee.status]}
                 </Chip>
               ),
@@ -314,17 +304,26 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
               className: "col-action",
               render: (_value, employee) => (
                 <RowActionsMenu
-                  label={`Aksi ${employee.fullName}`}
                   actions={[
                     {
                       label: "Lihat detail",
                       onSelect: () => router.push(EMPLOYEE_DETAIL(employee.id)),
                     },
                   ]}
+                  label={`Aksi ${employee.fullName}`}
                 />
               ),
             },
           ]}
+          dataSource={pageRows}
+          loading={loadingMoreRow}
+          loadingText={
+            <>
+              Memuat baris {hintFrom}–{hintTo} dari {totalCount}…
+            </>
+          }
+          pagination={pagination}
+          rowKey={(employee) => employee.id}
         />
       )}
     </section>

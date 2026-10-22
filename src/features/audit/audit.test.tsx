@@ -67,6 +67,43 @@ describe("AuditPage — Admin (FR-17)", () => {
     expect(screen.getByText("1–1")).toBeInTheDocument();
   });
 
+  it("labels the dynamic access-configuration entities (W4/TAN-265)", async () => {
+    const edges = [
+      { entityType: "menu_access", entityId: "TALENT:idp", action: "UPDATE" },
+      { entityType: "access_config", entityId: "TALENT", action: "MUTATE" },
+      { entityType: "role", entityId: "PM_QA", action: "CREATE" },
+    ].map((override, i) => ({
+      ...logEdge(i + 1),
+      node: { ...logEdge(i + 1).node, ...override },
+    }));
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: AuditLogsDocument, variables: { filter: {}, first: 25, after: null } },
+            result: {
+              data: {
+                auditLogs: {
+                  __typename: "AuditLogConnection",
+                  totalCount: 3,
+                  edges,
+                  pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: "c-3" },
+                },
+              },
+            },
+          },
+        ]}
+      >
+        <AuditPage />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText(/Akses menu · TALENT:idp/)).toBeInTheDocument();
+    expect(screen.getByText(/Konfigurasi akses · TALENT$/)).toBeInTheDocument();
+    expect(screen.getByText("Role akses · PM_QA")).toBeInTheDocument();
+    expect(screen.queryByText(/^menu_access$/)).not.toBeInTheDocument();
+  });
+
   it("moves between table pages with the pagination controls", async () => {
     const twelveLogs = {
       __typename: "AuditLogConnection",

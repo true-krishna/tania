@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
 import EditEmployeePage from "@/app/(app)/employees/[id]/edit/page";
@@ -10,6 +10,7 @@ import EmployeeDetailPage from "@/app/(app)/employees/[id]/page";
 import {
   AuditLogsDocument,
   EmployeeDocument,
+  EmployeeEntraProvisionDocument,
   UpdateEmployeeDocument,
 } from "@/generated/graphql";
 
@@ -174,6 +175,57 @@ const auditLogsMock = {
   },
 };
 
+// `entraProvision` is requested only for roles holding permEntraRead
+// (Operation/Admin) — the query itself is gated before it is ever sent.
+const entraProvisionMock = {
+  request: { query: EmployeeEntraProvisionDocument, variables: { id: "emp-1" } },
+  result: {
+    data: {
+      employee: {
+        __typename: "Employee",
+        id: "emp-1",
+        entraProvision: {
+          __typename: "EntraProvision",
+          status: "FAILED",
+          action: "CREATE",
+          upn: null,
+          lastError: "graph unavailable",
+          updatedAt: "2026-10-12T10:00:00Z",
+        },
+      },
+    },
+  },
+};
+
+const noProvisionMock = {
+  request: { query: EmployeeEntraProvisionDocument, variables: { id: "emp-1" } },
+  result: {
+    data: {
+      employee: { __typename: "Employee", id: "emp-1", entraProvision: null },
+    },
+  },
+};
+
+const createdProvisionMock = {
+  request: { query: EmployeeEntraProvisionDocument, variables: { id: "emp-1" } },
+  result: {
+    data: {
+      employee: {
+        __typename: "Employee",
+        id: "emp-1",
+        entraProvision: {
+          __typename: "EntraProvision",
+          status: "CREATED",
+          action: "CREATE",
+          upn: "rina.kusuma@digitaltelkom.id",
+          lastError: null,
+          updatedAt: "2026-10-12T10:00:00Z",
+        },
+      },
+    },
+  },
+};
+
 async function renderEdit(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
   await act(async () => {
     render(
@@ -288,7 +340,7 @@ describe("EditEmployeePage (form ubah data diri, T020)", () => {
 describe("EmployeeDetailPage (riwayat kontrak + riwayat perubahan, T022)", () => {
   it("shows data diri with NIK masked and the full TMS attributes of every contract", async () => {
     await act(async () => {
-      renderDetail([employeeMock, auditLogsMock]);
+      renderDetail([employeeMock, auditLogsMock, entraProvisionMock]);
     });
 
     expect(await screen.findByRole("heading", { name: /detail karyawan|andi pratama/i })).toBeInTheDocument();
@@ -307,7 +359,7 @@ describe("EmployeeDetailPage (riwayat kontrak + riwayat perubahan, T022)", () =>
 
   it("shows the per-record change history from auditLogs", async () => {
     await act(async () => {
-      renderDetail([employeeMock, auditLogsMock]);
+      renderDetail([employeeMock, auditLogsMock, entraProvisionMock]);
     });
 
     expect(await screen.findByText(/riwayat perubahan/i)).toBeInTheDocument();
@@ -321,7 +373,7 @@ describe("EmployeeDetailPage (riwayat kontrak + riwayat perubahan, T022)", () =>
 describe("EmployeeDetailPage per role (T034)", () => {
   it("lets Operation manage the record", async () => {
     await act(async () => {
-      renderDetail([employeeMock, auditLogsMock]);
+      renderDetail([employeeMock, auditLogsMock, entraProvisionMock]);
     });
 
     expect(await screen.findByText("************1234")).toBeInTheDocument();
@@ -333,7 +385,7 @@ describe("EmployeeDetailPage per role (T034)", () => {
   it("lets Admin manage the record (TAN-212 clarify 4)", async () => {
     auth.role = "ADMIN";
     await act(async () => {
-      renderDetail([employeeMock, auditLogsMock]);
+      renderDetail([employeeMock, auditLogsMock, entraProvisionMock]);
     });
 
     expect(await screen.findByText("************1234")).toBeInTheDocument();
@@ -354,6 +406,7 @@ describe("EmployeeDetailPage per role (T034)", () => {
     expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
     expect(screen.queryByText(/riwayat perubahan/i)).toBeNull();
+    expect(screen.queryByText(/provisi akun entra/i)).toBeNull();
     expect(screen.getByRole("link", { name: "PKWT/2025/002" })).toBeInTheDocument();
   });
 
@@ -367,6 +420,45 @@ describe("EmployeeDetailPage per role (T034)", () => {
     expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
     expect(screen.queryByText(/riwayat perubahan/i)).toBeNull();
+    expect(screen.queryByText(/provisi akun entra/i)).toBeNull();
     expect(screen.queryByRole("link", { name: "PKWT/2025/002" })).toBeNull();
+  });
+});
+
+describe("EmployeeDetailPage provisi akun Entra (TAN-272 U1)", () => {
+  it("shows the recorded provisioning outcome with UPN and last error", async () => {
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock, entraProvisionMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    const card = screen.getByText("Provisi akun Entra").closest("div") as HTMLElement;
+    expect(await within(card).findByText("Gagal")).toBeInTheDocument();
+    expect(within(card).getByText("CREATE")).toBeInTheDocument();
+    expect(within(card).getByText(/graph unavailable/i)).toBeInTheDocument();
+    expect(within(card).getByText(/diperbarui/i)).toBeInTheDocument();
+    expect(within(card).getAllByText("-").length).toBeGreaterThan(0);
+  });
+
+  it("says the talent was never provisioned when no outcome is recorded", async () => {
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock, noProvisionMock]);
+    });
+
+    expect(await screen.findByText("Belum pernah diprovisi.")).toBeInTheDocument();
+  });
+
+  it("marks a CREATED outcome as menunggu aktivasi (TAN-273 Opsi A)", async () => {
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock, createdProvisionMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    const card = screen.getByText("Provisi akun Entra").closest("div") as HTMLElement;
+    expect(await within(card).findByText("Menunggu aktivasi")).toBeInTheDocument();
+    expect(within(card).getByText("rina.kusuma@digitaltelkom.id")).toBeInTheDocument();
+    expect(
+      within(card).getByText(/diaktifkan di luar aplikasi/i)
+    ).toBeInTheDocument();
   });
 });

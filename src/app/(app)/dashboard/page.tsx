@@ -53,24 +53,6 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-zinc-500">{children}</p>;
 }
 
-/**
- * Role-scoped dashboard (US4 / FR-30). The served SDL returns a `Dashboard`
- * union; the concrete member is narrowed from `__typename`, then the matching
- * widget groups render. Data is kept fresh via `cache-and-network` (FR-30).
- *
- * Amandemen penempatan (2026-10-12, keputusan pemilik produk, TAN-154):
- * untuk OperationDashboard & ChapterDashboard konten widget digantikan oleh
- * konten Laporan Talent (TalentReportContent); Admin & Talent tetap
- * melihat widget eksisting — laporan talent adalah konten Operation/Chapter.
- *
- * Amandemen remediasi (2026-10-19, TAN-238/TAN-240): dashboard Operation
- * kembali menampilkan widget administratifnya (total karyawan aktif,
- * distribusi per Unit, perubahan data terbaru) DI ATAS konten Laporan Talent,
- * kini org-wide mengikuti populasi BE (tanpa dimensi chapter), ditambah
- * indikator FR-40 (kontrak berakhir H-90/H-30 & pra-pensiun). Field
- * `nonAssignableEmployees` sengaja tidak dirender — istilah internal tidak
- * ditampilkan di UI. Dashboard Chapter tidak berubah.
- */
 export default function DashboardPage() {
   const { status, data, error } = useDashboard();
 
@@ -82,21 +64,21 @@ export default function DashboardPage() {
 
   return (
     <section className="flex flex-col gap-5">
-      <PageHeader title="Dashboard" subtitle="Ringkasan sesuai peran akses Anda." />
+      <PageHeader subtitle="Ringkasan sesuai peran akses Anda." title="Dashboard" />
 
       {dash.__typename === "AdminDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="Akun tidak aktif" value={dash.inactiveAccounts} icon={IconUserShield} />
+            <StatCard icon={IconUserShield} label="Akun tidak aktif" value={dash.inactiveAccounts} />
             <StatCard
+              icon={IconTarget}
               label="Talent per chapter"
               value={dash.talentsPerChapter.reduce((sum, c) => sum + c.count, 0)}
-              icon={IconTarget}
             />
             <StatCard
+              icon={IconUsers}
               label="Total akun"
               value={dash.accountsPerRole.reduce((sum, c) => sum + c.count, 0)}
-              icon={IconUsers}
             />
           </div>
 
@@ -122,7 +104,7 @@ export default function DashboardPage() {
             {dash.masterDataActiveCounts.length ? (
               <ul className="flex flex-col gap-3">
                 {dash.masterDataActiveCounts.map((c) => (
-                  <li key={c.kind} className="flex items-center justify-between gap-3 text-sm">
+                  <li className="flex items-center justify-between gap-3 text-sm" key={c.kind}>
                     <span className="capitalize text-zinc-600">{c.kind}</span>
                     <span className="text-zinc-500">
                       <span className="font-semibold text-zinc-900">{c.active}</span> aktif ·{" "}
@@ -141,24 +123,24 @@ export default function DashboardPage() {
       {dash.__typename === "OperationDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Karyawan aktif" value={dash.totalActiveEmployees} icon={IconUsers} />
+            <StatCard icon={IconUsers} label="Karyawan aktif" value={dash.totalActiveEmployees} />
             <StatCard
-              label="Kontrak berakhir ≤ 90 hari"
-              value={dash.contractsExpiringIn90Days}
               hint="FR-40"
               icon={IconAlertTriangle}
+              label="Kontrak berakhir ≤ 90 hari"
+              value={dash.contractsExpiringIn90Days}
             />
             <StatCard
-              label="Kontrak berakhir ≤ 30 hari"
-              value={dash.contractsExpiringIn30Days}
               hint="FR-40"
               icon={IconCalendarClock}
+              label="Kontrak berakhir ≤ 30 hari"
+              value={dash.contractsExpiringIn30Days}
             />
             <StatCard
-              label="Karyawan pra-pensiun"
-              value={dash.preRetirementEmployees}
               hint="Usia ≥ batas pensiun − 1 tahun (FR-40)"
               icon={IconHourglass}
+              label="Karyawan pra-pensiun"
+              value={dash.preRetirementEmployees}
             />
           </div>
 
@@ -178,8 +160,8 @@ export default function DashboardPage() {
                 <ul className="flex flex-col gap-2">
                   {dash.recentEmployeeChanges.map((e) => (
                     <li
-                      key={e.id}
                       className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-surface-border px-3 py-2.5"
+                      key={e.id}
                     >
                       <span className="text-sm font-medium text-zinc-900">{e.fullName}</span>
                       <span className="text-xs text-zinc-500">{orDash(e.nomorInduk)}</span>
@@ -209,7 +191,7 @@ export default function DashboardPage() {
       {dash.__typename === "TalentDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="Penugasan aktif" value={dash.activeAssignments.length} icon={IconClipboardText} />
+            <StatCard icon={IconClipboardText} label="Penugasan aktif" value={dash.activeAssignments.length} />
           </div>
 
           <Panel title="Penugasan Aktif">
@@ -217,16 +199,16 @@ export default function DashboardPage() {
               <ul className="flex flex-col gap-2">
                 {dash.activeAssignments.map((a) => (
                   <li
-                    key={a.id}
                     className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-surface-border px-3 py-2.5"
+                    key={a.id}
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-zinc-900">{a.project.name}</p>
                       <p className="text-xs text-zinc-500">
-                        {a.jobRole.name} · {a.periodStart} — {a.periodEnd ?? "…"}
+                        {a.periodStart} — {a.periodEnd ?? "…"}
                       </p>
                     </div>
-                    <Chip variant={ASSIGNMENT_STATUS_VARIANT[a.status]} size="small">
+                    <Chip size="small" variant={ASSIGNMENT_STATUS_VARIANT[a.status]}>
                       {ASSIGNMENT_STATUS_LABEL[a.status]}
                     </Chip>
                   </li>

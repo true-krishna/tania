@@ -8,25 +8,20 @@ import { useTablePagination } from "@/components/Pagination";
 import { useSessionRole } from "@/lib/auth/guard";
 import { roleLabel } from "@/features/accounts/roles";
 import { useAuditLogs } from "@/features/audit/useAuditLogs";
-import { ACTION_LABEL, ACTION_PILL } from "@/features/audit/actionLabels";
+import { ACTION_LABEL, ACTION_PILL, entityLabel } from "@/features/audit/actionLabels";
 import type { AccessRole } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 
 const ROLE_LABEL: Record<AccessRole, string> = roleLabel;
 
-/**
- * Admin audit trail viewer (FR-17) — US5.
- * Cursor pagination over `auditLogs` (connection). Admin-only route (FR-17);
- * auth enforced server-side (FR-16), this gates the view at the UI layer.
- */
 export default function AuditPage() {
   const role = useSessionRole();
   if (role !== "ADMIN") {
     return (
       <section className="flex flex-col gap-4">
         <PageHeader
-          title="Jejak Audit"
           subtitle="Jejak audit hanya dapat diakses oleh peran Admin (FR-17)."
+          title="Jejak Audit"
         />
       </section>
     );
@@ -49,16 +44,13 @@ function AuditViewer() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Jejak Audit"
         subtitle={`Mutasi & aktivitas sistem (${totalCount} catatan).`}
+        title="Jejak Audit"
       />
 
       {logs && logs.length ? (
         <Table
           caption="Jejak audit"
-          rowKey={(log) => log.id}
-          dataSource={pageRows}
-          pagination={pagination}
           columns={[
             {
               key: "waktu",
@@ -83,7 +75,7 @@ function AuditViewer() {
               className: "font-medium text-zinc-900",
               render: (_value, log) => (
                 <>
-                  {log.entityType}
+                  {entityLabel(log.entityType)}
                   {log.entityId ? ` · ${log.entityId}` : ""}
                 </>
               ),
@@ -137,6 +129,9 @@ function AuditViewer() {
               ),
             },
           ]}
+          dataSource={pageRows}
+          pagination={pagination}
+          rowKey={(log) => log.id}
         />
       ) : (
         <EmptyState message="Belum ada catatan audit." />

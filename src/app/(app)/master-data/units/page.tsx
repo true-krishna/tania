@@ -26,26 +26,21 @@ export default function UnitsPage() {
 
   return (
     <MasterDataSection<Unit>
-      caption="Daftar unit"
-      emptyMessage="Belum ada unit. Tambahkan unit pertama."
       addLabel="Tambah Unit"
-      nameLabel="Nama Unit"
+      caption="Daftar unit"
       codeLabel="Kode Unit"
-      codePlaceholder="cth: DBT"
       codeOf={(unit) => unit.code}
-      items={data}
-      status={status}
+      codePlaceholder="cth: DBT"
+      emptyMessage="Belum ada unit. Tambahkan unit pertama."
       error={error}
-      searchable
-      extraColumn={{ label: "Proyek", render: (unit) => unit.projects.length }}
+      extraColumn={{ label: "Initiative", render: (unit) => unit.projects.length }}
+      items={data}
+      nameLabel="Nama Unit"
       onCreate={({ name, code }) =>
         detectError(
           () => unitMutations.create({ name, code }),
           `Unit "${name}" berhasil dibuat.`,
         )
-      }
-      onUpdate={(id, { name, code }) =>
-        detectError(() => unitMutations.update(id, { name, code }), "Unit berhasil diubah.")
       }
       onToggleActive={(id, isActive) =>
         detectError(
@@ -53,6 +48,11 @@ export default function UnitsPage() {
           isActive ? "Unit berhasil diaktifkan." : "Unit berhasil dinonaktifkan.",
         )
       }
+      onUpdate={(id, { name, code }) =>
+        detectError(() => unitMutations.update(id, { name, code }), "Unit berhasil diubah.")
+      }
+      searchable
+      status={status}
     />
   );
 }

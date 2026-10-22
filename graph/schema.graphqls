@@ -22,7 +22,11 @@ scalar JSON
 
 # ------------------------------- Enums --------------------------------------
 
-"""Application access roles (fixed set, FR-15)."""
+"""Application access roles (fixed set, FR-15).
+
+The four built-in roles of the dynamic RBAC configuration (FR-03 amandemen
+2026-10-19); a role built on one of them as its template keeps this enum as the
+value of AccessRoleDefinition.templateRole."""
 enum AccessRole {
   ADMIN
   OPERATION
@@ -230,6 +234,9 @@ type User {
   email: String!
   fullName: String!
   accessRole: AccessRole!
+  """Nama mesin role di `users.role`: nama bawaan (ADMIN, OPERATION, ...) atau
+  nama role kustom. Sumbu yang dipakai pemilih peran di halaman Accounts."""
+  roleName: String!
   status: AccountStatus!
   employee: Employee
   lastLoginAt: Time
@@ -249,6 +256,26 @@ type AuthPayload {
 input LocalLoginInput {
   email: String!
   password: String!
+}
+
+"""Status permulaan alur SSO Microsoft Entra ID."""
+type EntraSsoStart {
+  """True bila backend siap menerima login SSO (kredensial Entra lengkap)."""
+  enabled: Boolean!
+  """
+  URL otorisasi Microsoft yang siap dibuka browser. Null bila enabled=false.
+  Berisi hanya nilai publik (authority, clientId, scope, redirectUri, PKCE challenge).
+  """
+  authorizationUrl: String
+}
+
+input EntraLoginInput {
+  """Authorization code dari query string /login/callback (sekali pakai, umur pendek)."""
+  code: String!
+  """PKCE code verifier yang dipakai saat meminta otorisasi (base64url, 43–128 char)."""
+  codeVerifier: String!
+  """Nonce yang dikirim pada permintaan otorisasi; dicocokkan dengan klaim nonce ID token."""
+  nonce: String!
 }
 
 # ------------------------------- Master data --------------------------------
@@ -534,7 +561,6 @@ type Assignment {
   id: ID!
   talent: Employee!
   project: Project!
-  jobRole: JobRole!
   periodStart: Date!
   periodEnd: Date
   status: AssignmentStatus!
@@ -555,14 +581,12 @@ input AssignmentFilter {
 input CreateAssignmentInput {
   employeeId: ID!
   projectId: ID!
-  jobRoleId: ID!
   periodStart: Date!
   periodEnd: Date
 }
 
 input UpdateAssignmentInput {
   projectId: ID
-  jobRoleId: ID
   periodStart: Date
   periodEnd: Date
 }
@@ -871,7 +895,7 @@ input TalentReportPeriodInput {
   endMonth: String!
 }
 
-"""Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest (tidak lebih awal dari 2022) s.d. Desember tahun berjalan."""
+"""Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest s.d. Desember tahun berjalan."""
 type TalentReportRange {
   startMonth: String!
   endMonth: String!
@@ -954,6 +978,64 @@ type ChatMessageConnection { edges: [ChatMessageEdge!]!, pageInfo: PageInfo!, to
 type ChatConversationEdge { node: ChatConversation!, cursor: String! }
 type ChatConversationConnection { edges: [ChatConversationEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
 
+# ------------------------- Dynamic RBAC (FR-03 amandemen 2026-10-19) ---------
+
+"""Status sebuah access role."""
+enum RoleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+"""Tingkat akses satu sel menu × role; cakupan data diwarisi dari template_role."""
+enum MenuAccessLevel {
+  NONE
+  READ
+  MANAGE
+}
+
+"""Definisi access role sebagai data — built-in atau custom (FR-01 amandemen)."""
+type Role {
+  id: ID!
+  """Nama mesin, unik; built-in memakai nama AccessRole (ADMIN, OPERATION, ...)."""
+  name: String!
+  label: String!
+  """Peran yang diwarisi cakupan servernya; built-in mewarisi dirinya sendiri."""
+  templateRole: AccessRole!
+  """True untuk empat peran bawaan: tidak dapat diubah maupun dihapus."""
+  builtIn: Boolean!
+  status: RoleStatus!
+}
+
+"""Sel menu × role: visibilitas menu dan tingkat akses di dalamnya."""
+type RoleMenuEntry {
+  roleId: ID!
+  """Nama mesin role pemilik sel ini (bawaan atau kustom) — kunci kolom grid."""
+  roleName: String!
+  """Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`."""
+  menuEntryId: String!
+  visible: Boolean!
+  accessLevel: MenuAccessLevel!
+}
+
+"""Input pembuatan role kustom: template menentukan cakupan servernya."""
+input CreateRoleInput {
+  """Nama mesin, ^[A-Z][A-Z0-9_]{2,49}$, unik, dan immutable setelah dibuat."""
+  name: String!
+  label: String!
+  templateRole: AccessRole!
+}
+
+"""Satu sel menu × role pada `setRoleMenuAccess`.
+
+`accessLevel` adalah sumbu otorisasi server; `visible` hanya tampilan sidebar."""
+input RoleMenuAccessInput {
+  """Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`."""
+  menuEntryId: String!
+  """Visibilitas entri di sidebar; tidak pernah mengubah otorisasi server."""
+  visible: Boolean!
+  accessLevel: MenuAccessLevel!
+}
+
 # -------------------------------- Queries -----------------------------------
 
 type Query {
@@ -962,6 +1044,9 @@ type Query {
 
   """Profil user yang sedang login."""
   me: User!
+
+  """Publik. Dipakai halaman login untuk memutuskan redirect otomatis (FR-001)."""
+  entraSsoStart(codeChallenge: String!, state: String!, nonce: String!): EntraSsoStart!
 
   # --- Master data (Admin tulis; baca mengikuti matriks 002-tania-rbac §Matriks) ---
   """Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8."""
@@ -1028,6 +1113,19 @@ type Query {
   # --- Audit (Admin) ---
   auditLogs(filter: AuditLogFilter, first: Int = 25, after: String): AuditLogConnection!
 
+  # --- Konfigurasi akses per role (Admin; FR-03 amandemen 2026-10-19) ---
+  """Daftar access role: built-in + custom (FR-01 amandemen). Khusus Admin."""
+  roles(includeInactive: Boolean = false): [Role!]!
+  """Grid menu × role efektif: sel tanpa baris tersimpan memakai default FR-03.
+
+  `roleId` kosong = seluruh role; terisi = role itu saja. Khusus Admin."""
+  roleMenuConfig(roleId: ID): [RoleMenuEntry!]!
+  """Grid menu efektif milik role pemanggil — sumber sidebar dinamis.
+
+  Tidak khusus Admin: pemanggil hanya menerima baris role-nya sendiri, yang
+  memang sudah tercermin di sidebar dan sesinya."""
+  myMenuConfig: [RoleMenuEntry!]!
+
   # --- Asisten data (Chapter & Operation; FR-01/FR-02) ---
   """Percakapan asisten milik pemanggil (privat mutlak; FR-02)."""
   chatConversations(first: Int = 20, after: String): ChatConversationConnection!
@@ -1040,6 +1138,9 @@ type Query {
 type Mutation {
   # --- Auth ---
   login(input: LocalLoginInput!): AuthPayload!
+
+  """Publik. Menukar authorization code dengan sesi Tania (FR-003/FR-004)."""
+  loginWithEntra(input: EntraLoginInput!): AuthPayload!
 
   """Exchange a refresh token for a new token pair (rotating)."""
   refreshSession(refreshToken: String!): AuthPayload!
@@ -1130,10 +1231,36 @@ Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FA
   submitPerformanceEvaluation(id: ID!): PerformanceEvaluation!
 
   # --- Akun user (Admin) ---
-  createUserAccount(employeeId: ID!, email: String!, accessRole: AccessRole!, temporaryPassword: String): User!
-  updateUserAccessRole(userId: ID!, accessRole: AccessRole!): User!
+  """Buat akun untuk seorang karyawan (Khusus Admin).
+
+  `accessRole` (bawaan) atau `roleName` (bawaan maupun kustom) menunjuk role
+  tersimpan; keduanya opsional tetapi tepat satu harus diisi."""
+  createUserAccount(employeeId: ID!, email: String!, accessRole: AccessRole, roleName: String, temporaryPassword: String): User!
+  """Ubah peran akses sebuah akun (Khusus Admin).
+
+  `accessRole` (bawaan) atau `roleName` (bawaan maupun kustom) menunjuk role
+  tersimpan; keduanya opsional tetapi tepat satu harus diisi."""
+  updateUserAccessRole(userId: ID!, accessRole: AccessRole, roleName: String): User!
   setUserAccountStatus(userId: ID!, status: AccountStatus!): User!
   revokeUserSessions(userId: ID!): Boolean!
+
+  # --- Konfigurasi akses per role (Admin; FR-03 amandemen 2026-10-19) ---
+  """Buat role kustom dari salah satu template bawaan. Khusus Admin."""
+  createRole(input: CreateRoleInput!): Role!
+  """Ubah label role kustom; nama mesin immutable. Khusus Admin."""
+  updateRole(id: ID!, label: String!): Role!
+  """Aktifkan/nonaktifkan role kustom. Khusus Admin."""
+  setRoleStatus(id: ID!, status: RoleStatus!): Role!
+  """Hapus role kustom yang tidak dipakai akun mana pun. Khusus Admin."""
+  deleteRole(id: ID!): Boolean!
+  """Simpan konfigurasi menu satu role.
+
+  Hanya sel yang benar-benar berbeda dari matriks default FR-03 yang ditulis dan
+  dicatat audit. Sel khusus Admin (Accounts, Audit, kelola Master Data) divalidasi
+  di server. Khusus Admin."""
+  setRoleMenuAccess(roleId: ID!, entries: [RoleMenuAccessInput!]!): [RoleMenuEntry!]!
+  """Kembalikan konfigurasi menu satu role ke matriks default FR-03. Khusus Admin."""
+  resetRoleMenuConfig(roleId: ID!): [RoleMenuEntry!]!
 
   # --- Asisten data (Chapter & Operation; FR-01) ---
   """Mulai percakapan baru milik pemanggil."""

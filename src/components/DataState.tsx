@@ -1,17 +1,13 @@
 import { Chip } from "@/components/Chip";
 
-/**
- * Shared data states on the shipped canon (constitution design v4.0.0):
- * §IV progress uses `--tp-neutral`, §V `.tp-empty`, §IX tint+ink semantics.
- */
 
 export function LoadingState({ label = "Memuat…" }: { label?: string }) {
   return (
     <div className="flex items-center justify-center rounded-tp-lg border border-tp-line bg-tp-surface p-6">
       <span className="flex items-center gap-2 text-sm text-tp-muted">
         <span
-          className="h-4 w-4 animate-spin rounded-full border-2 border-tp-neutral border-t-transparent"
           aria-hidden
+          className="h-4 w-4 animate-spin rounded-full border-2 border-tp-neutral border-t-transparent"
         />
         {label}
       </span>
@@ -39,7 +35,7 @@ export function EmptyState({ message }: { message: string }) {
 
 export function StatusBadge({ active }: { active: boolean }) {
   return (
-    <Chip variant={active ? "success" : "neutral"} size="small" dot>
+    <Chip dot size="small" variant={active ? "success" : "neutral"}>
       {active ? "Aktif" : "Nonaktif"}
     </Chip>
   );

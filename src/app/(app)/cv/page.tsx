@@ -34,8 +34,6 @@ import {
 const LABEL =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm";
 
-/** D11 — dropdown terkontrol lima nilai jenjang (disahkan pemilik produk 2026-10-10).
- * Nilai = enum `EducationLevel` (kontrak SDL); label = tampilan D11. */
 const EDUCATION_LEVELS: readonly { value: EducationLevel; label: string }[] = [
   { value: "SMA_SMK_SEDERAJAT", label: "SMA/SMK Sederajat" },
   { value: "D3", label: "D3" },
@@ -44,32 +42,19 @@ const EDUCATION_LEVELS: readonly { value: EducationLevel; label: string }[] = [
   { value: "S3", label: "S3" },
 ];
 
-/** Tampilan D11: nilai enum → label; entri legacy free-text tampil apa adanya. */
 function formatDegree(degree: string | null | undefined): string {
   if (!degree) return "";
   return EDUCATION_LEVELS.find((level) => level.value === degree)?.label ?? degree;
 }
 
-/**
- * CV profile (FR-12/FR-13) — US4.
- * Talent edits their own structured CV (summary, educations, certifications,
- * skills) one section at a time; work experience is derived from assignment
- * history (never hand-entered). Chapter, Operation and Admin get a read-only
- * view — Chapter for a talent in its scope, Operation and Admin for any talent
- * (TAN-212 clarify 4 + 2026-10-16 clarify 6).
- * Other roles are blocked at the UI layer (server enforces FR-16).
- */
 export default function CvPage() {
   const role = useSessionRole();
   if (role === "TALENT") return <TalentCvEditor />;
   if (role === "CHAPTER") return <CvRosterViewer audience="CHAPTER" />;
-  // Admin manages every active module (TAN-212 clarify 4) and Operation reads
-  // every talent (2026-10-16): a read-only roster view in both cases, since a
-  // CV is personal content owned by its talent (FR-13).
   if (role === "OPERATION" || role === "ADMIN") return <CvRosterViewer audience={role} />;
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title="Profil CV" subtitle="Fitur CV hanya untuk peran Talent, Chapter, Operation, dan Admin (FR-13)." />
+      <PageHeader subtitle="Fitur CV hanya untuk peran Talent, Chapter, Operation, dan Admin (FR-13)." title="Profil CV" />
     </section>
   );
 }
@@ -82,8 +67,8 @@ function TalentCvEditor() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Profil CV"
         subtitle="Isi setiap bagian lalu simpan; pengalaman kerja terisi otomatis dari riwayat assignment."
+        title="Profil CV"
       />
       <SummarySection cv={data} />
       <EducationsSection cv={data} />
@@ -116,15 +101,15 @@ function SummarySection({ cv }: { cv: CvFieldsFragment | undefined }) {
       <h2 className="text-base font-semibold text-zinc-900">Ringkasan Profil</h2>
       <InputControl label="Ringkasan">
         <textarea
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-          rows={4}
-          placeholder="Tulis ringkasan singkat tentang diri Anda…"
           className={LABEL}
+          onChange={(e) => setSummary(e.target.value)}
+          placeholder="Tulis ringkasan singkat tentang diri Anda…"
+          rows={4}
+          value={summary}
         />
       </InputControl>
       <div>
-        <Button onClick={onSave} disabled={loading}>
+        <Button disabled={loading} onClick={onSave}>
           Simpan Ringkasan
         </Button>
       </div>
@@ -155,7 +140,6 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
     setEndYear("");
   }
 
-  /** Load one stored entry into the form so it can be corrected in place (US4 skenario 3). */
   function fillFrom(edu: CvFieldsFragment["educations"][number]) {
     setEditingId(edu.id);
     setInstitution(edu.institution);
@@ -210,7 +194,7 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
       {cv?.educations.length ? (
         <ul className="flex flex-col gap-2">
           {cv.educations.map((edu) => (
-            <li key={edu.id} className="flex items-start justify-between gap-3 rounded-md border border-board-border px-3 py-2 text-sm">
+            <li className="flex items-start justify-between gap-3 rounded-md border border-board-border px-3 py-2 text-sm" key={edu.id}>
               <div>
                 <p className="font-medium text-zinc-900">
                   {edu.institution}
@@ -224,17 +208,17 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
               </div>
               <div className="flex shrink-0 gap-1">
                 <button
-                  type="button"
                   aria-label={`Ubah ${edu.institution}`}
-                  onClick={() => fillFrom(edu)}
                   className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+                  onClick={() => fillFrom(edu)}
+                  type="button"
                 >
                   Ubah
                 </button>
                 <button
-                  type="button"
-                  onClick={() => onDelete(edu.id)}
                   className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => onDelete(edu.id)}
+                  type="button"
                 >
                   Hapus
                 </button>
@@ -246,28 +230,28 @@ function EducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
         <p className="text-sm text-zinc-500">Belum ada riwayat pendidikan.</p>
       )}
 
-      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Institusi (wajib)" required />
+      <form className="grid grid-cols-1 gap-2 sm:grid-cols-2" onSubmit={onSubmit}>
+        <Input onChange={(e) => setInstitution(e.target.value)} placeholder="Institusi (wajib)" required value={institution} />
         <Select
-          value={degree}
-          onChange={(e) => setDegree(e.target.value as EducationLevel | "")}
           aria-label="Jenjang pendidikan"
+          onChange={(e) => setDegree(e.target.value as EducationLevel | "")}
           options={[
             { value: "", label: "— pilih jenjang (opsional) —" },
             ...EDUCATION_LEVELS.map((level) => ({ value: level.value, label: level.label })),
           ]}
+          value={degree}
         />
-        <Input value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} placeholder="Jurusan" />
+        <Input onChange={(e) => setFieldOfStudy(e.target.value)} placeholder="Jurusan" value={fieldOfStudy} />
         <div className="flex gap-2">
-          <Input value={startYear} onChange={(e) => setStartYear(e.target.value)} placeholder="Tahun mulai" inputMode="numeric" />
-          <Input value={endYear} onChange={(e) => setEndYear(e.target.value)} placeholder="Tahun selesai" inputMode="numeric" />
+          <Input inputMode="numeric" onChange={(e) => setStartYear(e.target.value)} placeholder="Tahun mulai" value={startYear} />
+          <Input inputMode="numeric" onChange={(e) => setEndYear(e.target.value)} placeholder="Tahun selesai" value={endYear} />
         </div>
         <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit" disabled={saving || !institution.trim()}>
+          <Button disabled={saving || !institution.trim()} type="submit">
             {editingId ? "Simpan Perubahan" : "+ Tambah Pendidikan"}
           </Button>
           {editingId ? (
-            <Button type="button" variant="secondary" onClick={reset} disabled={saving}>
+            <Button disabled={saving} onClick={reset} type="button" variant="secondary">
               Batal
             </Button>
           ) : null}
@@ -294,7 +278,6 @@ function CertificationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
     setIssuer("");
   }
 
-  /** Load one stored entry into the form so it can be corrected in place (US4 skenario 3). */
   function fillFrom(cert: CvFieldsFragment["certifications"][number]) {
     setEditingId(cert.id);
     setName(cert.name);
@@ -340,24 +323,24 @@ function CertificationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
       {cv?.certifications.length ? (
         <ul className="flex flex-col gap-2">
           {cv.certifications.map((cert) => (
-            <li key={cert.id} className="flex items-start justify-between gap-3 rounded-md border border-board-border px-3 py-2 text-sm">
+            <li className="flex items-start justify-between gap-3 rounded-md border border-board-border px-3 py-2 text-sm" key={cert.id}>
               <div>
                 <p className="font-medium text-zinc-900">{cert.name}</p>
                 <p className="text-xs text-zinc-500">{cert.issuer || "—"}</p>
               </div>
               <div className="flex shrink-0 gap-1">
                 <button
-                  type="button"
                   aria-label={`Ubah ${cert.name}`}
-                  onClick={() => fillFrom(cert)}
                   className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+                  onClick={() => fillFrom(cert)}
+                  type="button"
                 >
                   Ubah
                 </button>
                 <button
-                  type="button"
-                  onClick={() => onDelete(cert.id)}
                   className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => onDelete(cert.id)}
+                  type="button"
                 >
                   Hapus
                 </button>
@@ -369,15 +352,15 @@ function CertificationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
         <p className="text-sm text-zinc-500">Belum ada sertifikasi.</p>
       )}
 
-      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama sertifikasi (wajib)" required />
-        <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} placeholder="Penerbit" />
+      <form className="grid grid-cols-1 gap-2 sm:grid-cols-2" onSubmit={onSubmit}>
+        <Input onChange={(e) => setName(e.target.value)} placeholder="Nama sertifikasi (wajib)" required value={name} />
+        <Input onChange={(e) => setIssuer(e.target.value)} placeholder="Penerbit" value={issuer} />
         <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit" disabled={saving || !name.trim()}>
+          <Button disabled={saving || !name.trim()} type="submit">
             {editingId ? "Simpan Perubahan" : "+ Tambah Sertifikasi"}
           </Button>
           {editingId ? (
-            <Button type="button" variant="secondary" onClick={reset} disabled={saving}>
+            <Button disabled={saving} onClick={reset} type="button" variant="secondary">
               Batal
             </Button>
           ) : null}
@@ -404,7 +387,6 @@ function SkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
     setLevel("");
   }
 
-  /** Load one stored entry into the form so it can be corrected in place (US4 skenario 3). */
   function fillFrom(skill: CvFieldsFragment["skills"][number]) {
     setEditingId(skill.id);
     setName(skill.name);
@@ -450,24 +432,24 @@ function SkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
       {cv?.skills.length ? (
         <ul className="flex flex-col gap-2">
           {cv.skills.map((skill) => (
-            <li key={skill.id} className="flex items-start justify-between gap-3 rounded-md border border-board-border px-3 py-2 text-sm">
+            <li className="flex items-start justify-between gap-3 rounded-md border border-board-border px-3 py-2 text-sm" key={skill.id}>
               <div>
                 <p className="font-medium text-zinc-900">{skill.name}</p>
                 <p className="text-xs text-zinc-500">{skill.level || "—"}</p>
               </div>
               <div className="flex shrink-0 gap-1">
                 <button
-                  type="button"
                   aria-label={`Ubah ${skill.name}`}
-                  onClick={() => fillFrom(skill)}
                   className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+                  onClick={() => fillFrom(skill)}
+                  type="button"
                 >
                   Ubah
                 </button>
                 <button
-                  type="button"
-                  onClick={() => onDelete(skill.id)}
                   className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => onDelete(skill.id)}
+                  type="button"
                 >
                   Hapus
                 </button>
@@ -479,15 +461,15 @@ function SkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
         <p className="text-sm text-zinc-500">Belum ada keahlian.</p>
       )}
 
-      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama keahlian (wajib)" required />
-        <Input value={level} onChange={(e) => setLevel(e.target.value)} placeholder="Level (cth: Mahir)" />
+      <form className="grid grid-cols-1 gap-2 sm:grid-cols-2" onSubmit={onSubmit}>
+        <Input onChange={(e) => setName(e.target.value)} placeholder="Nama keahlian (wajib)" required value={name} />
+        <Input onChange={(e) => setLevel(e.target.value)} placeholder="Level (cth: Mahir)" value={level} />
         <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit" disabled={saving || !name.trim()}>
+          <Button disabled={saving || !name.trim()} type="submit">
             {editingId ? "Simpan Perubahan" : "+ Tambah Keahlian"}
           </Button>
           {editingId ? (
-            <Button type="button" variant="secondary" onClick={reset} disabled={saving}>
+            <Button disabled={saving} onClick={reset} type="button" variant="secondary">
               Batal
             </Button>
           ) : null}
@@ -508,11 +490,11 @@ function WorkExperienceSection({ cv }: { cv: CvFieldsFragment | undefined }) {
       {experiences.length ? (
         <ul className="flex flex-col gap-2">
           {experiences.map((exp) => (
-            <li key={exp.id} className="flex items-start justify-between gap-3 rounded-md border border-board-border px-3 py-2 text-sm">
+            <li className="flex items-start justify-between gap-3 rounded-md border border-board-border px-3 py-2 text-sm" key={exp.id}>
               <div>
                 <p className="font-medium text-zinc-900">{exp.project.name}</p>
                 <p className="text-xs text-zinc-500">
-                  {exp.jobRole.name} · {exp.periodStart}
+                  {exp.periodStart}
                   {exp.periodEnd ? ` — ${exp.periodEnd}` : " — sekarang"}
                 </p>
               </div>
@@ -539,18 +521,18 @@ function CvRosterViewer({ audience }: { audience: "CHAPTER" | "OPERATION" | "ADM
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Profil CV Talent"
         subtitle={
           audience === "CHAPTER"
             ? "Lihat profil CV talent dalam chapter Anda (hanya-baca, FR-13)."
             : "Lihat profil CV seluruh talent (hanya-baca; konten CV milik talent, FR-13)."
         }
+        title="Profil CV Talent"
       />
       <InputControl label="Pilih Talent">
         <select
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
           className={LABEL}
+          onChange={(e) => setSelected(e.target.value)}
+          value={selected}
         >
           <option value="">— pilih talent —</option>
           {(talents.employees ?? []).map((emp) => (
@@ -587,7 +569,7 @@ function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
         {cv.educations.length ? (
           <ul className="flex flex-col gap-1.5">
             {cv.educations.map((edu) => (
-              <li key={edu.id} className="text-sm text-zinc-800">
+              <li className="text-sm text-zinc-800" key={edu.id}>
                 {edu.institution}
                 {edu.degree ? ` — ${formatDegree(edu.degree)}` : ""}
                 <span className="ml-2 text-xs text-zinc-500">
@@ -607,7 +589,7 @@ function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
         {cv.certifications.length ? (
           <ul className="flex flex-col gap-1.5">
             {cv.certifications.map((cert) => (
-              <li key={cert.id} className="text-sm text-zinc-800">
+              <li className="text-sm text-zinc-800" key={cert.id}>
                 {cert.name}
                 <span className="ml-2 text-xs text-zinc-500">{cert.issuer || ""}</span>
               </li>
@@ -622,7 +604,7 @@ function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
         {cv.skills.length ? (
           <ul className="flex flex-col gap-1.5">
             {cv.skills.map((skill) => (
-              <li key={skill.id} className="text-sm text-zinc-800">
+              <li className="text-sm text-zinc-800" key={skill.id}>
                 {skill.name}
                 <span className="ml-2 text-xs text-zinc-500">{skill.level || ""}</span>
               </li>
@@ -638,9 +620,9 @@ function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
         {cv.workExperience.length ? (
           <ul className="flex flex-col gap-1.5">
             {cv.workExperience.map((exp) => (
-              <li key={exp.id} className="flex items-start justify-between gap-3 text-sm">
+              <li className="flex items-start justify-between gap-3 text-sm" key={exp.id}>
                 <span className="text-zinc-800">
-                  {exp.project.name} — {exp.jobRole.name}
+                  {exp.project.name}
                   <span className="ml-2 text-xs text-zinc-500">
                     {exp.periodStart}
                     {exp.periodEnd ? ` — ${exp.periodEnd}` : " — sekarang"}

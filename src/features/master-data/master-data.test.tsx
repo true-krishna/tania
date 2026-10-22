@@ -11,6 +11,8 @@ import ProjectsPage from "@/app/(app)/master-data/projects/page";
 import UnitsPage from "@/app/(app)/master-data/units/page";
 import {
   ChaptersDocument,
+  CreateJobRoleDocument,
+  CreateProjectDocument,
   CreateUnitDocument,
   JobRolesDocument,
   ProjectsDocument,
@@ -464,7 +466,7 @@ describe("master-data search per page (US1, US2)", () => {
     );
     await screen.findByText("Alpha Transformation");
 
-    fireEvent.change(screen.getByRole("searchbox", { name: "Cari nama proyek" }), {
+    fireEvent.change(screen.getByRole("searchbox", { name: "Cari nama initiative" }), {
       target: { value: "rollout" },
     });
 
@@ -517,5 +519,256 @@ describe("master-data read-only per role (matrix: lihat untuk semua peran)", () 
 
     expect(await screen.findByText("Product")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Tambah Chapter" })).toBeNull();
+  });
+});
+// --- Create Job Role (US2) & Initiative/Project (US3) — TAN-187, 004-master-data-create ---
+
+const CHAPTERS_QUERY = {
+  request: { query: ChaptersDocument, variables: { includeInactive: true } },
+  result: {
+    data: {
+      chapters: [
+        { id: "c-1", name: "Engineering", isActive: true, jobRoles: [], __typename: "Chapter" },
+      ],
+    },
+  },
+};
+
+const UNITS_PICKER_QUERY = {
+  request: { query: UnitsDocument, variables: { includeInactive: true } },
+  result: {
+    data: {
+      units: [{ id: "u-1", name: "Digital Business", isActive: true, projects: [], __typename: "Unit" }],
+    },
+  },
+};
+
+function renderJobRolesPage(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
+  render(
+    <MockedProvider mocks={mocks}>
+      <ToastProvider>
+        <JobRolesPage />
+      </ToastProvider>
+    </MockedProvider>
+  );
+}
+
+function renderProjectsPage(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
+  render(
+    <MockedProvider mocks={mocks}>
+      <ToastProvider>
+        <ProjectsPage />
+      </ToastProvider>
+    </MockedProvider>
+  );
+}
+
+describe("master-data create Job Role (US2, FR-002/FR-003/FR-022)", () => {
+  it("creates a job role without a chapter (G1) and shows it as 'Tanpa chapter'", async () => {
+    const mocks = [
+      {
+        request: { query: JobRolesDocument, variables: { includeInactive: true } },
+        result: { data: { jobRoles: [] } },
+      },
+      CHAPTERS_QUERY,
+      {
+        request: { query: CreateJobRoleDocument, variables: { name: "Data Analyst", chapterId: null } },
+        result: {
+          data: {
+            createJobRole: {
+              id: "r-9",
+              name: "Data Analyst",
+              isActive: true,
+              chapter: null,
+              __typename: "JobRole",
+            },
+          },
+        },
+      },
+      {
+        request: { query: JobRolesDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            jobRoles: [
+              {
+                id: "r-9",
+                name: "Data Analyst",
+                isActive: true,
+                chapter: null,
+                __typename: "JobRole",
+              },
+            ],
+          },
+        },
+      },
+    ];
+    renderJobRolesPage(mocks);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Job Role" }));
+    fireEvent.change(screen.getByLabelText("Nama Job Role"), { target: { value: "Data Analyst" } });
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent('Job role "Data Analyst" berhasil dibuat.');
+    expect(await screen.findByText("Data Analyst")).toBeInTheDocument();
+    expect(screen.getByText("Tanpa chapter")).toBeInTheDocument();
+  });
+
+  it("creates a job role with a chapter selected", async () => {
+    const mocks = [
+      {
+        request: { query: JobRolesDocument, variables: { includeInactive: true } },
+        result: { data: { jobRoles: [] } },
+      },
+      CHAPTERS_QUERY,
+      {
+        request: { query: CreateJobRoleDocument, variables: { name: "Backend Engineer", chapterId: "c-1" } },
+        result: {
+          data: {
+            createJobRole: {
+              id: "r-10",
+              name: "Backend Engineer",
+              isActive: true,
+              chapter: { id: "c-1", name: "Engineering", __typename: "Chapter" },
+              __typename: "JobRole",
+            },
+          },
+        },
+      },
+      {
+        request: { query: JobRolesDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            jobRoles: [
+              {
+                id: "r-10",
+                name: "Backend Engineer",
+                isActive: true,
+                chapter: { id: "c-1", name: "Engineering", __typename: "Chapter" },
+                __typename: "JobRole",
+              },
+            ],
+          },
+        },
+      },
+    ];
+    renderJobRolesPage(mocks);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Job Role" }));
+    fireEvent.change(screen.getByLabelText("Nama Job Role"), { target: { value: "Backend Engineer" } });
+    fireEvent.change(screen.getByLabelText("Chapter"), { target: { value: "c-1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent('Job role "Backend Engineer" berhasil dibuat.');
+    expect(await screen.findByText("Backend Engineer")).toBeInTheDocument();
+    expect(screen.getByText("Engineering")).toBeInTheDocument();
+  });
+
+  it("blocks an empty job role name without complaining about the optional chapter", async () => {
+    renderJobRolesPage([
+      {
+        request: { query: JobRolesDocument, variables: { includeInactive: true } },
+        result: { data: { jobRoles: [] } },
+      },
+      CHAPTERS_QUERY,
+    ]);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Job Role" }));
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+
+    await waitFor(() => expect(screen.getByText("Nama Job Role wajib diisi.")).toBeInTheDocument());
+    expect(screen.queryByText("Chapter wajib dipilih.")).not.toBeInTheDocument();
+  });
+});
+
+describe("master-data create Initiative/Project (US3, FR-006)", () => {
+  it("creates a project with a unit and shows the unit column", async () => {
+    const mocks = [
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: { data: { projects: [] } },
+      },
+      UNITS_PICKER_QUERY,
+      {
+        request: { query: CreateProjectDocument, variables: { name: "Alpha Transformation", unitId: "u-1" } },
+        result: {
+          data: {
+            createProject: {
+              id: "p-9",
+              name: "Alpha Transformation",
+              isActive: true,
+              unit: { id: "u-1", name: "Digital Business", __typename: "Unit" },
+              __typename: "Project",
+            },
+          },
+        },
+      },
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            projects: [
+              {
+                id: "p-9",
+                name: "Alpha Transformation",
+                isActive: true,
+                unit: { id: "u-1", name: "Digital Business", __typename: "Unit" },
+                __typename: "Project",
+              },
+            ],
+          },
+        },
+      },
+    ];
+    renderProjectsPage(mocks);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Initiative" }));
+    fireEvent.change(screen.getByLabelText("Nama Initiative"), { target: { value: "Alpha Transformation" } });
+    fireEvent.change(screen.getByLabelText("Unit"), { target: { value: "u-1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent('Initiative "Alpha Transformation" berhasil dibuat.');
+    expect(await screen.findByText("Alpha Transformation")).toBeInTheDocument();
+    expect(screen.getByText("Digital Business")).toBeInTheDocument();
+  });
+
+  it("blocks submitting a project without a unit (FR-006)", async () => {
+    renderProjectsPage([
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: { data: { projects: [] } },
+      },
+      UNITS_PICKER_QUERY,
+    ]);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Initiative" }));
+    fireEvent.change(screen.getByLabelText("Nama Initiative"), { target: { value: "No Unit Project" } });
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+
+    await waitFor(() => expect(screen.getByText("Unit wajib dipilih.")).toBeInTheDocument());
+    // The inline validation error is now an alert too (InputControl), so assert
+    // the absence of the success toast instead: nothing was submitted.
+    expect(screen.queryByText(/berhasil dibuat/)).not.toBeInTheDocument();
+  });
+
+  it("surfaces the server validation message on a rejected create (FR-005/FR-007)", async () => {
+    const serverMessage = "Nama proyek sudah digunakan.";
+    renderProjectsPage([
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: { data: { projects: [] } },
+      },
+      UNITS_PICKER_QUERY,
+      {
+        request: { query: CreateProjectDocument, variables: { name: "Duplikat", unitId: "u-1" } },
+        error: new Error(serverMessage),
+      },
+    ]);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tambah Initiative" }));
+    fireEvent.change(screen.getByLabelText("Nama Initiative"), { target: { value: "Duplikat" } });
+    fireEvent.change(screen.getByLabelText("Unit"), { target: { value: "u-1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(serverMessage);
   });
 });

@@ -25,8 +25,14 @@ import { orDash } from "@/lib/cell";
 import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 export default function EntraProvisioningPage() {
-  const { status, employees, totalCount, error } = useEmployeesWithoutEntra();
-  const { pageRows, pagination } = useTablePagination(employees, { totalItems: totalCount });
+  const { status, employees, totalCount, hasNextPage, loadingMore, loadMore, error } =
+    useEmployeesWithoutEntra();
+  const { pageRows, pagination } = useTablePagination(employees, {
+    totalItems: totalCount,
+    hasMore: hasNextPage,
+    loadingMore,
+    loadMore,
+  });
   const [provisionEntra] = useMutation(ProvisionEntraAccountDocument, {
     refetchQueries: [
       { query: EmployeesWithoutEntraDocument, variables: { ...ENTRA_LIST_VARIABLES } },
@@ -72,8 +78,8 @@ export default function EntraProvisioningPage() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Provisi Akun Entra"
         subtitle="Talent yang belum memiliki akun Microsoft Entra — provisioning manual atau ulang setelah gagal (Operation)."
+        title="Provisi Akun Entra"
       />
 
       {message ? (
@@ -99,17 +105,14 @@ export default function EntraProvisioningPage() {
       {status === "ready" && employees && employees.length > 0 ? (
         <Table
           caption="Talent tanpa akun Entra"
-          rowKey={(employee) => employee.id}
-          dataSource={pageRows}
-          pagination={pagination}
           columns={[
             {
               key: "name",
               title: "Nama",
               render: (_value, employee) => (
                 <Link
-                  href={EMPLOYEE_DETAIL(employee.id)}
                   className="font-medium text-zinc-900 hover:underline"
+                  href={EMPLOYEE_DETAIL(employee.id)}
                 >
                   {employee.fullName}
                 </Link>
@@ -150,7 +153,6 @@ export default function EntraProvisioningPage() {
                 const failed = employee.entraProvision?.status === "FAILED";
                 return (
                   <RowActionsMenu
-                    label={`Aksi ${employee.fullName}`}
                     actions={[
                       {
                         label:
@@ -163,11 +165,15 @@ export default function EntraProvisioningPage() {
                         disabled: busyId !== null,
                       },
                     ]}
+                    label={`Aksi ${employee.fullName}`}
                   />
                 );
               },
             },
           ]}
+          dataSource={pageRows}
+          pagination={pagination}
+          rowKey={(employee) => employee.id}
         />
       ) : null}
     </section>

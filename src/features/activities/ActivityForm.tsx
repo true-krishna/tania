@@ -27,13 +27,11 @@ interface FormValues {
 type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 export interface ActivityFormProps {
-  /** Prefill for edit; omit/null for create. Remount (via `key`) when it changes. */
   initial?: PersonalWorkActivity | null;
   projects: ActivityProject[];
   priorities: ActivityReference[];
   statuses: ActivityReference[];
   submitting?: boolean;
-  /** Server/action error — shown verbatim, input is preserved. */
   serverError?: string | null;
   successMessage?: string | null;
   onSubmit: (input: ActivityInput) => void | Promise<void>;
@@ -59,7 +57,6 @@ function validate(values: FormValues): FormErrors {
   if (values.endDate && values.startDate && values.endDate < values.startDate) {
     errors.endDate = "Tanggal selesai tidak boleh mendahului tanggal mulai.";
   }
-  // Project is conditionally required (FR-004): only for non-training.
   if (values.activityType !== "training" && !values.projectId) {
     errors.projectId = "Project wajib dipilih untuk aktivitas bekerja.";
   }
@@ -68,13 +65,6 @@ function validate(values: FormValues): FormErrors {
   return errors;
 }
 
-/**
- * Create/edit form for a PersonalWorkActivity (data-model §5.1).
- *
- * Client validation is UX only; the server stays authoritative. On a recoverable
- * error the typed values are never discarded — only `onSubmit` failures leave the
- * form mounted with the user's input intact.
- */
 export function ActivityForm({
   initial,
   projects,
@@ -97,8 +87,6 @@ export function ActivityForm({
 
   function onTypeChange(value: string) {
     const activityType = value as ActivityType;
-    // Switching to training clears the project field; it stays cleared when
-    // switching back so the user makes a deliberate choice.
     setValues((prev) => ({
       ...prev,
       activityType,
@@ -125,7 +113,7 @@ export function ActivityForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+    <form className="flex flex-col gap-4" noValidate onSubmit={handleSubmit}>
       {successMessage ? (
         <p
           className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800"
@@ -140,102 +128,102 @@ export function ActivityForm({
         </p>
       ) : null}
 
-      <InputControl label="Judul aktivitas" error={errors.title} htmlFor="activity-title">
+      <InputControl error={errors.title} htmlFor="activity-title" label="Judul aktivitas">
         <Input
+          aria-invalid={Boolean(errors.title)}
           id="activity-title"
-          type="text"
-          value={values.title}
           onChange={(e) => set("title", e.target.value)}
           placeholder="cth. Implementasi form aktivitas"
-          aria-invalid={Boolean(errors.title)}
+          type="text"
+          value={values.title}
         />
       </InputControl>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <InputControl label="Jenis aktivitas" error={errors.activityType} htmlFor="activity-type">
+        <InputControl error={errors.activityType} htmlFor="activity-type" label="Jenis aktivitas">
           <Select
             id="activity-type"
-            value={values.activityType}
             onChange={(e) => onTypeChange(e.target.value)}
             options={[
               { value: "working", label: ACTIVITY_TYPE_LABEL.working },
               { value: "training", label: ACTIVITY_TYPE_LABEL.training },
             ]}
+            value={values.activityType}
           />
         </InputControl>
 
-        <InputControl label="Prioritas" error={errors.priorityId} htmlFor="activity-priority">
+        <InputControl error={errors.priorityId} htmlFor="activity-priority" label="Prioritas">
           <Select
-            id="activity-priority"
-            value={values.priorityId}
-            onChange={(e) => set("priorityId", e.target.value)}
             aria-invalid={Boolean(errors.priorityId)}
+            id="activity-priority"
+            onChange={(e) => set("priorityId", e.target.value)}
             options={[
               { value: "", label: "— pilih prioritas —" },
               ...priorities.map((priority) => ({ value: priority.id, label: priority.name })),
             ]}
+            value={values.priorityId}
           />
         </InputControl>
 
-        <InputControl label="Tanggal mulai" error={errors.startDate} htmlFor="activity-start">
+        <InputControl error={errors.startDate} htmlFor="activity-start" label="Tanggal mulai">
           <Input
+            aria-invalid={Boolean(errors.startDate)}
             id="activity-start"
+            onChange={(e) => set("startDate", e.target.value)}
             type="date"
             value={values.startDate}
-            onChange={(e) => set("startDate", e.target.value)}
-            aria-invalid={Boolean(errors.startDate)}
           />
         </InputControl>
 
-        <InputControl label="Tanggal selesai (opsional)" error={errors.endDate} htmlFor="activity-end">
+        <InputControl error={errors.endDate} htmlFor="activity-end" label="Tanggal selesai (opsional)">
           <Input
+            aria-invalid={Boolean(errors.endDate)}
             id="activity-end"
+            onChange={(e) => set("endDate", e.target.value)}
             type="date"
             value={values.endDate}
-            onChange={(e) => set("endDate", e.target.value)}
-            aria-invalid={Boolean(errors.endDate)}
           />
         </InputControl>
 
         <InputControl
-          label="Project"
           error={errors.projectId}
-          htmlFor="activity-project"
           helper={isTraining ? "Pelatihan tidak terikat project." : undefined}
+          htmlFor="activity-project"
+          label="Project"
         >
           <Select
-            id="activity-project"
-            value={values.projectId}
-            onChange={(e) => set("projectId", e.target.value)}
-            disabled={isTraining}
             aria-invalid={Boolean(errors.projectId)}
+            disabled={isTraining}
+            id="activity-project"
+            onChange={(e) => set("projectId", e.target.value)}
             options={[
               { value: "", label: isTraining ? "— tidak berlaku —" : "— pilih project —" },
               ...projects.map((project) => ({ value: project.id, label: project.name })),
             ]}
+            value={values.projectId}
           />
         </InputControl>
 
-        <InputControl label="Status" error={errors.statusId} htmlFor="activity-status">
+        <InputControl error={errors.statusId} htmlFor="activity-status" label="Status">
           <Select
-            id="activity-status"
-            value={values.statusId}
-            onChange={(e) => set("statusId", e.target.value)}
             aria-invalid={Boolean(errors.statusId)}
+            id="activity-status"
+            onChange={(e) => set("statusId", e.target.value)}
             options={[
               { value: "", label: "— pilih status —" },
               ...statuses.map((status) => ({ value: status.id, label: status.name })),
             ]}
+            value={values.statusId}
           />
         </InputControl>
       </div>
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={submitting}>
+        <Button disabled={submitting} type="submit">
           {submitting ? "Menyimpan…" : initial ? "Simpan perubahan" : "Simpan aktivitas"}
         </Button>
         {onCancel ? (
-          <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
+          <Button disabled={submitting} onClick={onCancel} type="button" variant="secondary">
             Batal
           </Button>
         ) : null}

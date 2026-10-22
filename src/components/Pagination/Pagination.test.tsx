@@ -65,11 +65,11 @@ describe("Pagination", () => {
   it("slides the window forward on next and clamps it on the last pages", () => {
     const view = render(
       <Pagination
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
         page={2}
         pageSize={10}
         totalItems={57}
-        onPageChange={vi.fn()}
-        onPageSizeChange={vi.fn()}
       />,
     );
 
@@ -80,11 +80,11 @@ describe("Pagination", () => {
 
     view.rerender(
       <Pagination
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
         page={6}
         pageSize={10}
         totalItems={57}
-        onPageChange={vi.fn()}
-        onPageSizeChange={vi.fn()}
       />,
     );
     for (const n of ["4", "5", "6"]) {
@@ -120,11 +120,11 @@ describe("Pagination", () => {
   it("disables previous on the first page and next on the last page", () => {
     const { rerender } = render(
       <Pagination
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
         page={1}
         pageSize={10}
         totalItems={57}
-        onPageChange={vi.fn()}
-        onPageSizeChange={vi.fn()}
       />,
     );
     expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeDisabled();
@@ -132,11 +132,11 @@ describe("Pagination", () => {
 
     rerender(
       <Pagination
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
         page={6}
         pageSize={10}
         totalItems={57}
-        onPageChange={vi.fn()}
-        onPageSizeChange={vi.fn()}
       />,
     );
     expect(screen.getByRole("button", { name: "Halaman sebelumnya" })).toBeEnabled();

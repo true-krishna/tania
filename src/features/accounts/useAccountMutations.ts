@@ -8,12 +8,13 @@ import {
   UpdateUserAccessRoleDocument,
   UsersDocument,
 } from "@/generated/graphql";
-import type { AccessRole, AccountStatus } from "@/generated/graphql/types";
+import type { AccountStatus } from "@/generated/graphql/types";
 
 export type CreateAccountValues = {
   employeeId: string;
   email: string;
-  accessRole: AccessRole;
+  /** Machine name of the access role: a built-in name or a custom role's name. */
+  roleName: string;
   temporaryPassword?: string;
 };
 
@@ -40,12 +41,12 @@ export function useAccountMutations() {
         variables: {
           employeeId: values.employeeId,
           email: values.email,
-          accessRole: values.accessRole,
+          roleName: values.roleName,
           temporaryPassword: values.temporaryPassword || null,
         },
       }),
-    changeRole: (userId: string, accessRole: AccessRole) =>
-      updateAccessRole({ variables: { userId, accessRole } }),
+    changeRole: (userId: string, roleName: string) =>
+      updateAccessRole({ variables: { userId, roleName } }),
     setStatus: (userId: string, status: AccountStatus) =>
       setAccountStatus({ variables: { userId, status } }),
     revokeSessions: (userId: string) => revokeSessions({ variables: { userId } }),

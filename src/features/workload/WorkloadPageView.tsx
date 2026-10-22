@@ -24,11 +24,6 @@ import type { ScopeSummary } from "./types";
 
 type TabId = "own" | "chapter" | "org";
 
-/**
- * Role-adaptive landing (SC-003 / US4): CHAPTER lands on the chapter list,
- * OPERATION/ADMIN on the org distribution; `Workload saya` is identical for
- * every role and TALENT sees only that (no tabs).
- */
 function tabsForRole(role: AccessRole | null): WorkloadTab[] {
   if (role === "CHAPTER") {
     return [
@@ -68,8 +63,6 @@ export function WorkloadPageView() {
 
   const tabs = tabsForRole(role);
   const [activeTab, setActiveTab] = React.useState<TabId>(tabs[0].id as TabId);
-  // Role can change between renders (local-only role switch) — fall back to the
-  // role's landing tab when the selected one is no longer offered.
   const selectedTab: TabId = tabs.some((t) => t.id === activeTab) ? activeTab : (tabs[0].id as TabId);
 
   function setPeriod(nextPeriodId: string) {
@@ -90,7 +83,7 @@ export function WorkloadPageView() {
         {fixture.freshness.expectedReflectionHours !== null ? (
           <WorkloadReflectionNotice hours={fixture.freshness.expectedReflectionHours} />
         ) : null}
-        <WorkloadOwnView view={fixture.own} stale={stale} variant="self" onRetry={retry} />
+        <WorkloadOwnView onRetry={retry} stale={stale} variant="self" view={fixture.own} />
       </div>
     );
   } else if (selectedTab === "chapter") {
@@ -102,10 +95,10 @@ export function WorkloadPageView() {
     } else {
       content = (
         <div className="flex flex-col gap-4">
-          <WorkloadKpiHero label="Ringkasan chapter" kpis={scopeKpis(chapter.summary)} />
+          <WorkloadKpiHero kpis={scopeKpis(chapter.summary)} label="Ringkasan chapter" />
           <WorkloadCard
-            title={`Talent dalam ${chapter.summary.scopeLabel}`}
             action={stale ? <DataLamaChip /> : <CardCaption>Urut dari beban tertinggi</CardCaption>}
+            title={`Talent dalam ${chapter.summary.scopeLabel}`}
           >
             <TalentList talents={chapter.talents} totalCount={chapter.totalCount} />
           </WorkloadCard>
@@ -121,10 +114,10 @@ export function WorkloadPageView() {
     } else {
       content = (
         <div className="flex flex-col gap-4">
-          <WorkloadKpiHero label="Ringkasan organisasi" kpis={scopeKpis(org.summary)} />
+          <WorkloadKpiHero kpis={scopeKpis(org.summary)} label="Ringkasan organisasi" />
           <WorkloadCard
-            title="Distribusi beban"
             action={stale ? <DataLamaChip /> : <CardCaption>Rata-rata per scope</CardCaption>}
+            title="Distribusi beban"
           >
             <DistributionBlock rows={org.rows} />
           </WorkloadCard>
@@ -136,18 +129,18 @@ export function WorkloadPageView() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Workload"
         subtitle="Pantau beban kerja talent dari data WAD — hanya baca, tanpa perhitungan ulang di UI."
+        title="Workload"
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         {tabs.length > 1 ? (
-          <WorkloadTabs tabs={tabs} value={selectedTab} onChange={(id) => setActiveTab(id as TabId)} />
+          <WorkloadTabs onChange={(id) => setActiveTab(id as TabId)} tabs={tabs} value={selectedTab} />
         ) : (
           <span />
         )}
         <div className="ml-auto">
-          <WorkloadPeriodSelector value={periodId} onChange={setPeriod} />
+          <WorkloadPeriodSelector onChange={setPeriod} value={periodId} />
         </div>
       </div>
 

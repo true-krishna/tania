@@ -1,16 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { useMutation } from "@apollo/client";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMutation, useQuery } from "@apollo/client";
 import {
   IconAlertCircle,
   IconArrowRight,
+  IconBrandWindows,
   IconLock,
   IconMail,
 } from "@tabler/icons-react";
-import { LoginDocument } from "@/generated/graphql";
-import { authConfig } from "@/lib/auth/config";
+import { EntraSsoStartDocument, LoginDocument } from "@/generated/graphql";
+import {
+  authConfig,
+  clearSsoHints,
+  isSsoFallbackMarked,
+  isSsoUnlinked,
+  markSsoFallback,
+} from "@/lib/auth/config";
+import { beginEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/entra-pkce";
 import { setSession } from "@/lib/auth/token-store";
 import { DASHBOARD } from "@/lib/constants/routes";
 import { Button } from "@/components/Button";
@@ -18,28 +26,82 @@ import { Input } from "@/components/Input";
 import { Brand } from "@/components/Brand";
 import { BrandPanel } from "./BrandPanel";
 
-/**
- * Login form — TAN-191 redesign on canon tokens (constitution-design
- * v4.3.1). Owner direction: the page must read brand-red first ("our primary
- * color red"), so the submit button fills `--tp-brand-red` (hover/press
- * `--tp-brand-red-deep`, white text 4.7:1) instead of the navy default — a
- * recorded §II deviation scoped to this page. The important-modifier
- * overrides exist because the unlayered `.tp-*` classes beat layered
- * Tailwind utilities regardless of specificity. Danger keeps its dedicated
- * tokens (tint + ink + icon, §IX) and never reuses brand red. Copy is the
- * owner's revision from the TAN-160 review: no invite-only caveat, no
- * pending-invite notice and no admin-contact affordance.
- */
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnReason = searchParams.get("sso");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [login, { loading }] = useMutation(LoginDocument);
 
+  const [attempt, setAttempt] = React.useState<EntraAuthAttempt | null>(null);
+  const [codeChallenge, setCodeChallenge] = React.useState<string | null>(null);
+  const [emailDoorChosen, setEmailDoorChosen] = React.useState(
+    () => isSsoFallbackMarked() || isSsoUnlinked(),
+  );
+  const handedOver = React.useRef(false);
+
+  React.useEffect(() => {
+    if (authConfig.localOnly) return;
+    let cancelled = false;
+    beginEntraAuthAttempt()
+      .then((started) => {
+        if (cancelled) return;
+        setAttempt(started.attempt);
+        setCodeChallenge(started.codeChallenge);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   React.useEffect(() => {
     if (authConfig.localOnly) router.replace(DASHBOARD);
   }, [router]);
+
+  React.useEffect(() => {
+    if (returnReason === "cancelled" || returnReason === "error") markSsoFallback();
+  }, [returnReason]);
+
+  const { data, error: ssoError } = useQuery(EntraSsoStartDocument, {
+    skip: authConfig.localOnly || !attempt || !codeChallenge,
+    variables: {
+      codeChallenge: codeChallenge ?? "",
+      state: attempt?.state ?? "",
+      nonce: attempt?.nonce ?? "",
+    },
+  });
+
+  const authorizationUrl = data?.entraSsoStart?.enabled
+    ? (data.entraSsoStart.authorizationUrl ?? null)
+    : null;
+  const returnMessage =
+    returnReason === "cancelled"
+      ? "Masuk dengan Microsoft dibatalkan. Anda dapat mencoba lagi atau masuk dengan email & kata sandi."
+      : returnReason === "error"
+        ? "Masuk dengan Microsoft gagal. Silakan coba lagi atau masuk dengan email & kata sandi."
+        : null;
+  const emailDoor = emailDoorChosen || returnMessage !== null;
+  const showEmailForm = !authorizationUrl || emailDoor;
+
+  React.useEffect(() => {
+    if (handedOver.current || !authorizationUrl || emailDoor) return;
+    handedOver.current = true;
+    window.location.replace(authorizationUrl);
+  }, [authorizationUrl, emailDoor]);
+
+  function goToMicrosoft() {
+    if (!authorizationUrl || handedOver.current) return;
+    handedOver.current = true;
+    window.location.replace(authorizationUrl);
+  }
+
+  function chooseEmailDoor() {
+    markSsoFallback();
+    setEmailDoorChosen(true);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,6 +127,7 @@ export default function LoginForm() {
         fullName: user.fullName,
         email: user.email,
       });
+      clearSsoHints();
       router.replace(DASHBOARD);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
@@ -75,13 +138,13 @@ export default function LoginForm() {
   if (authConfig.localOnly) return null;
 
   return (
-    <main lang="id" className="flex min-h-screen w-full">
+    <main className="flex min-h-screen w-full" lang="id">
       <BrandPanel />
 
       <section className="flex w-full items-center justify-center bg-tp-bg px-6 py-12 lg:w-1/2 lg:px-10">
         <div className="flex w-full max-w-[440px] flex-col">
           <div className="lg:hidden">
-            <Brand variant="small" className="text-[40px]" />
+            <Brand className="text-[40px]" variant="small" />
           </div>
 
           <p className="mt-8 text-[13px] font-semibold text-tp-brand-red-deep lg:mt-0">
@@ -92,85 +155,147 @@ export default function LoginForm() {
             Masuk ke TANIA
           </h1>
 
-          <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="login-email"
-                className="text-sm font-semibold text-tp-text"
-              >
-                Email kerja
-              </label>
-              <IconField icon={<IconMail />}>
-                <Input
-                  id="login-email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  placeholder="nama@perusahaan.com"
-                  className="h-12 pl-12!"
-                />
-              </IconField>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="login-password"
-                className="text-sm font-semibold text-tp-text"
-              >
-                Password
-              </label>
-              <IconField icon={<IconLock />}>
-                <Input
-                  id="login-password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  placeholder="Masukkan password"
-                  className="h-12 pl-12!"
-                />
-              </IconField>
-            </div>
-
-            {error ? (
-              <p
-                role="alert"
-                className="flex items-start gap-2.5 rounded-tp-md bg-tp-tint-peach px-4 py-3 text-sm font-semibold text-tp-ink-peach"
-              >
-                <IconAlertCircle
-                  aria-hidden="true"
-                  className="mt-0.5 h-4.5 w-4.5 shrink-0"
-                />
-                {error}
+          {showEmailForm ? (
+            <>
+              <p className="mt-4 text-sm leading-[1.6] text-tp-muted">
+                Masuk dengan email & kata sandi akun Tania Anda.
               </p>
-            ) : null}
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="mt-2 h-13 w-full justify-center bg-tp-brand-red! border-tp-brand-red! hover:bg-tp-brand-red-deep! hover:border-tp-brand-red-deep! active:bg-tp-brand-red-deep! active:border-tp-brand-red-deep!"
-            >
-              {loading ? "Memproses…" : "Masuk ke workspace"}
-              <IconArrowRight aria-hidden="true" className="h-5 w-5 shrink-0" />
-            </Button>
-          </form>
+              {returnMessage ? (
+                <p
+                  className="mt-6 flex items-start gap-2.5 rounded-tp-md bg-tp-tint-peach px-4 py-3 text-sm font-semibold text-tp-ink-peach"
+                  role="alert"
+                >
+                  <IconAlertCircle
+                    aria-hidden="true"
+                    className="mt-0.5 h-4.5 w-4.5 shrink-0"
+                  />
+                  {returnMessage}
+                </p>
+              ) : null}
+
+              <form className="mt-8 flex flex-col gap-5" onSubmit={onSubmit}>
+                <div className="flex flex-col gap-2">
+                  <label
+                    className="text-sm font-semibold text-tp-text"
+                    htmlFor="login-email"
+                  >
+                    Email kerja
+                  </label>
+                  <IconField icon={<IconMail />}>
+                    <Input
+                      autoComplete="email"
+                      className="h-12 pl-12!"
+                      id="login-email"
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="nama@perusahaan.com"
+                      required
+                      type="email"
+                      value={email}
+                    />
+                  </IconField>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label
+                    className="text-sm font-semibold text-tp-text"
+                    htmlFor="login-password"
+                  >
+                    Password
+                  </label>
+                  <IconField icon={<IconLock />}>
+                    <Input
+                      autoComplete="current-password"
+                      className="h-12 pl-12!"
+                      id="login-password"
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Masukkan password"
+                      required
+                      type="password"
+                      value={password}
+                    />
+                  </IconField>
+                </div>
+
+                {error ? (
+                  <p
+                    className="flex items-start gap-2.5 rounded-tp-md bg-tp-tint-peach px-4 py-3 text-sm font-semibold text-tp-ink-peach"
+                    role="alert"
+                  >
+                    <IconAlertCircle
+                      aria-hidden="true"
+                      className="mt-0.5 h-4.5 w-4.5 shrink-0"
+                    />
+                    {error}
+                  </p>
+                ) : null}
+
+                <Button
+                  className="mt-2 h-13 w-full justify-center bg-tp-brand-red! border-tp-brand-red! hover:bg-tp-brand-red-deep! hover:border-tp-brand-red-deep! active:bg-tp-brand-red-deep! active:border-tp-brand-red-deep!"
+                  disabled={loading}
+                  type="submit"
+                >
+                  {loading ? "Memproses…" : "Masuk ke workspace"}
+                  <IconArrowRight aria-hidden="true" className="h-5 w-5 shrink-0" />
+                </Button>
+              </form>
+
+              {ssoError ? (
+                <p className="mt-4 text-sm text-tp-muted" role="status">
+                  Masuk dengan Microsoft sedang tidak tersedia. Silakan masuk
+                  dengan email & kata sandi.
+                </p>
+              ) : null}
+
+              {authorizationUrl ? (
+                <Button
+                  className="mt-4 h-12 w-full justify-center"
+                  onClick={goToMicrosoft}
+                  type="button"
+                  variant="secondary"
+                >
+                  <IconBrandWindows aria-hidden="true" className="h-5 w-5 shrink-0" />
+                  Masuk dengan Microsoft
+                </Button>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <p className="mt-4 text-sm leading-[1.6] text-tp-muted">
+                Gunakan akun korporat Telkom Anda. Kami mengalihkan Anda ke
+                halaman masuk Microsoft.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-4">
+                <Button
+                  className="h-13 w-full justify-center bg-tp-brand-red! border-tp-brand-red! hover:bg-tp-brand-red-deep! hover:border-tp-brand-red-deep! active:bg-tp-brand-red-deep! active:border-tp-brand-red-deep!"
+                  onClick={goToMicrosoft}
+                  type="button"
+                >
+                  <IconBrandWindows aria-hidden="true" className="h-5 w-5 shrink-0" />
+                  Masuk dengan Microsoft
+                </Button>
+
+                <button
+                  className="self-center text-sm font-semibold text-tp-brand-red-deep underline underline-offset-4 hover:text-tp-brand-red-ink"
+                  onClick={chooseEmailDoor}
+                  type="button"
+                >
+                  Masuk dengan email & kata sandi
+                </button>
+              </div>
+
+              <p className="mt-6 text-sm text-tp-muted" role="status">
+                Mengalihkan ke Microsoft…
+              </p>
+            </>
+          )}
         </div>
       </section>
     </main>
   );
 }
 
-/**
- * Decorative 24px outline glyph inside a canon `.tp-input` field.
- *
- * The field itself must reserve the gutter with `pl-12!`: `.tp-input` sets
- * `padding: 0 16px` from an unlayered stylesheet, and unlayered declarations
- * beat layered Tailwind utilities regardless of specificity — without the
- * important modifier the glyph sits on top of the placeholder text.
- */
 function IconField({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="relative">

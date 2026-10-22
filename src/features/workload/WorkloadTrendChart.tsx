@@ -4,12 +4,11 @@ const WIDTH = 300;
 const HEIGHT = 130;
 const LEFT = 20;
 const RIGHT = 288;
-const TOP = 25; // 100% reference line
-const BOTTOM = 110; // 0%
+const TOP = 25; 
+const BOTTOM = 110; 
 const REFERENCE = 100;
 
 function yFor(value: number): number {
-  // 100% sits on the TOP reference line; overflow draws above it (design §5.4).
   return BOTTOM - (value / REFERENCE) * (BOTTOM - TOP);
 }
 
@@ -18,7 +17,6 @@ function xFor(index: number, count: number): number {
   return LEFT + (index * (RIGHT - LEFT)) / (count - 1);
 }
 
-/** Recent-periods line chart (design spec §5.4). Single hue, server values only. */
 export function WorkloadTrendChart({
   trend,
   stale = false,
@@ -38,38 +36,38 @@ export function WorkloadTrendChart({
 
   return (
     <svg
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      role="img"
       aria-label={label}
       className="block h-auto w-full"
+      role="img"
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
     >
       <line
-        x1={14}
-        y1={TOP}
-        x2={RIGHT + 4}
-        y2={TOP}
         stroke="var(--tp-neutral)"
         strokeDasharray="4 4"
         strokeOpacity={0.7}
+        x1={14}
+        x2={RIGHT + 4}
+        y1={TOP}
+        y2={TOP}
       />
-      <text x={16} y={19} fontSize={10} fill="var(--tp-muted)">
+      <text fill="var(--tp-muted)" fontSize={10} x={16} y={19}>
         100%
       </text>
-      <polygon points={area} fill="var(--tp-brand-navy)" fillOpacity={0.08} />
+      <polygon fill="var(--tp-brand-navy)" fillOpacity={0.08} points={area} />
       <polyline
-        points={line}
         fill="none"
+        points={line}
         stroke="var(--tp-brand-navy)"
-        strokeWidth={2.5}
-        strokeLinejoin="round"
         strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.5}
       />
       <g fill="var(--tp-surface)" stroke="var(--tp-brand-navy)" strokeWidth={2}>
         {points.map((p) => (
-          <circle key={`${p.label}-${p.loadPercentage}`} cx={p.x} cy={p.y} r={3} />
+          <circle cx={p.x} cy={p.y} key={`${p.label}-${p.loadPercentage}`} r={3} />
         ))}
       </g>
-      <g fontSize={10} fill="var(--tp-muted)" textAnchor="middle">
+      <g fill="var(--tp-muted)" fontSize={10} textAnchor="middle">
         {points.map((p) => (
           <text key={p.label} x={p.x} y={126}>
             {p.label}

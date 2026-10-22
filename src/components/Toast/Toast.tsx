@@ -17,12 +17,6 @@ type ToastContextValue = {
 
 const ToastContext = React.createContext<ToastContextValue | null>(null);
 
-/**
- * Lightweight toast provider — bottom-center snackbar for mutation feedback.
- * Canon (constitution design v4.0.0 §IV/§IX): tint+ink pairs (peach = needs
- * attention, mint = done) on the one ratified card shadow; auto-dismiss after
- * 4s with a close button, and `role="alert"` / `aria-live` for screen readers.
- */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<ToastItem[]>([]);
   const nextId = React.useRef(1);
@@ -45,7 +39,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <ToastStack toasts={toasts} onDismiss={dismiss} />
+      <ToastStack onDismiss={dismiss} toasts={toasts} />
     </ToastContext.Provider>
   );
 }
@@ -70,21 +64,21 @@ export function ToastStack({
     >
       {toasts.map((t) => (
         <div
-          key={t.id}
-          role="alert"
           className={cn(
             "pointer-events-auto flex items-start gap-2 rounded-tp-md border border-tp-line px-3 py-2 text-sm shadow-card",
             t.variant === "error"
               ? "bg-tp-tint-peach text-tp-ink-peach"
               : "bg-tp-tint-mint text-tp-ink-mint",
           )}
+          key={t.id}
+          role="alert"
         >
           <span className="flex-1">{t.message}</span>
           <button
-            type="button"
             aria-label="Tutup notifikasi"
-            onClick={() => onDismiss(t.id)}
             className="text-xs opacity-70 transition-opacity hover:opacity-100"
+            onClick={() => onDismiss(t.id)}
+            type="button"
           >
             ✕
           </button>

@@ -18,8 +18,11 @@ function WorkloadLanding() {
 }
 
 export default function WorkloadPage() {
+<<<<<<< HEAD
   // Kedua view membaca `?period=` — Suspense menjaga shell statis tetap
   // bisa di-prerender.
+=======
+>>>>>>> 9612b5d3b454060ad87dfe9e6beee7f0badd9cab
   return (
     <React.Suspense fallback={<WorkloadSkeleton />}>
       <WorkloadLanding />
