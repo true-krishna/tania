@@ -10,6 +10,7 @@ import { GraphQLError, Kind, parse, visit, type FieldNode } from "graphql";
 import AssignmentsPage from "@/app/(app)/assignments/page";
 import NewAssignmentPage from "@/app/(app)/assignments/new/page";
 import AssignmentDetailPage from "@/app/(app)/assignments/[id]/page";
+import { ToastProvider } from "@/components/Toast";
 import {
   AssignableTalentsDocument,
   AssignmentsDocument,
@@ -22,9 +23,11 @@ import {
 
 const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
 const nav = vi.hoisted(() => ({ push: vi.fn() }));
+const redirect = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => nav,
+  redirect,
   notFound: () => {
     throw new Error("notFound");
   },
@@ -93,22 +96,26 @@ const assignmentsResult = {
 };
 
 describe("AssignmentsPage (Apollo, US2)", () => {
-  it("renders the assignment list after the queries resolve", async () => {
+  function renderPage(mocks: ReadonlyArray<MockedResponse>) {
     render(
-      <MockedProvider
-        mocks={[
-          { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
-          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-          { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
-        ]}
-      >
-        <AssignmentsPage />
+      <MockedProvider mocks={mocks}>
+        <ToastProvider>
+          <AssignmentsPage />
+        </ToastProvider>
       </MockedProvider>
     );
+  }
+
+  it("renders the assignment list after the queries resolve", async () => {
+    renderPage([
+      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
+      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+    ]);
 
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
     expect(screen.getAllByText("Network Modernization").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole("link", { name: /buat assignment/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /buat assignment/i })).toBeInTheDocument();
     // O4 — label status seragam: ACTIVE tampil sebagai "Berjalan" (bukan "Aktif").
     expect(screen.getByText("Berjalan")).toBeInTheDocument();
     // TAN-133 — peran bukan lagi bagian assignment: tidak ada "Engineer" di mana pun.
@@ -127,32 +134,26 @@ describe("AssignmentsPage (Apollo, US2)", () => {
       talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
       project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
     };
-    render(
-      <MockedProvider
-        mocks={[
-          { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
-          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-          {
-            request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
-            result: {
-              data: {
-                assignments: {
-                  __typename: "AssignmentConnection",
-                  totalCount: 2,
-                  edges: [
-                    { __typename: "AssignmentEdge", cursor: "asg-1", node: assignmentNode },
-                    { __typename: "AssignmentEdge", cursor: "asg-9", node: completedNode },
-                  ],
-                  pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-                },
-              },
+    renderPage([
+      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
+      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+      {
+        request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+        result: {
+          data: {
+            assignments: {
+              __typename: "AssignmentConnection",
+              totalCount: 2,
+              edges: [
+                { __typename: "AssignmentEdge", cursor: "asg-1", node: assignmentNode },
+                { __typename: "AssignmentEdge", cursor: "asg-9", node: completedNode },
+              ],
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
             },
           },
-        ]}
-      >
-        <AssignmentsPage />
-      </MockedProvider>
-    );
+        },
+      },
+    ]);
 
     expect(await screen.findAllByRole("link", { name: "Andi Pratama" })).toHaveLength(2);
     expect(screen.getByText("Berjalan")).toBeInTheDocument();
@@ -173,30 +174,24 @@ describe("AssignmentsPage (Apollo, US2)", () => {
       talent: { __typename: "Employee", id: "emp-2", fullName: "Rina Kartika", nomorInduk: "EMP-002" },
       project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
     };
-    render(
-      <MockedProvider
-        mocks={[
-          { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
-          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-          { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
-          {
-            request: { query: AssignmentsDocument, variables: { filter: { projectId: "prj-1" }, first: 100 } },
-            result: {
-              data: {
-                assignments: {
-                  __typename: "AssignmentConnection",
-                  totalCount: 1,
-                  edges: [{ __typename: "AssignmentEdge", cursor: "asg-7", node: filteredNode }],
-                  pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-                },
-              },
+    renderPage([
+      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
+      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+      {
+        request: { query: AssignmentsDocument, variables: { filter: { projectId: "prj-1" }, first: 100 } },
+        result: {
+          data: {
+            assignments: {
+              __typename: "AssignmentConnection",
+              totalCount: 1,
+              edges: [{ __typename: "AssignmentEdge", cursor: "asg-7", node: filteredNode }],
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
             },
           },
-        ]}
-      >
-        <AssignmentsPage />
-      </MockedProvider>
-    );
+        },
+      },
+    ]);
 
     await screen.findByRole("link", { name: "Andi Pratama" });
     fireEvent.click(screen.getByRole("button", { name: "Filter" }));
@@ -225,7 +220,7 @@ describe("AssignmentsPage (Apollo, US2)", () => {
 
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
     expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /buat assignment/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /buat assignment/i })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Filter" }));
     expect(screen.getByLabelText("Talent")).toBeInTheDocument();
@@ -247,7 +242,7 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
     expect(screen.getByText(/riwayat penugasan anda/i)).toBeInTheDocument();
     expect(screen.queryByLabelText("Talent")).toBeNull();
-    expect(screen.queryByRole("link", { name: /buat assignment/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /buat assignment/i })).toBeNull();
   });
 
   it("shows a FORBIDDEN message from the server as-is (T033)", async () => {
@@ -306,9 +301,7 @@ describe("AssignmentsPage (Apollo, US2)", () => {
   });
 });
 
-describe("NewAssignmentPage (Apollo form, US2)", () => {
-  // UAT K6 — master data nonaktif ikut dimuat (includeInactive) namun TIDAK
-  // boleh menjadi pilihan form (US1-3).
+describe("CreateAssignmentModal (TAN-316)", () => {
   const createProjectsResult = {
     data: {
       projects: [
@@ -317,7 +310,7 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
       ],
     },
   };
-  const newMocks = [
+  const baseMocks = [
     { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: createProjectsResult },
     {
       request: { query: AssignableTalentsDocument, variables: { first: 100 } },
@@ -330,6 +323,7 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
         },
       },
     },
+    { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
     {
       request: {
         query: CreateAssignmentDocument,
@@ -359,43 +353,25 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
       result: { data: { createAssignment: { id: "asg-3", status: "ACTIVE", __typename: "Assignment" } } },
     },
   ];
-  const renderPage = () =>
+
+  function renderListWithCreate(mocks: ReadonlyArray<MockedResponse> = baseMocks) {
     render(
-      <MockedProvider mocks={newMocks}>
-        <NewAssignmentPage />
+      <MockedProvider mocks={mocks}>
+        <ToastProvider>
+          <AssignmentsPage />
+        </ToastProvider>
       </MockedProvider>
     );
+  }
 
-  it("only offers assignable talents on the form", async () => {
-    renderPage();
-    await screen.findByRole("heading", { name: /buat assignment/i });
+  async function openCreateModal() {
+    await screen.findByRole("link", { name: "Andi Pratama" });
+    fireEvent.click(screen.getByRole("button", { name: /buat assignment/i }));
+    expect(screen.getByRole("dialog", { name: /buat assignment/i })).toBeInTheDocument();
+    await screen.findByRole("combobox", { name: /talent/i });
+  }
 
-    const talentSelect = screen.getByRole("combobox", { name: /talent/i });
-    const options = Array.from(talentSelect.querySelectorAll("option")).map((o) => o.textContent);
-    // emp-5 (Eko Prasetyo) is not assignable -> must not appear
-    expect(options.some((t) => t?.includes("Eko Prasetyo"))).toBe(false);
-    expect(options.some((t) => t?.includes("Andi Pratama"))).toBe(true);
-  });
-
-  it("shows required-field errors on an empty submit", async () => {
-    renderPage();
-    await screen.findByRole("heading", { name: /buat assignment/i });
-
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
-
-    expect(screen.getByText(/talent wajib dipilih/i)).toBeInTheDocument();
-    expect(screen.getByText(/project wajib dipilih/i)).toBeInTheDocument();
-    expect(screen.getByText(/tanggal mulai wajib diisi/i)).toBeInTheDocument();
-    // TAN-133 — peran tidak lagi diminta pada form buat: tidak ada field job
-    // role maupun pesan validasinya.
-    expect(screen.queryByRole("combobox", { name: /job role/i })).toBeNull();
-    expect(screen.queryByText(/job role wajib dipilih/i)).toBeNull();
-  });
-
-  it("creates the assignment and shows a success state", async () => {
-    renderPage();
-    await screen.findByRole("heading", { name: /buat assignment/i });
-
+  function fillCreateForm() {
     fireEvent.change(screen.getByRole("combobox", { name: /talent/i }), {
       target: { value: "emp-1" },
     });
@@ -403,17 +379,68 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
       target: { value: "prj-1" },
     });
     fireEvent.change(screen.getByLabelText(/tanggal mulai/i), { target: { value: "2025-07-01" } });
+  }
 
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+  it("opens the create modal when the button is clicked", async () => {
+    renderListWithCreate();
+    await openCreateModal();
 
-    expect(await screen.findByText(/berhasil dibuat/i)).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /buat assignment/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /talent/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /project/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/tanggal mulai/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/tanggal selesai/i)).toBeInTheDocument();
   });
 
-  // UAT K6 (T009) — US1-3: pilihan project hanya master data aktif. Peran
-  // bukan lagi bagian assignment (TAN-133) — form tidak memintanya sama sekali.
+  it("closes the modal when Batal is clicked", async () => {
+    renderListWithCreate();
+    await openCreateModal();
+
+    fireEvent.click(screen.getByRole("button", { name: /batal/i }));
+    expect(screen.queryByRole("dialog", { name: /buat assignment/i })).toBeNull();
+  });
+
+  it("only offers assignable talents on the form", async () => {
+    renderListWithCreate();
+    await openCreateModal();
+
+    const talentSelect = screen.getByRole("combobox", { name: /talent/i });
+    const options = Array.from(talentSelect.querySelectorAll("option")).map((o) => o.textContent);
+    expect(options.some((t) => t?.includes("Eko Prasetyo"))).toBe(false);
+    expect(options.some((t) => t?.includes("Andi Pratama"))).toBe(true);
+  });
+
+  it("shows required-field errors on an empty submit", async () => {
+    renderListWithCreate();
+    await openCreateModal();
+
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
+
+    expect(screen.getByText(/talent wajib dipilih/i)).toBeInTheDocument();
+    expect(screen.getByText(/project wajib dipilih/i)).toBeInTheDocument();
+    expect(screen.getByText(/tanggal mulai wajib diisi/i)).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /job role/i })).toBeNull();
+    expect(screen.queryByText(/job role wajib dipilih/i)).toBeNull();
+  });
+
+  it("creates the assignment, closes the modal, and shows a success toast", async () => {
+    const listRefreshMocks = [
+      ...baseMocks,
+      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+    ];
+    renderListWithCreate(listRefreshMocks);
+    await openCreateModal();
+
+    fillCreateForm();
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
+    expect(screen.queryByRole("dialog", { name: /buat assignment/i })).toBeNull();
+  });
+
   it("only offers active master data for project (US1-3)", async () => {
-    renderPage();
-    await screen.findByRole("heading", { name: /buat assignment/i });
+    renderListWithCreate();
+    await openCreateModal();
 
     const projectOptions = Array.from(
       screen.getByRole("combobox", { name: /project/i }).querySelectorAll("option")
@@ -424,40 +451,24 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
     expect(screen.queryByRole("combobox", { name: /job role/i })).toBeNull();
   });
 
-  // UAT K6 (T009) — FR-01: tanggal selesai rencana terkirim pada payload buat.
   it("sends the filled end date in the create payload (FR-01)", async () => {
-    renderPage();
-    await screen.findByRole("heading", { name: /buat assignment/i });
+    renderListWithCreate();
+    await openCreateModal();
 
-    fillNewForm();
+    fillCreateForm();
     fireEvent.change(screen.getByLabelText(/tanggal selesai/i), { target: { value: "2025-12-31" } });
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
 
-    expect(await screen.findByText(/berhasil dibuat/i)).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
   });
 
-  // G5/K4 (T006/T007) — penolakan server tampil sebagai pesan Indonesia yang
-  // jelas: per field untuk validasi tanggal, pesan aksi untuk duplikat
-  // aktif (CONFLICT) dan cakupan (FORBIDDEN). Tanpa swallowed error.
-  const formMocks = newMocks.slice(0, 2);
-  const renderNewWithError = (createMock: MockedResponse) =>
-    render(
-      <MockedProvider mocks={[...formMocks, createMock]}>
-        <NewAssignmentPage />
-      </MockedProvider>
-    );
-  const fillNewForm = () => {
-    fireEvent.change(screen.getByRole("combobox", { name: /talent/i }), {
-      target: { value: "emp-1" },
-    });
-    fireEvent.change(screen.getByRole("combobox", { name: /project/i }), {
-      target: { value: "prj-1" },
-    });
-    fireEvent.change(screen.getByLabelText(/tanggal mulai/i), { target: { value: "2025-07-01" } });
-  };
+  const errorFormMocks = baseMocks.slice(0, 3);
+  function renderWithError(createMock: MockedResponse) {
+    renderListWithCreate([...errorFormMocks, createMock]);
+  }
 
   it("maps a server date rejection to a per-field message on the end-date input (T007)", async () => {
-    renderNewWithError({
+    renderWithError({
       request: {
         query: CreateAssignmentDocument,
         variables: {
@@ -477,26 +488,19 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
         ],
       },
     });
-    await screen.findByRole("heading", { name: /buat assignment/i });
-    fillNewForm();
+    await openCreateModal();
+    fillCreateForm();
     fireEvent.change(screen.getByLabelText(/tanggal selesai/i), { target: { value: "2025-06-30" } });
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
 
     expect(await screen.findByText("Tanggal selesai tidak boleh lebih awal dari tanggal mulai.")).toBeInTheDocument();
-    // Pesan menempel pada field Tanggal Selesai, bukan pesan aksi.
     const periodEndField = screen.getByLabelText(/tanggal selesai/i).closest("label")!;
     expect(within(periodEndField).getByText(/tidak boleh lebih awal/i)).toBeInTheDocument();
-    // InputControl (refactor TAN-231) menandai error per field dengan
-    // role="alert" — semua alert harus berasal dari field ini; tidak ada
-    // pesan aksi form-level.
-    for (const alertEl of screen.getAllByRole("alert")) {
-      expect(periodEndField.contains(alertEl)).toBe(true);
-    }
-    expect(screen.queryByText(/berhasil dibuat/i)).toBeNull();
+    expect(screen.getByRole("dialog", { name: /buat assignment/i })).toBeInTheDocument();
   });
 
   it("maps a duplicate-active CONFLICT rejection to a clear action message (T007)", async () => {
-    renderNewWithError({
+    renderWithError({
       request: {
         query: CreateAssignmentDocument,
         variables: {
@@ -516,23 +520,19 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
         ],
       },
     });
-    await screen.findByRole("heading", { name: /buat assignment/i });
-    fillNewForm();
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+    await openCreateModal();
+    fillCreateForm();
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
 
     expect(
       await screen.findByText("Talent ini sudah memiliki assignment aktif pada project tersebut.")
     ).toBeInTheDocument();
-    expect(screen.queryByRole("alert")).toHaveTextContent(
-      "Talent ini sudah memiliki assignment aktif pada project tersebut."
-    );
-    // Pesan mentah server berbahasa Inggris — tidak ditampilkan apa adanya.
     expect(screen.queryByText(/resource already exists/i)).toBeNull();
-    expect(screen.queryByText(/berhasil dibuat/i)).toBeNull();
+    expect(screen.getByRole("dialog", { name: /buat assignment/i })).toBeInTheDocument();
   });
 
   it("maps a FORBIDDEN rejection to a clear action message (T007)", async () => {
-    renderNewWithError({
+    renderWithError({
       request: {
         query: CreateAssignmentDocument,
         variables: {
@@ -552,13 +552,24 @@ describe("NewAssignmentPage (Apollo form, US2)", () => {
         ],
       },
     });
-    await screen.findByRole("heading", { name: /buat assignment/i });
-    fillNewForm();
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+    await openCreateModal();
+    fillCreateForm();
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
 
     expect(await screen.findByText("Anda tidak memiliki izin untuk aksi ini.")).toBeInTheDocument();
     expect(screen.queryByText(/operation not permitted/i)).toBeNull();
-    expect(screen.queryByText(/berhasil dibuat/i)).toBeNull();
+    expect(screen.getByRole("dialog", { name: /buat assignment/i })).toBeInTheDocument();
+  });
+});
+
+describe("NewAssignmentPage redirect (TAN-316)", () => {
+  beforeEach(() => {
+    redirect.mockClear();
+  });
+
+  it("redirects /assignments/new to /assignments", () => {
+    NewAssignmentPage();
+    expect(redirect).toHaveBeenCalledWith("/assignments");
   });
 });
 

@@ -17,13 +17,18 @@ type IdpNode = IdpsQuery["idps"]["edges"][number]["node"];
  */
 export function useIdps(filter: IdpFilter = {}): QueryState<
   Array<IdpNode> | undefined
-> {
+> & { refetch: () => Promise<void> } {
   const clean = Object.fromEntries(
     Object.entries(filter ?? {}).filter(([, v]) => v !== undefined)
   ) as typeof filter;
   const result = useQuery(IdpsDocument, { variables: { filter: clean, first: 100 } });
-  return toQueryState({
-    ...result,
-    data: result.data?.idps?.edges.map((edge) => edge.node),
-  });
+  return {
+    ...toQueryState({
+      ...result,
+      data: result.data?.idps?.edges.map((edge) => edge.node),
+    }),
+    refetch: async () => {
+      await result.refetch();
+    },
+  };
 }

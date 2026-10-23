@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
+import { CreateAssignmentModal } from "@/features/assignments/CreateAssignmentModal";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { FilterButton } from "@/components/FilterButton";
@@ -19,7 +20,7 @@ import type { AccessRole, AssignmentStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
-import { ASSIGNMENT_NEW, ASSIGNMENT_DETAIL } from "@/lib/constants/routes";
+import { ASSIGNMENT_DETAIL } from "@/lib/constants/routes";
 
 const SUBTITLE: Partial<Record<AccessRole, string>> = {
   CHAPTER: "Kelola penugasan talent ke project dalam chapter Anda.",
@@ -80,6 +81,7 @@ export default function AssignmentsPage() {
   const [projectId, setProjectId] = React.useState("");
   const [status, setStatus] = React.useState<AssignmentStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [createOpen, setCreateOpen] = React.useState(false);
   const { status: query, data, error } = useAssignments({
     employeeId: talentId || undefined,
     projectId: projectId || undefined,
@@ -95,9 +97,9 @@ export default function AssignmentsPage() {
       <PageHeader
         actions={
           manage ? (
-            <Link className="no-underline" href={ASSIGNMENT_NEW}>
-              <Button variant="primary">+ Buat Assignment</Button>
-            </Link>
+            <Button onClick={() => setCreateOpen(true)} variant="primary">
+              + Buat Assignment
+            </Button>
           ) : undefined
         }
         filters={
@@ -224,9 +226,19 @@ export default function AssignmentsPage() {
           ]}
           dataSource={pageRows}
           pagination={pagination}
-          rowKey={(assignment) => assignment.id}
-        />
-      )}
-    </section>
-  );
-}
+           rowKey={(assignment) => assignment.id}
+         />
+       )}
+
+       {manage && createOpen ? (
+         <CreateAssignmentModal
+           onClose={() => setCreateOpen(false)}
+           onCreated={() => {
+             resetPage();
+           }}
+           open={createOpen}
+         />
+       ) : null}
+     </section>
+   );
+ }

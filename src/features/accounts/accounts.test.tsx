@@ -104,35 +104,49 @@ const USERS_QUERY_AFTER_ROLE_CHANGE = {
   },
 };
 
-const EMPLOYEES_QUERY = {
-  request: { query: EmployeesDocument, variables: { filter: {}, first: 100, after: null } },
-  result: {
-    data: {
-      employees: {
-        totalCount: 1,
-        edges: [
-          {
-            node: {
-              id: "emp-1",
-              fullName: "Ahmad Fauzi",
-              nomorInduk: "EMP-0100",
-              email: "ahmad@telkom.co.id",
-              status: "ACTIVE",
-              assignable: true,
-              unit: { id: "u-1", name: "Digital", __typename: "Unit" },
-              jobRole: { id: "jr-1", name: "Engineer", __typename: "JobRole" },
-              __typename: "Employee",
-            },
-            cursor: "c1",
-            __typename: "EmployeeEdge",
-          },
-        ],
-        pageInfo: { hasNextPage: false, endCursor: "c1", __typename: "PageInfo" },
-        __typename: "EmployeeConnection",
+const EMPLOYEE_1 = {
+  id: "emp-1",
+  fullName: "Ahmad Fauzi",
+  nomorInduk: "EMP-0100",
+  email: "ahmad@telkom.co.id",
+  status: "ACTIVE",
+  assignable: true,
+  unit: { id: "u-1", name: "Digital", __typename: "Unit" },
+  jobRole: { id: "jr-1", name: "Engineer", __typename: "JobRole" },
+  nikMasked: "************0001",
+  __typename: "Employee",
+};
+
+function employeesMock(search: string | undefined, nodes: unknown[]) {
+  return {
+    request: {
+      query: EmployeesDocument,
+      variables: {
+        filter: search ? { search } : {},
+        first: 10,
+        after: null,
       },
     },
-  },
-};
+    result: {
+      data: {
+        employees: {
+          totalCount: nodes.length,
+          edges: nodes.map((n) => ({
+            node: n,
+            cursor: `c-${(n as { id: string }).id}`,
+            __typename: "EmployeeEdge",
+          })),
+          pageInfo: {
+            hasNextPage: false,
+            endCursor: nodes.length ? `c-${(nodes[nodes.length - 1] as { id: string }).id}` : null,
+            __typename: "PageInfo",
+          },
+          __typename: "EmployeeConnection",
+        },
+      },
+    },
+  };
+}
 
 function renderPage(mocks: unknown[]) {
   render(
@@ -150,9 +164,24 @@ function rowOf(name: string) {
   return cell as HTMLElement;
 }
 
+async function openCreateForm() {
+  fireEvent.click(screen.getByRole("button", { name: "Tambah Akun" }));
+  // The picker mounts and fires an initial empty-search query.
+  await screen.findByRole("combobox", { name: /karyawan/i });
+}
+
+async function selectEmployeeByName(name: string) {
+  const input = screen.getByRole("combobox", { name: /karyawan/i });
+  fireEvent.focus(input);
+  fireEvent.change(input, { target: { value: name } });
+  // Wait for the debounced query to resolve and the option to appear.
+  const option = await screen.findByRole("option", { name: new RegExp(name, "i") });
+  fireEvent.mouseDown(option);
+}
+
 describe("accounts management (Admin) — T053", () => {
   it("lists accounts with role badges and status", async () => {
-    renderPage([USERS_QUERY, EMPLOYEES_QUERY]);
+    renderPage([USERS_QUERY]);
 
     await screen.findByText("Sari Dewi");
     const adminRow = rowOf("Sari Dewi");
@@ -169,10 +198,13 @@ describe("accounts management (Admin) — T053", () => {
   });
 
   it("blocks creating an account without employee, email, and role (client-side)", async () => {
-    renderPage([USERS_QUERY, EMPLOYEES_QUERY]);
+    renderPage([
+      USERS_QUERY,
+      employeesMock(undefined, []),
+    ]);
 
     await screen.findByText("Sari Dewi");
-    fireEvent.click(screen.getByRole("button", { name: "Tambah Akun" }));
+    await openCreateForm();
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     expect(screen.getByText("Karyawan wajib dipilih.")).toBeInTheDocument();
@@ -183,7 +215,8 @@ describe("accounts management (Admin) — T053", () => {
   it("creates an account for an employee and shows the success toast", async () => {
     renderPage([
       USERS_QUERY,
-      EMPLOYEES_QUERY,
+      employeesMock(undefined, [EMPLOYEE_1]),
+      employeesMock("Ahmad", [EMPLOYEE_1]),
       {
         request: {
           query: CreateUserAccountDocument,
@@ -212,8 +245,8 @@ describe("accounts management (Admin) — T053", () => {
     ]);
 
     await screen.findByText("Sari Dewi");
-    fireEvent.click(screen.getByRole("button", { name: "Tambah Akun" }));
-    fireEvent.change(screen.getByLabelText("Karyawan"), { target: { value: "emp-1" } });
+    await openCreateForm();
+    await selectEmployeeByName("Ahmad");
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "ahmad@telkom.co.id" },
     });
@@ -229,7 +262,8 @@ describe("accounts management (Admin) — T053", () => {
     const serverMessage = "Karyawan sudah memiliki akun.";
     renderPage([
       USERS_QUERY,
-      EMPLOYEES_QUERY,
+      employeesMock(undefined, [EMPLOYEE_1]),
+      employeesMock("Ahmad", [EMPLOYEE_1]),
       {
         request: {
           query: CreateUserAccountDocument,
@@ -245,8 +279,8 @@ describe("accounts management (Admin) — T053", () => {
     ]);
 
     await screen.findByText("Sari Dewi");
-    fireEvent.click(screen.getByRole("button", { name: "Tambah Akun" }));
-    fireEvent.change(screen.getByLabelText("Karyawan"), { target: { value: "emp-1" } });
+    await openCreateForm();
+    await selectEmployeeByName("Ahmad");
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "ahmad@telkom.co.id" },
     });
@@ -260,7 +294,6 @@ describe("accounts management (Admin) — T053", () => {
   it("changes a user's access role and reflects it in the list (scenario 8)", async () => {
     renderPage([
       USERS_QUERY,
-      EMPLOYEES_QUERY,
       {
         request: {
           query: UpdateUserAccessRoleDocument,
@@ -297,7 +330,6 @@ describe("accounts management (Admin) — T053", () => {
   it("deactivates an account and shows the success toast", async () => {
     renderPage([
       USERS_QUERY,
-      EMPLOYEES_QUERY,
       {
         request: {
           query: SetUserAccountStatusDocument,
@@ -330,7 +362,6 @@ describe("accounts management (Admin) — T053", () => {
   it("revokes sessions only after the confirmation step", async () => {
     renderPage([
       USERS_QUERY,
-      EMPLOYEES_QUERY,
       {
         request: { query: RevokeUserSessionsDocument, variables: { userId: "usr-1" } },
         result: { data: { revokeUserSessions: true } },
@@ -351,7 +382,6 @@ describe("accounts management (Admin) — T053", () => {
     const serverMessage = "Sesi tidak dapat dicabut.";
     renderPage([
       USERS_QUERY,
-      EMPLOYEES_QUERY,
       {
         request: { query: RevokeUserSessionsDocument, variables: { userId: "usr-1" } },
         error: new Error(serverMessage),
