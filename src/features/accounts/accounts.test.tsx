@@ -44,6 +44,10 @@ const USERS_QUERY = {
           accessRole: "ADMIN",
           roleName: "ADMIN",
           status: "ACTIVE",
+          employee: {
+            chapter: null,
+            __typename: "Employee",
+          },
           __typename: "User",
         },
         {
@@ -53,6 +57,10 @@ const USERS_QUERY = {
           accessRole: "TALENT",
           roleName: "TALENT",
           status: "INACTIVE",
+          employee: {
+            chapter: null,
+            __typename: "Employee",
+          },
           __typename: "User",
         },
       ],
@@ -72,6 +80,10 @@ const USERS_QUERY_AFTER_ROLE_CHANGE = {
           accessRole: "ADMIN",
           roleName: "ADMIN",
           status: "ACTIVE",
+          employee: {
+            chapter: null,
+            __typename: "Employee",
+          },
           __typename: "User",
         },
         {
@@ -81,6 +93,10 @@ const USERS_QUERY_AFTER_ROLE_CHANGE = {
           accessRole: "CHAPTER",
           roleName: "CHAPTER",
           status: "INACTIVE",
+          employee: {
+            chapter: { id: "ch-1", name: "Design", __typename: "Chapter" },
+            __typename: "Employee",
+          },
           __typename: "User",
         },
       ],
@@ -141,13 +157,15 @@ describe("accounts management (Admin) — T053", () => {
     await screen.findByText("Sari Dewi");
     const adminRow = rowOf("Sari Dewi");
     expect(within(adminRow).getAllByRole("cell")[2]).toHaveTextContent("Admin");
-    expect(within(adminRow).getAllByRole("cell")[3]).toHaveTextContent("Aktif");
+    expect(within(adminRow).getAllByRole("cell")[3]).toHaveTextContent("—");
+    expect(within(adminRow).getAllByRole("cell")[4]).toHaveTextContent("Aktif");
     fireEvent.click(within(adminRow).getByRole("button", { name: "Aksi Sari Dewi" }));
     expect(screen.getByLabelText("Ubah peran Sari Dewi")).toHaveValue("ADMIN");
 
     const talentRow = rowOf("Budi Santoso");
     expect(within(talentRow).getAllByRole("cell")[2]).toHaveTextContent("Talent");
-    expect(within(talentRow).getAllByRole("cell")[3]).toHaveTextContent("Nonaktif");
+    expect(within(talentRow).getAllByRole("cell")[3]).toHaveTextContent("—");
+    expect(within(talentRow).getAllByRole("cell")[4]).toHaveTextContent("Nonaktif");
   });
 
   it("blocks creating an account without employee, email, and role (client-side)", async () => {
@@ -273,6 +291,7 @@ describe("accounts management (Admin) — T053", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Peran akses berhasil diubah.");
     expect(within(rowOf("Budi Santoso")).getAllByRole("cell")[2]).toHaveTextContent("Chapter");
+    expect(await within(rowOf("Budi Santoso")).findByText("Design")).toBeInTheDocument();
   });
 
   it("deactivates an account and shows the success toast", async () => {
