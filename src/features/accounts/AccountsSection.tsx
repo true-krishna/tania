@@ -134,6 +134,14 @@ export function AccountsSection({
       ),
     },
     {
+      key: "chapter",
+      title: "Chapter",
+      render: (_value, account) =>
+        account.accessRole !== "CHAPTER"
+          ? "—"
+          : orDash(account.employee?.chapter?.name),
+    },
+    {
       key: "status",
       title: "Status",
       render: (_value, account) => <StatusBadge active={account.status === "ACTIVE"} />,
