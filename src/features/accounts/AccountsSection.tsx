@@ -11,8 +11,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { EmployeePicker } from "@/features/accounts/EmployeePicker";
 import { roleLabelFor, roleOptions, type RoleOption } from "@/features/accounts/roles";
-import { useEmployees } from "@/features/employees/useEmployees";
 import type { UsersQuery } from "@/generated/graphql";
 import type { AccountStatus, Role } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
@@ -58,7 +58,6 @@ export function AccountsSection({
   onRevokeSessions,
 }: AccountsSectionProps) {
   const [creating, setCreating] = React.useState(false);
-  const [employeeSearch, setEmployeeSearch] = React.useState("");
   const [employeeId, setEmployeeId] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [roleName, setRoleName] = React.useState("");
@@ -68,7 +67,6 @@ export function AccountsSection({
   const [busy, setBusy] = React.useState(false);
   const [confirmRevokeId, setConfirmRevokeId] = React.useState<string | null>(null);
 
-  const employees = useEmployees({ search: employeeSearch || undefined }, 100);
   const { pageRows, pagination } = useTablePagination(accounts);
   const options = React.useMemo(() => roleOptions(roles), [roles]);
 
@@ -77,7 +75,6 @@ export function AccountsSection({
 
   function resetForm() {
     setCreating(false);
-    setEmployeeSearch("");
     setEmployeeId("");
     setEmail("");
     setRoleName("");
@@ -216,38 +213,13 @@ export function AccountsSection({
           className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
           onSubmit={handleSubmit}
         >
-          <InputControl label="Cari Karyawan">
-            <Input
-              onChange={(e) => setEmployeeSearch(e.target.value)}
-              placeholder="Cari nama, email, atau kode…"
-              type="search"
-              value={employeeSearch}
-            />
-          </InputControl>
-          <InputControl error={fieldErrors.employeeId} label="Karyawan">
-            <Select
-              onChange={(e) => setEmployeeId(e.target.value)}
-              options={[
-                {
-                  value: "",
-                  label:
-                    employees.status === "loading"
-                      ? "— Memuat karyawan… —"
-                      : "— Pilih karyawan —",
-                },
-                ...(employees.employees ?? []).map((employee) => ({
-                  value: employee.id,
-                  label: `${employee.fullName} (${employee.nomorInduk ?? "—"})`,
-                })),
-              ]}
-              value={employeeId}
-            />
-          </InputControl>
-          {employees.status === "error" ? (
-            <span className="text-xs text-red-600">
-              {employees.error ?? "Gagal memuat daftar karyawan."}
-            </span>
-          ) : null}
+          <EmployeePicker
+            error={fieldErrors.employeeId}
+            label="Karyawan"
+            required
+            value={employeeId}
+            onChange={setEmployeeId}
+          />
           <InputControl error={fieldErrors.email} label="Email">
             <Input
               onChange={(e) => setEmail(e.target.value)}
