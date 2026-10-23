@@ -7,6 +7,7 @@ import { Chip } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
+import { Modal } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
@@ -198,27 +199,22 @@ export function AccountsSection({
     <div className="flex flex-col gap-4">
       <PageHeader
         actions={
-          creating ? undefined : (
-            <Button onClick={() => setCreating(true)} type="button">
-              Tambah Akun
-            </Button>
-          )
+          <Button onClick={() => setCreating(true)} type="button">
+            Tambah Akun
+          </Button>
         }
         subtitle="Kelola akun dan peran akses di sistem Tania."
         title="Akun Pengguna"
       />
 
-      {creating ? (
-        <form
-          className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
-          onSubmit={handleSubmit}
-        >
+      <Modal onClose={resetForm} open={creating} size="md" title="Tambah Akun">
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <EmployeePicker
             error={fieldErrors.employeeId}
             label="Karyawan"
+            onChange={setEmployeeId}
             required
             value={employeeId}
-            onChange={setEmployeeId}
           />
           <InputControl error={fieldErrors.email} label="Email">
             <Input
@@ -246,7 +242,7 @@ export function AccountsSection({
             />
           </InputControl>
           {formError ? <span className="text-xs text-red-600">{formError}</span> : null}
-          <div className="flex gap-2">
+          <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
             <Button disabled={busy} type="submit">
               Simpan
             </Button>
@@ -255,7 +251,7 @@ export function AccountsSection({
             </Button>
           </div>
         </form>
-      ) : null}
+      </Modal>
 
       {!accounts || accounts.length === 0 ? (
         <EmptyState message="Belum ada akun pengguna." />

@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
+import { Modal } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
@@ -197,7 +198,7 @@ export function MasterDataSection<T extends MasterDataItem>({
     <div className="flex flex-col gap-4">
       <PageHeader
         actions={
-          !manage || editing ? undefined : (
+          !manage ? undefined : (
             <Button onClick={openCreate} type="button">
               {addLabel}
             </Button>
@@ -229,11 +230,13 @@ export function MasterDataSection<T extends MasterDataItem>({
         title="Master Data"
       />
 
-      {manage && editing ? (
-        <form
-          className="flex max-w-xl flex-col gap-4 rounded-lg border border-board-border bg-board p-4 shadow-sm"
-          onSubmit={handleSubmit}
-        >
+      <Modal
+        onClose={reset}
+        open={editing}
+        size="md"
+        title={editingId !== null ? `Ubah ${nameLabel}` : addLabel}
+      >
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <InputControl error={nameError} label={nameLabel}>
             <Input onChange={(e) => setName(e.target.value)} placeholder="cth: Digital Business" value={name} />
           </InputControl>
@@ -258,7 +261,7 @@ export function MasterDataSection<T extends MasterDataItem>({
               />
             </InputControl>
           ) : null}
-          <div className="flex gap-2">
+          <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
             <Button disabled={busy} type="submit">
               Simpan
             </Button>
@@ -267,7 +270,7 @@ export function MasterDataSection<T extends MasterDataItem>({
             </Button>
           </div>
         </form>
-      ) : null}
+      </Modal>
 
       {!items || items.length === 0 ? (
         <EmptyState message={emptyMessage} />
