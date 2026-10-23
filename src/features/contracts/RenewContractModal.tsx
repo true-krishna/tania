@@ -135,6 +135,10 @@ function RenewContractForm({
     setFormError(null);
   }
 
+  const selectedJobRole = values.jobRoleId
+    ? (jobRoles.data ?? []).find((jr) => jr.id === values.jobRoleId) ?? null
+    : null;
+
   function goToAttributes(e: React.FormEvent) {
     e.preventDefault();
     const nextErrors = validatePeriod(values, contract);
@@ -208,6 +212,9 @@ function RenewContractForm({
 
       {step === 1 ? (
         <>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Periode &amp; status
+          </h3>
           <InputControl error={errors.contractType} label="Jenis kontrak">
             <Select
               onChange={(e) => {
@@ -253,6 +260,9 @@ function RenewContractForm({
         </>
       ) : (
         <>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Identitas kontrak
+          </h3>
           <InputControl error={errors.nomorInduk} label="Nomor induk karyawan">
             <Input
               onChange={(e) => set("nomorInduk", e.target.value)}
@@ -267,6 +277,9 @@ function RenewContractForm({
               value={values.officeEmail}
             />
           </InputControl>
+          <h3 className="mt-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Posisi & unit
+          </h3>
           <InputControl
             error={errors.unitId}
             helper="(pindah unit bila diubah)"
@@ -281,7 +294,13 @@ function RenewContractForm({
               value={values.unitId}
             />
           </InputControl>
-          <InputControl error={errors.jobRoleId} label="Posisi / Job Role">
+          <InputControl
+            error={errors.jobRoleId}
+            helper={
+              selectedJobRole ? `Chapter: ${selectedJobRole.chapter?.name ?? "Tanpa chapter"}` : undefined
+            }
+            label="Posisi / Job Role"
+          >
             <Select
               onChange={(e) => set("jobRoleId", e.target.value)}
               options={[

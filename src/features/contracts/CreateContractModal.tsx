@@ -144,6 +144,10 @@ export function CreateContractModal({
     return next;
   }
 
+  const selectedJobRole = values.jobRoleId
+    ? (jobRoles.data ?? []).find((jr) => jr.id === values.jobRoleId) ?? null
+    : null;
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const nextErrors = validate(values);
@@ -200,6 +204,9 @@ export function CreateContractModal({
     <Modal onClose={onClose} open={open} size="lg" title="Tambah Kontrak">
       <form className="flex flex-col gap-4" onSubmit={onSubmit}>
         {formError ? <ErrorState message={formError} /> : null}
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Identitas kontrak
+        </h3>
         <InputControl error={errors.employeeId} label="Karyawan">
           <Select
             onChange={(e) => set("employeeId", e.target.value)}
@@ -250,6 +257,9 @@ export function CreateContractModal({
             value={values.officeEmail}
           />
         </InputControl>
+        <h3 className="mt-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Posisi &amp; unit
+        </h3>
         <InputControl error={errors.unitId} label="Unit">
           <Select
             onChange={(e) => set("unitId", e.target.value)}
@@ -260,7 +270,13 @@ export function CreateContractModal({
             value={values.unitId}
           />
         </InputControl>
-        <InputControl error={errors.jobRoleId} label="Posisi / Job Role">
+        <InputControl
+          error={errors.jobRoleId}
+          helper={
+            selectedJobRole ? `Chapter: ${selectedJobRole.chapter?.name ?? "Tanpa chapter"}` : undefined
+          }
+          label="Posisi / Job Role"
+        >
           <Select
             onChange={(e) => set("jobRoleId", e.target.value)}
             options={[
@@ -310,6 +326,9 @@ export function CreateContractModal({
             value={values.workLocation}
           />
         </InputControl>
+        <h3 className="mt-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Periode &amp; status
+        </h3>
         <InputControl error={errors.startDate} label="Tanggal mulai">
           <Input
             onChange={(e) => set("startDate", e.target.value)}

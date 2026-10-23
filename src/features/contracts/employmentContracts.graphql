@@ -27,6 +27,10 @@ query EmploymentContracts($filter: EmploymentContractFilter, $first: Int = 25, $
         jobRole {
           id
           name
+          chapter {
+            id
+            name
+          }
         }
       }
     }

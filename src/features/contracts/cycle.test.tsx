@@ -49,7 +49,7 @@ const contractNode: ContractNode = {
     email: "andi@tania.id",
   },
   unit: { id: "u-1", name: "Digital" },
-  jobRole: { id: "jr-1", name: "Engineer" },
+  jobRole: { id: "jr-1", name: "Engineer", chapter: { id: "ch-1", name: "Platform" } },
   predecessor: null,
   createdBy: { id: "u-1", fullName: "Sari Operator" },
   createdAt: "2025-06-20T09:00:00Z",

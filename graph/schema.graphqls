@@ -439,6 +439,7 @@ input EmployeeFilter {
   search: String
   unitId: ID
   jobRoleId: ID
+  chapterId: ID
   status: EmployeeStatus
   assignableOnly: Boolean
 }

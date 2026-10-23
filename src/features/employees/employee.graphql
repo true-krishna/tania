@@ -15,18 +15,6 @@ query Employee($id: ID!) {
     status
     assignable
     joinedAt
-    unit {
-      id
-      name
-    }
-    jobRole {
-      id
-      name
-    }
-    chapter {
-      id
-      name
-    }
     contracts(first: 50) {
       totalCount
       edges {
@@ -53,6 +41,10 @@ query Employee($id: ID!) {
           jobRole {
             id
             name
+            chapter {
+              id
+              name
+            }
           }
           createdAt
           updatedAt
