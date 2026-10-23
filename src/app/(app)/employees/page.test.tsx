@@ -7,6 +7,7 @@ import { MockedProvider } from "@apollo/client/testing";
 import EmployeesPage from "@/app/(app)/employees/page";
 import {
   AssignableTalentsDocument,
+  EmployeeDocument,
   EmployeesDocument,
   MyEmployeeDocument,
   UnitsDocument,
@@ -356,5 +357,171 @@ describe("EmployeesPage per role (T034)", () => {
       </MockedProvider>
     );
     expect(await screen.findByText(/belum tertaut/i)).toBeInTheDocument();
+  });
+});
+
+const employeeDetailMock = {
+  request: { query: EmployeeDocument, variables: { id: "emp-1" } },
+  result: {
+    data: {
+      employee: {
+        __typename: "Employee",
+        id: "emp-1",
+        fullName: "Andi Pratama",
+        nikMasked: "************1234",
+        email: "andi@tania.id",
+        birthDate: "1990-01-01",
+        gender: "MALE",
+        phone: "0811111111",
+        address: "Jl. Satu",
+        latestEducation: null,
+        institutionName: null,
+        major: null,
+        nomorInduk: "EMP-77",
+        status: "ACTIVE",
+        assignable: true,
+        joinedAt: "2024-01-01",
+        unit: { __typename: "Unit", id: "u-1", name: "Digital" },
+        jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
+        chapter: { __typename: "Chapter", id: "ch-1", name: "Platform" },
+        contracts: {
+          __typename: "EmploymentContractConnection",
+          totalCount: 0,
+          edges: [],
+        },
+      },
+    },
+  },
+};
+
+function submitForm() {
+  const submitBtns = screen.getAllByRole("button", { name: "Simpan" });
+  const submitBtn = submitBtns.find(
+    (b) => (b as HTMLButtonElement).type === "submit"
+  );
+  if (!submitBtn) throw new Error("submit button not found");
+  fireEvent.click(submitBtn);
+}
+
+describe("EmployeesPage — create modal (TAN-315)", () => {
+  it("opens the create modal when clicking Tambah Karyawan", async () => {
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /tambah karyawan/i }));
+
+    expect(screen.getByRole("dialog", { name: /tambah karyawan/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^nik/i)).toHaveValue("");
+  });
+
+  it("closes the modal on Batal click", async () => {
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /tambah karyawan/i }));
+    expect(screen.getByRole("dialog", { name: /tambah karyawan/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /batal/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("shows validation errors when submitting empty create form", async () => {
+    render(
+      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /tambah karyawan/i }));
+    submitForm();
+
+    expect(screen.getByText(/nik wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByText(/nama lengkap wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByText(/email wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByText(/tanggal lahir wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByText(/jenis kelamin wajib dipilih/i)).toBeInTheDocument();
+    expect(screen.getByText(/telepon wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByText(/alamat wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByText(/tanggal bergabung wajib diisi/i)).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+});
+
+describe("EmployeesPage — edit modal (TAN-315)", () => {
+  it("opens the edit modal from row action with employee data loaded", async () => {
+    const mocks = [unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
+    render(
+      <MockedProvider mocks={mocks}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ubah data diri" }));
+
+    const dialog = await screen.findByRole("dialog", { name: /ubah data/i });
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByLabelText(/nama lengkap/i)).toHaveValue("Andi Pratama");
+    expect(screen.getByLabelText(/^email/i)).toHaveValue("andi@tania.id");
+  });
+
+  it("shows NIK masked and separate NIK baru field (FR-42)", async () => {
+    const mocks = [unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
+    render(
+      <MockedProvider mocks={mocks}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ubah data diri" }));
+
+    const dialog = await screen.findByRole("dialog", { name: /ubah data/i });
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getAllByText("************1234").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByLabelText(/nik baru/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/nik baru/i)).toHaveValue("");
+  });
+
+  it("closes the edit modal on Batal click", async () => {
+    const mocks = [unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
+    render(
+      <MockedProvider mocks={mocks}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Andi Pratama" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ubah data diri" }));
+    expect(await screen.findByRole("dialog", { name: /ubah data/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /batal/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
+
+describe("Old routes redirect to /employees (TAN-315)", () => {
+  it("redirects from /employees/new to /employees", async () => {
+    const NewPage = (await import("./new/page")).default;
+    render(
+      <MockedProvider mocks={[]}>
+        <NewPage />
+      </MockedProvider>
+    );
+    await waitFor(() => {
+      expect(nav.replace).toHaveBeenCalledWith("/employees");
+    });
   });
 });

@@ -16,6 +16,8 @@ import { Select } from "@/components/Select";
 import { canManage } from "@/lib/auth/matrix";
 import { useSessionRole } from "@/lib/auth/guard";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
+import { CreateContractModal } from "@/features/contracts/CreateContractModal";
+import { RenewContractModal } from "@/features/contracts/RenewContractModal";
 import {
   CONTRACT_STATUS_LABEL,
   CONTRACT_STATUS_VARIANT,
@@ -28,11 +30,13 @@ import type {
   EmploymentContractStatus,
 } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
-import { CONTRACT_NEW, CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
+import { CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 export default function ContractsPage() {
   const router = useRouter();
   const manage = canManage(useSessionRole(), "contracts");
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [renewContractId, setRenewContractId] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
   const [contractType, setContractType] = React.useState<ContractType | "ALL">("ALL");
   const [status, setStatus] = React.useState<EmploymentContractStatus | "ALL">("ALL");
@@ -65,9 +69,9 @@ export default function ContractsPage() {
       <PageHeader
         actions={
           manage ? (
-            <Link className="no-underline" href={CONTRACT_NEW}>
-              <Button variant="primary">+ Tambah Kontrak</Button>
-            </Link>
+            <Button onClick={() => setCreateOpen(true)} type="button">
+              + Tambah Kontrak
+            </Button>
           ) : undefined
         }
         filters={
@@ -228,6 +232,14 @@ export default function ContractsPage() {
                       label: "Lihat detail",
                       onSelect: () => router.push(CONTRACT_DETAIL(contract.id)),
                     },
+                    ...(manage
+                      ? [
+                          {
+                            label: "Perpanjang",
+                            onSelect: () => setRenewContractId(contract.id),
+                          },
+                        ]
+                      : []),
                   ]}
                   label={`Aksi ${contract.contractNo}`}
                 />
@@ -239,6 +251,13 @@ export default function ContractsPage() {
           rowKey={(contract) => contract.id}
         />
       )}
+
+      <CreateContractModal onClose={() => setCreateOpen(false)} open={createOpen} />
+      <RenewContractModal
+        contractId={renewContractId}
+        onClose={() => setRenewContractId(null)}
+        open={renewContractId !== null}
+      />
     </section>
   );
 }

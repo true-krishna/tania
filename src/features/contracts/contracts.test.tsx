@@ -6,8 +6,10 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
 import ContractsPage from "@/app/(app)/contracts/page";
-import NewContractPage from "@/app/(app)/contracts/new/page";
 import ContractDetailPage from "@/app/(app)/contracts/[id]/page";
+import { CreateContractModal } from "@/features/contracts/CreateContractModal";
+import { RenewContractModal } from "@/features/contracts/RenewContractModal";
+import { ToastProvider } from "@/components/Toast";
 import {
   AuditLogsDocument,
   CreateEmploymentContractDocument,
@@ -15,6 +17,7 @@ import {
   EmploymentContractDocument,
   EmploymentContractsDocument,
   JobRolesDocument,
+  RenewEmploymentContractDocument,
   UnitsDocument,
 } from "@/generated/graphql";
 import { workLocationFormValue } from "@/features/contracts/labels";
@@ -26,6 +29,9 @@ vi.mock("next/navigation", () => ({
   useRouter: () => nav,
   notFound: () => {
     throw new Error("notFound");
+  },
+  redirect: () => {
+    throw new Error("redirect");
   },
 }));
 
@@ -115,12 +121,14 @@ const createMock = {
   },
 };
 
-async function renderNew(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
+async function renderCreateModal(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
   await act(async () => {
     render(
       <React.Suspense fallback={null}>
         <MockedProvider mocks={mocks}>
-          <NewContractPage searchParams={Promise.resolve({})} />
+          <ToastProvider>
+            <CreateContractModal onClose={() => {}} open={true} />
+          </ToastProvider>
         </MockedProvider>
       </React.Suspense>
     );
@@ -163,10 +171,10 @@ function submitForm() {
   fireEvent.submit(form);
 }
 
-describe("NewContractPage (form kontrak, T023)", () => {
+describe("CreateContractModal (form tambah kontrak, T023)", () => {
   it("shows per-field required errors when submitting an empty form", async () => {
-    await renderNew([unitsMock, jobRolesMock, employeesMock, createMock]);
-    await screen.findByRole("heading", { name: /tambah kontrak/i });
+    await renderCreateModal([unitsMock, jobRolesMock, employeesMock, createMock]);
+    expect(await screen.findByRole("dialog", { name: /tambah kontrak/i })).toBeInTheDocument();
 
     submitForm();
 
@@ -180,8 +188,8 @@ describe("NewContractPage (form kontrak, T023)", () => {
   });
 
   it("requires an end date for a time-bound type", async () => {
-    await renderNew([unitsMock, jobRolesMock, employeesMock, createMock]);
-    await screen.findByRole("heading", { name: /tambah kontrak/i });
+    await renderCreateModal([unitsMock, jobRolesMock, employeesMock, createMock]);
+    expect(await screen.findByRole("dialog", { name: /tambah kontrak/i })).toBeInTheDocument();
 
     fireEvent.change(screen.getByRole("combobox", { name: /karyawan/i }), {
       target: { value: "emp-1" },
@@ -210,8 +218,8 @@ describe("NewContractPage (form kontrak, T023)", () => {
   });
 
   it("offers the TMS contract types and treats KARYAWAN TETAP as open-ended", async () => {
-    await renderNew([unitsMock, jobRolesMock, employeesMock]);
-    await screen.findByRole("heading", { name: /tambah kontrak/i });
+    await renderCreateModal([unitsMock, jobRolesMock, employeesMock]);
+    expect(await screen.findByRole("dialog", { name: /tambah kontrak/i })).toBeInTheDocument();
 
     for (const label of [
       "TPPBW PROHIRE",
@@ -232,13 +240,13 @@ describe("NewContractPage (form kontrak, T023)", () => {
   });
 
   it("creates the contract with the TMS input", async () => {
-    await renderNew([unitsMock, jobRolesMock, employeesMock, createMock]);
-    await screen.findByRole("heading", { name: /tambah kontrak/i });
+    await renderCreateModal([unitsMock, jobRolesMock, employeesMock, createMock]);
+    expect(await screen.findByRole("dialog", { name: /tambah kontrak/i })).toBeInTheDocument();
 
     fillValidForm();
     submitForm();
 
-    expect(await screen.findByText(/kontrak pkwt\/2026\/001 berhasil dibuat/i)).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
   });
 
   it("rejects a duplicate nomor induk with a clear message", async () => {
@@ -253,8 +261,8 @@ describe("NewContractPage (form kontrak, T023)", () => {
         },
       },
     ];
-    await renderNew(mocks);
-    await screen.findByRole("heading", { name: /tambah kontrak/i });
+    await renderCreateModal(mocks);
+    expect(await screen.findByRole("dialog", { name: /tambah kontrak/i })).toBeInTheDocument();
 
     fillValidForm();
     submitForm();
@@ -280,8 +288,8 @@ describe("NewContractPage (form kontrak, T023)", () => {
         },
       },
     ];
-    await renderNew(mocks);
-    await screen.findByRole("heading", { name: /tambah kontrak/i });
+    await renderCreateModal(mocks);
+    expect(await screen.findByRole("dialog", { name: /tambah kontrak/i })).toBeInTheDocument();
 
     fillValidForm();
     submitForm();
@@ -289,6 +297,120 @@ describe("NewContractPage (form kontrak, T023)", () => {
     expect(
       await screen.findByText(/overlaps an existing contract period/i)
     ).toBeInTheDocument();
+  });
+});
+
+const renewDetailMock = {
+  request: { query: EmploymentContractDocument, variables: { id: "ctr-1" } },
+  result: {
+    data: {
+      employmentContract: {
+        __typename: "EmploymentContract",
+        id: "ctr-1",
+        contractNo: "PKWT/2025/002",
+        contractType: "TKWT_DIGITAL_TALENT",
+        officeEmail: "andi@corp.id",
+        nomorInduk: "EMP-77",
+        bandPosition: "II",
+        jobTitle: "Backend Engineer",
+        jobLevel: "Junior",
+        workLocation: "JAKARTA",
+        startDate: "2025-07-01",
+        endDate: "2026-06-30",
+        status: "ACTIVE",
+        endReason: null,
+        notes: "",
+        employee: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama" },
+        unit: { __typename: "Unit", id: "u-1", name: "Digital" },
+        jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
+      },
+    },
+  },
+};
+
+const validRenewInput = {
+  predecessorContractId: "ctr-1",
+  contractNo: "PKWT/2026/003",
+  contractType: "TKWT_DIGITAL_TALENT",
+  nomorInduk: "EMP-77",
+  bandPosition: "II",
+  jobRoleId: "jr-1",
+  workLocation: "JAKARTA",
+  unitId: "u-1",
+  startDate: "2026-07-01",
+  endDate: "2027-06-30",
+  officeEmail: "andi@corp.id",
+  jobTitle: "Backend Engineer",
+  jobLevel: "Junior",
+};
+
+const renewMock = {
+  request: { query: RenewEmploymentContractDocument, variables: { input: validRenewInput } },
+  result: {
+    data: {
+      renewEmploymentContract: {
+        __typename: "EmploymentContract",
+        id: "ctr-2",
+        contractNo: "PKWT/2026/003",
+        status: "ACTIVE",
+        startDate: "2026-07-01",
+      },
+    },
+  },
+};
+
+async function renderRenewModal(mocks: React.ComponentProps<typeof MockedProvider>["mocks"]) {
+  await act(async () => {
+    render(
+      <React.Suspense fallback={null}>
+        <MockedProvider mocks={mocks}>
+          <ToastProvider>
+            <RenewContractModal contractId="ctr-1" onClose={() => {}} open={true} />
+          </ToastProvider>
+        </MockedProvider>
+      </React.Suspense>
+    );
+  });
+}
+
+describe("RenewContractModal (form perpanjangan kontrak, T023)", () => {
+  it("pre-fills attributes from the predecessor contract", async () => {
+    await renderRenewModal([renewDetailMock, unitsMock, jobRolesMock, renewMock]);
+    expect(await screen.findByRole("dialog", { name: /perpanjang kontrak/i })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/no\. kontrak baru/i), {
+      target: { value: validRenewInput.contractNo },
+    });
+    fireEvent.change(screen.getByLabelText(/tanggal mulai/i), {
+      target: { value: validRenewInput.startDate },
+    });
+    fireEvent.change(screen.getByLabelText(/tanggal selesai/i), {
+      target: { value: validRenewInput.endDate },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /lanjut/i }));
+
+    expect(await screen.findByLabelText(/nomor induk karyawan/i)).toHaveValue("EMP-77");
+    expect(screen.getByLabelText(/email kantor/i)).toHaveValue("andi@corp.id");
+  });
+
+  it("membuat kontrak perpanjangan dengan data yang valid", async () => {
+    await renderRenewModal([renewDetailMock, unitsMock, jobRolesMock, renewMock]);
+    expect(await screen.findByRole("dialog", { name: /perpanjang kontrak/i })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/no\. kontrak baru/i), {
+      target: { value: validRenewInput.contractNo },
+    });
+    fireEvent.change(screen.getByLabelText(/tanggal mulai/i), {
+      target: { value: validRenewInput.startDate },
+    });
+    fireEvent.change(screen.getByLabelText(/tanggal selesai/i), {
+      target: { value: validRenewInput.endDate },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /lanjut/i }));
+    fireEvent.click(screen.getByRole("button", { name: /simpan perpanjangan/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
   });
 });
 
@@ -330,7 +452,9 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
   it("renders the contract rows with TMS attributes", async () => {
     render(
       <MockedProvider mocks={[listMock]}>
-        <ContractsPage />
+        <ToastProvider>
+          <ContractsPage />
+        </ToastProvider>
       </MockedProvider>
     );
 
@@ -346,11 +470,13 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
     auth.role = "CHAPTER";
     const chapter = render(
       <MockedProvider mocks={[listMock]}>
-        <ContractsPage />
+        <ToastProvider>
+          <ContractsPage />
+        </ToastProvider>
       </MockedProvider>
     );
     expect(await screen.findByText("PKWT/2025/002")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "+ Tambah Kontrak" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "+ Tambah Kontrak" })).toBeNull();
     expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
     chapter.unmount();
 
@@ -358,13 +484,50 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
     try {
       render(
         <MockedProvider mocks={[listMock]}>
-          <ContractsPage />
+          <ToastProvider>
+            <ContractsPage />
+          </ToastProvider>
         </MockedProvider>
       );
-      expect(await screen.findByRole("link", { name: "+ Tambah Kontrak" })).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "+ Tambah Kontrak" })).toBeInTheDocument();
     } finally {
       auth.role = "OPERATION";
     }
+  });
+
+  it("membuka modal tambah saat tombol Tambah Kontrak diklik", async () => {
+    render(
+      <MockedProvider mocks={[listMock, unitsMock, jobRolesMock, employeesMock]}>
+        <ToastProvider>
+          <ContractsPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("PKWT/2025/002")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /tambah kontrak/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Tambah Kontrak" }));
+
+    expect(await screen.findByRole("dialog", { name: /tambah kontrak/i })).toBeInTheDocument();
+  });
+
+  it("membuka modal perpanjang dari aksi baris", async () => {
+    render(
+      <MockedProvider mocks={[listMock, renewDetailMock, unitsMock, jobRolesMock]}>
+        <ToastProvider>
+          <ContractsPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("PKWT/2025/002")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /perpanjang kontrak/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /aksi pkwt\/2025\/002/i }));
+    fireEvent.click(screen.getByRole("button", { name: /perpanjang/i }));
+
+    expect(await screen.findByRole("dialog", { name: /perpanjang kontrak/i })).toBeInTheDocument();
   });
 
   it("filters by jenis via the collapsible filter panel", async () => {
@@ -386,7 +549,9 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
     };
     render(
       <MockedProvider mocks={[listMock, filteredMock]}>
-        <ContractsPage />
+        <ToastProvider>
+          <ContractsPage />
+        </ToastProvider>
       </MockedProvider>
     );
 

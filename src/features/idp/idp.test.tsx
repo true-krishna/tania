@@ -4,8 +4,9 @@ import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
+import { ToastProvider } from "@/components/Toast";
 import IdpPage from "@/app/(app)/idp/page";
-import NewIdpPage from "@/app/(app)/idp/new/page";
+import { CreateIdpForm } from "@/features/idp/CreateIdpForm";
 import IdpDetailPage from "@/app/(app)/idp/[id]/page";
 import {
   AddDevelopmentActionDocument,
@@ -153,7 +154,9 @@ describe("IdpPage (Apollo, US3)", () => {
           { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
         ]}
       >
-        <IdpPage />
+        <ToastProvider>
+          <IdpPage />
+        </ToastProvider>
       </MockedProvider>
     );
 
@@ -178,7 +181,9 @@ describe("IdpPage (Apollo, US3)", () => {
           },
         ]}
       >
-        <IdpPage />
+        <ToastProvider>
+          <IdpPage />
+        </ToastProvider>
       </MockedProvider>
     );
 
@@ -211,7 +216,9 @@ describe("IdpPage (Apollo, US3)", () => {
           },
         ]}
       >
-        <IdpPage />
+        <ToastProvider>
+          <IdpPage />
+        </ToastProvider>
       </MockedProvider>
     );
 
@@ -227,13 +234,15 @@ describe("IdpPage (Apollo, US3)", () => {
             { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
           ]}
         >
-          <IdpPage />
+          <ToastProvider>
+            <IdpPage />
+          </ToastProvider>
         </MockedProvider>
       );
 
       expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
       expect(screen.getByText(/hanya baca/i)).toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: /buat idp/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /buat idp/i })).toBeNull();
     } finally {
       auth.role = "CHAPTER";
     }
@@ -268,7 +277,9 @@ describe("IdpPage (Apollo, US3)", () => {
             },
           ]}
         >
-          <IdpPage />
+          <ToastProvider>
+            <IdpPage />
+          </ToastProvider>
         </MockedProvider>
       );
 
@@ -278,9 +289,54 @@ describe("IdpPage (Apollo, US3)", () => {
       auth.role = "CHAPTER";
     }
   });
+
+  it("membuka modal buat IDP saat tombol Buat IDP diklik", async () => {
+    render(
+      <MockedProvider
+        mocks={[
+          { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
+          { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: assignableTalentsResult },
+        ]}
+      >
+        <ToastProvider>
+          <IdpPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /buat idp/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /buat idp/i }));
+
+    expect(await screen.findByRole("dialog", { name: /buat idp/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /talent/i })).toBeInTheDocument();
+  });
+
+  it("menutup modal create IDP saat tombol Batal diklik", async () => {
+    render(
+      <MockedProvider
+        mocks={[
+          { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
+          { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: assignableTalentsResult },
+        ]}
+      >
+        <ToastProvider>
+          <IdpPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    await screen.findByText("Andi Pratama");
+    fireEvent.click(screen.getByRole("button", { name: /buat idp/i }));
+    expect(await screen.findByRole("dialog", { name: /buat idp/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /batal/i }));
+    expect(screen.queryByRole("dialog", { name: /buat idp/i })).toBeNull();
+  });
 });
 
-describe("NewIdpPage (Apollo form, US3)", () => {
+describe("CreateIdpForm (Apollo form, US3)", () => {
   const newMocks = [
     { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: assignableTalentsResult },
     {
@@ -307,13 +363,22 @@ describe("NewIdpPage (Apollo form, US3)", () => {
     },
   ];
 
-  it("shows required-field errors on an empty submit", async () => {
+  function renderForm() {
+    const onSuccess = vi.fn();
+    const onCancel = vi.fn();
     render(
       <MockedProvider mocks={newMocks}>
-        <NewIdpPage />
+        <ToastProvider>
+          <CreateIdpForm onCancel={onCancel} onSuccess={onSuccess} />
+        </ToastProvider>
       </MockedProvider>
     );
-    await screen.findByRole("heading", { name: /buat idp/i });
+    return { onSuccess, onCancel };
+  }
+
+  it("shows required-field errors on an empty submit", async () => {
+    renderForm();
+    expect(await screen.findByRole("combobox", { name: /talent/i })).toBeInTheDocument();
 
     fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
 
@@ -323,12 +388,8 @@ describe("NewIdpPage (Apollo form, US3)", () => {
   });
 
   it("offers only assignable talents and creates an IDP with an action", async () => {
-    render(
-      <MockedProvider mocks={newMocks}>
-        <NewIdpPage />
-      </MockedProvider>
-    );
-    await screen.findByRole("heading", { name: /buat idp/i });
+    const { onSuccess } = renderForm();
+    expect(await screen.findByRole("combobox", { name: /talent/i })).toBeInTheDocument();
 
     const talentSelect = screen.getByRole("combobox", { name: /talent/i });
     expect(Array.from(talentSelect.querySelectorAll("option")).some((o) => o.textContent?.includes("Andi Pratama"))).toBe(
@@ -355,12 +416,12 @@ describe("NewIdpPage (Apollo form, US3)", () => {
     fireEvent.change(screen.getByLabelText(/deskripsi \/ tindakan/i), {
       target: { value: "Training Go lanjutan" },
     });
-    // method defaults to TRAINING
     fireEvent.change(screen.getByLabelText(/metode/i), { target: { value: "TRAINING" } });
 
     fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
 
-    expect(await screen.findByText(/berhasil dibuat/i)).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
+    expect(onSuccess).toHaveBeenCalled();
   });
 
   it("shows an error toast when the create mutation fails", async () => {
@@ -388,10 +449,12 @@ describe("NewIdpPage (Apollo form, US3)", () => {
 
     render(
       <MockedProvider mocks={failingMocks}>
-        <NewIdpPage />
+        <ToastProvider>
+          <CreateIdpForm onCancel={() => {}} />
+        </ToastProvider>
       </MockedProvider>
     );
-    await screen.findByRole("heading", { name: /buat idp/i });
+    expect(await screen.findByRole("combobox", { name: /talent/i })).toBeInTheDocument();
 
     fireEvent.change(screen.getByRole("combobox", { name: /talent/i }), { target: { value: "emp-1" } });
     fireEvent.change(screen.getByLabelText(/development objective/i), {

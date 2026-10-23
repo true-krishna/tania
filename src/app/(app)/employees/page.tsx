@@ -13,22 +13,28 @@ import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { ToastProvider } from "@/components/Toast/Toast";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
 import { EMPLOYEE_STATUS_LABEL, EMPLOYEE_STATUS_VARIANT } from "@/features/employees/labels";
+import { EmployeeFormModal } from "@/features/employees/EmployeeFormModal";
 import { useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
-import { EMPLOYEE_NEW, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
+import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 export default function EmployeesPage() {
   const role = useSessionRole();
   if (role === "TALENT") return <OwnEmployeeRedirect />;
   if (role === "CHAPTER") return <ChapterTalentList />;
-  return <EmployeeDirectory manage={canManage(role, "employees")} />;
+  return (
+    <ToastProvider>
+      <EmployeeDirectory manage={canManage(role, "employees")} />
+    </ToastProvider>
+  );
 }
 
 function OwnEmployeeRedirect() {
@@ -116,6 +122,8 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [pageSize, setPageSize] = React.useState(25);
+  const [modalMode, setModalMode] = React.useState<"create" | "edit" | null>(null);
+  const [editEmployeeId, setEditEmployeeId] = React.useState<string | null>(null);
   const units = useUnits();
   const {
     status: query,
@@ -153,9 +161,9 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       <PageHeader
         actions={
           manage ? (
-            <Link className="no-underline" href={EMPLOYEE_NEW}>
-              <Button variant="primary">+ Tambah Karyawan</Button>
-            </Link>
+            <Button onClick={() => setModalMode("create")} variant="primary">
+              + Tambah Karyawan
+            </Button>
           ) : undefined
         }
         filters={
@@ -309,6 +317,17 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
                       label: "Lihat detail",
                       onSelect: () => router.push(EMPLOYEE_DETAIL(employee.id)),
                     },
+                    ...(manage
+                      ? [
+                          {
+                            label: "Ubah data diri",
+                            onSelect: () => {
+                              setEditEmployeeId(employee.id);
+                              setModalMode("edit");
+                            },
+                          },
+                        ]
+                      : []),
                   ]}
                   label={`Aksi ${employee.fullName}`}
                 />
@@ -326,6 +345,15 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
           rowKey={(employee) => employee.id}
         />
       )}
+      <EmployeeFormModal
+        employeeId={editEmployeeId ?? undefined}
+        mode={modalMode ?? "create"}
+        onClose={() => {
+          setModalMode(null);
+          setEditEmployeeId(null);
+        }}
+        open={modalMode !== null}
+      />
     </section>
   );
 }
