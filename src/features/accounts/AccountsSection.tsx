@@ -196,7 +196,7 @@ export function AccountsSection({
               <span>Peran</span>
               <Select
                 aria-label={`Ubah peran ${account.fullName}`}
-                className="w-auto"
+                className="w-fit"
                 onChange={(e) => void onChangeRole(account.id, e.target.value)}
                 options={options.map((option) => ({ value: option.value, label: option.label }))}
                 value={account.roleName}

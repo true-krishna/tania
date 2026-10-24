@@ -29,19 +29,37 @@ const SUBTITLE: Partial<Record<AccessRole, string>> = {
   TALENT: "Riwayat penugasan Anda.",
 };
 
-function TalentOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function TalentOptions({
+  labelledBy,
+  value,
+  onChange,
+}: {
+  labelledBy?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
   const role = useSessionRole();
   return role === "CHAPTER" ? (
-    <ChapterTalentOptions onChange={onChange} value={value} />
+    <ChapterTalentOptions labelledBy={labelledBy} onChange={onChange} value={value} />
   ) : (
-    <EmployeeTalentOptions onChange={onChange} value={value} />
+    <EmployeeTalentOptions labelledBy={labelledBy} onChange={onChange} value={value} />
   );
 }
 
-function EmployeeTalentOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function EmployeeTalentOptions({
+  labelledBy,
+  value,
+  onChange,
+}: {
+  labelledBy?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
   const employees = useEmployees();
   return (
     <Select
+      aria-labelledby={labelledBy}
+      className="w-64"
       onChange={(e) => onChange(e.target.value)}
       options={[
         { value: "", label: "Semua" },
@@ -52,10 +70,20 @@ function EmployeeTalentOptions({ value, onChange }: { value: string; onChange: (
   );
 }
 
-function ChapterTalentOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function ChapterTalentOptions({
+  labelledBy,
+  value,
+  onChange,
+}: {
+  labelledBy?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
   const talents = useAssignableTalents();
   return (
     <Select
+      aria-labelledby={labelledBy}
+      className="w-64"
       onChange={(e) => onChange(e.target.value)}
       options={[
         { value: "", label: "Semua" },
@@ -89,9 +117,11 @@ export default function AssignmentsPage() {
   const talentField = {
     key: "talentId",
     label: "Talent",
-    render: ({ onChange, value }: { onChange: (value: string) => void; value: string }) => (
-      <TalentOptions onChange={onChange} value={value} />
-    ),
+    render: (context: {
+      labelledBy?: string;
+      onChange: (value: string) => void;
+      value: string;
+    }) => <TalentOptions labelledBy={context.labelledBy} onChange={context.onChange} value={context.value} />,
     type: "custom" as const,
   };
   const fields = [

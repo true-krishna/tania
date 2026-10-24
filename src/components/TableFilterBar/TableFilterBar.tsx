@@ -1,11 +1,10 @@
 "use client";
 
-import { IconSearch } from "@tabler/icons-react";
+import { IconSearch, IconX } from "@tabler/icons-react";
 import * as React from "react";
 import { FilterButton } from "@/components/FilterButton";
 import { Input } from "@/components/Input";
 import { Select, type SelectOption } from "@/components/Select";
-import { Button } from "@/components/Button";
 import { cn } from "@/lib/cn";
 
 export type TableFilterValues = Record<string, string>;
@@ -13,6 +12,7 @@ export type TableFilterValues = Record<string, string>;
 export interface TableFilterFieldContext {
   value: string;
   onChange: (value: string) => void;
+  labelledBy?: string;
 }
 
 export type TableFilterField =
@@ -55,17 +55,20 @@ function countActiveFields(
 
 function FilterFieldControl({
   field,
+  labelId,
   value,
   onChange,
 }: {
   field: TableFilterField;
+  labelId: string;
   value: string;
   onChange: (value: string) => void;
 }) {
   if (field.type === "select") {
     return (
       <Select
-        className={cn("w-auto", field.className)}
+        aria-labelledby={labelId}
+        className={cn("w-48", field.className)}
         onChange={(event) => onChange(event.target.value)}
         options={field.options}
         value={value}
@@ -75,14 +78,15 @@ function FilterFieldControl({
   if (field.type === "date") {
     return (
       <Input
-        className={cn("w-auto", field.className)}
+        aria-labelledby={labelId}
+        className="w-40"
         onChange={(event) => onChange(event.target.value)}
         type="date"
         value={value}
       />
     );
   }
-  return field.render({ value, onChange });
+  return field.render({ labelledBy: labelId, onChange, value });
 }
 
 export function TableFilterBar({
@@ -120,12 +124,22 @@ export function TableFilterBar({
             />
             <input
               aria-label={search.label}
-              className="tp-input pl-11!"
+              className="tp-input pl-11! pr-10!"
               onChange={(event) => search.onChange(event.target.value)}
               placeholder={search.placeholder}
               type="search"
               value={search.value}
             />
+            {search.value ? (
+              <button
+                aria-label="Hapus pencarian"
+                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-tp-muted transition-colors hover:bg-tp-bg hover:text-tp-text"
+                onClick={() => search.onChange("")}
+                type="button"
+              >
+                <IconX aria-hidden size={16} stroke={2} />
+              </button>
+            ) : null}
           </div>
         ) : null}
         {hasFields ? (
@@ -141,21 +155,38 @@ export function TableFilterBar({
       </div>
 
       {hasFields && panelOpen ? (
-        <div className="tp-card flex flex-wrap items-end gap-4" id={panelId}>
-          {fields.map((field) => (
-            <label className="flex items-center gap-2 text-sm text-zinc-700" key={field.key}>
-              <span>{field.label}</span>
-              <FilterFieldControl
-                field={field}
-                onChange={(value) => change(field.key, value)}
-                value={values[field.key] ?? ""}
-              />
-            </label>
-          ))}
+        <div className="tp-card flex flex-col gap-4" id={panelId}>
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+            {fields.map((field) => {
+              const labelId = `${panelId}-${field.key}-label`;
+              return (
+                <div className="flex min-w-0 flex-col gap-1.5" key={field.key}>
+                  <span
+                    className="text-xs font-semibold text-tp-muted"
+                    id={labelId}
+                  >
+                    {field.label}
+                  </span>
+                  <FilterFieldControl
+                    field={field}
+                    labelId={labelId}
+                    onChange={(value) => change(field.key, value)}
+                    value={values[field.key] ?? ""}
+                  />
+                </div>
+              );
+            })}
+          </div>
           {activeCount > 0 ? (
-            <Button className="ml-auto" onClick={resetAll} type="button" variant="secondary">
-              Reset
-            </Button>
+            <div className="flex justify-end border-t border-tp-line pt-3">
+              <button
+                className="rounded-full px-3 py-1.5 text-sm font-semibold text-tp-muted transition-colors hover:bg-tp-bg hover:text-tp-text"
+                onClick={resetAll}
+                type="button"
+              >
+                Reset
+              </button>
+            </div>
           ) : null}
         </div>
       ) : null}

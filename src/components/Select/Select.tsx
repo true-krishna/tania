@@ -11,10 +11,15 @@ type SelectProps = Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "children
   options: readonly SelectOption[];
 };
 
-export function Select({ className = "", options, ...rest }: SelectProps) {
+export function Select({ className = "", options, value, ...rest }: SelectProps) {
   return (
-    <div className="relative">
-      <select className={cn("tp-input appearance-none pr-10!", className)} {...rest}>
+    <div className={cn("relative h-11 min-w-0 text-sm", className)}>
+      <select
+        className="tp-select"
+        data-empty={value === "" || undefined}
+        value={value}
+        {...rest}
+      >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

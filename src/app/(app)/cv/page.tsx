@@ -529,18 +529,18 @@ function CvRosterViewer({ audience }: { audience: "CHAPTER" | "OPERATION" | "ADM
         title="Profil CV Talent"
       />
       <InputControl label="Pilih Talent">
-        <select
-          className={LABEL}
+        <Select
+          aria-label="Pilih talent"
           onChange={(e) => setSelected(e.target.value)}
+          options={[
+            { value: "", label: "— pilih talent —" },
+            ...(talents.employees ?? []).map((emp) => ({
+              value: emp.id,
+              label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
+            })),
+          ]}
           value={selected}
-        >
-          <option value="">— pilih talent —</option>
-          {(talents.employees ?? []).map((emp) => (
-            <option key={emp.id} value={emp.id}>
-              {emp.fullName} ({emp.nomorInduk ?? "—"})
-            </option>
-          ))}
-        </select>
+        />
       </InputControl>
 
       {!selected ? null : status === "loading" ? (
