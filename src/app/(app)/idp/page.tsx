@@ -7,12 +7,11 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
-import { FilterButton } from "@/components/FilterButton";
 import { Modal } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
-import { Select } from "@/components/Select";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { CreateIdpForm } from "@/features/idp/CreateIdpForm";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { MyIdpView } from "@/features/idp/MyIdpView";
@@ -48,17 +47,21 @@ export default function IdpPage() {
 
 function IdpRosterView({ managing }: { managing: boolean }) {
   const router = useRouter();
-  const [status, setStatus] = React.useState<IdpStatus | "ALL">("ALL");
-  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [status, setStatus] = React.useState("");
   const [createOpen, setCreateOpen] = React.useState(false);
   const { status: query, data, error, refetch } = useIdps({
-    status: status === "ALL" ? undefined : status,
+    status: (status || undefined) as IdpStatus | undefined,
   });
   const { pageRows, pagination, resetPage } = useTablePagination(data);
 
   function handleCreateSuccess() {
     setCreateOpen(false);
     void refetch();
+  }
+
+  function changeFilter(key: string, value: string) {
+    if (key === "status") setStatus(value);
+    resetPage();
   }
 
   return (
@@ -71,14 +74,6 @@ function IdpRosterView({ managing }: { managing: boolean }) {
             </Button>
           ) : undefined
         }
-        filters={
-          <FilterButton
-            activeCount={status !== "ALL" ? 1 : 0}
-            expanded={filtersOpen}
-            onClick={() => setFiltersOpen((open) => !open)}
-            panelId="idp-filter-panel"
-          />
-        }
         subtitle={
           managing
             ? "Kelola Individual Development Plan talent dalam chapter Anda."
@@ -87,26 +82,23 @@ function IdpRosterView({ managing }: { managing: boolean }) {
         title="IDP"
       />
 
-      {filtersOpen ? (
-        <div className="tp-card flex flex-wrap items-end gap-4" id="idp-filter-panel">
-          <label className="flex items-center gap-2 text-sm text-zinc-700">
-            <span>Status</span>
-            <Select
-              onChange={(e) => {
-                setStatus(e.target.value as IdpStatus | "ALL");
-                resetPage();
-              }}
-              options={[
-                { value: "ALL", label: "Semua" },
-                { value: "IN_PROGRESS", label: "Berjalan" },
-                { value: "NEEDS_REVIEW", label: "Perlu review" },
-                { value: "COMPLETED", label: "Selesai" },
-              ]}
-              value={status}
-            />
-          </label>
-        </div>
-      ) : null}
+      <TableFilterBar
+        fields={[
+          {
+            key: "status",
+            label: "Status",
+            options: [
+              { value: "", label: "Semua" },
+              { value: "IN_PROGRESS", label: "Berjalan" },
+              { value: "NEEDS_REVIEW", label: "Perlu review" },
+              { value: "COMPLETED", label: "Selesai" },
+            ],
+            type: "select",
+          },
+        ]}
+        onChange={changeFilter}
+        values={{ status }}
+      />
 
       {query === "loading" ? (
         <LoadingState />

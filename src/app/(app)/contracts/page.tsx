@@ -7,12 +7,10 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
-import { FilterButton } from "@/components/FilterButton";
-import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
-import { Select } from "@/components/Select";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { canManage } from "@/lib/auth/matrix";
 import { useSessionRole } from "@/lib/auth/guard";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
@@ -38,13 +36,14 @@ export default function ContractsPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [renewContractId, setRenewContractId] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
-  const [contractType, setContractType] = React.useState<ContractType | "ALL">("ALL");
-  const [status, setStatus] = React.useState<EmploymentContractStatus | "ALL">("ALL");
-  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [filters, setFilters] = React.useState<{ contractType: string; status: string }>({
+    contractType: "",
+    status: "",
+  });
   const filter: EmploymentContractFilter = {
     search: search || undefined,
-    contractType: contractType === "ALL" ? undefined : contractType,
-    status: status === "ALL" ? undefined : status,
+    contractType: (filters.contractType || undefined) as ContractType | undefined,
+    status: (filters.status || undefined) as EmploymentContractStatus | undefined,
   };
   const {
     status: query,
@@ -55,7 +54,6 @@ export default function ContractsPage() {
     error,
     loadMore,
   } = useEmploymentContracts(filter);
-  const activeFilters = (contractType !== "ALL" ? 1 : 0) + (status !== "ALL" ? 1 : 0);
 
   const { pageRows, pagination, resetPage } = useTablePagination(contracts, {
     totalItems: totalCount,
@@ -63,6 +61,11 @@ export default function ContractsPage() {
     loadingMore,
     loadMore,
   });
+
+  function changeFilter(key: string, value: string) {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    resetPage();
+  }
 
   return (
     <section className="flex flex-col gap-4">
@@ -74,28 +77,6 @@ export default function ContractsPage() {
             </Button>
           ) : undefined
         }
-        filters={
-          <FilterButton
-            activeCount={activeFilters}
-            expanded={filtersOpen}
-            onClick={() => setFiltersOpen((open) => !open)}
-            panelId="contract-filter-panel"
-          />
-        }
-        search={
-          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
-            <span className="sr-only">Cari kontrak</span>
-            <Input
-              onChange={(e) => {
-                setSearch(e.target.value);
-                resetPage();
-              }}
-              placeholder="Cari nama karyawan, no kontrak, atau nomor induk…"
-              type="search"
-              value={search}
-            />
-          </label>
-        }
         subtitle={
           manage
             ? "Kelola kontrak kerja karyawan."
@@ -104,45 +85,44 @@ export default function ContractsPage() {
         title="Kontrak Kerja"
       />
 
-      {filtersOpen ? (
-        <div className="tp-card flex flex-wrap items-end gap-4" id="contract-filter-panel">
-          <label className="flex items-center gap-2 text-sm text-zinc-700">
-            <span>Jenis</span>
-            <Select
-              className="w-auto"
-              onChange={(e) => {
-                setContractType(e.target.value as ContractType | "ALL");
-                resetPage();
-              }}
-              options={[
-                { value: "ALL", label: "Semua" },
-                ...CONTRACT_TYPE_ORDER.map((type) => ({
-                  value: type,
-                  label: CONTRACT_TYPE_LABEL[type],
-                })),
-              ]}
-              value={contractType}
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-zinc-700">
-            <span>Status</span>
-            <Select
-              className="w-auto"
-              onChange={(e) => {
-                setStatus(e.target.value as EmploymentContractStatus | "ALL");
-                resetPage();
-              }}
-              options={[
-                { value: "ALL", label: "Semua" },
-                ...(Object.keys(CONTRACT_STATUS_LABEL) as Array<
-                  keyof typeof CONTRACT_STATUS_LABEL
-                >).map((value) => ({ value, label: CONTRACT_STATUS_LABEL[value] })),
-              ]}
-              value={status}
-            />
-          </label>
-        </div>
-      ) : null}
+      <TableFilterBar
+        fields={[
+          {
+            key: "contractType",
+            label: "Jenis",
+            options: [
+              { value: "", label: "Semua" },
+              ...CONTRACT_TYPE_ORDER.map((type) => ({
+                value: type,
+                label: CONTRACT_TYPE_LABEL[type],
+              })),
+            ],
+            type: "select",
+          },
+          {
+            key: "status",
+            label: "Status",
+            options: [
+              { value: "", label: "Semua" },
+              ...(Object.keys(CONTRACT_STATUS_LABEL) as Array<
+                keyof typeof CONTRACT_STATUS_LABEL
+              >).map((value) => ({ value, label: CONTRACT_STATUS_LABEL[value] })),
+            ],
+            type: "select",
+          },
+        ]}
+        onChange={changeFilter}
+        search={{
+          label: "Cari kontrak",
+          onChange: (value) => {
+            setSearch(value);
+            resetPage();
+          },
+          placeholder: "Cari nama karyawan, no kontrak, atau nomor induk…",
+          value: search,
+        }}
+        values={filters}
+      />
 
       {query === "loading" ? (
         <LoadingState />

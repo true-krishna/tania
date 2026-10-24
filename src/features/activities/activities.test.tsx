@@ -241,7 +241,8 @@ describe("ActivitiesPageView — create, edit, delete against the store", () => 
     const table = await screen.findByRole("table", { name: "Daftar aktivitas saya" });
     expect(within(table).getByText("Pelatihan Go Clean Architecture")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Filter status aktivitas"), {
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+    fireEvent.change(screen.getByLabelText("Status"), {
       target: { value: "status-done" },
     });
 

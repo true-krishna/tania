@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Card } from "@/components/Card";
 import { Table } from "@/components/Table";
-import { Input } from "@/components/Input";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { LoadStatusBadge } from "./LoadStatusBadge";
 import type { DistributionRow } from "./types";
 
@@ -42,18 +42,16 @@ export function TalentTable({
             Tabel talent dengan workload periode terpilih — pilih talent untuk melihat laporannya.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-[13px] font-semibold text-tp-muted">
-          Cari
-          <Input
-            aria-label="Cari talent"
-            className="h-10 max-w-72 flex-1"
-            onChange={(e) => changeSearch(e.target.value)}
-            placeholder="Nama, tribe, atau squad…"
-            type="search"
-            value={search}
-          />
-        </label>
       </div>
+
+      <TableFilterBar
+        search={{
+          label: "Cari talent",
+          onChange: changeSearch,
+          placeholder: "Nama, tribe, atau squad…",
+          value: search,
+        }}
+      />
 
       <Table
         caption="Tabel talent dengan workload"

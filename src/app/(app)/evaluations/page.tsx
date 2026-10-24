@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Table } from "@/components/Table";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { useCurrentEvaluationPeriod } from "@/features/evaluations/useCurrentEvaluationPeriod";
 import { useEvaluationRoster } from "@/features/evaluations/useEvaluationRoster";
 import {
@@ -27,7 +29,16 @@ export default function EvaluationsPage() {
   const current = useCurrentEvaluationPeriod();
   const roster = useEvaluationRoster(current.data?.id ?? null);
   const period = current.data;
-  const { pageRows, pagination } = useTablePagination(roster.data);
+  const [search, setSearch] = React.useState("");
+  const { pageRows, pagination } = useTablePagination(
+    React.useMemo(() => {
+      const needle = search.trim().toLowerCase();
+      if (!needle) return roster.data;
+      return (roster.data ?? []).filter((entry) =>
+        entry.talent.fullName.toLowerCase().includes(needle),
+      );
+    }, [roster.data, search]),
+  );
 
   if (role === "TALENT") {
     return (
@@ -92,8 +103,19 @@ export default function EvaluationsPage() {
         </div>
       </div>
 
+      <TableFilterBar
+        search={{
+          label: "Cari talent",
+          onChange: setSearch,
+          placeholder: "Cari nama talent…",
+          value: search,
+        }}
+      />
+
       {entries.length === 0 ? (
         <EmptyState message="Tidak ada talent dalam cakupan chapter untuk periode ini." />
+      ) : pageRows.length === 0 ? (
+        <p className="text-sm text-tp-muted">Tidak ada talent yang cocok dengan pencarian.</p>
       ) : (
         <Table
           caption="Roster evaluasi periode"

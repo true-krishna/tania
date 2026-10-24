@@ -7,12 +7,19 @@ import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/
 import { Modal } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
 import { EvaluationTemplateCreateForm } from "@/features/evaluations/EvaluationTemplateCreateForm";
 
 export default function EvaluationTemplatesPage() {
   const { status, data, error } = useEvaluationTemplates();
-  const { pageRows, pagination } = useTablePagination(data);
+  const [search, setSearch] = React.useState("");
+  const visibleTemplates = React.useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return data ?? [];
+    return (data ?? []).filter((template) => template.name.toLowerCase().includes(needle));
+  }, [data, search]);
+  const { pageRows, pagination } = useTablePagination(visibleTemplates);
   const [modalOpen, setModalOpen] = React.useState(false);
 
   const actions = (
@@ -33,8 +40,20 @@ export default function EvaluationTemplatesPage() {
         subtitle="Framework penilaian yang dikelola Admin (FR-31)."
         title="Template Evaluasi"
       />
+      {isEmpty ? null : (
+        <TableFilterBar
+          search={{
+            label: "Cari template",
+            onChange: setSearch,
+            placeholder: "Cari nama template…",
+            value: search,
+          }}
+        />
+      )}
       {isEmpty ? (
         <EmptyState message="Belum ada template evaluasi. Buat template pertama." />
+      ) : visibleTemplates.length === 0 ? (
+        <p className="text-sm text-tp-muted">Tidak ada template yang cocok dengan pencarian.</p>
       ) : (
         <Table
           caption="Daftar template evaluasi"
