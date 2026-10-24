@@ -8,17 +8,19 @@ import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
 import { FilterButton } from "@/components/FilterButton";
+import { Modal } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { CreateIdpForm } from "@/features/idp/CreateIdpForm";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { MyIdpView } from "@/features/idp/MyIdpView";
 import { useIdps } from "@/features/idp/useIdps";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 import { orDash } from "@/lib/cell";
-import { IDP_NEW, IDP_DETAIL } from "@/lib/constants/routes";
+import { IDP_DETAIL } from "@/lib/constants/routes";
 import type { IdpStatus } from "@/generated/graphql/types";
 
 type IdpListRow = {
@@ -48,19 +50,25 @@ function IdpRosterView({ managing }: { managing: boolean }) {
   const router = useRouter();
   const [status, setStatus] = React.useState<IdpStatus | "ALL">("ALL");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
-  const { status: query, data, error } = useIdps({
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const { status: query, data, error, refetch } = useIdps({
     status: status === "ALL" ? undefined : status,
   });
   const { pageRows, pagination, resetPage } = useTablePagination(data);
+
+  function handleCreateSuccess() {
+    setCreateOpen(false);
+    void refetch();
+  }
 
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
         actions={
           managing ? (
-            <Link className="no-underline" href={IDP_NEW}>
-              <Button variant="primary">+ Buat IDP</Button>
-            </Link>
+            <Button onClick={() => setCreateOpen(true)} variant="primary">
+              + Buat IDP
+            </Button>
           ) : undefined
         }
         filters={
@@ -199,6 +207,19 @@ function IdpRosterView({ managing }: { managing: boolean }) {
           rowKey={(idp) => idp.id}
         />
       )}
+
+      <Modal
+        onClose={() => setCreateOpen(false)}
+        open={createOpen}
+        size="lg"
+        subtitle="Rancang Individual Development Plan untuk talent (Chapter)."
+        title="Buat IDP"
+      >
+        <CreateIdpForm
+          onCancel={() => setCreateOpen(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      </Modal>
     </section>
   );
 }

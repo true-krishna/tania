@@ -1,6 +1,6 @@
 # Tania Design Constitution
 
-**Version**: 4.5.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-21
+**Version**: 4.6.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-22
 **Source of record (two layers, one canon)**:
 1. **Owner-approved TANIA navy+red brand direction** — brand-role mapping and values are defined in Principle I from the approved TAN-99 exploration. It supersedes the prior Legion Violet brand mapping only. Amendment 4.3.0 extends it with the brand owner's **TANIA Brand Color Kit** (Color Guideline v1.2, Logo Guideline v1.1) and the owner's five decisions of 2026-10-13 (informational status, active red accent roles, danger distinctness, official logo assets, kit surfaces). Amendment 4.3.1 closes the deviations reported against that review: the kit's chart series order and the dark-theme active-navigation pair. Amendment 4.5.0 ratifies the tosca/sky/warm-white accent layer from the latest TAN-99 exploration (`tania-login-tosca-v2.html`, 2026-10-21).
 2. **The `tania-design-system` package (TANIA Pulse)** — executable structural adaptation: Pulse components, radius scale, shadow, themes, icon set, app shell, and reference pages. Existing non-brand Pulse rules remain in force unless amended below.
@@ -62,6 +62,18 @@ The workflow remains **fully agentic** (Principle X): the constitution, the Legi
 ### V. Shipped component classes define the state model
 
 `tokens/components.css` (`.tp-*`) is the reference implementation. Interactive components MUST preserve these behaviors:
+
+- **Modal / Dialog**: All CRUD forms (create and edit) for table-based list pages open in a modal dialog instead of navigating to a separate page. Modals preserve the context of the list page underneath.
+  - **Structure**: centered card on a semi-transparent scrim overlay (`bg-black/40`). Card uses `.tp-card` styling: surface bg, 1px `--tp-line` border, r-lg `20px`, 20px padding, `--tp-shadow`.
+  - **Sizing**: three widths — small `420px` (simple forms: master data, confirmations), medium `560px` (standard forms: assignments, evaluations), large `720px` (complex forms: employees, contracts with many fields).
+  - **Header**: Bold 700 22px title (`.tp-card` title size), optional subtitle; close icon (×) in top-right (outline 2px, 24px grid).
+  - **Content**: scrollable body when content exceeds max height (viewport − 160px top/bottom padding).
+  - **Footer**: action buttons right-aligned — primary button (e.g. "Simpan") on right, outline/secondary button (e.g. "Batal") to its left. Both use `.tp-btn` / `.tp-btn--primary` styles.
+  - **Behavior**: dismissible by clicking scrim, pressing Escape, or clicking close icon/batal button. Submitting closes the modal and shows a success toast.
+  - **Accessibility**: `role="dialog"`, `aria-modal="true"`, focus trap inside modal while open, first focusable element focused on open, focus returns to trigger on close, `aria-labelledby` points to title.
+  - **Motion**: 200ms ease-in-out fade-in for scrim, scale-in for card; honor `prefers-reduced-motion`.
+  - **Pattern for list pages**: "Tambah" button in page header opens create modal; row action menu "Ubah" opens edit modal with pre-filled data. No route change for create/edit.
+  - **Exception**: detail pages with inline edits (e.g. contract detail, assignment detail) keep their existing inline pattern — only the list-page create/edit flows move to modals.
 
 - **Button** (`.tp-btn`): Nunito Sans 600 14px, min-height 40px, padding 0 18px, pill, 1.5px ink (`--tp-text`) border, transparent bg; hover = `--tp-bg`. **Primary** (`.tp-btn--primary`): `--tp-brand-navy` fill, white text; hover/press = `--tp-brand-navy-deep`. Validate contrast (VI). Icon accents inside yield to white only if contrast passes. Inline-flex, 8px icon gap.
 - **Input** (`.tp-input`): min-height 44px, padding 0 16px, 1px `--tp-line`, pill, surface bg, 400 14px.
@@ -130,7 +142,7 @@ Tania's FE workflow is **fully agentic** — no human transcribes designs into c
 The package does not define; until it does, derive by analogy from shipped values + general industry reference, mark **"non-canonical (general reference)"** in the spec, and promote recurring choices by amendment:
 
 1. **Disabled/pressed/loading states** — primary navy/deep-navy states are defined in II and V; recipes for other components remain undefined. Disabled button/input recipes remain undefined.
-2. **Overlay & feedback components**: modal, dropdown/select, tooltip, toast/snackbar, pagination.
+2. **Overlay & feedback components**: dropdown/select, tooltip, toast/snackbar, pagination. (Modal/dialog promoted in 4.6.0.)
 3. **Form controls**: checkbox, radio, switch, textarea, validation/error borders (no error/success border tokens exist).
 4. **Table component spec** — reference pages show usage, not a tokenized component.
 5. **Formal spacing scale and z-index system** — reuse shipped paddings on the 4px grid; no invented scale.
@@ -148,6 +160,7 @@ Navy+red brand roles and the tosca/sky/warm-white accent layer are owner-approve
 
 | Version | Date | Change |
 |---|---|---|
+| 4.6.0 | 2026-10-22 | Promoted modal/dialog from Known Gaps to §V (Principle V). Defined the standard pattern for CRUD forms on table-based list pages: all create and edit forms open in a centered modal dialog instead of navigating to a separate page. Specified structure (card on scrim), three size tiers (420/560/720px), header/content/footer layout, accessibility requirements (role=dialog, focus trap, aria-labelledby), dismiss behaviors (scrim click, Escape, close button), motion timing, and the list-page trigger pattern (Tambah in header, Ubah in row actions). Detail-page inline edits are explicitly excluded from this pattern. |
 | 4.5.0 | 2026-10-21 | Ratified the latest TAN-99 mockup (`tania-login-tosca-v2.html`, 2026-10-20) as the accent layer: tosca `#00A99D` / soft `#D9F5F0` / ink `#066B66` (5.5:1) as decorative/content accent, sky `#DFF2FF`/`#A9DCFF`/`#F5F9FD` and warm-white `#FDFCFB` as canvas/panel surfaces (I); hero/illustration panels may use the light warm-white + red-tint wash + flat wave recipe and the dark card becomes max-one (II, Additional Constraints); tosca added to the accent share and excluded from status/interaction roles (IX); legacy alias cleanup during propagation made explicit (I). Non-brand rules and the navy+red mapping are unchanged — primary buttons stay navy, the focus ring stays the ratified 2px `--tp-brand-red` + 2px offset. Package propagation of the new accent tokens (tokens.css + Tailwind mirror) and dark-theme pairs remain follow-up work. (Renumbered from the colliding 4.3.0 of the TAN-63 delivery, following the 2026-10-14 governance-repair precedent.) |
 | 4.4.0 | 2026-10-13 | Owner decision (TAN-170): §VIII content widths — the 1160px centered content container is retired; main is fluid with 24px side gutters and fills the viewport minus the 268px sidebar so content adapts to large viewports. Topbar horizontal padding 28px → 24px to stay aligned with the content gutter. Pages keep self-constrained widths (standard 860–900px, narrow/forms 560px). (Renumbered from a colliding 4.3.0 to 4.4.0 during the 2026-10-14 governance repair, owner-approved.) |
 | 4.3.1 | 2026-10-13 | Owner decisions closing the five deviations reported after 4.3.0 shipped. (a) Chart series adopt the kit palette `--tp-chart-1..4` (`#E1231A`/`#2684FF`/`#168A5B`/`#D9822B`), mapped to our semantic roles (churn / distribution / new talent, chart-4 reserved) so no existing series meaning is inverted; bar tracks use canvas. (b) The active-navigation pair gains ratified **dark** values taken verbatim from the TAN-99 dark mockup: `--tp-brand-red-tint` `#3A1715` + new `--tp-brand-red-ink` `#FF8A82` (7.0:1), superseding 4.3.0's "no dark brand values" for this pair only; this also fixes the `.tp-ai` block on dark surfaces. (c) Link colour confirmed as `--tp-brand-red-deep` (`#B71C14`), `#E1231A` reserved for non-text use. (d) `--tp-text` stays `#212121`. (e) Logo assets confirmed as the attached kit files. Amendment only; package/token propagation is the follow-up implementation change. |
@@ -160,4 +173,4 @@ Navy+red brand roles and the tosca/sky/warm-white accent layer are owner-approve
 | 2.0.0 | 2026-09-30 | Owner decisions: visual values over tokens; 24px gutter + general-reference grid/breakpoints; light mode only; general references for non-Legion gaps. |
 | 1.0.0 | 2026-09-25 | Initial ratification from `DESIGN-legion.md`. |
 
-**Version**: 4.5.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-21
+**Version**: 4.6.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-22

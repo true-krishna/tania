@@ -15,3 +15,4 @@ export { InputControl } from "./InputControl";
 export { PageHeader } from "./PageHeader";
 export { Select } from "./Select";
 export { Brand } from "./Brand";
+export { Modal, type ModalSize, type ModalFooterAction } from "./Modal";

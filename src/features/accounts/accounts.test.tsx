@@ -166,6 +166,7 @@ function rowOf(name: string) {
 
 async function openCreateForm() {
   fireEvent.click(screen.getByRole("button", { name: "Tambah Akun" }));
+  expect(screen.getByRole("dialog", { name: "Tambah Akun" })).toBeInTheDocument();
   // The picker mounts and fires an initial empty-search query.
   await screen.findByRole("combobox", { name: /karyawan/i });
 }
@@ -256,6 +257,7 @@ describe("accounts management (Admin) — T053", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       'Akun "ahmad@telkom.co.id" berhasil dibuat.',
     );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("surfaces the server validation message on the create form", async () => {

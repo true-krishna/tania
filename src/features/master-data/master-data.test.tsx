@@ -75,11 +75,13 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Tambah Unit" }));
+    expect(screen.getByRole("dialog", { name: "Tambah Unit" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Kode Unit"), { target: { value: "ENG" } });
     fireEvent.change(screen.getByLabelText("Nama Unit"), { target: { value: "Engineering" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent('Unit "Engineering" berhasil dibuat.');
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("renames a unit via the edit form", async () => {
@@ -106,10 +108,12 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Aksi Digital Business & Technology" }));
     fireEvent.click(screen.getByRole("button", { name: "Ubah" }));
+    expect(screen.getByRole("dialog", { name: "Ubah Nama Unit" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Nama Unit"), { target: { value: "Digital" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Unit berhasil diubah.");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("deactivates a unit and shows the success toast", async () => {
