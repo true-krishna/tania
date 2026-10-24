@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
 //
-// Component tests for the SSO-first `/login` (T026 · FR-001/FR-002/FR-009 · D8′).
-// The PKCE primitives themselves are covered in
-// `src/features/auth/entra-pkce.test.ts`; here the subject is the page's
-// decision: offer Microsoft as the main door, never navigate on mount, and put
-// the email + password form behind "Login by Email".
+// Component tests for the redesigned `/login` (TAN-331, mockup
+// login-tosca-desktop / constitution 4.5.0): the email + password form is the
+// main door from the first paint, "Masuk dengan SSO Telkom" is the secondary
+// door below it, and the page never navigates on its own.
 
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -49,9 +48,10 @@ function renderLogin(mocks: unknown[]) {
   );
 }
 
-const EMAIL_LABEL = /email kerja/i;
-const MICROSOFT = { name: /continue with microsoft/i };
-const EMAIL_DOOR = { name: /login by email/i };
+const EMAIL_LABEL = /email/i;
+const PASSWORD_LABEL = /kata sandi/i;
+const SSO_BUTTON = { name: "Masuk dengan SSO Telkom" };
+const LOGIN_BUTTON = { name: "Masuk" };
 
 beforeEach(() => {
   process.env.NEXT_PUBLIC_AUTH_LOCAL_ONLY = "0";
@@ -71,51 +71,69 @@ beforeEach(() => {
   });
 });
 
-describe("tombol Microsoft selalu tampil, tanpa pengalihan otomatis (D8′)", () => {
-  it("offers the Microsoft button and never navigates while the page is open", async () => {
+/**
+ * jsdom's `document.cookie` getter hides attributes (Max-Age), so capture the
+ * raw cookie writes to assert session vs persistent persistence.
+ */
+function captureCookieWrites() {
+  const writes: string[] = [];
+  let value = "";
+  Object.defineProperty(document, "cookie", {
+    configurable: true,
+    get: () => value,
+    set: (next: string) => {
+      writes.push(next);
+      value = next;
+    },
+  });
+  return {
+    writes,
+    restore: () => Reflect.deleteProperty(document, "cookie"),
+  };
+}
+
+describe("form email adalah pintu utama (TAN-331)", () => {
+  it("shows the email + password form from the first paint and never navigates on mount", async () => {
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    expect(await screen.findByRole("button", MICROSOFT)).toBeInTheDocument();
-    expect(screen.queryByLabelText(EMAIL_LABEL)).not.toBeInTheDocument();
+    expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
+    expect(screen.getByLabelText(PASSWORD_LABEL)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Masuk" })).toBeInTheDocument();
+    expect(locationAssign).not.toHaveBeenCalled();
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
+
+  it("offers the SSO Telkom button once the start answer is ready", async () => {
+    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
+
+    expect(await screen.findByRole("button", SSO_BUTTON)).toBeInTheDocument();
     // The authorization URL is ready, but the browser stays put until a click.
     await waitFor(() => expect(sessionStorage.getItem(ENTRA_ATTEMPT_KEY)).not.toBeNull());
     expect(locationAssign).not.toHaveBeenCalled();
   });
 
-  it("hands the browser to Microsoft on click", async () => {
+  it("hands the browser to SSO Telkom on click", async () => {
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    fireEvent.click(await screen.findByRole("button", MICROSOFT));
+    fireEvent.click(await screen.findByRole("button", SSO_BUTTON));
 
     expect(locationAssign).toHaveBeenCalledWith(AUTHORIZATION_URL);
     // The attempt must survive the navigation: the callback page reads it back.
     expect(sessionStorage.getItem(ENTRA_ATTEMPT_KEY)).not.toBeNull();
   });
-
-  it("opens the email + password form in place from the Login by Email link", async () => {
-    renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
-
-    fireEvent.click(await screen.findByRole("button", EMAIL_DOOR));
-
-    expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(locationAssign).not.toHaveBeenCalled();
-    expect(routerReplace).not.toHaveBeenCalled();
-  });
 });
 
-describe("selagi opsi masuk diperiksa (tanpa tombol nonaktif)", () => {
-  it("shows a neutral placeholder instead of a disabled Microsoft button", async () => {
+describe("selagi opsi masuk SSO diperiksa (tanpa tombol nonaktif)", () => {
+  it("shows a neutral placeholder instead of a disabled SSO button", async () => {
     // Staging feedback (TAN-287): a button that is disabled and then vanishes
     // when SSO turns out to be off reads as a glitch. While the answer is in
     // flight, show a status line and no door at all.
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
     expect(screen.getByRole("status")).toHaveTextContent(/memeriksa opsi masuk/i);
-    expect(screen.queryByRole("button", MICROSOFT)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", EMAIL_DOOR)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", SSO_BUTTON)).not.toBeInTheDocument();
 
-    expect(await screen.findByRole("button", MICROSOFT)).toBeInTheDocument();
+    expect(await screen.findByRole("button", SSO_BUTTON)).toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });
@@ -125,12 +143,11 @@ describe("SSO tidak aktif atau gagal (tanpa tombol menggantung)", () => {
     renderLogin([ssoStartMock(false)]);
 
     expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
-    expect(screen.queryByRole("button", MICROSOFT)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", EMAIL_DOOR)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", SSO_BUTTON)).not.toBeInTheDocument();
     expect(locationAssign).not.toHaveBeenCalled();
   });
 
-  it("falls back to the email form and says so when the SSO query fails", async () => {
+  it("keeps the email form and says so when the SSO query fails", async () => {
     renderLogin([
       {
         request: { query: EntraSsoStartDocument },
@@ -141,9 +158,9 @@ describe("SSO tidak aktif atau gagal (tanpa tombol menggantung)", () => {
 
     expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
     expect(
-      await screen.findByText(/masuk dengan microsoft sedang tidak tersedia/i),
+      await screen.findByText(/masuk dengan sso telkom sedang tidak tersedia/i),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", MICROSOFT)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", SSO_BUTTON)).not.toBeInTheDocument();
     expect(locationAssign).not.toHaveBeenCalled();
   });
 });
@@ -156,8 +173,8 @@ describe("kembali dari Microsoft (?sso=)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /masuk dengan microsoft dibatalkan/i,
     );
-    expect(await screen.findByRole("button", MICROSOFT)).toBeInTheDocument();
-    expect(screen.queryByLabelText(EMAIL_LABEL)).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", SSO_BUTTON)).toBeInTheDocument();
+    expect(screen.getByLabelText(EMAIL_LABEL)).toBeInTheDocument();
     expect(locationAssign).not.toHaveBeenCalled();
   });
 
@@ -170,23 +187,22 @@ describe("kembali dari Microsoft (?sso=)", () => {
     expect(locationAssign).not.toHaveBeenCalled();
   });
 
-  it("explains an error return and still lets the visitor open the email form", async () => {
+  it("explains an error return and keeps the email form usable", async () => {
     params = new URLSearchParams("sso=error");
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /masuk dengan microsoft gagal/i,
     );
-    fireEvent.click(await screen.findByRole("button", EMAIL_DOOR));
-    expect(await screen.findByLabelText(EMAIL_LABEL)).toBeInTheDocument();
+    expect(screen.getByLabelText(EMAIL_LABEL)).toBeInTheDocument();
     expect(locationAssign).not.toHaveBeenCalled();
   });
 });
 
 describe("jalur email + kata sandi (FR-002 — tidak boleh teregresi)", () => {
-  it("signs in and goes to the dashboard", async () => {
-    renderLogin([
-      ssoStartMock(true, AUTHORIZATION_URL),
+  function loginMocks() {
+    return [
+      ssoStartMock(false),
       {
         request: {
           query: LoginDocument,
@@ -210,21 +226,72 @@ describe("jalur email + kata sandi (FR-002 — tidak boleh teregresi)", () => {
           },
         },
       },
-    ]);
+    ];
+  }
 
-    fireEvent.click(await screen.findByRole("button", EMAIL_DOOR));
+  async function fillAndSubmit(password = "secret") {
     fireEvent.change(await screen.findByLabelText(EMAIL_LABEL), {
       target: { value: "ada@tania.id" },
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: "secret" },
+    fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
+      target: { value: password },
     });
-    fireEvent.click(screen.getByRole("button", { name: /masuk ke workspace/i }));
+    fireEvent.click(screen.getByRole("button", LOGIN_BUTTON));
+  }
+
+  it("signs in and goes to the dashboard", async () => {
+    const capture = captureCookieWrites();
+    try {
+      renderLogin(loginMocks());
+
+      await fillAndSubmit();
+
+      await waitFor(() => {
+        expect(tokenStore.getSession()?.accessToken).toBe("token-abc");
+        expect(routerReplace).toHaveBeenCalledWith("/dashboard");
+      });
+      // Without "Ingat saya" the session cookie stays browser-scoped.
+      expect(capture.writes.join(" ")).not.toContain("Max-Age=");
+      expect(locationAssign).not.toHaveBeenCalled();
+    } finally {
+      capture.restore();
+    }
+  });
+
+  it("writes a persistent cookie when Ingat saya is checked", async () => {
+    const capture = captureCookieWrites();
+    try {
+      renderLogin(loginMocks());
+
+      fireEvent.click(await screen.findByRole("checkbox", { name: /ingat saya/i }));
+      await fillAndSubmit();
+
+      await waitFor(() => {
+        expect(tokenStore.getSession()?.accessToken).toBe("token-abc");
+      });
+      expect(capture.writes.join(" ")).toContain("Max-Age=2592000");
+    } finally {
+      capture.restore();
+    }
+  });
+
+  it("shows an alert and keeps the session empty when the mutation fails", async () => {
+    renderLogin([
+      ssoStartMock(false),
+      {
+        request: {
+          query: LoginDocument,
+          variables: { input: { email: "ada@tania.id", password: "wrong" } },
+        },
+        error: new Error("FORBIDDEN"),
+      },
+    ]);
+
+    await fillAndSubmit("wrong");
 
     await waitFor(() => {
-      expect(tokenStore.getSession()?.accessToken).toBe("token-abc");
-      expect(routerReplace).toHaveBeenCalledWith("/dashboard");
+      expect(screen.getByRole("alert")).toHaveTextContent("FORBIDDEN");
+      expect(tokenStore.getSession()).toBeNull();
     });
-    expect(locationAssign).not.toHaveBeenCalled();
   });
 });

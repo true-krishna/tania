@@ -56,7 +56,7 @@ async function loginAs(page: Page, email: string): Promise<void> {
   if (await emailInput.isVisible()) {
     await emailInput.fill(email);
     await page.locator("#login-password").fill(SEED_PASSWORD);
-    await page.getByRole("button", { name: /masuk ke workspace/i }).click();
+    await page.getByRole("button", { name: "Masuk", exact: true }).click();
   }
   await page.waitForURL(/\/dashboard/);
 }
@@ -417,9 +417,9 @@ test("T034 — gagal ramah lalu coba ulang idempoten dengan clientRequestId sama
 // 006-entra-sso-login — U2 (T028): regresi jalur lokal & rute callback, tanpa
 // kredensial Entra. Stack sama dengan runbook `e2e/README.md`; backend hidup
 // **tanpa** `ENTRA_*` sehingga `entraSsoStart.enabled = false` (quickstart §A).
-// Sejak revisi D8′ (2026-10-22) halaman login tidak pernah mengalihkan sendiri:
-// tombol "Continue with Microsoft" baru membuka Microsoft saat ditekan, dan form
-// email terbuka lewat tautan "Login by Email". Mode
+// Sejak redesain TAN-331 form email adalah pintu utama sejak render pertama;
+// tombol "Masuk dengan SSO Telkom" hanya muncul saat backend siap, dan halaman
+// tidak pernah mengalihkan sendiri. Mode
 // `NEXT_PUBLIC_AUTH_LOCAL_ONLY=1` tidak merender form login sama sekali
 // (LoginForm langsung ke /dashboard), jadi skenario yang memeriksa form di-skip
 // di mode itu — ter-`skip` bukan lulus.
@@ -434,12 +434,10 @@ test("T028 — tanpa SSO aktif, /login menampilkan form email langsung", async (
 
   await expect(page.locator("#login-email")).toBeVisible();
   await expect(page.locator("#login-password")).toBeVisible();
-  // Tidak ada tombol SSO menggantung saat `enabled=false`, dan tanpa SSO tidak
-  // ada tautan "Login by Email" yang tidak ada gunanya.
+  // Tidak ada tombol SSO menggantung saat `enabled=false`.
   await expect(
-    page.getByRole("button", { name: /continue with microsoft/i }),
+    page.getByRole("button", { name: /sso telkom/i }),
   ).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /login by email/i })).toHaveCount(0);
   // Beri waktu query entraSsoStart selesai: tidak boleh ada pengalihan otomatis.
   await page.waitForTimeout(2000);
   await expect(page).toHaveURL(/\/login$/);
@@ -451,7 +449,7 @@ test("T028 — jalur email + kata sandi tetap masuk sampai /dashboard (SC-003)",
   await emailInput.waitFor({ state: "visible", timeout: 15_000 });
   await emailInput.fill(SEED_USERS.ADMIN);
   await page.locator("#login-password").fill(SEED_PASSWORD);
-  await page.getByRole("button", { name: /masuk ke workspace/i }).click();
+  await page.getByRole("button", { name: "Masuk", exact: true }).click();
 
   await page.waitForURL(/\/dashboard/);
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();

@@ -80,3 +80,46 @@ describe("token-store cookie persistence", () => {
     expect(getSession()).toBeNull();
   });
 });
+
+describe("token-store remember me (Ingat saya)", () => {
+  /** jsdom's `document.cookie` getter hides attributes (Max-Age), so capture
+   * the raw cookie writes instead. */
+  function captureCookieWrites() {
+    const writes: string[] = [];
+    let value = "";
+    Object.defineProperty(document, "cookie", {
+      configurable: true,
+      get: () => value,
+      set: (next: string) => {
+        writes.push(next);
+        value = next;
+      },
+    });
+    return {
+      writes,
+      restore: () => Reflect.deleteProperty(document, "cookie"),
+    };
+  }
+
+  it("writes a persistent Max-Age cookie when remember is set", () => {
+    const capture = captureCookieWrites();
+    try {
+      setSession(SESSION, { remember: true });
+      expect(getSession()).toEqual(SESSION);
+      expect(capture.writes.join(" ")).toContain("Max-Age=2592000");
+    } finally {
+      capture.restore();
+    }
+  });
+
+  it("keeps the cookie session-scoped without remember", () => {
+    const capture = captureCookieWrites();
+    try {
+      setSession(SESSION);
+      expect(getSession()).toEqual(SESSION);
+      expect(capture.writes.join(" ")).not.toContain("Max-Age=");
+    } finally {
+      capture.restore();
+    }
+  });
+});
