@@ -8,6 +8,13 @@ export { Button } from "./Button";
 export { Chip, type ChipVariant, type ChipSize } from "./Chip";
 export { RowActionsMenu, type RowAction } from "./RowActionsMenu";
 export { FilterButton } from "./FilterButton";
+export { TableFilterBar } from "./TableFilterBar";
+export type {
+  TableFilterField,
+  TableFilterFieldContext,
+  TableFilterSearch,
+  TableFilterValues,
+} from "./TableFilterBar";
 export { Pagination, useTablePagination } from "./Pagination";
 export { Card } from "./Card";
 export { Input } from "./Input";

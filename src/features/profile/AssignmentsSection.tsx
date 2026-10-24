@@ -1,7 +1,11 @@
+"use client";
+
+import * as React from "react";
 import { EmptyState } from "@/components/DataState";
 import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
 import { Table } from "@/components/Table";
 import { Card } from "@/components/Card";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import type { ProfileAssignment } from "./useProfile";
 
 export function AssignmentsSection({
@@ -9,14 +13,37 @@ export function AssignmentsSection({
 }: {
   assignments: readonly ProfileAssignment[];
 }) {
+  const [search, setSearch] = React.useState("");
+  const visible = React.useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return assignments;
+    return assignments.filter((assignment) =>
+      assignment.project.name.toLowerCase().includes(needle),
+    );
+  }, [assignments, search]);
+
   if (assignments.length === 0) {
     return <EmptyState message="Belum ada assignment tercatat." />;
   }
 
   return (
-    <Card className="max-w-3xl" padded={false}>
-      <Table
-        caption="Riwayat assignment saya"
+    <div className="flex flex-col gap-3">
+      <TableFilterBar
+        search={{
+          label: "Cari assignment",
+          onChange: setSearch,
+          placeholder: "Cari nama project…",
+          value: search,
+        }}
+      />
+      {visible.length === 0 ? (
+        <p className="text-sm text-tp-muted">
+          Tidak ada assignment yang cocok dengan pencarian.
+        </p>
+      ) : (
+        <Card className="max-w-3xl" padded={false}>
+          <Table
+            caption="Riwayat assignment saya"
         columns={[
           {
             key: "project",
@@ -42,9 +69,11 @@ export function AssignmentsSection({
             ),
           },
         ]}
-        dataSource={assignments}
+        dataSource={visible}
         rowKey={(assignment) => assignment.id}
       />
     </Card>
+      )}
+    </div>
   );
 }

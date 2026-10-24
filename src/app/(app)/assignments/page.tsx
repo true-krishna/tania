@@ -8,15 +8,15 @@ import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBa
 import { CreateAssignmentModal } from "@/features/assignments/CreateAssignmentModal";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
-import { FilterButton } from "@/components/FilterButton";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { useAssignments } from "@/features/assignments/useAssignments";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useProjects } from "@/features/master-data/useMasterData";
-import type { AccessRole, AssignmentStatus } from "@/generated/graphql/types";
+import type { AccessRole, AssignmentFilter, AssignmentStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
@@ -29,7 +29,7 @@ const SUBTITLE: Partial<Record<AccessRole, string>> = {
   TALENT: "Riwayat penugasan Anda.",
 };
 
-function TalentFilter({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function TalentOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const role = useSessionRole();
   return role === "CHAPTER" ? (
     <ChapterTalentOptions onChange={onChange} value={value} />
@@ -40,35 +40,29 @@ function TalentFilter({ value, onChange }: { value: string; onChange: (v: string
 
 function EmployeeTalentOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const employees = useEmployees();
-  return <TalentSelect onChange={onChange} options={employees.employees ?? []} value={value} />;
+  return (
+    <Select
+      onChange={(e) => onChange(e.target.value)}
+      options={[
+        { value: "", label: "Semua" },
+        ...(employees.employees ?? []).map((emp) => ({ value: emp.id, label: emp.fullName })),
+      ]}
+      value={value}
+    />
+  );
 }
 
 function ChapterTalentOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const talents = useAssignableTalents();
-  return <TalentSelect onChange={onChange} options={talents.data ?? []} value={value} />;
-}
-
-function TalentSelect({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: ReadonlyArray<{ id: string; fullName: string }>;
-}) {
   return (
-    <label className="flex items-center gap-2 text-sm text-zinc-700">
-      <span>Talent</span>
-      <Select
-        onChange={(e) => onChange(e.target.value)}
-        options={[
-          { value: "", label: "Semua" },
-          ...options.map((emp) => ({ value: emp.id, label: emp.fullName })),
-        ]}
-        value={value}
-      />
-    </label>
+    <Select
+      onChange={(e) => onChange(e.target.value)}
+      options={[
+        { value: "", label: "Semua" },
+        ...(talents.data ?? []).map((emp) => ({ value: emp.id, label: emp.fullName })),
+      ]}
+      value={value}
+    />
   );
 }
 
@@ -77,20 +71,56 @@ export default function AssignmentsPage() {
   const role = useSessionRole();
   const manage = canManage(role, "assignments");
   const ownOnly = role === "TALENT";
-  const [talentId, setTalentId] = React.useState("");
-  const [projectId, setProjectId] = React.useState("");
-  const [status, setStatus] = React.useState<AssignmentStatus | "ALL">("ALL");
-  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [filters, setFilters] = React.useState<{
+    talentId: string;
+    projectId: string;
+    status: string;
+  }>({ talentId: "", projectId: "", status: "" });
   const [createOpen, setCreateOpen] = React.useState(false);
-  const { status: query, data, error } = useAssignments({
-    employeeId: talentId || undefined,
-    projectId: projectId || undefined,
-    status: status === "ALL" ? undefined : status,
-  });
+  const filter: AssignmentFilter = {
+    employeeId: filters.talentId || undefined,
+    projectId: filters.projectId || undefined,
+    status: (filters.status || undefined) as AssignmentStatus | undefined,
+  };
+  const { status: query, data, error } = useAssignments(filter);
   const projects = useProjects();
-  const activeFilters =
-    (talentId ? 1 : 0) + (projectId ? 1 : 0) + (status !== "ALL" ? 1 : 0);
   const { pageRows, pagination, resetPage } = useTablePagination(data);
+
+  const talentField = {
+    key: "talentId",
+    label: "Talent",
+    render: ({ onChange, value }: { onChange: (value: string) => void; value: string }) => (
+      <TalentOptions onChange={onChange} value={value} />
+    ),
+    type: "custom" as const,
+  };
+  const fields = [
+    ...(ownOnly ? [] : [talentField]),
+    {
+      key: "projectId",
+      label: "Project",
+      options: [
+        { value: "", label: "Semua" },
+        ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+      ],
+      type: "select" as const,
+    },
+    {
+      key: "status",
+      label: "Status",
+      options: [
+        { value: "", label: "Semua" },
+        { value: "ACTIVE", label: "Berjalan" },
+        { value: "COMPLETED", label: "Selesai" },
+      ],
+      type: "select" as const,
+    },
+  ];
+
+  function changeFilter(key: string, value: string) {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    resetPage();
+  }
 
   return (
     <section className="flex flex-col gap-4">
@@ -102,60 +132,11 @@ export default function AssignmentsPage() {
             </Button>
           ) : undefined
         }
-        filters={
-          <FilterButton
-            activeCount={activeFilters}
-            expanded={filtersOpen}
-            onClick={() => setFiltersOpen((open) => !open)}
-            panelId="assignment-filter-panel"
-          />
-        }
         subtitle={(role && SUBTITLE[role]) ?? "Penugasan talent ke project."}
         title="Assignments"
       />
 
-      {filtersOpen ? (
-        <div className="tp-card flex flex-wrap items-end gap-4" id="assignment-filter-panel">
-          {ownOnly ? null : (
-            <TalentFilter
-              onChange={(value) => {
-                setTalentId(value);
-                resetPage();
-              }}
-              value={talentId}
-            />
-          )}
-          <label className="flex items-center gap-2 text-sm text-zinc-700">
-            <span>Project</span>
-            <Select
-              onChange={(e) => {
-                setProjectId(e.target.value);
-                resetPage();
-              }}
-              options={[
-                { value: "", label: "Semua" },
-                ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name })),
-              ]}
-              value={projectId}
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-zinc-700">
-            <span>Status</span>
-            <Select
-              onChange={(e) => {
-                setStatus(e.target.value as AssignmentStatus | "ALL");
-                resetPage();
-              }}
-              options={[
-                { value: "ALL", label: "Semua" },
-                { value: "ACTIVE", label: "Berjalan" },
-                { value: "COMPLETED", label: "Selesai" },
-              ]}
-              value={status}
-            />
-          </label>
-        </div>
-      ) : null}
+      <TableFilterBar fields={fields} onChange={changeFilter} values={filters} />
 
       {query === "loading" ? (
         <LoadingState />

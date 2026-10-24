@@ -7,13 +7,20 @@ import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/
 import { Modal } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { useEvaluationPeriods } from "@/features/evaluations/useEvaluationPeriods";
 import { PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
 import { EvaluationPeriodCreateForm } from "@/features/evaluations/EvaluationPeriodCreateForm";
 
 export default function EvaluationPeriodsPage() {
   const { status, data, error } = useEvaluationPeriods();
-  const { pageRows, pagination } = useTablePagination(data);
+  const [search, setSearch] = React.useState("");
+  const visiblePeriods = React.useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return data ?? [];
+    return (data ?? []).filter((period) => period.name.toLowerCase().includes(needle));
+  }, [data, search]);
+  const { pageRows, pagination } = useTablePagination(visiblePeriods);
   const [modalOpen, setModalOpen] = React.useState(false);
 
   const actions = (
@@ -34,8 +41,20 @@ export default function EvaluationPeriodsPage() {
         subtitle="Kelola periode evaluasi performa (Admin)."
         title="Periode Evaluasi"
       />
+      {isEmpty ? null : (
+        <TableFilterBar
+          search={{
+            label: "Cari periode",
+            onChange: setSearch,
+            placeholder: "Cari nama periode…",
+            value: search,
+          }}
+        />
+      )}
       {isEmpty ? (
         <EmptyState message="Belum ada periode evaluasi. Buat periode pertama." />
+      ) : visiblePeriods.length === 0 ? (
+        <p className="text-sm text-tp-muted">Tidak ada periode yang cocok dengan pencarian.</p>
       ) : (
         <Table
           caption="Daftar periode evaluasi"

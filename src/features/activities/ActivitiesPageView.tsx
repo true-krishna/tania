@@ -2,10 +2,9 @@
 
 import * as React from "react";
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
 import { Modal } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
-import { Select } from "@/components/Select";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { ActivityForm } from "./ActivityForm";
 import { ActivityList } from "./ActivityList";
 import { useActivitiesStore } from "./ActivitiesProvider";
@@ -21,13 +20,13 @@ import type {
   PersonalWorkActivityFilter,
 } from "./types";
 
-interface FilterValues {
+type FilterValues = {
   activityType: ActivityType | "";
   statusId: string;
   projectId: string;
   startDate: string;
   endDate: string;
-}
+};
 
 const EMPTY_FILTER: FilterValues = {
   activityType: "",
@@ -59,8 +58,8 @@ export function ActivitiesPageView() {
   const { update, loading: updating, error: updateError } = useUpdateActivity();
   const { remove, loading: deleting, error: deleteError } = useDeleteActivity();
 
-  function setFilterValue<K extends keyof FilterValues>(key: K, value: FilterValues[K]) {
-    setFilter((prev) => ({ ...prev, [key]: value }));
+  function setFilterValue(key: keyof FilterValues, value: string) {
+    setFilter((prev) => ({ ...prev, [key]: value }) as FilterValues);
   }
 
   function openCreate() {
@@ -109,67 +108,45 @@ export function ActivitiesPageView() {
             + Catat aktivitas
           </Button>
         }
-        filters={
-          <>
-            <div className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Jenis</span>
-              <Select
-                aria-label="Filter jenis aktivitas"
-                onChange={(e) => setFilterValue("activityType", e.target.value as ActivityType | "")}
-                options={[
-                  { value: "", label: "Semua" },
-                  { value: "working", label: "Bekerja" },
-                  { value: "training", label: "Pelatihan" },
-                ]}
-                value={filter.activityType}
-              />
-            </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Status</span>
-              <Select
-                aria-label="Filter status aktivitas"
-                onChange={(e) => setFilterValue("statusId", e.target.value)}
-                options={[
-                  { value: "", label: "Semua" },
-                  ...ACTIVITY_STATUSES.map((status) => ({ value: status.id, label: status.name })),
-                ]}
-                value={filter.statusId}
-              />
-            </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Project</span>
-              <Select
-                aria-label="Filter project aktivitas"
-                onChange={(e) => setFilterValue("projectId", e.target.value)}
-                options={[
-                  { value: "", label: "Semua" },
-                  ...ACTIVITY_PROJECTS.map((project) => ({ value: project.id, label: project.name })),
-                ]}
-                value={filter.projectId}
-              />
-            </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Dari tanggal</span>
-              <Input
-                aria-label="Filter tanggal mulai dari"
-                onChange={(e) => setFilterValue("startDate", e.target.value)}
-                type="date"
-                value={filter.startDate}
-              />
-            </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-700">
-              <span>Sampai tanggal</span>
-              <Input
-                aria-label="Filter tanggal mulai sampai"
-                onChange={(e) => setFilterValue("endDate", e.target.value)}
-                type="date"
-                value={filter.endDate}
-              />
-            </div>
-          </>
-        }
         subtitle="Catat aktivitas kerja dan pelatihan yang menjadi sumber angka workload."
         title="Aktivitas saya"
+      />
+
+      <TableFilterBar
+        fields={[
+          {
+            key: "activityType",
+            label: "Jenis",
+            options: [
+              { value: "", label: "Semua" },
+              { value: "working", label: "Bekerja" },
+              { value: "training", label: "Pelatihan" },
+            ],
+            type: "select",
+          },
+          {
+            key: "statusId",
+            label: "Status",
+            options: [
+              { value: "", label: "Semua" },
+              ...ACTIVITY_STATUSES.map((status) => ({ value: status.id, label: status.name })),
+            ],
+            type: "select",
+          },
+          {
+            key: "projectId",
+            label: "Project",
+            options: [
+              { value: "", label: "Semua" },
+              ...ACTIVITY_PROJECTS.map((project) => ({ value: project.id, label: project.name })),
+            ],
+            type: "select",
+          },
+          { key: "startDate", label: "Dari tanggal", type: "date" },
+          { key: "endDate", label: "Sampai tanggal", type: "date" },
+        ]}
+        onChange={(key, value) => setFilterValue(key as keyof FilterValues, value)}
+        values={filter}
       />
 
       {success ? (

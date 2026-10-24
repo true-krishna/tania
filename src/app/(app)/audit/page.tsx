@@ -5,11 +5,21 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Table } from "@/components/Table";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { useSessionRole } from "@/lib/auth/guard";
 import { roleLabel } from "@/features/accounts/roles";
 import { useAuditLogs } from "@/features/audit/useAuditLogs";
-import { ACTION_LABEL, ACTION_PILL, entityLabel } from "@/features/audit/actionLabels";
-import type { AccessRole } from "@/generated/graphql/types";
+import {
+  ACTION_LABEL,
+  ACTION_PILL,
+  ENTITY_LABEL,
+  entityLabel,
+} from "@/features/audit/actionLabels";
+import type {
+  AccessRole,
+  AuditAction,
+  AuditLogFilter,
+} from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 
 const ROLE_LABEL: Record<AccessRole, string> = roleLabel;
@@ -30,7 +40,16 @@ export default function AuditPage() {
 }
 
 function AuditViewer() {
-  const { status, logs, totalCount, hasNextPage, loadingMore, error, loadMore } = useAuditLogs();
+  const [filters, setFilters] = React.useState<{ action: string; entityType: string }>({
+    action: "",
+    entityType: "",
+  });
+  const filter: AuditLogFilter = {
+    action: (filters.action || undefined) as AuditAction | undefined,
+    entityType: filters.entityType || undefined,
+  };
+  const { status, logs, totalCount, hasNextPage, loadingMore, error, loadMore } =
+    useAuditLogs(filter);
   const { pageRows, pagination } = useTablePagination(logs, {
     totalItems: totalCount,
     hasMore: hasNextPage,
@@ -46,6 +65,34 @@ function AuditViewer() {
       <PageHeader
         subtitle={`Mutasi & aktivitas sistem (${totalCount} catatan).`}
         title="Jejak Audit"
+      />
+
+      <TableFilterBar
+        fields={[
+          {
+            key: "action",
+            label: "Aksi",
+            options: [
+              { value: "", label: "Semua" },
+              ...(Object.keys(ACTION_LABEL) as AuditAction[]).map((value) => ({
+                value,
+                label: ACTION_LABEL[value],
+              })),
+            ],
+            type: "select",
+          },
+          {
+            key: "entityType",
+            label: "Entitas",
+            options: [
+              { value: "", label: "Semua" },
+              ...Object.entries(ENTITY_LABEL).map(([value, label]) => ({ value, label })),
+            ],
+            type: "select",
+          },
+        ]}
+        onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+        values={filters}
       />
 
       {logs && logs.length ? (
@@ -134,7 +181,13 @@ function AuditViewer() {
           rowKey={(log) => log.id}
         />
       ) : (
-        <EmptyState message="Belum ada catatan audit." />
+        <EmptyState
+          message={
+            filters.action || filters.entityType
+              ? "Tidak ada catatan audit yang cocok dengan filter."
+              : "Belum ada catatan audit."
+          }
+        />
       )}
     </section>
   );

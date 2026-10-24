@@ -5,7 +5,7 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { Card } from "@/components/Card";
 import { Table, type TableColumn } from "@/components/Table";
 import { Chip, type ChipVariant } from "@/components/Chip";
-import { Input } from "@/components/Input";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { formatTimestamp } from "./formatTimestamp";
 import type { IndividualBacklogNormalizedRow, IndividualBacklogRow } from "./types";
 
@@ -266,17 +266,14 @@ export function BacklogTable({
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-[13px] font-semibold text-tp-muted">
-        Cari
-        <Input
-          aria-label="Cari aktivitas"
-          className="h-10 max-w-80 flex-1"
-          onChange={(e) => changeSearch(e.target.value)}
-          placeholder="Issue key, project, atau judul aktivitas…"
-          type="search"
-          value={search}
-        />
-      </label>
+      <TableFilterBar
+        search={{
+          label: "Cari aktivitas",
+          onChange: changeSearch,
+          placeholder: "Issue key, project, atau judul aktivitas…",
+          value: search,
+        }}
+      />
 
       {variant === "detail" ? (
         <Table

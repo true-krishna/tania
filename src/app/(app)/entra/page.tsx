@@ -6,10 +6,10 @@ import { ApolloError, useMutation } from "@apollo/client";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { Table } from "@/components/Table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import {
   EmployeesWithoutEntraDocument,
   ProvisionEntraAccountDocument,
@@ -146,22 +146,20 @@ export default function EntraProvisioningPage() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        search={
-          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
-            <span className="sr-only">Cari nama karyawan</span>
-            <Input
-              onChange={(e) => {
-                setSearchInput(e.target.value);
-                resetPage();
-              }}
-              placeholder="Cari nama karyawan…"
-              type="search"
-              value={searchInput}
-            />
-          </label>
-        }
         subtitle="Talent yang belum memiliki akun Microsoft Entra — provisioning manual atau ulang setelah gagal (Operation)."
         title="Provisi Akun Entra"
+      />
+
+      <TableFilterBar
+        search={{
+          label: "Cari nama karyawan",
+          onChange: (value) => {
+            setSearchInput(value);
+            resetPage();
+          },
+          placeholder: "Cari nama karyawan…",
+          value: searchInput,
+        }}
       />
 
       {message ? (
