@@ -22,6 +22,11 @@ export { decodeSession, encodeSession };
 /** 4KB is the practical per-cookie size ceiling. */
 const MAX_COOKIE_LENGTH = 4096;
 
+/** "Ingat saya" persistence window; actual validity still ends with the
+ * backend-issued refresh token, so this only keeps the cookie across browser
+ * restarts, it never extends token life. */
+const REMEMBER_ME_MAX_AGE = 30 * 24 * 60 * 60;
+
 function readCookieValue(cookie: string): string | null {
   const match = cookie.match(
     new RegExp("(?:^|; )" + SESSION_COOKIE + "=([^;]*)")
@@ -41,7 +46,10 @@ export function getSession(): Session | null {
   return raw ? decodeSession(raw) : null;
 }
 
-export function setSession(next: Session | null): void {
+export function setSession(
+  next: Session | null,
+  options?: { remember?: boolean },
+): void {
   if (typeof document === "undefined") return;
   if (!next) {
     clearSession();
@@ -52,7 +60,10 @@ export function setSession(next: Session | null): void {
     clearSession();
     return;
   }
-  document.cookie = `${SESSION_COOKIE}=${encoded}; ${cookieAttributes()}`;
+  // Without `remember` the cookie stays a browser-session cookie: closing the
+  // browser signs the user out. With it, the cookie survives restarts.
+  const maxAge = options?.remember ? `; Max-Age=${REMEMBER_ME_MAX_AGE}` : "";
+  document.cookie = `${SESSION_COOKIE}=${encoded}; ${cookieAttributes()}${maxAge}`;
 }
 
 export function clearSession(): void {

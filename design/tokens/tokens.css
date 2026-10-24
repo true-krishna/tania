@@ -24,6 +24,16 @@
 --tp-tint-peach:#fee4e2;--tp-tint-mint:#d1fadf;--tp-tint-sun:#feefc6;--tp-tint-info:#E9F2FF;
 --tp-ink-peach:#b32318;--tp-ink-mint:#0F6E48;--tp-ink-sun:#b54708;--tp-ink-info:#0B5FD6;
 --tp-neutral:#6B778C;
+/* Lapisan aksen tosca/sky/warm-white (amendemen 4.5.0, mockup TAN-99
+ * `tania-login-tosca-v2.html`): tosca = aksen dekoratif/konten (chip kicker,
+ * swoosh, orbit, spark, wave) — BUKAN voltage interaktif, bukan status, bukan
+ * ring fokus, bukan isian tombol primer. Sky-pale = kanvas halaman auth/hero;
+ * warm-white = panel hero/ilustrasi. Sky & warm-white tidak memikul teks;
+ * teks kecil di atas tint tosca memakai `--tp-tosca-ink`. Tanpa pasangan
+ * dark: nilai dark belum diratifikasi dan tidak boleh diinferensi. */
+--tp-tosca:#00A99D;--tp-tosca-soft:#D9F5F0;--tp-tosca-ink:#066B66;
+--tp-sky:#DFF2FF;--tp-sky-strong:#A9DCFF;--tp-sky-pale:#F5F9FD;
+--tp-warm-white:#FDFCFB;
 /* Seri data visualisasi (kit v1.2 §Data visualisasi): urutan seri chart-1..4;
  * track bar memakai `--tp-bg` (canvas). Seri kita memakai urutan makna:
  * chart-1 = churn/penurunan, chart-2 = distribusi (hue laporan), chart-3 = new

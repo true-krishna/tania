@@ -60,15 +60,15 @@ describe("LoginForm", () => {
       </MockedProvider>
     );
 
-    // SSO is unavailable here (the start query has no mock), so the email form
-    // is the page the visitor lands on (D8′).
+    // The email form is the main door from the first paint (TAN-331); without
+    // a start-query mock the SSO button simply never appears.
     fireEvent.change(await screen.findByLabelText(/email/i), {
       target: { value: "ada@tania.id" },
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
+    fireEvent.change(screen.getByLabelText(/kata sandi/i), {
       target: { value: "secret" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /masuk ke workspace/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
 
     await waitFor(() => {
       const session = tokenStore.getSession();
@@ -97,15 +97,15 @@ describe("LoginForm", () => {
       </MockedProvider>
     );
 
-    // SSO is unavailable here (the start query has no mock), so the email form
-    // is the page the visitor lands on (D8′).
+    // The email form is the main door from the first paint (TAN-331); without
+    // a start-query mock the SSO button simply never appears.
     fireEvent.change(await screen.findByLabelText(/email/i), {
       target: { value: "ada@tania.id" },
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
+    fireEvent.change(screen.getByLabelText(/kata sandi/i), {
       target: { value: "wrong" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /masuk ke workspace/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("FORBIDDEN");
@@ -120,15 +120,11 @@ describe("LoginForm", () => {
       </MockedProvider>
     );
 
-    expect(
-      screen.getByRole("heading", { name: /masuk ke tania/i })
-    ).toBeInTheDocument();
-    expect(screen.getByText(/talent management platform/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Masuk" })).toBeInTheDocument();
+    expect(screen.getByText(/platform manajemen talent/i)).toBeInTheDocument();
     expect(screen.queryByText(/invite tania/i)).not.toBeInTheDocument();
     expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /masuk ke workspace/i })
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/kata sandi/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Masuk" })).toBeInTheDocument();
   });
 });

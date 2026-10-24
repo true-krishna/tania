@@ -82,7 +82,7 @@ async function loginAs(page: Page, email: string): Promise<void> {
   await emailInput.waitFor({ state: "visible", timeout: 15_000 });
   await emailInput.fill(email);
   await page.locator("#login-password").fill(SEED_PASSWORD);
-  await page.getByRole("button", { name: /masuk ke workspace/i }).click();
+  await page.getByRole("button", { name: "Masuk", exact: true }).click();
   await page.waitForURL(/\/dashboard/);
 }
 

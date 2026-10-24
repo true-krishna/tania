@@ -11,7 +11,11 @@ module.exports = {
       brand:{ navy:'#172B4D', 'navy-deep':'#0B1F4D', red:'#E1231A', 'red-deep':'#B71C14', 'red-ink':'#B71C14', 'red-tint':'#FCE9E8', 'red-tint-line':'#F5B8B5', 'on-red':'#FFFFFF' },
       info:{ DEFAULT:'#2684FF', tint:'#E9F2FF', ink:'#0B5FD6' },
       chart:{ 1:'#E1231A', 2:'#2684FF', 3:'#168A5B', 4:'#D9822B' },
-      mint:{ DEFAULT:'#168A5B', ink:'#0F6E48' }, peach:'#f97066', sun:'#D9822B'
+      mint:{ DEFAULT:'#168A5B', ink:'#0F6E48' }, peach:'#f97066', sun:'#D9822B',
+      // Lapisan aksen tosca/sky/warm-white (amendemen 4.5.0): dekoratif/konten saja.
+      tosca:{ DEFAULT:'#00A99D', soft:'#D9F5F0', ink:'#066B66' },
+      sky:{ DEFAULT:'#DFF2FF', strong:'#A9DCFF', pale:'#F5F9FD' },
+      'warm-white':'#FDFCFB'
     },
     fontFamily:{ display:['Nunito Sans','system-ui','sans-serif'], sans:['Nunito Sans','system-ui','sans-serif'] },
     borderRadius:{ sm:'10px', md:'14px', lg:'20px', xl:'28px' },
