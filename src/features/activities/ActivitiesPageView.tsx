@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
+import { Modal } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { ActivityForm } from "./ActivityForm";
@@ -186,24 +186,24 @@ export function ActivitiesPageView() {
         </p>
       ) : null}
 
-      {formOpen ? (
-        <Card>
-          <h2 className="mb-3 text-base font-semibold text-zinc-900">
-            {editing ? "Ubah aktivitas" : "Catat aktivitas"}
-          </h2>
-          <ActivityForm
-            initial={editing}
-            key={editing?.id ?? "new"}
-            onCancel={closeForm}
-            onSubmit={handleSubmit}
-            priorities={ACTIVITY_PRIORITIES}
-            projects={ACTIVITY_PROJECTS}
-            serverError={editing ? updateError : createError}
-            statuses={ACTIVITY_STATUSES}
-            submitting={creating || updating}
-          />
-        </Card>
-      ) : null}
+      <Modal
+        onClose={closeForm}
+        open={formOpen}
+        size="md"
+        title={editing ? "Ubah aktivitas" : "Catat aktivitas"}
+      >
+        <ActivityForm
+          initial={editing}
+          key={editing?.id ?? "new"}
+          onCancel={closeForm}
+          onSubmit={handleSubmit}
+          priorities={ACTIVITY_PRIORITIES}
+          projects={ACTIVITY_PROJECTS}
+          serverError={editing ? updateError : createError}
+          statuses={ACTIVITY_STATUSES}
+          submitting={creating || updating}
+        />
+      </Modal>
 
       <ActivityList
         activities={data}

@@ -187,6 +187,7 @@ describe("ActivitiesPageView — create, edit, delete against the store", () => 
     await screen.findByText("Implementasi form aktivitas");
 
     fireEvent.click(screen.getByRole("button", { name: "+ Catat aktivitas" }));
+    expect(screen.getByRole("dialog", { name: "Catat aktivitas" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Judul aktivitas"), {
       target: { value: "Review arsitektur WAD" },
     });
@@ -202,6 +203,7 @@ describe("ActivitiesPageView — create, edit, delete against the store", () => 
       await screen.findByText('Aktivitas "Review arsitektur WAD" berhasil dicatat.'),
     ).toBeInTheDocument();
     expect(screen.getByText("Review arsitektur WAD")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("edits an owned activity", async () => {
@@ -210,6 +212,7 @@ describe("ActivitiesPageView — create, edit, delete against the store", () => 
 
     fireEvent.click(screen.getByRole("button", { name: "Aksi Implementasi form aktivitas" }));
     fireEvent.click(screen.getByRole("button", { name: "Ubah" }));
+    expect(screen.getByRole("dialog", { name: "Ubah aktivitas" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Judul aktivitas"), {
       target: { value: "Implementasi form aktivitas v2" },
     });
@@ -219,6 +222,7 @@ describe("ActivitiesPageView — create, edit, delete against the store", () => 
       await screen.findByText('Aktivitas "Implementasi form aktivitas v2" berhasil diperbarui.'),
     ).toBeInTheDocument();
     expect(screen.getByText("Implementasi form aktivitas v2")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("deletes an owned activity", async () => {
