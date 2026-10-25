@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { IconSearch } from "@tabler/icons-react";
+import { Select } from "@/components/Select";
 import { TalentRow } from "./TalentRow";
 import type { TalentSummary } from "./types";
 
@@ -57,21 +58,16 @@ export function TalentList({
             value={query}
           />
         </div>
-        <label className="sr-only" htmlFor="workload-talent-sort">
-          Urutkan
-        </label>
-        <select
-          className="h-11 rounded-full border border-tp-line bg-tp-surface px-4 text-sm font-medium text-tp-text"
-          id="workload-talent-sort"
+        <Select
+          aria-label="Urutkan"
+          className="w-60"
           onChange={(e) => setSort(e.target.value as SortKey)}
+          options={(Object.keys(SORT_LABEL) as SortKey[]).map((key) => ({
+            value: key,
+            label: SORT_LABEL[key],
+          }))}
           value={sort}
-        >
-          {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
-            <option key={key} value={key}>
-              {SORT_LABEL[key]}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       {visible.length ? (

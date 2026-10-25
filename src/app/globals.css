@@ -257,3 +257,44 @@
 .tp-filter-btn[aria-expanded="true"]:active {
   background: color-mix(in srgb, var(--tp-brand-navy) 24%, transparent);
 }
+
+/* Select (TAN-332): reusable dropdown skin, dibangun di atas resep kanon
+ * .tp-input. Unlayered seperti .tp-filter-btn agar state hover/press
+ * mengalahkan gaya dasar; lebar dikontrol wrapper lewat utilitas karena
+ * utilitas Tailwind kalah dari CSS unlayered. */
+select.tp-select {
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  padding: 0 40px 0 14px;
+  border: 1px solid var(--tp-line);
+  border-radius: var(--tp-r-pill);
+  background: var(--tp-surface);
+  color: var(--tp-text);
+  font-family: var(--tp-font-body);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  cursor: pointer;
+  transition:
+    border-color var(--tp-dur) var(--tp-ease),
+    box-shadow var(--tp-dur) var(--tp-ease);
+}
+select.tp-select:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--tp-neutral) 55%, transparent);
+}
+select.tp-select:active:not(:disabled) {
+  border-color: color-mix(in srgb, var(--tp-brand-navy) 45%, transparent);
+}
+select.tp-select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+select.tp-select[data-empty] {
+  color: var(--tp-muted);
+  font-weight: 400;
+}
+select.tp-select option {
+  background: var(--tp-surface);
+  color: var(--tp-text);
+  font-weight: 400;
+}

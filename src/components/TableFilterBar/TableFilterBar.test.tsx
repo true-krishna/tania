@@ -47,6 +47,24 @@ describe("TableFilterBar", () => {
     expect(onSearchChange).toHaveBeenLastCalledWith("budi");
   });
 
+  it("offers a clear button on the search input only when it has a value", () => {
+    const onSearchChange = vi.fn();
+    const search = { label: "Cari karyawan", onChange: onSearchChange, placeholder: "Cari nama…", value: "budi" };
+    const { rerender } = renderBar({ search });
+    fireEvent.click(screen.getByRole("button", { name: "Hapus pencarian" }));
+    expect(onSearchChange).toHaveBeenLastCalledWith("");
+
+    rerender(
+      <TableFilterBar
+        fields={FIELDS}
+        onChange={vi.fn()}
+        search={{ ...search, value: "" }}
+        values={{ status: "", from: "" }}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Hapus pencarian" })).not.toBeInTheDocument();
+  });
+
   it("renders nothing when there is no search and no fields", () => {
     const { container } = render(<TableFilterBar onChange={vi.fn()} values={{}} />);
     expect(container).toBeEmptyDOMElement();

@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/Select";
 import { WORKLOAD_PERIODS } from "./mocks";
 
 export function WorkloadPeriodSelector({
@@ -12,18 +13,13 @@ export function WorkloadPeriodSelector({
   return (
     <label className="flex items-center gap-2 text-[13px] font-semibold text-tp-muted">
       Periode
-      <select
+      <Select
         aria-label="Pilih periode workload"
-        className="h-11 rounded-full border border-tp-line bg-tp-surface px-4 text-sm font-medium text-tp-text"
+        className="w-44"
         onChange={(e) => onChange(e.target.value)}
+        options={WORKLOAD_PERIODS.map((period) => ({ value: period.id, label: period.label }))}
         value={value}
-      >
-        {WORKLOAD_PERIODS.map((period) => (
-          <option key={period.id} value={period.id}>
-            {period.label}
-          </option>
-        ))}
-      </select>
+      />
     </label>
   );
 }
