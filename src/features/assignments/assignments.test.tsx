@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import { GraphQLError, Kind, parse, visit, type FieldNode } from "graphql";
+import ExcelJS from "exceljs";
 import AssignmentsPage from "@/app/(app)/assignments/page";
 import NewAssignmentPage from "@/app/(app)/assignments/new/page";
 import AssignmentDetailPage from "@/app/(app)/assignments/[id]/page";
@@ -1004,10 +1005,25 @@ describe("Bulk assignment (TAN-337)", () => {
     await screen.findByRole("dialog", { name: /buat assignment massal/i });
   }
 
-  function pickTalents(...names: string[]) {
-    const candidates = screen.getByRole("list", { name: "Kandidat talent" });
-    for (const name of names) {
-      fireEvent.click(within(candidates).getByRole("button", { name: new RegExp(`^${name}`) }));
+  async function uploadTalentFile(
+    rows: string[],
+    options: { awaitRead?: boolean; name?: string; header?: string } = {},
+  ) {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Talent");
+    sheet.addRow([options.header ?? "nomor_induk"]);
+    for (const nomorInduk of rows) sheet.addRow([nomorInduk]);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const file = new File([buffer], options.name ?? "talent.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Unggah berkas Excel talent"), {
+        target: { files: [file] },
+      });
+    });
+    if (options.awaitRead !== false) {
+      await screen.findByText(/talent terbaca/);
     }
   }
 
@@ -1051,7 +1067,7 @@ describe("Bulk assignment (TAN-337)", () => {
       )
     );
     await openBulkCreateModal();
-    pickTalents("Andi Pratama", "Budi Santoso");
+    await uploadTalentFile(["EMP-001", "EMP-002"]);
     fillBulkForm();
     fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
 
@@ -1100,7 +1116,7 @@ describe("Bulk assignment (TAN-337)", () => {
       )
     );
     await openBulkCreateModal();
-    pickTalents("Andi Pratama", "Budi Santoso");
+    await uploadTalentFile(["EMP-001", "EMP-002"]);
     fillBulkForm();
     fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
 
@@ -1165,7 +1181,7 @@ describe("Bulk assignment (TAN-337)", () => {
       )
     );
     await openBulkCreateModal();
-    pickTalents("Andi Pratama", "Budi Santoso");
+    await uploadTalentFile(["EMP-001", "EMP-002"]);
     fillBulkForm();
     fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
 
@@ -1176,51 +1192,83 @@ describe("Bulk assignment (TAN-337)", () => {
     expect(screen.getByRole("dialog", { name: /buat assignment massal/i })).toBeInTheDocument();
   });
 
-  it("filters candidate talents by search", async () => {
+  it("offers the downloadable Excel template and no longer offers multi-select (keputusan owner opsi A)", async () => {
     renderBulkPage(bulkMocks());
     await openBulkCreateModal();
 
-    fireEvent.change(screen.getByRole("searchbox", { name: "Cari talent" }), {
-      target: { value: "budi" },
-    });
-    const candidates = screen.getByRole("list", { name: "Kandidat talent" });
-    expect(within(candidates).getByRole("button", { name: /Budi Santoso/ })).toBeInTheDocument();
-    expect(within(candidates).queryByRole("button", { name: /Andi Pratama/ })).toBeNull();
+    const link = screen.getByRole("link", { name: "Unduh Template" });
+    expect(link).toHaveAttribute("href", "/templates/template-buat-assignment-massal.xlsx");
+    expect(link).toHaveAttribute("download");
+    expect(screen.queryByRole("list", { name: "Kandidat talent" })).toBeNull();
+    expect(screen.queryByRole("searchbox", { name: "Cari talent" })).toBeNull();
   });
 
-  it("guards the 100-row batch limit on the client (FR-07)", async () => {
-    const manyTalents = Array.from({ length: 101 }, (_, i) => ({
-      __typename: "Employee",
-      id: `bulk-emp-${i + 1}`,
-      fullName: `Talent Massal ${i + 1}`,
-      nomorInduk: `EMP-${String(i + 1).padStart(3, "0")}`,
-    }));
-    renderBulkPage([
-      {
-        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
-        result: {
-          data: {
-            assignableTalents: {
-              __typename: "EmployeeConnection",
-              edges: manyTalents.map((node) => ({ __typename: "EmployeeEdge", cursor: node.id, node })),
+  it("reports unmapped nomor induk per row and sends only the mapped talents (FR-12)", async () => {
+    renderBulkPage(
+      bulkMocks(
+        {
+          request: {
+            query: BulkCreateAssignmentsDocument,
+            variables: {
+              input: {
+                employeeIds: ["emp-1"],
+                projectId: "prj-1",
+                periodStart: "2025-07-01",
+                periodEnd: undefined,
+              },
+            },
+          },
+          result: {
+            data: {
+              bulkCreateAssignments: {
+                __typename: "BulkAssignmentResult",
+                succeeded: [createdRow(0, "emp-1", "asg-10", "Andi Pratama")],
+                failed: [],
+              },
             },
           },
         },
-      },
-      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: twoAssignmentsResult },
-    ]);
+        listRefreshMock,
+      )
+    );
     await openBulkCreateModal();
+    await uploadTalentFile(["EMP-001", "NIA-999"]);
+    expect(screen.getByText(/1 talent terbaca, 1 tidak dikenal/)).toBeInTheDocument();
+    const unknown = screen.getByRole("list", { name: "Baris tidak dikenal" });
+    expect(unknown).toHaveTextContent(
+      "Baris 2: NIA-999 — nomor induk tidak ditemukan di antara kandidat talent assignable."
+    );
 
-    const candidates = screen.getByRole("list", { name: "Kandidat talent" });
-    const candidateButtons = within(candidates).getAllByRole("button");
-    expect(candidateButtons).toHaveLength(101);
-    candidateButtons.forEach((button) => fireEvent.click(button));
-
-    expect(screen.getByText("Maksimum 100 talent per operasi massal.")).toBeInTheDocument();
-    const last = within(candidates).getByRole("button", { name: /^Talent Massal 101 EMP-/ });
-    expect(last).toHaveAttribute("aria-pressed", "false");
+    fillBulkForm();
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/1 assignment berhasil dibuat massal/);
   });
+
+  it("rejects a template whose first row lacks the nomor_induk column (FR-12)", async () => {
+    renderBulkPage(bulkMocks());
+    await openBulkCreateModal();
+    await uploadTalentFile(["EMP-001"], { awaitRead: false, header: "nik" });
+    expect(
+      await screen.findByText('Kolom "nomor_induk" tidak ditemukan pada baris pertama berkas.'),
+    ).toBeInTheDocument();
+  });
+
+  it("guards the 100-row batch limit on the client (FR-07)", async () => {
+    renderBulkPage(bulkMocks());
+    await openBulkCreateModal();
+    await uploadTalentFile(
+      Array.from({ length: 101 }, (_, i) => `EMP-${String(i + 1).padStart(3, "0")}`),
+      { awaitRead: false },
+    );
+    expect(
+      await screen.findByText("Maksimum 100 talent per operasi massal; berkas berisi 101 baris."),
+    ).toBeInTheDocument();
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
+    expect(
+      screen.getByText(/Unggah berkas Excel berisi minimal satu talent/),
+    ).toBeInTheDocument();
+  });
+
 
   it("hides selection and bulk actions from non-managing roles (T033/FR-08)", async () => {
     auth.role = "OPERATION";

@@ -1,10 +1,8 @@
 "use client";
 
-import { IconX } from "@tabler/icons-react";
 import * as React from "react";
 import { ApolloError } from "@apollo/client";
 import { Button } from "@/components/Button";
-import { Chip } from "@/components/Chip";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { Modal } from "@/components/Modal";
@@ -13,11 +11,9 @@ import { useToast } from "@/components/Toast";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { useProjects } from "@/features/master-data/useMasterData";
 import { errorMessage } from "@/lib/errors";
-import { cn } from "@/lib/cn";
 import { BulkResultSummary, type BulkRowResult } from "./BulkResultSummary";
 import { BULK_ASSIGNMENT_MAX_ROWS, useBulkCreateAssignments } from "./useBulkAssignments";
-
-type TalentOption = { id: string; fullName: string; nomorInduk: string | null };
+import { TEMPLATE_COLUMN, TEMPLATE_URL, mapTemplateRows, parseTalentTemplate, type TalentTemplateRow } from "./talentTemplate";
 
 type FieldErrors = Partial<Record<"employees" | "projectId" | "periodStart" | "periodEnd", string>>;
 
@@ -32,15 +28,6 @@ type BulkCreateAssignmentModalProps = {
   onCreated?: () => void;
 };
 
-function matchesSearch(talent: TalentOption, search: string): boolean {
-  const needle = search.trim().toLowerCase();
-  if (!needle) return true;
-  return (
-    talent.fullName.toLowerCase().includes(needle) ||
-    (talent.nomorInduk ?? "").toLowerCase().includes(needle)
-  );
-}
-
 export function BulkCreateAssignmentModal({
   open,
   onClose,
@@ -49,8 +36,10 @@ export function BulkCreateAssignmentModal({
   const projects = useProjects();
   const talents = useAssignableTalents();
   const [bulkCreate, { loading }] = useBulkCreateAssignments();
-  const [selected, setSelected] = React.useState<TalentOption[]>([]);
-  const [search, setSearch] = React.useState("");
+  const [rows, setRows] = React.useState<TalentTemplateRow[] | null>(null);
+  const [fileName, setFileName] = React.useState<string | null>(null);
+  const [fileError, setFileError] = React.useState<string | null>(null);
+  const [parsing, setParsing] = React.useState(false);
   const [projectId, setProjectId] = React.useState("");
   const [periodStart, setPeriodStart] = React.useState("");
   const [periodEnd, setPeriodEnd] = React.useState("");
@@ -59,34 +48,48 @@ export function BulkCreateAssignmentModal({
   const [result, setResult] = React.useState<BulkOutcome | null>(null);
   const { pushToast } = useToast();
 
-  const candidates = (talents.data ?? []).filter((talent) => matchesSearch(talent, search));
-  const selectedIds = new Set(selected.map((talent) => talent.id));
+  const mappedRows = (rows ?? []).filter((row): row is TalentTemplateRow & { talent: NonNullable<TalentTemplateRow["talent"]> } => !!row.talent);
+  const unmappedRows = (rows ?? []).filter((row) => !row.talent);
   const retryIds = result ? result.failed.map((row) => row.employeeId).filter((id): id is string => !!id) : null;
-  const idsToSend = retryIds ?? selected.map((talent) => talent.id);
+  const idsToSend = retryIds ?? mappedRows.map((row) => row.talent.id);
   const isRetry = retryIds !== null;
+  const talentLabel = new Map(mappedRows.map((row) => [row.talent.id, row.talent.fullName]));
 
-  function toggleTalent(talent: TalentOption) {
+  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    e.target.value = "";
+    setFileError(null);
     setFormError(null);
-    setErrors((e) => ({ ...e, employees: undefined }));
-    setSelected((prev) => {
-      if (prev.some((t) => t.id === talent.id)) {
-        return prev.filter((t) => t.id !== talent.id);
+    setErrors((prev) => ({ ...prev, employees: undefined }));
+    setRows(null);
+    setFileName(null);
+    if (!file) return;
+    setParsing(true);
+    try {
+      const parsed = await parseTalentTemplate(file);
+      if (!parsed.ok) {
+        setFileError(parsed.reason);
+        return;
       }
-      if (prev.length >= BULK_ASSIGNMENT_MAX_ROWS) {
-        setErrors((e) => ({
-          ...e,
-          employees: `Maksimum ${BULK_ASSIGNMENT_MAX_ROWS} talent per operasi massal.`,
-        }));
-        return prev;
+      if (parsed.nomorInduk.length > BULK_ASSIGNMENT_MAX_ROWS) {
+        setFileError(
+          `Maksimum ${BULK_ASSIGNMENT_MAX_ROWS} talent per operasi massal; berkas berisi ${parsed.nomorInduk.length} baris.`,
+        );
+        return;
       }
-      return [...prev, talent];
-    });
+      setRows(mapTemplateRows(parsed.nomorInduk, talents.data ?? []));
+      setFileName(file.name);
+    } finally {
+      setParsing(false);
+    }
   }
 
   function validate(): FieldErrors {
     const next: FieldErrors = {};
     if (idsToSend.length === 0) {
-      next.employees = isRetry ? "Tidak ada baris gagal untuk diulangi." : "Pilih minimal satu talent.";
+      next.employees = isRetry
+        ? "Tidak ada baris gagal untuk diulangi."
+        : `Unggah berkas Excel berisi minimal satu talent (kolom ${TEMPLATE_COLUMN}).`;
     }
     if (!projectId) next.projectId = "Project wajib dipilih.";
     if (!periodStart) next.periodStart = "Tanggal mulai wajib diisi.";
@@ -132,8 +135,8 @@ export function BulkCreateAssignmentModal({
   }
 
   function labelFor(row: BulkRowResult): string {
-    const talent = selected.find((t) => t.id === row.employeeId);
-    return talent?.fullName ?? `Talent ${row.employeeId ?? `#${row.index}`}`;
+    const name = row.employeeId ? talentLabel.get(row.employeeId) : undefined;
+    return name ?? `Talent ${row.employeeId ?? `#${row.index}`}`;
   }
 
   const loadingData = projects.status === "loading" || talents.status === "loading";
@@ -163,68 +166,45 @@ export function BulkCreateAssignmentModal({
             {result ? (
               <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
             ) : null}
-            <div className="flex flex-col gap-1">
-              <InputControl error={errors.employees} label={`Talent (${selected.length} dipilih)`}>
+            <InputControl
+              error={errors.employees ?? fileError ?? undefined}
+              helper={`Unduh template, isi kolom ${TEMPLATE_COLUMN}, lalu unggah kembali (maksimum ${BULK_ASSIGNMENT_MAX_ROWS} baris).`}
+              label="Daftar Talent (berkas Excel)"
+            >
+              <div className="flex items-center gap-2">
                 <Input
-                  aria-label="Cari talent"
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari nama atau nomor induk…"
-                  type="search"
-                  value={search}
+                  accept=".xlsx"
+                  aria-label="Unggah berkas Excel talent"
+                  disabled={parsing}
+                  onChange={onFileChange}
+                  type="file"
                 />
-              </InputControl>
-              {selected.length > 0 ? (
-                <ul aria-label="Talent terpilih" className="flex flex-wrap gap-1.5">
-                  {selected.map((talent) => (
-                    <Chip key={talent.id} size="small" variant="info">
-                      {talent.fullName}
-                      <button
-                        aria-label={`Hapus ${talent.fullName} dari pilihan`}
-                        className="ml-0.5 rounded-full hover:opacity-70"
-                        onClick={() => toggleTalent(talent)}
-                        type="button"
-                      >
-                        <IconX aria-hidden size={12} stroke={2} />
-                      </button>
-                    </Chip>
-                  ))}
-                </ul>
-              ) : null}
-              <ul
-                aria-label="Kandidat talent"
-                className="max-h-44 divide-y divide-tp-line overflow-y-auto rounded-lg border border-tp-line"
-              >
-                {candidates.length === 0 ? (
-                  <li className="px-3 py-2 text-sm text-tp-muted">Tidak ada talent yang cocok.</li>
-                ) : (
-                  candidates.map((talent) => {
-                    const isSelected = selectedIds.has(talent.id);
-                    return (
-                      <li key={talent.id}>
-                        <button
-                          aria-label={`${talent.fullName} ${talent.nomorInduk ?? ""}`.trim()}
-                          aria-pressed={isSelected}
-                          className={cn(
-                            "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-tp-bg",
-                            isSelected && "font-medium",
-                          )}
-                          onClick={() => toggleTalent(talent)}
-                          type="button"
-                        >
-                          <span>
-                            {talent.fullName}
-                            <span className="ml-2 text-xs text-tp-muted">
-                              {` ${talent.nomorInduk ?? "—"}`}
-                            </span>
-                          </span>
-                          {isSelected ? <span className="text-xs text-tp-ink-info">dipilih</span> : null}
-                        </button>
-                      </li>
-                    );
-                  })
-                )}
+                <a
+                  className="shrink-0 text-sm font-medium text-tp-ink-info underline hover:opacity-80"
+                  download
+                  href={TEMPLATE_URL}
+                >
+                  Unduh Template
+                </a>
+              </div>
+            </InputControl>
+            {parsing ? <p className="text-sm text-tp-muted">Membaca berkas…</p> : null}
+            {fileName && rows ? (
+              <p aria-live="polite" className="text-sm text-tp-muted">
+                {fileName} — {mappedRows.length} talent terbaca
+                {unmappedRows.length > 0 ? `, ${unmappedRows.length} tidak dikenal` : ""}.
+              </p>
+            ) : null}
+            {unmappedRows.length > 0 ? (
+              <ul aria-label="Baris tidak dikenal" className="rounded-lg border border-tp-line">
+                {unmappedRows.map((row) => (
+                  <li className="px-3 py-2 text-sm text-red-700" key={row.rowNumber}>
+                    Baris {row.rowNumber}: {row.nomorInduk} — nomor induk tidak ditemukan di antara
+                    kandidat talent assignable.
+                  </li>
+                ))}
               </ul>
-            </div>
+            ) : null}
             <InputControl error={errors.projectId} label="Project">
               <Select
                 onChange={(e) => {
@@ -270,7 +250,7 @@ export function BulkCreateAssignmentModal({
           <Button disabled={loading || loadingData} onClick={onClose} type="button" variant="secondary">
             {result ? "Tutup" : "Batal"}
           </Button>
-          <Button disabled={loading || loadingData || !!dataError} type="submit">
+          <Button disabled={loading || parsing || loadingData || !!dataError} type="submit">
             {loading
               ? "Menyimpan…"
               : isRetry
