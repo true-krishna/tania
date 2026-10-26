@@ -25,35 +25,38 @@ dihapus (melindungi riwayat penempatan dan turunan pengalaman kerja CV). Keputus
 ini tercatat sebagai Open Item O1 pada plan untuk konfirmasi akhir pemilik produk.
 
 **Revisi**: 2026-10-26 (keputusan pemilik produk pada thread TAN-337) — **Bulk create beralih ke
-unggah berkas Excel.** Pemilihan talent multi-select pada form bulk create dibuang total: daftar
-talent kini diambil dari berkas templat Excel yang diunggah (kolom `nomor_induk`), sementara
-project dan periode tetap dipilih pada form. Templat resmi disediakan untuk diunduh dari
-aplikasi (FR-12). Nomor induk pada berkas dipetakan ke kandidat talent assignable; baris yang
-tidak dapat dipetakan dilaporkan per baris beserta alasannya. Kontrak GraphQL
-(`bulkCreateAssignments` dengan `employeeIds`) dan backend tidak berubah akibat penyesuaian ini.
-Impor berkas untuk bulk edit/hapus tetap di luar scope.
+unggah berkas Excel dengan data lengkap per baris.** Pemilihan talent multi-select pada form
+bulk create dibuang total. Berkas templat Excel memuat satu assignment per baris dengan data
+yang sama seperti pembuatan tunggal — kolom `employee_id`, `project_id`, `period_start`,
+`period_end` (opsional; kosong berarti berjalan). `employee_id` menerima nomor induk atau ID
+talent; `project_id` menerima nama project (Master Data Project aktif) atau ID project — nama
+yang dipakai lebih dari satu project aktif ditolak per baris. Templat resmi disediakan untuk
+diunduh dari aplikasi (FR-12); setiap baris divalidasi seperti pembuatan tunggal dan baris yang
+gagal dilaporkan per baris beserta alasannya tanpa memengaruhi baris lain (FR-02). Kontrak:
+mutasi `importAssignments` (maksimum 100 baris, Chapter + Admin); `bulkCreateAssignments`
+tetap tersedia sebagai API. Impor berkas untuk bulk edit/hapus tetap di luar scope.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Chapter membuat assignment massal untuk banyak talent (Priority: P1)
 
 Sebagai **Chapter**, saya dapat membuat assignment untuk banyak talent sekaligus dalam satu aksi
-— mengunggah berkas templat Excel berisi daftar nomor induk talent (karyawan aktif dan
-assignable dalam tanggung jawab chapter-nya), lalu memilih satu project dari Master Data Project
-dan satu periode — sehingga penempatan sekumpulan talent ke sebuah project terdokumentasi tanpa
-mengulang form per talent.
+— mengunggah berkas templat Excel yang setiap barisnya memuat satu assignment lengkap seperti
+pembuatan tunggal: talent (karyawan aktif dan assignable dalam tanggung jawab chapter-nya),
+project dari Master Data Project, dan periode — sehingga penempatan sekumpulan talent
+terdokumentasi tanpa mengulang form per talent.
 
 **Why this priority**: Pembuatan massal adalah nilai utama fitur — penempatan tim ke project
 adalah kegiatan berulang dan saat ini menuntut pengisian form berulang per talent; inilah yang
 menjadi inti permintaan "bulk assignment".
 
 **Independent Test**: Dapat diuji penuh dengan login sebagai Chapter, mengunggah berkas templat
-berisi 3 nomor induk talent dalam chapter-nya, memilih satu project aktif dan periode, lalu
-menyimpan — assignment tersimpan dan muncul pada riwayat masing-masing talent.
+berisi 3 baris assignment (talent dalam chapter-nya, project aktif, periode), lalu menyimpan —
+assignment tersimpan sesuai data tiap baris dan muncul pada riwayat masing-masing talent.
 
 **Acceptance Scenarios**:
 
-1. **Given** Chapter sudah login dan terdapat beberapa talent aktif assignable dalam chapter-nya, **When** membuat assignment massal dengan mengunggah berkas templat berisi nomor induk mereka, satu project dari Master Data Project, dan satu periode, **Then** assignment tersimpan untuk setiap talent pada berkas yang sah dan muncul pada riwayat masing-masing talent.
+1. **Given** Chapter sudah login dan terdapat beberapa talent aktif assignable dalam chapter-nya, **When** membuat assignment massal dengan mengunggah berkas templat yang setiap barisnya memuat talent, project, dan periodenya, **Then** assignment tersimpan sesuai data tiap baris yang sah dan muncul pada riwayat masing-masing talent.
 2. **Given** salah satu talent yang dipilih sudah memiliki assignment aktif pada project yang sama, **When** operasi massal dieksekusi, **Then** talent lain tetap berhasil dibuat dan baris yang gagal dilaporkan beserta alasannya — kegagalan satu baris tidak menggagalkan baris lain.
 3. **Given** Chapter memilih talent di luar tanggung jawab chapter-nya (atau talent nonaktif), **When** permintaan dikirim, **Then** baris tersebut ditolak di sisi server dengan penjelasan, tanpa memengaruhi baris lain yang sah.
 
@@ -120,7 +123,7 @@ daftar per project — sementara assignment berstatus selesai tidak menawarkan a
 
 ### Functional Requirements
 
-- **FR-01**: Pengelola assignment (Chapter dalam cakupan chapter-nya; Admin selaras aturan pengelolaan assignment berjalan saat ini — TAN-212 clarify 4) harus dapat membuat assignment massal dalam satu aksi: daftar talent diambil dari berkas templat Excel yang diunggah — setiap baris memuat nomor induk seorang talent yang harus aktif dan assignable dalam cakupan — disertai satu project dari Master Data Project aktif dan satu periode (mulai wajib; selesai opsional).
+- **FR-01**: Pengelola assignment (Chapter dalam cakupan chapter-nya; Admin selaras aturan pengelolaan assignment berjalan saat ini — TAN-212 clarify 4) harus dapat membuat assignment massal dalam satu aksi: mengunggah berkas templat Excel yang setiap barisnya memuat satu assignment lengkap seperti pembuatan tunggal — talent (aktif, assignable, dalam cakupan), project dari Master Data Project aktif, dan periode (mulai wajib; selesai opsional).
 - **FR-02**: Hasil operasi massal harus dilaporkan per baris: baris yang berhasil (beserta assignment hasilnya) dan baris yang gagal (beserta alasan yang jelas dan dapat ditindaklanjuti); kegagalan satu baris tidak boleh menggagalkan baris lain yang sah.
 - **FR-03**: Pengelola assignment harus dapat memilih banyak assignment berjalan sekaligus dan menerapkan satu perubahan (project dan/atau periode) kepada semuanya dalam satu aksi; per baris berlaku aturan pengubahan assignment yang ada — hanya assignment berstatus berjalan, talent tidak berganti, larangan duplikat aktif per talent+project.
 - **FR-04**: Pengelola assignment harus dapat menghapus banyak assignment sekaligus; hanya assignment berstatus berjalan yang dapat dihapus — assignment berstatus selesai tidak pernah dapat dihapus (catatan historis tetap utuh, termasuk sebagai sumber pengalaman kerja CV).
@@ -131,7 +134,7 @@ daftar per project — sementara assignment berstatus selesai tidak menawarkan a
 - **FR-09**: Setiap assignment yang dibuat, diubah, atau dihapus melalui operasi massal harus tercatat jejak auditnya per assignment (bukan satu catatan untuk seluruh batch); jejak audit hanya dapat dilihat Admin.
 - **FR-10**: Operasi massal wajib mengikuti seluruh aturan data assignment tunggal yang berlaku: project hanya dari Master Data Project aktif; talent hanya karyawan aktif dan assignable dalam cakupan; tanggal selesai (bila diisi) tidak lebih awal dari tanggal mulai; satu talent maksimum satu assignment aktif per project.
 - **FR-11**: Perubahan periode pada operasi massal tidak mengosongkan tanggal selesai yang sudah terisi; pengakhiran assignment tetap melalui alur akhiri assignment yang ada.
-- **FR-12**: Aplikasi menyediakan templat Excel resmi yang dapat diunduh untuk bulk create; berkas yang diunggah divalidasi sebelum eksekusi (format .xlsx, kolom `nomor_induk` pada baris pertama, batas 100 baris) dan setiap baris yang nomor induknya tidak dapat dipetakan ke kandidat assignable dilaporkan per baris beserta alasannya, tanpa memengaruhi baris lain yang sah.
+- **FR-12**: Aplikasi menyediakan templat Excel resmi yang dapat diunduh untuk bulk create, berkolom `employee_id`, `project_id`, `period_start`, `period_end` (opsional; kosong berarti assignment berjalan). Berkas yang diunggah divalidasi sebelum eksekusi (format .xlsx, keempat kolom pada baris pertama, batas 100 baris); `employee_id` menerima nomor induk atau ID talent dan `project_id` menerima nama project aktif atau ID project (nama yang dipakai lebih dari satu project aktif ditolak per baris); setiap baris yang referensinya tidak dapat diselesaikan atau gagal validasi dilaporkan per baris beserta alasannya, tanpa memengaruhi baris lain yang sah.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -159,7 +162,7 @@ daftar per project — sementara assignment berstatus selesai tidak menawarkan a
 
 ## Out of Scope
 
-- Impor assignment dengan project dan/atau periode yang berbeda per baris, serta impor berkas untuk bulk edit/hapus — bulk create menerima unggah templat Excel berisi daftar talent (FR-01, FR-12); seleksi baris tetap menjadi cara untuk bulk edit/hapus.
+- Impor berkas untuk bulk edit/hapus — bulk create menerima unggah templat Excel berisi assignment lengkap per baris (FR-01, FR-12); seleksi baris tetap menjadi cara untuk bulk edit/hapus.
 - Template atau pola assignment berulang/rotasi otomatis antar periode.
 - Perubahan aturan assignment tunggal atau model data assignment — fitur ini melapisi operasi massal di atas aturan yang berlaku.
 - Operasi massal pada IDP, evaluasi performa, atau entitas lain di luar assignment.

@@ -1,14 +1,14 @@
 /**
- * Templat & pembaca berkas Excel untuk bulk create assignment (TAN-337, opsi A —
- * keputusan pemilik produk pada thread TAN-337): daftar talent diambil dari
- * berkas templat (kolom `nomor_induk`) alih-alih pemilihan multi-select.
- * Pemetaan nomor induk → talent dilakukan di sisi klien terhadap daftar
- * kandidat assignable, sehingga mutasi `bulkCreateAssignments` (employeeIds)
- * dan backend tidak berubah.
+ * Templat & pembaca berkas Excel untuk bulk create assignment (TAN-337, keputusan
+ * pemilik produk pada thread TAN-337): satu assignment per baris, dengan data yang
+ * sama seperti pembuatan tunggal — kolom `employee_id`, `project_id`, `period_start`,
+ * `period_end`. Referensi diselesaikan di server (employee_id = nomor induk atau ID
+ * talent; project_id = nama project aktif atau ID project) via mutasi
+ * `importAssignments`, jadi parser klien hanya memvalidasi struktur baris.
  */
 
-/** Kolom wajib pada baris pertama berkas templat. */
-export const TEMPLATE_COLUMN = "nomor_induk";
+/** Kolom pada baris pertama berkas templat (period_end opsional diisi). */
+export const TEMPLATE_COLUMNS = ["employee_id", "project_id", "period_start", "period_end"] as const;
 
 /** Lokasi berkas templat yang dapat diunduh dari aplikasi. */
 export const TEMPLATE_URL = "/templates/template-buat-assignment-massal.xlsx";
@@ -17,18 +17,23 @@ export const TEMPLATE_URL = "/templates/template-buat-assignment-massal.xlsx";
 export const TEMPLATE_FILE_ERROR =
   "Gagal membaca berkas. Pastikan berkas Excel (.xlsx) valid.";
 
-export type TalentCandidate = { id: string; fullName: string; nomorInduk: string | null };
-
-export type TalentTemplateRow = {
-  /** Posisi baris data pada berkas (1-based, header tidak dihitung). */
+export type ImportTemplateRow = {
+  /** Nomor baris pada berkas (1-based termasuk header). */
   rowNumber: number;
-  nomorInduk: string;
-  /** Terisi bila nomor induk terpetakan ke kandidat talent assignable. */
-  talent?: TalentCandidate;
+  employeeId: string;
+  projectId: string;
+  periodStart: string;
+  /** Kosong berarti assignment berjalan (period_end opsional). */
+  periodEnd: string;
 };
 
-export type TalentTemplateParse =
-  | { ok: true; nomorInduk: string[] }
+export type ImportTemplateInvalidRow = {
+  rowNumber: number;
+  reason: string;
+};
+
+export type ImportTemplateParse =
+  | { ok: true; rows: ImportTemplateRow[]; invalid: ImportTemplateInvalidRow[] }
   | { ok: false; reason: string };
 
 function cellText(value: unknown): string {
@@ -36,8 +41,8 @@ function cellText(value: unknown): string {
   return String(value).trim();
 }
 
-/** Membaca daftar nomor induk dari lembar kerja pertama berkas .xlsx. */
-export async function parseTalentTemplate(file: File): Promise<TalentTemplateParse> {
+/** Membaca baris assignment dari lembar kerja pertama berkas .xlsx. */
+export async function parseTemplate(file: File): Promise<ImportTemplateParse> {
   if (!/\.xlsx$/i.test(file.name)) {
     return { ok: false, reason: "Berkas harus berformat .xlsx." };
   }
@@ -54,7 +59,7 @@ export async function parseTalentTemplate(file: File): Promise<TalentTemplatePar
   if (!sheet) {
     return { ok: false, reason: "Berkas tidak memiliki lembar kerja." };
   }
-  return readNomorInduk(sheet);
+  return readImportRows(sheet);
 }
 
 /** Bentuk minimal lembar kerja exceljs yang dipakai parser (memudahkan test). */
@@ -66,52 +71,53 @@ export type TemplateSheet = {
   rowCount: number;
 };
 
-function readNomorInduk(sheet: TemplateSheet): TalentTemplateParse {
+function readImportRows(sheet: TemplateSheet): ImportTemplateParse {
   const header = sheet.getRow(1);
-  let column = 0;
+  const columns = new Map<string, number>();
   for (let c = 1; c <= header.cellCount; c += 1) {
-    if (cellText(header.getCell(c)?.text).toLowerCase() === TEMPLATE_COLUMN) {
-      column = c;
-      break;
-    }
+    const name = cellText(header.getCell(c)?.text).toLowerCase();
+    if (name && !columns.has(name)) columns.set(name, c);
   }
-  if (column === 0) {
+  const missing = TEMPLATE_COLUMNS.filter((name) => !columns.has(name));
+  if (missing.length > 0) {
     return {
       ok: false,
-      reason: `Kolom "${TEMPLATE_COLUMN}" tidak ditemukan pada baris pertama berkas.`,
+      reason: `Kolom ${missing.map((name) => `"${name}"`).join(", ")} tidak ditemukan pada baris pertama berkas.`,
     };
   }
-  const nomorInduk: string[] = [];
-  for (let r = 2; r <= sheet.rowCount; r += 1) {
-    const text = cellText(sheet.getRow(r).getCell(column)?.text);
-    if (text) nomorInduk.push(text);
-  }
-  if (nomorInduk.length === 0) {
-    return { ok: false, reason: "Berkas tidak berisi baris talent." };
-  }
-  return { ok: true, nomorInduk };
-}
 
-/**
- * Memetakan daftar nomor induk ke kandidat assignable (perbandingan tanpa
- * memedulikan besar-kecil huruf, setelah trim). Baris yang tidak ditemukan
- * tetap masuk hasil tanpa `talent` — dilaporkan per baris sebelum eksekusi.
- */
-export function mapTemplateRows(
-  nomorInduk: readonly string[],
-  candidates: readonly TalentCandidate[],
-): TalentTemplateRow[] {
-  const byNomor = new Map<string, TalentCandidate>();
-  for (const candidate of candidates) {
-    const nomor = candidate.nomorInduk?.trim().toLowerCase();
-    if (nomor) byNomor.set(nomor, candidate);
+  const rows: ImportTemplateRow[] = [];
+  const invalid: ImportTemplateInvalidRow[] = [];
+  for (let r = 2; r <= sheet.rowCount; r += 1) {
+    const get = (column: string) => cellText(sheet.getRow(r).getCell(columns.get(column) ?? 0)?.text);
+    const employeeId = get("employee_id");
+    const projectId = get("project_id");
+    const periodStart = get("period_start");
+    const periodEnd = get("period_end");
+    if (!employeeId && !projectId && !periodStart && !periodEnd) continue;
+    if (!employeeId || !projectId || !periodStart) {
+      const missingCells = [
+        !employeeId ? "employee_id" : null,
+        !projectId ? "project_id" : null,
+        !periodStart ? "period_start" : null,
+      ].filter(Boolean);
+      invalid.push({
+        rowNumber: r,
+        reason: `kolom ${missingCells.join(", ")} wajib diisi`,
+      });
+      continue;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(periodStart) || (periodEnd && !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd))) {
+      invalid.push({
+        rowNumber: r,
+        reason: "tanggal harus berformat YYYY-MM-DD",
+      });
+      continue;
+    }
+    rows.push({ rowNumber: r, employeeId, projectId, periodStart, periodEnd });
   }
-  return nomorInduk.map((nomor, index) => {
-    const trimmed = nomor.trim();
-    return {
-      rowNumber: index + 1,
-      nomorInduk: trimmed,
-      talent: byNomor.get(trimmed.toLowerCase()),
-    };
-  });
+  if (rows.length === 0 && invalid.length === 0) {
+    return { ok: false, reason: "Berkas tidak berisi baris assignment." };
+  }
+  return { ok: true, rows, invalid };
 }

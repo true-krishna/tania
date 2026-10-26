@@ -39,6 +39,12 @@ enum AccountStatus {
   INACTIVE
 }
 
+"""Jenis aktivitas pribadi talent (FR-003)."""
+enum ActivityType {
+  working
+  training
+}
+
 enum EmployeeStatus {
   ACTIVE
   INACTIVE
@@ -357,6 +363,100 @@ type ActivityStatus {
   isTerminal: Boolean!
 }
 
+"""Aktivitas kerja/pelatihan milik seorang talent (FR-008–FR-010).
+
+Aktivitas disimpan di Tania dan selalu terikat pada satu assignment milik
+pemiliknya; satu talent boleh punya beberapa assignment, dan setiap aktivitas
+memilih salah satunya. `talent` selalu berasal dari sesi saat create."""
+type PersonalWorkActivity {
+  id: ID!
+  title: String!
+  activityType: ActivityType!
+  startDate: Date!
+  endDate: Date
+  """Assignment pemilik aktivitas; wajib aktif saat create (FR-010)."""
+  assignment: Assignment!
+  """Turunan assignment; null untuk activityType training (FR-004)."""
+  project: Project
+  priority: ActivityPriority!
+  status: ActivityStatus!
+  """Pemilik aktivitas; diisi server dari sesi, tidak bisa di-set klien (FR-010)."""
+  talent: Employee!
+  createdAt: Time!
+  updatedAt: Time!
+  """Penanda soft-delete; null = masih aktif (FR-009)."""
+  deletedAt: Time
+}
+
+type PersonalWorkActivityEdge { node: PersonalWorkActivity!, cursor: String! }
+type PersonalWorkActivityConnection {
+  edges: [PersonalWorkActivityEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+input PersonalWorkActivityFilter {
+  """Hanya untuk Chapter/Operation/Admin — Talent selalu dibatasi ke dirinya sendiri."""
+  talentId: ID
+  assignmentId: ID
+  activityType: ActivityType
+  statusId: ID
+  """Project mengikuti assignment aktivitas."""
+  projectId: ID
+  """Batas bawah inklusif startDate."""
+  startDate: Date
+  """Batas atas inklusif startDate."""
+  endDate: Date
+}
+
+input CreatePersonalWorkActivityInput {
+  title: String!
+  activityType: ActivityType!
+  startDate: Date!
+  endDate: Date
+  """Salah satu assignment aktif milik pemanggil (FR-010)."""
+  assignmentId: ID!
+  """Opsional; wajib null untuk training (FR-004). Project working selalu dari assignment."""
+  projectId: ID
+  priorityId: ID!
+  statusId: ID!
+}
+
+input UpdatePersonalWorkActivityInput {
+  title: String
+  activityType: ActivityType
+  startDate: Date
+  endDate: Date
+  assignmentId: ID
+  """Opsional; wajib null untuk training (FR-004)."""
+  projectId: ID
+  priorityId: ID
+  statusId: ID
+}
+
+"""Jumlah aktivitas per status pada satu periode (FR-008)."""
+type ActivityStatusCount {
+  statusId: ID!
+  statusName: String!
+  count: Int!
+}
+
+"""Jumlah aktivitas per jenis pada satu periode (FR-008)."""
+type ActivityTypeCount {
+  activityType: ActivityType!
+  count: Int!
+}
+
+"""Rekap aktivitas satu bulan (FR-008); `periodId` berformat `YYYY-MM`."""
+type ActivitySummary {
+  periodId: ID!
+  startDate: Date!
+  endDate: Date!
+  totalCount: Int!
+  statusCounts: [ActivityStatusCount!]!
+  typeCounts: [ActivityTypeCount!]!
+}
+
 # ------------------------------- Employee -----------------------------------
 
 type Employee {
@@ -439,6 +539,7 @@ input EmployeeFilter {
   search: String
   unitId: ID
   jobRoleId: ID
+  """chapter pemilik job role pada kontrak aktif"""
   chapterId: ID
   status: EmployeeStatus
   assignableOnly: Boolean
@@ -1094,6 +1195,14 @@ type Query {
   """Referensi status aktivitas, urut siklus hidup."""
   activityStatuses: [ActivityStatus!]!
 
+  # --- Aktivitas pribadi (FR-008–FR-010) ---
+  """Aktivitas milik pemanggil; Chapter/Operation/Admin boleh menyaring ke talent dalam scope (tanpa query allActivities)."""
+  myActivities(filter: PersonalWorkActivityFilter, first: Int = 25, after: String): PersonalWorkActivityConnection!
+  """Satu aktivitas yang terlihat pemanggil; baris orang lain atau terhapus → NOT_FOUND."""
+  activity(id: ID!): PersonalWorkActivity
+  """Rekap aktivitas satu bulan (`periodId` = YYYY-MM) sesuai scope pemanggil."""
+  activitySummary(periodId: ID!): ActivitySummary!
+
   # --- Employee (Operation/Admin tulis; Chapter/Admin baca) ---
   employees(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
   employee(id: ID!): Employee
@@ -1237,6 +1346,12 @@ Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FA
   updateAssignment(id: ID!, input: UpdateAssignmentInput!): Assignment!
   endAssignment(id: ID!, periodEnd: Date!): Assignment!
 
+  # --- Aktivitas pribadi (pemilik; FR-008–FR-010) ---
+  createPersonalWorkActivity(input: CreatePersonalWorkActivityInput!): PersonalWorkActivity!
+  updatePersonalWorkActivity(id: ID!, input: UpdatePersonalWorkActivityInput!): PersonalWorkActivity!
+  """Soft-delete; baris dan jejak audit tetap tersimpan (FR-009)."""
+  deletePersonalWorkActivity(id: ID!): PersonalWorkActivity!
+
   # --- IDP (Chapter kecuali update status aksi oleh Talent) ---
   createIdp(input: CreateIdpInput!): Idp!
   updateIdp(id: ID!, input: UpdateIdpInput!): Idp!
@@ -1378,4 +1493,30 @@ extend type Mutation {
   bulkUpdateAssignments(input: BulkUpdateAssignmentsInput!): BulkAssignmentResult!
   """Hapus banyak assignment aktif sekaligus (selesai tidak dapat dihapus). Chapter + Admin."""
   bulkDeleteAssignments(ids: [ID!]!): BulkAssignmentResult!
+}
+
+
+# --- Operasi massal assignment: impor berkas (TAN-337) ---
+# Impor assignment massal dari berkas templat Excel yang dibaca di klien:
+# setiap baris memuat satu assignment lengkap seperti pembuatan tunggal
+# (talent, project, periode). employeeId menerima nomor induk atau ID talent;
+# projectId menerima nama project atau ID project (nama yang dipakai lebih
+# dari satu project aktif ditolak per baris). periodEnd opsional — kosong
+# berarti assignment berjalan.
+
+input AssignmentImportRowInput {
+  employeeId: ID!
+  projectId: ID!
+  periodStart: Date!
+  periodEnd: Date
+}
+
+input ImportAssignmentsInput {
+  """Maksimum 100 baris per operasi (FR-07)."""
+  rows: [AssignmentImportRowInput!]!
+}
+
+extend type Mutation {
+  """Impor assignment massal dari berkas templat: satu assignment per baris. Chapter + Admin."""
+  importAssignments(input: ImportAssignmentsInput!): BulkAssignmentResult!
 }
