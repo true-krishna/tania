@@ -79,6 +79,10 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
       <Card className="max-w-3xl">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">Detail kontrak</h2>
+
+        <h3 className="mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Identitas kontrak
+        </h3>
         <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Karyawan</dt>
@@ -95,17 +99,29 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-zinc-500">Nomor Induk</dt>
-            <dd className="text-zinc-900">{contract.nomorInduk}</dd>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">No. Kontrak</dt>
+            <dd className="text-zinc-900">{contract.contractNo}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Jenis Kontrak</dt>
             <dd className="text-zinc-900">{CONTRACT_TYPE_LABEL[contract.contractType]}</dd>
           </div>
           <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">Nomor Induk</dt>
+            <dd className="text-zinc-900">{contract.nomorInduk}</dd>
+          </div>
+          <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Email Kantor</dt>
             <dd className="text-zinc-900">{contract.officeEmail ?? "—"}</dd>
           </div>
+        </dl>
+
+        <hr className="my-4 border-board-border" />
+
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Posisi &amp; unit
+        </h3>
+        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Unit</dt>
             <dd className="text-zinc-900">{contract.unit.name}</dd>
@@ -113,6 +129,12 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Posisi / Job Role</dt>
             <dd className="text-zinc-900">{contract.jobRole.name}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">Chapter</dt>
+            <dd className="text-zinc-900">
+              {contract.jobRole.chapter?.name ?? "Tanpa chapter"}
+            </dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Job Title</dt>
@@ -130,6 +152,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Work Location</dt>
             <dd className="text-zinc-900">{WORK_LOCATION_LABEL[contract.workLocation]}</dd>
           </div>
+        </dl>
+
+        <hr className="my-4 border-board-border" />
+
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Periode &amp; status
+        </h3>
+        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Periode</dt>
             <dd className="text-zinc-900">

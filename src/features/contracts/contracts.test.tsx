@@ -56,7 +56,13 @@ const jobRolesMock = {
   result: {
     data: {
       jobRoles: [
-        { __typename: "JobRole", id: "jr-1", name: "Engineer", isActive: true, chapter: null },
+        {
+          __typename: "JobRole",
+          id: "jr-1",
+          name: "Engineer",
+          isActive: true,
+          chapter: { __typename: "Chapter", id: "ch-1", name: "Platform" },
+        },
       ],
     },
   },
@@ -249,6 +255,17 @@ describe("CreateContractModal (form tambah kontrak, T023)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
   });
 
+  it("menampilkan chapter dari job role terpilih (TAN-328)", async () => {
+    await renderCreateModal([unitsMock, jobRolesMock, employeesMock]);
+    expect(await screen.findByRole("dialog", { name: /tambah kontrak/i })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox", { name: /posisi/i }), {
+      target: { value: "jr-1" },
+    });
+
+    expect(await screen.findByText(/chapter:\s*platform/i)).toBeInTheDocument();
+  });
+
   it("rejects a duplicate nomor induk with a clear message", async () => {
     const mocks = [
       unitsMock,
@@ -411,6 +428,24 @@ describe("RenewContractModal (form perpanjangan kontrak, T023)", () => {
     fireEvent.click(screen.getByRole("button", { name: /simpan perpanjangan/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
+  });
+
+  it("menampilkan chapter dari job role terpilih (TAN-328)", async () => {
+    await renderRenewModal([renewDetailMock, unitsMock, jobRolesMock, renewMock]);
+    expect(await screen.findByRole("dialog", { name: /perpanjang kontrak/i })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/no\. kontrak baru/i), {
+      target: { value: validRenewInput.contractNo },
+    });
+    fireEvent.change(screen.getByLabelText(/tanggal mulai/i), {
+      target: { value: validRenewInput.startDate },
+    });
+    fireEvent.change(screen.getByLabelText(/tanggal selesai/i), {
+      target: { value: validRenewInput.endDate },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /lanjut/i }));
+
+    expect(await screen.findByText(/chapter:\s*platform/i)).toBeInTheDocument();
   });
 });
 
@@ -594,7 +629,12 @@ const contractDetailNode = {
     email: "andi@tania.id",
   },
   unit: { __typename: "Unit", id: "u-1", name: "Digital" },
-  jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
+  jobRole: {
+    __typename: "JobRole",
+    id: "jr-1",
+    name: "Engineer",
+    chapter: { __typename: "Chapter", id: "ch-1", name: "Platform" },
+  },
   predecessor: { __typename: "EmploymentContract", id: "ctr-0", contractNo: "PKWT/2024/001" },
   createdBy: { __typename: "User", id: "u-1", fullName: "Sari Operator" },
   createdAt: "2025-06-20T09:00:00Z",
@@ -670,6 +710,25 @@ describe("ContractDetailPage (detail kontrak + riwayat, T023)", () => {
     expect(await screen.findByText("Perpanjang")).toBeInTheDocument();
     expect(screen.getByText("Sari Operator")).toBeInTheDocument();
     expect(screen.getByText(/sebelum: \{"contractNo":"PKWT\/2024\/001"\}/i)).toBeInTheDocument();
+  });
+
+  it("menampilkan section kontrak dan chapter dari job role (TAN-328)", async () => {
+    await act(async () => {
+      render(
+        <React.Suspense fallback={null}>
+          <MockedProvider mocks={[detailMock, contractAuditMock]}>
+            <ContractDetailPage params={Promise.resolve({ id: "ctr-1" })} />
+          </MockedProvider>
+        </React.Suspense>
+      );
+    });
+
+    expect(await screen.findByRole("heading", { name: /pkwt\/2025\/002/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Identitas kontrak" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Posisi & unit" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Periode & status" })).toBeInTheDocument();
+    expect(screen.getByText("Platform")).toBeInTheDocument();
+    expect(screen.queryByText("Tanpa chapter")).toBeNull();
   });
 
   // 2026-10-16 clarify 5: Chapter reads the contracts of its own chapter.

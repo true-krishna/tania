@@ -16,7 +16,7 @@ import { useAssignableTalents, useEmployees } from "@/features/employees/useEmpl
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
 import { EMPLOYEE_STATUS_LABEL, EMPLOYEE_STATUS_VARIANT } from "@/features/employees/labels";
 import { EmployeeFormModal } from "@/features/employees/EmployeeFormModal";
-import { useUnits } from "@/features/master-data/useMasterData";
+import { useChapters, useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
@@ -116,14 +116,16 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   const router = useRouter();
   const [searchInput, setSearchInput] = React.useState("");
   const search = useDebouncedValue(searchInput);
-  const [filters, setFilters] = React.useState<{ unitId: string; status: string }>({
-    unitId: "",
+  const [filters, setFilters] = React.useState<{ chapterId: string; status: string; unitId: string }>({
+    chapterId: "",
     status: "",
+    unitId: "",
   });
   const [pageSize, setPageSize] = React.useState(25);
   const [modalMode, setModalMode] = React.useState<"create" | "edit" | null>(null);
   const [editEmployeeId, setEditEmployeeId] = React.useState<string | null>(null);
   const units = useUnits();
+  const chapters = useChapters();
   const {
     status: query,
     employees,
@@ -138,6 +140,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
     {
       search: search || undefined,
       unitId: filters.unitId || undefined,
+      chapterId: filters.chapterId || undefined,
       status: (filters.status || undefined) as EmployeeStatus | undefined,
     },
     pageSize
@@ -185,6 +188,15 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             options: [
               { value: "", label: "Semua" },
               ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+            ],
+            type: "select",
+          },
+          {
+            key: "chapterId",
+            label: "Chapter",
+            options: [
+              { value: "", label: "Semua" },
+              ...(chapters.data ?? []).map((chapter) => ({ value: chapter.id, label: chapter.name })),
             ],
             type: "select",
           },

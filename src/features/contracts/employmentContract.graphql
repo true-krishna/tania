@@ -28,6 +28,10 @@ query EmploymentContract($id: ID!) {
     jobRole {
       id
       name
+      chapter {
+        id
+        name
+      }
     }
     predecessor {
       id

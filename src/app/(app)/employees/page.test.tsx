@@ -7,6 +7,7 @@ import { MockedProvider } from "@apollo/client/testing";
 import EmployeesPage from "@/app/(app)/employees/page";
 import {
   AssignableTalentsDocument,
+  ChaptersDocument,
   EmployeeDocument,
   EmployeesDocument,
   MyEmployeeDocument,
@@ -65,6 +66,17 @@ const unitsMock = {
   },
 };
 
+const chaptersMock = {
+  request: { query: ChaptersDocument, variables: { includeInactive: true } },
+  result: {
+    data: {
+      chapters: [
+        { __typename: "Chapter", id: "ch-1", name: "Platform", isActive: true, jobRoles: [] },
+      ],
+    },
+  },
+};
+
 const pageOne = {
   data: {
     employees: {
@@ -105,7 +117,7 @@ const nextPageMock = {
 describe("EmployeesPage (daftar + filter, T021)", () => {
   it("renders NIK masked (4 digit akhir) and nomor induk per row", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+      <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -119,7 +131,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 
   it("renders a dash for cells without a value (TAN-189)", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+      <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -132,7 +144,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 
   it("opens the row action menu and navigates to the detail page (TAN-189)", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+      <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -145,6 +157,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 
   it("re-queries with the typed search filter", async () => {
     const mocks = [
+      chaptersMock,
       unitsMock,
       firstPageMock,
       nextPageMock,
@@ -185,6 +198,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 
   it("filters by divisi and status", async () => {
     const mocks = [
+      chaptersMock,
       unitsMock,
       firstPageMock,
       nextPageMock,
@@ -218,7 +232,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 
     const selects = screen.getAllByRole("combobox");
     fireEvent.change(selects[0], { target: { value: "u-1" } });
-    fireEvent.change(selects[1], { target: { value: "INACTIVE" } });
+    fireEvent.change(selects[2], { target: { value: "INACTIVE" } });
 
     expect(
       screen.getByRole("button", { name: "Filter, 2 filter aktif" }),
@@ -227,8 +241,51 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
   });
 
+  it("filters by chapter", async () => {
+    const mocks = [
+      chaptersMock,
+      unitsMock,
+      firstPageMock,
+      nextPageMock,
+      {
+        request: {
+          query: EmployeesDocument,
+          variables: { filter: { chapterId: "ch-1" }, first: 25, after: null },
+        },
+        result: {
+          data: {
+            employees: {
+              __typename: "EmployeeConnection",
+              totalCount: 1,
+              edges: edges([
+                node("emp-2", "Citra Lestari", "citra@tania.id", "ACTIVE", "************5678", "EMP-2", "Digital"),
+              ]),
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+            },
+          },
+        },
+      },
+    ];
+    render(
+      <MockedProvider mocks={mocks}>
+        <EmployeesPage />
+      </MockedProvider>
+    );
+    await screen.findByText("Andi Pratama");
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+
+    const selects = screen.getAllByRole("combobox");
+    fireEvent.change(selects[1], { target: { value: "ch-1" } });
+
+    expect(screen.getByRole("button", { name: "Filter, 1 filter aktif" })).toBeInTheDocument();
+    expect(await screen.findByText("Citra Lestari")).toBeInTheDocument();
+    expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
+  });
+
   it("auto-fetches the next cursor page to fill the shown page", async () => {
     const mocks = [
+      chaptersMock,
       unitsMock,
       firstPageMock,
       nextPageMock,
@@ -248,6 +305,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     render(
       <MockedProvider
         mocks={[
+          chaptersMock,
           unitsMock,
           {
             request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
@@ -275,7 +333,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
 describe("EmployeesPage per role (T034)", () => {
   it("shows the add action to Operation and Admin", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+      <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -286,7 +344,7 @@ describe("EmployeesPage per role (T034)", () => {
   it("lets Admin manage the directory (TAN-212 clarify 4)", async () => {
     auth.role = "ADMIN";
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+      <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -406,7 +464,7 @@ function submitForm() {
 describe("EmployeesPage — create modal (TAN-315)", () => {
   it("opens the create modal when clicking Tambah Karyawan", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+      <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -420,7 +478,7 @@ describe("EmployeesPage — create modal (TAN-315)", () => {
 
   it("closes the modal on Batal click", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+      <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -435,7 +493,7 @@ describe("EmployeesPage — create modal (TAN-315)", () => {
 
   it("shows validation errors when submitting empty create form", async () => {
     render(
-      <MockedProvider mocks={[unitsMock, firstPageMock, nextPageMock]}>
+      <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
       </MockedProvider>
     );
@@ -458,7 +516,7 @@ describe("EmployeesPage — create modal (TAN-315)", () => {
 
 describe("EmployeesPage — edit modal (TAN-315)", () => {
   it("opens the edit modal from row action with employee data loaded", async () => {
-    const mocks = [unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
+    const mocks = [chaptersMock, unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
@@ -476,7 +534,7 @@ describe("EmployeesPage — edit modal (TAN-315)", () => {
   });
 
   it("shows NIK masked and separate NIK baru field (FR-42)", async () => {
-    const mocks = [unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
+    const mocks = [chaptersMock, unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
@@ -495,7 +553,7 @@ describe("EmployeesPage — edit modal (TAN-315)", () => {
   });
 
   it("closes the edit modal on Batal click", async () => {
-    const mocks = [unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
+    const mocks = [chaptersMock, unitsMock, firstPageMock, nextPageMock, employeeDetailMock];
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />

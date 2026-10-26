@@ -551,6 +551,7 @@ export type EmployeeEdge = {
 
 export type EmployeeFilter = {
   assignableOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  chapterId?: InputMaybe<Scalars['ID']['input']>;
   jobRoleId?: InputMaybe<Scalars['ID']['input']>;
   /** nama / email / nomor induk (via kontrak aktif) */
   search?: InputMaybe<Scalars['String']['input']>;

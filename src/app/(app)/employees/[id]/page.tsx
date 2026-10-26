@@ -164,18 +164,6 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 <dd className="text-zinc-900">{employee.joinedAt}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-zinc-500">Unit / Divisi</dt>
-                <dd className="text-zinc-900">{employee.unit?.name ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-zinc-500">Job Role</dt>
-                <dd className="text-zinc-900">{employee.jobRole?.name ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-zinc-500">Chapter</dt>
-                <dd className="text-zinc-900">{employee.chapter?.name ?? "Tanpa chapter"}</dd>
-              </div>
-              <div>
                 <dt className="text-xs uppercase tracking-wide text-zinc-500">Status</dt>
                 <dd className="text-zinc-900">{EMPLOYEE_STATUS_LABEL[employee.status]}</dd>
               </div>
@@ -291,6 +279,12 @@ function ContractHistoryCard({ contract, linked }: { contract: ContractRow; link
         <div>
           <dt className="text-xs uppercase tracking-wide text-zinc-500">Posisi / Job Role</dt>
           <dd className="text-zinc-900">{contract.jobRole.name}</dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-zinc-500">Chapter</dt>
+          <dd className="text-zinc-900">
+            {contract.jobRole.chapter?.name ?? "Tanpa chapter"}
+          </dd>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-zinc-500">Job Title</dt>
