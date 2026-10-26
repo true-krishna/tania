@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
+import { BulkActionBar, type AssignmentRow } from "@/features/assignments/BulkActionBar";
+import { BulkCreateAssignmentModal } from "@/features/assignments/BulkCreateAssignmentModal";
 import { CreateAssignmentModal } from "@/features/assignments/CreateAssignmentModal";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
@@ -105,6 +107,8 @@ export default function AssignmentsPage() {
     status: string;
   }>({ talentId: "", projectId: "", status: "" });
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [bulkCreateOpen, setBulkCreateOpen] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const filter: AssignmentFilter = {
     employeeId: filters.talentId || undefined,
     projectId: filters.projectId || undefined,
@@ -113,6 +117,25 @@ export default function AssignmentsPage() {
   const { status: query, data, error } = useAssignments(filter);
   const projects = useProjects();
   const { pageRows, pagination, resetPage } = useTablePagination(data);
+  const selectedIdSet = new Set(selectedIds);
+  const selectedRows: AssignmentRow[] = (data ?? []).filter((row) => selectedIdSet.has(row.id));
+
+  function toggleRow(row: AssignmentRow, checked: boolean) {
+    setSelectedIds((prev) =>
+      checked && !prev.includes(row.id)
+        ? [...prev, row.id]
+        : prev.filter((id) => id !== row.id)
+    );
+  }
+
+  function toggleAllRows(checked: boolean) {
+    const pageIds = pageRows.map((row) => row.id);
+    setSelectedIds((prev) =>
+      checked
+        ? Array.from(new Set([...prev, ...pageIds]))
+        : prev.filter((id) => !pageIds.includes(id))
+    );
+  }
 
   const talentField = {
     key: "talentId",
@@ -150,6 +173,11 @@ export default function AssignmentsPage() {
   function changeFilter(key: string, value: string) {
     setFilters((prev) => ({ ...prev, [key]: value }));
     resetPage();
+    setSelectedIds([]);
+  }
+
+  function clearSelection() {
+    setSelectedIds([]);
   }
 
   return (
@@ -157,9 +185,14 @@ export default function AssignmentsPage() {
       <PageHeader
         actions={
           manage ? (
-            <Button onClick={() => setCreateOpen(true)} variant="primary">
-              + Buat Assignment
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setBulkCreateOpen(true)} variant="secondary">
+                + Buat Massal
+              </Button>
+              <Button onClick={() => setCreateOpen(true)} variant="primary">
+                + Buat Assignment
+              </Button>
+            </div>
           ) : undefined
         }
         subtitle={(role && SUBTITLE[role]) ?? "Penugasan talent ke project."}
@@ -167,6 +200,10 @@ export default function AssignmentsPage() {
       />
 
       <TableFilterBar fields={fields} onChange={changeFilter} values={filters} />
+
+      {manage && selectedRows.length > 0 ? (
+        <BulkActionBar onClear={clearSelection} onDone={resetPage} rows={selectedRows} />
+      ) : null}
 
       {query === "loading" ? (
         <LoadingState />
@@ -178,6 +215,31 @@ export default function AssignmentsPage() {
         <Table
           caption="Daftar assignment"
           columns={[
+            ...(manage
+              ? [
+                  {
+                    key: "select",
+                    title: (
+                      <input
+                        aria-label="Pilih semua baris di halaman ini"
+                        checked={pageRows.length > 0 && pageRows.every((row) => selectedIdSet.has(row.id))}
+                        className="h-4 w-4"
+                        onChange={(e) => toggleAllRows(e.target.checked)}
+                        type="checkbox"
+                      />
+                    ),
+                    render: (_value: unknown, assignment: AssignmentRow) => (
+                      <input
+                        aria-label={`Pilih ${assignment.talent.fullName}`}
+                        checked={selectedIdSet.has(assignment.id)}
+                        className="h-4 w-4"
+                        onChange={(e) => toggleRow(assignment, e.target.checked)}
+                        type="checkbox"
+                      />
+                    ),
+                  },
+                ]
+              : []),
             {
               key: "talent",
               title: "Talent",
@@ -240,6 +302,14 @@ export default function AssignmentsPage() {
            rowKey={(assignment) => assignment.id}
          />
        )}
+
+       {manage && bulkCreateOpen ? (
+         <BulkCreateAssignmentModal
+           onClose={() => setBulkCreateOpen(false)}
+           onCreated={resetPage}
+           open={bulkCreateOpen}
+         />
+       ) : null}
 
        {manage && createOpen ? (
          <CreateAssignmentModal
