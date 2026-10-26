@@ -32,6 +32,7 @@ export {
   DEFAULT_TALENT_ID,
   REPORT_PERIODS,
   REPORT_TALENT_OPTIONS,
+  SELF_TALENT_ID,
   formatPeriodLabel,
   formatPeriodShort,
   getExecutiveFixture,
@@ -41,7 +42,9 @@ export {
 export { ReportChartCard } from "./ReportChartCard";
 export { ReportPeriodSelector } from "./ReportPeriodSelector";
 export { ReportSkeleton } from "./ReportSkeleton";
+export { TalentOwnWorkloadView } from "./TalentOwnWorkloadView";
 export { TalentTable } from "./TalentTable";
+export { TalentWorkloadDetail } from "./TalentWorkloadDetail";
 export { TalentWorkloadView } from "./TalentWorkloadView";
 export { useExecutiveReport, type ExecutiveReportState } from "./useExecutiveReport";
 export { useTalentWorkload, type TalentWorkloadState } from "./useTalentWorkload";

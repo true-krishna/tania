@@ -51,8 +51,9 @@ vi.mock("echarts/renderers", () => ({ CanvasRenderer: {} }));
 
 vi.stubGlobal("ResizeObserver", echartsMock.ResizeObserverStub);
 
-import { getExecutiveFixture } from "./mocks";
+import { getExecutiveFixture, getTalentWorkloadFixture } from "./mocks";
 import { ExecutiveReportView } from "./ExecutiveReportView";
+import { TalentOwnWorkloadView } from "./TalentOwnWorkloadView";
 import { TalentWorkloadView } from "./TalentWorkloadView";
 
 beforeEach(() => {
@@ -381,41 +382,17 @@ describe("AnalyticsTables — logged vs estimated & TTD compliance (TAN-232)", (
   });
 });
 
-describe("TalentWorkloadView — tabel talent & laporan per-talent (TAN-233/234 + umpan balik)", () => {
-  async function openTalentDetail(name: RegExp) {
+describe("TalentWorkloadView — detail talent workload & tabel talent (TAN-233/234 + umpan balik)", () => {
+  function renderTalentView() {
     render(<TalentWorkloadView />);
-    await screen.findAllByText(/Tabel talent dengan workload/);
-    fireEvent.click(await screen.findByRole("button", { name: `Lihat detail ${name.source}` }));
-    await screen.findAllByText(name);
-    await screen.findByText("Beban (FTE)");
+    return screen.findByText("Beban (FTE)");
   }
 
-  it("lands on a table of talents with their workload", async () => {
-    render(<TalentWorkloadView />);
+  it("lands directly on the detail workload of the selected talent", async () => {
+    await renderTalentView();
 
-    expect((await screen.findAllByText(/Tabel talent dengan workload/)).length).toBeGreaterThan(0);
-    expect(await screen.findByText("Rani Puspita")).toBeInTheDocument();
-    expect(screen.getByText("Citra Lestari")).toBeInTheDocument();
+    expect((await screen.findAllByText(/Rani Puspita/)).length).toBeGreaterThan(0);
     expect(screen.getByText("135%")).toBeInTheDocument();
-    expect(screen.getAllByText("Overload").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Lihat detail Rani Puspita" })).toBeInTheDocument();
-  });
-
-  it("filters the talent table by search", async () => {
-    render(<TalentWorkloadView />);
-    await screen.findByText("Rani Puspita");
-
-    fireEvent.change(screen.getByLabelText("Cari talent"), { target: { value: "Delta" } });
-
-    expect(screen.getByText("Fajar Nugroho")).toBeInTheDocument();
-    expect(screen.queryByText("Rani Puspita")).toBeNull();
-  });
-
-  it("renders summary, charts and the backlog table for the selected talent", async () => {
-    await openTalentDetail(/Rani Puspita/);
-
-    await screen.findByText("135%");
-    expect(screen.getByText("Beban (FTE)")).toBeInTheDocument();
     expect(
       await screen.findByRole("img", { name: "Grafik garis tren backlog dan persentase beban" }),
     ).toBeInTheDocument();
@@ -424,18 +401,44 @@ describe("TalentWorkloadView — tabel talent & laporan per-talent (TAN-233/234 
     ).toBeInTheDocument();
     expect(screen.getByText("TAN-240")).toBeInTheDocument();
     expect(screen.getAllByText("TAN-249").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Tabel talent" })).toBeInTheDocument();
   });
 
-  it("returns to the talent table from the detail", async () => {
-    await openTalentDetail(/Rani Puspita/);
+  it("opens the talent table via the toggle and picks a talent from it", async () => {
+    await renderTalentView();
 
-    fireEvent.click(screen.getByRole("button", { name: "Kembali ke daftar talent" }));
+    fireEvent.click(screen.getByRole("button", { name: "Tabel talent" }));
 
     expect((await screen.findAllByText(/Tabel talent dengan workload/)).length).toBeGreaterThan(0);
+    expect(await screen.findByText("Citra Lestari")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Lihat detail Citra Lestari" }));
+    expect(await screen.findByText("130.9%")).toBeInTheDocument();
+  });
+
+  it("returns from the table back to the talent detail", async () => {
+    await renderTalentView();
+
+    fireEvent.click(screen.getByRole("button", { name: "Tabel talent" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Kembali ke detail talent" }));
+
+    expect(await screen.findByText("Beban (FTE)")).toBeInTheDocument();
+    expect((await screen.findAllByText(/Rani Puspita/)).length).toBeGreaterThan(0);
+  });
+
+  it("filters the talent table by search", async () => {
+    await renderTalentView();
+
+    fireEvent.click(screen.getByRole("button", { name: "Tabel talent" }));
+    await screen.findByText("Rani Puspita");
+
+    fireEvent.change(screen.getByLabelText("Cari talent"), { target: { value: "Delta" } });
+
+    expect(screen.getByText("Fajar Nugroho")).toBeInTheDocument();
+    expect(screen.queryByText("Rani Puspita")).toBeNull();
   });
 
   it("filters backlog rows by search without changing the URL", async () => {
-    await openTalentDetail(/Rani Puspita/);
+    await renderTalentView();
     await screen.findByText("TAN-240");
 
     fireEvent.change(screen.getByLabelText("Cari aktivitas"), { target: { value: "audit" } });
@@ -446,7 +449,7 @@ describe("TalentWorkloadView — tabel talent & laporan per-talent (TAN-233/234 
   });
 
   it("shows the normalized variant with filled vs normalized time spent", async () => {
-    await openTalentDetail(/Rani Puspita/);
+    await renderTalentView();
     await screen.findByText("TAN-240");
 
     fireEvent.click(screen.getByRole("tab", { name: "Ternormalisasi" }));
@@ -456,7 +459,7 @@ describe("TalentWorkloadView — tabel talent & laporan per-talent (TAN-233/234 
   });
 
   it("changes the talent context in-page and never in the URL", async () => {
-    await openTalentDetail(/Rani Puspita/);
+    await renderTalentView();
 
     fireEvent.change(screen.getByLabelText("Pilih talent"), { target: { value: "tal-09" } });
 
@@ -465,7 +468,7 @@ describe("TalentWorkloadView — tabel talent & laporan per-talent (TAN-233/234 
   });
 
   it("keeps only the period id in the URL when the period changes", async () => {
-    await openTalentDetail(/Rani Puspita/);
+    await renderTalentView();
 
     fireEvent.change(screen.getByLabelText("Pilih periode laporan talent"), {
       target: { value: "202608" },
@@ -480,5 +483,59 @@ describe("TalentWorkloadView — tabel talent & laporan per-talent (TAN-233/234 
 
     expect(await screen.findByText(/Data lama — terakhir diperbarui/)).toBeInTheDocument();
     expect(screen.queryByText(/Tidak dapat menghubungi sumber data WAD/)).toBeNull();
+  });
+});
+
+describe("TalentOwnWorkloadView — workload milik talent (TAN-227 umpan balik)", () => {
+  it("renders the same detail workload layout for the own talent, without the picker", async () => {
+    h.role.current = "TALENT";
+    render(<TalentOwnWorkloadView />);
+
+    await screen.findByText("Beban (FTE)");
+    expect(screen.getByText("135%")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("img", { name: "Grafik garis tren backlog dan persentase beban" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("TAN-240")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Pilih talent")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tabel talent" })).toBeNull();
+  });
+
+  it("renders nothing for non-TALENT roles", () => {
+    h.role.current = "ADMIN";
+    const { container } = render(<TalentOwnWorkloadView />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("keeps only the period id in the URL", async () => {
+    h.role.current = "TALENT";
+    render(<TalentOwnWorkloadView />);
+    await screen.findByText("Beban (FTE)");
+
+    fireEvent.change(screen.getByLabelText("Pilih periode workload"), {
+      target: { value: "202608" },
+    });
+
+    expect(h.replace).toHaveBeenCalledWith("/workload?period=202608");
+  });
+
+  it("shows the informative empty state for a period without data", async () => {
+    h.role.current = "TALENT";
+    h.params = new URLSearchParams("period=202607");
+    render(<TalentOwnWorkloadView />);
+
+    expect(await screen.findByText(/Belum ada data workload untuk periode Juli 2026/)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("flags the unavailable source and keeps last-known figures visible", async () => {
+    h.role.current = "TALENT";
+    h.params = new URLSearchParams("period=202606");
+    render(<TalentOwnWorkloadView />);
+
+    expect(await screen.findByText(/Tidak dapat menghubungi sumber data WAD/)).toBeInTheDocument();
+    const fixture = getTalentWorkloadFixture("202606", "tal-01");
+    expect(await screen.findByText(String(fixture!.summary!.totalTimespent))).toBeInTheDocument();
   });
 });

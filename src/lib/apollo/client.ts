@@ -29,6 +29,7 @@ function createCache(): InMemoryCache {
           employees: { keyArgs: ["filter"] },
           assignments: { keyArgs: ["filter"] },
           idps: { keyArgs: ["filter"] },
+          auditLogs: { keyArgs: ["filter"] },
           performanceEvaluations: { keyArgs: ["periodId", "employeeId"] },
         },
       },

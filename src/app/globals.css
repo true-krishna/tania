@@ -86,6 +86,16 @@
   --tp-ink-sun: #b54708;
   --tp-ink-info: #0b5fd6;
   --tp-neutral: #6b778c;
+  /* Lapisan aksen tosca/sky/warm-white (amendemen 4.5.0, `tania-login-tosca-v2.html`):
+   * tosca = aksen dekoratif/konten saja; sky-pale = kanvas halaman auth/hero;
+   * warm-white = panel hero/ilustrasi. Tanpa pasangan dark (belum diratifikasi). */
+  --tp-tosca: #00a99d;
+  --tp-tosca-soft: #d9f5f0;
+  --tp-tosca-ink: #066b66;
+  --tp-sky: #dff2ff;
+  --tp-sky-strong: #a9dcff;
+  --tp-sky-pale: #f5f9fd;
+  --tp-warm-white: #fdfcfb;
   /* Data visualisasi (kit v1.2 §Data visualisasi): urutan seri chart-1..4; track
    * bar memakai canvas `--tp-bg`. Pemetaan seri di app ini menjaga makna:
    * chart-1 = churn/penurunan, chart-2 = distribusi, chart-3 = new talent,
@@ -189,6 +199,13 @@
   --color-tp-ink-sun: var(--tp-ink-sun);
   --color-tp-ink-info: var(--tp-ink-info);
   --color-tp-neutral: var(--tp-neutral);
+  --color-tp-tosca: var(--tp-tosca);
+  --color-tp-tosca-soft: var(--tp-tosca-soft);
+  --color-tp-tosca-ink: var(--tp-tosca-ink);
+  --color-tp-sky: var(--tp-sky);
+  --color-tp-sky-strong: var(--tp-sky-strong);
+  --color-tp-sky-pale: var(--tp-sky-pale);
+  --color-tp-warm-white: var(--tp-warm-white);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-tp-display: var(--tp-font-display);
@@ -239,4 +256,45 @@
 .tp-filter-btn[data-active]:active,
 .tp-filter-btn[aria-expanded="true"]:active {
   background: color-mix(in srgb, var(--tp-brand-navy) 24%, transparent);
+}
+
+/* Select (TAN-332): reusable dropdown skin, dibangun di atas resep kanon
+ * .tp-input. Unlayered seperti .tp-filter-btn agar state hover/press
+ * mengalahkan gaya dasar; lebar dikontrol wrapper lewat utilitas karena
+ * utilitas Tailwind kalah dari CSS unlayered. */
+select.tp-select {
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  padding: 0 40px 0 14px;
+  border: 1px solid var(--tp-line);
+  border-radius: var(--tp-r-pill);
+  background: var(--tp-surface);
+  color: var(--tp-text);
+  font-family: var(--tp-font-body);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  cursor: pointer;
+  transition:
+    border-color var(--tp-dur) var(--tp-ease),
+    box-shadow var(--tp-dur) var(--tp-ease);
+}
+select.tp-select:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--tp-neutral) 55%, transparent);
+}
+select.tp-select:active:not(:disabled) {
+  border-color: color-mix(in srgb, var(--tp-brand-navy) 45%, transparent);
+}
+select.tp-select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+select.tp-select[data-empty] {
+  color: var(--tp-muted);
+  font-weight: 400;
+}
+select.tp-select option {
+  background: var(--tp-surface);
+  color: var(--tp-text);
+  font-weight: 400;
 }

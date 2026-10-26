@@ -847,6 +847,12 @@ export const REPORT_TALENT_OPTIONS: readonly TalentOption[] = TALENT_SEEDS.map((
 
 export const DEFAULT_TALENT_ID = REPORT_TALENT_OPTIONS[0].talentId;
 
+/**
+ * Stand-in mock untuk talent milik sesi (workload sendiri di level user);
+ * wiring GraphQL nanti yang memetakan user login ke talent-nya.
+ */
+export const SELF_TALENT_ID = DEFAULT_TALENT_ID;
+
 /** Baris sumber cost/revenue untuk headline tab Cost & Revenue. */
 export const COST_REVENUE_SOURCE_NOTE =
   "Revenue Source: PMA · Estimated Talent Cost Source: DPI, DPG, & PMA Report";

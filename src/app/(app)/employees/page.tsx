@@ -7,12 +7,10 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
-import { FilterButton } from "@/components/FilterButton";
-import { Input } from "@/components/Input";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
-import { Select } from "@/components/Select";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { ToastProvider } from "@/components/Toast/Toast";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
@@ -118,9 +116,10 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   const router = useRouter();
   const [searchInput, setSearchInput] = React.useState("");
   const search = useDebouncedValue(searchInput);
-  const [unitId, setUnitId] = React.useState("");
-  const [status, setStatus] = React.useState<EmployeeStatus | "ALL">("ALL");
-  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [filters, setFilters] = React.useState<{ unitId: string; status: string }>({
+    unitId: "",
+    status: "",
+  });
   const [pageSize, setPageSize] = React.useState(25);
   const [modalMode, setModalMode] = React.useState<"create" | "edit" | null>(null);
   const [editEmployeeId, setEditEmployeeId] = React.useState<string | null>(null);
@@ -138,12 +137,11 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   } = useEmployees(
     {
       search: search || undefined,
-      unitId: unitId || undefined,
-      status: status === "ALL" ? undefined : status,
+      unitId: filters.unitId || undefined,
+      status: (filters.status || undefined) as EmployeeStatus | undefined,
     },
     pageSize
   );
-  const activeFilters = (unitId ? 1 : 0) + (status !== "ALL" ? 1 : 0);
   const { pageRows, pagination, resetPage } = useTablePagination(employees, {
     totalItems: totalCount,
     pageSize,
@@ -156,6 +154,11 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   const hintTo = Math.min(pagination.page * pagination.pageSize, totalCount);
   const loadingMoreRow = loadingMore && pageRows.length === 0;
 
+  function changeFilter(key: string, value: string) {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    resetPage();
+  }
+
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
@@ -166,28 +169,6 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             </Button>
           ) : undefined
         }
-        filters={
-          <FilterButton
-            activeCount={activeFilters}
-            expanded={filtersOpen}
-            onClick={() => setFiltersOpen((open) => !open)}
-            panelId="employee-filter-panel"
-          />
-        }
-        search={
-          <label className="flex w-full max-w-xs items-center gap-2 text-sm text-zinc-700">
-            <span className="sr-only">Cari karyawan</span>
-            <Input
-              onChange={(e) => {
-                setSearchInput(e.target.value);
-                resetPage();
-              }}
-              placeholder="Cari nama, email, atau nomor induk…"
-              type="search"
-              value={searchInput}
-            />
-          </label>
-        }
         subtitle={
           manage
             ? "Kelola data karyawan, pencarian, dan filter."
@@ -196,42 +177,41 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
         title="Data Karyawan"
       />
 
-      {filtersOpen ? (
-        <div className="tp-card flex flex-wrap items-end gap-4" id="employee-filter-panel">
-          <label className="flex items-center gap-2 text-sm text-zinc-700">
-            <span>Divisi</span>
-            <Select
-              className="w-auto"
-              onChange={(e) => {
-                setUnitId(e.target.value);
-                resetPage();
-              }}
-              options={[
-                { value: "", label: "Semua" },
-                ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
-              ]}
-              value={unitId}
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-zinc-700">
-            <span>Status</span>
-            <Select
-              className="w-auto"
-              onChange={(e) => {
-                setStatus(e.target.value as EmployeeStatus | "ALL");
-                resetPage();
-              }}
-              options={[
-                { value: "ALL", label: "Semua" },
-                ...(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
-                  keyof typeof EMPLOYEE_STATUS_LABEL
-                >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] })),
-              ]}
-              value={status}
-            />
-          </label>
-        </div>
-      ) : null}
+      <TableFilterBar
+        fields={[
+          {
+            key: "unitId",
+            label: "Divisi",
+            options: [
+              { value: "", label: "Semua" },
+              ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
+            ],
+            type: "select",
+          },
+          {
+            key: "status",
+            label: "Status",
+            options: [
+              { value: "", label: "Semua" },
+              ...(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
+                keyof typeof EMPLOYEE_STATUS_LABEL
+              >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] })),
+            ],
+            type: "select",
+          },
+        ]}
+        onChange={changeFilter}
+        search={{
+          label: "Cari karyawan",
+          onChange: (value) => {
+            setSearchInput(value);
+            resetPage();
+          },
+          placeholder: "Cari nama, email, atau nomor induk…",
+          value: searchInput,
+        }}
+        values={filters}
+      />
 
       {stalled && query === "ready" ? (
         <div className="tp-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-amber-800">

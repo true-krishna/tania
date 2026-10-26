@@ -215,7 +215,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                 {canUpdateStatus ? (
                   <Select
                     aria-label={`Status aksi ${action.description}`}
-                    className="w-auto py-1 text-xs"
+                    className="w-fit h-8 text-xs"
                     onChange={(e) => {
                       const status = e.target.value as DevelopmentActionStatus;
                       updateActionStatus({ variables: { id: action.id, status } }).catch((err: unknown) => {

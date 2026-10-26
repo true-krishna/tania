@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { EmployeePicker } from "@/features/accounts/EmployeePicker";
 import { roleLabelFor, roleOptions, type RoleOption } from "@/features/accounts/roles";
 import type { UsersQuery } from "@/generated/graphql";
@@ -68,7 +69,18 @@ export function AccountsSection({
   const [busy, setBusy] = React.useState(false);
   const [confirmRevokeId, setConfirmRevokeId] = React.useState<string | null>(null);
 
-  const { pageRows, pagination } = useTablePagination(accounts);
+  const [search, setSearch] = React.useState("");
+  const filteredAccounts = React.useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return accounts ?? [];
+    return (accounts ?? []).filter(
+      (account) =>
+        account.fullName.toLowerCase().includes(needle) ||
+        account.email.toLowerCase().includes(needle),
+    );
+  }, [accounts, search]);
+
+  const { pageRows, pagination } = useTablePagination(filteredAccounts);
   const options = React.useMemo(() => roleOptions(roles), [roles]);
 
   if (status === "loading") return <LoadingState />;
@@ -184,7 +196,7 @@ export function AccountsSection({
               <span>Peran</span>
               <Select
                 aria-label={`Ubah peran ${account.fullName}`}
-                className="w-auto"
+                className="w-fit"
                 onChange={(e) => void onChangeRole(account.id, e.target.value)}
                 options={options.map((option) => ({ value: option.value, label: option.label }))}
                 value={account.roleName}
@@ -206,6 +218,17 @@ export function AccountsSection({
         subtitle="Kelola akun dan peran akses di sistem Tania."
         title="Akun Pengguna"
       />
+
+      {accounts && accounts.length > 0 ? (
+        <TableFilterBar
+          search={{
+            label: "Cari akun",
+            onChange: setSearch,
+            placeholder: "Cari nama atau email…",
+            value: search,
+          }}
+        />
+      ) : null}
 
       <Modal onClose={resetForm} open={creating} size="md" title="Tambah Akun">
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -255,6 +278,8 @@ export function AccountsSection({
 
       {!accounts || accounts.length === 0 ? (
         <EmptyState message="Belum ada akun pengguna." />
+      ) : filteredAccounts.length === 0 ? (
+        <p className="text-sm text-tp-muted">Tidak ada akun yang cocok dengan pencarian.</p>
       ) : (
         <Table
           caption="Daftar akun pengguna"

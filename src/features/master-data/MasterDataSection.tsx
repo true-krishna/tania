@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { IconSearch } from "@tabler/icons-react";
 import { Table, type TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
@@ -12,6 +11,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
+import { TableFilterBar } from "@/components/TableFilterBar";
 import { useSessionRole } from "@/lib/auth/guard";
 import { canManage } from "@/lib/auth/matrix";
 
@@ -204,24 +204,6 @@ export function MasterDataSection<T extends MasterDataItem>({
             </Button>
           )
         }
-        search={
-          searchable && items && items.length > 0 ? (
-            <div className="relative w-full max-w-sm">
-              <IconSearch
-                aria-hidden
-                className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-tp-muted"
-              />
-              <input
-                aria-label={searchLabel}
-                className="h-11 w-full rounded-full border border-tp-line bg-tp-surface pl-11 pr-4 text-sm text-tp-text placeholder:text-tp-muted"
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={`${searchLabel}…`}
-                type="search"
-                value={query}
-              />
-            </div>
-          ) : undefined
-        }
         subtitle={
           manage
             ? "Reference data for the talent ecosystem, managed by Admin."
@@ -229,6 +211,17 @@ export function MasterDataSection<T extends MasterDataItem>({
         }
         title="Master Data"
       />
+
+      {searchable && items && items.length > 0 ? (
+        <TableFilterBar
+          search={{
+            label: searchLabel,
+            onChange: setQuery,
+            placeholder: `${searchLabel}…`,
+            value: query,
+          }}
+        />
+      ) : null}
 
       <Modal
         onClose={reset}

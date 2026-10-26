@@ -4,7 +4,6 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/Card";
 import { Select } from "@/components/Select";
-import { Table } from "@/components/Table";
 import { EmptyState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { useSessionRole } from "@/lib/auth/guard";
@@ -109,41 +108,37 @@ export function TalentWorkloadView() {
               <h2 className="tp-h3">Assignments</h2>
               <p className="tp-label mt-1">Penempatan project talent pada periode terpilih.</p>
             </div>
-            <Table
-              caption="Tabel assignment project talent"
-              columns={[
-                {
-                  key: "projectKey",
-                  title: "Project",
-                  className: "font-medium text-tp-text",
-                  render: (_value, row) => row.projectKey,
-                },
-                { key: "tribe", title: "Tribe", render: (_value, row) => row.tribe },
-                { key: "product", title: "Product", render: (_value, row) => row.product },
-                { key: "squad", title: "Squad", render: (_value, row) => row.squad },
-                {
-                  key: "availability",
-                  title: "Availability",
-                  align: "right",
-                  render: (_value, row) => `${row.availability}%`,
-                },
-                {
-                  key: "timespent",
-                  title: "Time Spent",
-                  align: "right",
-                  render: (_value, row) => `${row.timespent} jam`,
-                },
-                {
-                  key: "keterangan",
-                  title: "Keterangan",
-                  className: "max-w-[320px]",
-                  render: (_value, row) => row.category,
-                },
-              ]}
-              dataSource={detailFixture.assignedProjects}
-              minWidth={720}
-              rowKey={(row) => `${row.projectKey}-${row.squad}`}
-            />
+            <div className="table-panel">
+              <div className="table-scroll">
+                <table className="w-full min-w-[720px]">
+                  <caption className="sr-only">Tabel assignment project talent</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col" className="text-left">Project</th>
+                      <th scope="col" className="text-left">Tribe</th>
+                      <th scope="col" className="text-left">Product</th>
+                      <th scope="col" className="text-left">Squad</th>
+                      <th scope="col" className="text-right">Availability</th>
+                      <th scope="col" className="text-right">Time Spent</th>
+                      <th scope="col" className="text-left">Keterangan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailFixture.assignedProjects.map((row) => (
+                      <tr key={`${row.projectKey}-${row.squad}`}>
+                        <td className="font-medium text-tp-text">{row.projectKey}</td>
+                        <td>{row.tribe}</td>
+                        <td>{row.product}</td>
+                        <td>{row.squad}</td>
+                        <td className="text-right">{row.availability}%</td>
+                        <td className="text-right">{row.timespent} jam</td>
+                        <td className="max-w-[320px]">{row.category}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </Card>
         ) : null}
         {detailFixture.summary.leaves && detailFixture.summary.leaves.leavesList.length > 0 ? (
