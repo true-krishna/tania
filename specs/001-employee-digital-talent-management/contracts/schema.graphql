@@ -1311,3 +1311,70 @@ Pesan USER tersimpan sebelum pemanggilan model; kirim ulang dengan
 clientRequestId yang sama bersifat idempoten (tidak menggandakan pesan)."""
   sendChatMessage(conversationId: ID!, content: String!, clientRequestId: ID!): ChatMessage!
 }
+# --- Bulk assignment (TAN-337) ----------------------------------------------
+
+"""Kegagalan satu baris pada operasi assignment massal."""
+type BulkAssignmentError {
+  code: BulkAssignmentErrorCode!
+  """Pesan siap tampil kepada pengguna (berbahasa Indonesia)."""
+  message: String!
+}
+
+enum BulkAssignmentErrorCode {
+  OUT_OF_SCOPE      # talent/assignment di luar cakupan chapter atau tidak ditemukan
+  NOT_ASSIGNABLE    # karyawan nonaktif / tidak assignable
+  PROJECT_INACTIVE  # project tidak aktif
+  INVALID_PERIOD    # periodEnd < periodStart
+  DUPLICATE_ACTIVE  # sudah ada assignment aktif untuk talent+project
+  NOT_ACTIVE        # assignment tidak berstatus ACTIVE (bulk edit/delete)
+  REFERENCED        # assignment masih dirujuk aktivitas kerja personal (bulk delete)
+  BATCH_LIMIT       # jumlah baris melebihi batas 100
+  INVALID           # input tidak valid lainnya
+}
+
+"""Hasil satu baris operasi assignment massal."""
+type BulkAssignmentItemResult {
+  """Posisi baris pada input (0-based)."""
+  index: Int!
+  """Talent yang dimaksud baris ini (bulk add)."""
+  employeeId: ID
+  """Assignment yang dimaksud baris ini (bulk edit/delete)."""
+  assignmentId: ID
+  """Assignment hasil — terisi bila baris berhasil (bulk add/edit)."""
+  assignment: Assignment
+  """Kegagalan baris — terisi bila baris gagal."""
+  error: BulkAssignmentError
+}
+
+type BulkAssignmentResult {
+  succeeded: [BulkAssignmentItemResult!]!
+  failed: [BulkAssignmentItemResult!]!
+}
+
+input BulkCreateAssignmentsInput {
+  projectId: ID!
+  periodStart: Date!
+  periodEnd: Date
+  """Maksimum 100 talent per operasi (FR-07)."""
+  employeeIds: [ID!]!
+}
+
+input BulkUpdateAssignmentsInput {
+  """Hanya assignment berstatus ACTIVE yang dapat diubah."""
+  ids: [ID!]!
+  """Opsional — project baru untuk semua baris."""
+  projectId: ID
+  """Opsional — tanggal mulai baru untuk semua baris."""
+  periodStart: Date
+  """Opsional — tanggal selesai baru; tidak mengosongkan nilai yang sudah terisi (FR-11)."""
+  periodEnd: Date
+}
+
+extend type Mutation {
+  """Buat assignment untuk banyak talent sekaligus (satu project + periode). Chapter + Admin."""
+  bulkCreateAssignments(input: BulkCreateAssignmentsInput!): BulkAssignmentResult!
+  """Terapkan satu perubahan (project dan/atau periode) ke banyak assignment aktif. Chapter + Admin."""
+  bulkUpdateAssignments(input: BulkUpdateAssignmentsInput!): BulkAssignmentResult!
+  """Hapus banyak assignment aktif sekaligus (selesai tidak dapat dihapus). Chapter + Admin."""
+  bulkDeleteAssignments(ids: [ID!]!): BulkAssignmentResult!
+}

@@ -183,6 +183,65 @@ export type BandPosition =
   | 'V'
   | 'VI';
 
+/** Kegagalan satu baris pada operasi assignment massal. */
+export type BulkAssignmentError = {
+  __typename?: 'BulkAssignmentError';
+  code: BulkAssignmentErrorCode;
+  /** Pesan siap tampil kepada pengguna (berbahasa Indonesia). */
+  message: Scalars['String']['output'];
+};
+
+export type BulkAssignmentErrorCode =
+  | 'BATCH_LIMIT'
+  | 'DUPLICATE_ACTIVE'
+  | 'INVALID'
+  | 'INVALID_PERIOD'
+  | 'NOT_ACTIVE'
+  | 'NOT_ASSIGNABLE'
+  | 'OUT_OF_SCOPE'
+  | 'PROJECT_INACTIVE'
+  | 'REFERENCED';
+
+/** Hasil satu baris operasi assignment massal. */
+export type BulkAssignmentItemResult = {
+  __typename?: 'BulkAssignmentItemResult';
+  /** Assignment hasil — terisi bila baris berhasil (bulk add/edit). */
+  assignment?: Maybe<Assignment>;
+  /** Assignment yang dimaksud baris ini (bulk edit/delete). */
+  assignmentId?: Maybe<Scalars['ID']['output']>;
+  /** Talent yang dimaksud baris ini (bulk add). */
+  employeeId?: Maybe<Scalars['ID']['output']>;
+  /** Kegagalan baris — terisi bila baris gagal. */
+  error?: Maybe<BulkAssignmentError>;
+  /** Posisi baris pada input (0-based). */
+  index: Scalars['Int']['output'];
+};
+
+export type BulkAssignmentResult = {
+  __typename?: 'BulkAssignmentResult';
+  failed: Array<BulkAssignmentItemResult>;
+  succeeded: Array<BulkAssignmentItemResult>;
+};
+
+export type BulkCreateAssignmentsInput = {
+  /** Maksimum 100 talent per operasi (FR-07). */
+  employeeIds: Array<Scalars['ID']['input']>;
+  periodEnd?: InputMaybe<Scalars['Date']['input']>;
+  periodStart: Scalars['Date']['input'];
+  projectId: Scalars['ID']['input'];
+};
+
+export type BulkUpdateAssignmentsInput = {
+  /** Hanya assignment berstatus ACTIVE yang dapat diubah. */
+  ids: Array<Scalars['ID']['input']>;
+  /** Opsional — tanggal selesai baru; tidak mengosongkan nilai yang sudah terisi (FR-11). */
+  periodEnd?: InputMaybe<Scalars['Date']['input']>;
+  /** Opsional — tanggal mulai baru untuk semua baris. */
+  periodStart?: InputMaybe<Scalars['Date']['input']>;
+  /** Opsional — project baru untuk semua baris. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 /** Chapter master data (FR-24). */
 export type Chapter = {
   __typename?: 'Chapter';
@@ -869,6 +928,12 @@ export type Mutation = {
   addCvSkill: CvSkill;
   addDevelopmentAction: DevelopmentAction;
   addIdpReview: ReviewLog;
+  /** Buat assignment untuk banyak talent sekaligus (satu project + periode). Chapter + Admin. */
+  bulkCreateAssignments: BulkAssignmentResult;
+  /** Hapus banyak assignment aktif sekaligus (selesai tidak dapat dihapus). Chapter + Admin. */
+  bulkDeleteAssignments: BulkAssignmentResult;
+  /** Terapkan satu perubahan (project dan/atau periode) ke banyak assignment aktif. Chapter + Admin. */
+  bulkUpdateAssignments: BulkAssignmentResult;
   closeIdp: Idp;
   createAssignment: Assignment;
   createChapter: Chapter;
@@ -1003,6 +1068,21 @@ export type MutationAddDevelopmentActionArgs = {
 export type MutationAddIdpReviewArgs = {
   idpId: Scalars['ID']['input'];
   input: AddIdpReviewInput;
+};
+
+
+export type MutationBulkCreateAssignmentsArgs = {
+  input: BulkCreateAssignmentsInput;
+};
+
+
+export type MutationBulkDeleteAssignmentsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationBulkUpdateAssignmentsArgs = {
+  input: BulkUpdateAssignmentsInput;
 };
 
 

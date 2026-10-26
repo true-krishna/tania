@@ -1,0 +1,31 @@
+mutation BulkCreateAssignments($input: BulkCreateAssignmentsInput!) {
+  bulkCreateAssignments(input: $input) {
+    succeeded {
+      index
+      employeeId
+      assignment {
+        id
+        status
+        periodStart
+        periodEnd
+        talent {
+          id
+          fullName
+          nomorInduk
+        }
+        project {
+          id
+          name
+        }
+      }
+    }
+    failed {
+      index
+      employeeId
+      error {
+        code
+        message
+      }
+    }
+  }
+}

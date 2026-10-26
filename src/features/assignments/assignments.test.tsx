@@ -14,6 +14,9 @@ import { ToastProvider } from "@/components/Toast";
 import {
   AssignableTalentsDocument,
   AssignmentsDocument,
+  BulkCreateAssignmentsDocument,
+  BulkDeleteAssignmentsDocument,
+  BulkUpdateAssignmentsDocument,
   CreateAssignmentDocument,
   EmployeesDocument,
   EndAssignmentDocument,
@@ -900,5 +903,459 @@ describe("assignment jobRole removal (TAN-252, bukti c)", () => {
     }
 
     expect(violations).toEqual([]);
+  });
+});
+describe("Bulk assignment (TAN-337)", () => {
+  const budiTalent = {
+    __typename: "Employee",
+    id: "emp-2",
+    fullName: "Budi Santoso",
+    nomorInduk: "EMP-002",
+  };
+
+  const bulkTalentsResult = {
+    data: {
+      assignableTalents: {
+        __typename: "EmployeeConnection",
+        edges: [
+          { __typename: "EmployeeEdge", cursor: "emp-1", node: assignableTalentNode },
+          { __typename: "EmployeeEdge", cursor: "emp-2", node: budiTalent },
+        ],
+      },
+    },
+  };
+
+  const completedBudiNode = {
+    __typename: "Assignment",
+    id: "asg-9",
+    status: "COMPLETED",
+    periodStart: "2025-01-01",
+    periodEnd: "2025-06-30",
+    talent: budiTalent,
+    project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
+  };
+
+  const twoAssignmentsResult = {
+    data: {
+      assignments: {
+        __typename: "AssignmentConnection",
+        totalCount: 2,
+        edges: [
+          { __typename: "AssignmentEdge", cursor: "asg-1", node: assignmentNode },
+          { __typename: "AssignmentEdge", cursor: "asg-9", node: completedBudiNode },
+        ],
+        pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+      },
+    },
+  };
+
+  const listRefreshMock = {
+    request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+    result: twoAssignmentsResult,
+  };
+
+  function createdRow(index: number, employeeId: string, assignmentId: string, fullName: string) {
+    return {
+      __typename: "BulkAssignmentItemResult",
+      index,
+      employeeId,
+      assignment: {
+        __typename: "Assignment",
+        id: assignmentId,
+        status: "ACTIVE",
+        periodStart: "2025-07-01",
+        periodEnd: null,
+        talent: { __typename: "Employee", id: employeeId, fullName, nomorInduk: null },
+        project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
+      },
+    };
+  }
+
+  function updatedRow(index: number, assignmentId: string, fullName: string) {
+    return {
+      ...createdRow(index, "emp-1", assignmentId, fullName),
+      assignmentId,
+      employeeId: null,
+    };
+  }
+
+  function bulkMocks(...mutations: MockedResponse[]): MockedResponse[] {
+    return [
+      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: bulkTalentsResult },
+      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: twoAssignmentsResult },
+      ...mutations,
+    ];
+  }
+
+  function renderBulkPage(mocks: ReadonlyArray<MockedResponse>) {
+    render(
+      <MockedProvider mocks={mocks}>
+        <ToastProvider>
+          <AssignmentsPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+  }
+
+  async function openBulkCreateModal() {
+    await screen.findByRole("link", { name: "Andi Pratama" });
+    fireEvent.click(screen.getByRole("button", { name: "+ Buat Massal" }));
+    await screen.findByRole("dialog", { name: /buat assignment massal/i });
+  }
+
+  function pickTalents(...names: string[]) {
+    const candidates = screen.getByRole("list", { name: "Kandidat talent" });
+    for (const name of names) {
+      fireEvent.click(within(candidates).getByRole("button", { name: new RegExp(`^${name}`) }));
+    }
+  }
+
+  function fillBulkForm() {
+    fireEvent.change(screen.getByRole("combobox", { name: /^project$/i }), {
+      target: { value: "prj-1" },
+    });
+    fireEvent.change(screen.getByLabelText(/^tanggal mulai$/i), { target: { value: "2025-07-01" } });
+  }
+
+  async function selectRow(name: string) {
+    fireEvent.click(await screen.findByRole("checkbox", { name: `Pilih ${name}` }));
+  }
+
+  it("bulk-creates assignments for several talents in one action (US1-1)", async () => {
+    renderBulkPage(
+      bulkMocks(
+        {
+          request: {
+            query: BulkCreateAssignmentsDocument,
+            variables: {
+              input: {
+                employeeIds: ["emp-1", "emp-2"],
+                projectId: "prj-1",
+                periodStart: "2025-07-01",
+                periodEnd: undefined,
+              },
+            },
+          },
+          result: {
+            data: {
+              bulkCreateAssignments: {
+                __typename: "BulkAssignmentResult",
+                succeeded: [createdRow(0, "emp-1", "asg-10", "Andi Pratama"), createdRow(1, "emp-2", "asg-11", "Budi Santoso")],
+                failed: [],
+              },
+            },
+          },
+        },
+        listRefreshMock,
+      )
+    );
+    await openBulkCreateModal();
+    pickTalents("Andi Pratama", "Budi Santoso");
+    fillBulkForm();
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/2 assignment berhasil dibuat massal/);
+    expect(screen.queryByRole("dialog", { name: /buat assignment massal/i })).toBeNull();
+  });
+
+  it("reports per-row results and stays open on partial failure (US1-2, FR-02)", async () => {
+    renderBulkPage(
+      bulkMocks(
+        {
+          request: {
+            query: BulkCreateAssignmentsDocument,
+            variables: {
+              input: {
+                employeeIds: ["emp-1", "emp-2"],
+                projectId: "prj-1",
+                periodStart: "2025-07-01",
+                periodEnd: undefined,
+              },
+            },
+          },
+          result: {
+            data: {
+              bulkCreateAssignments: {
+                __typename: "BulkAssignmentResult",
+                succeeded: [createdRow(0, "emp-1", "asg-10", "Andi Pratama")],
+                failed: [
+                  {
+                    __typename: "BulkAssignmentItemResult",
+                    index: 1,
+                    employeeId: "emp-2",
+                    assignment: null,
+                    error: {
+                      __typename: "BulkAssignmentError",
+                      code: "DUPLICATE_ACTIVE",
+                      message: "Talent sudah memiliki assignment aktif pada project tersebut.",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        listRefreshMock,
+      )
+    );
+    await openBulkCreateModal();
+    pickTalents("Andi Pratama", "Budi Santoso");
+    fillBulkForm();
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
+
+    const summary = await screen.findByRole("status");
+    expect(summary).toHaveTextContent("1 berhasil, 1 gagal.");
+    expect(summary).toHaveTextContent(
+      "Budi Santoso — Talent sudah memiliki assignment aktif pada project tersebut."
+    );
+    expect(screen.getByRole("dialog", { name: /buat assignment massal/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ulangi 1 baris gagal/i })).toBeInTheDocument();
+  });
+
+  it("reports an all-failed batch with a reason per talent (US1-2, FR-02)", async () => {
+    renderBulkPage(
+      bulkMocks(
+        {
+          request: {
+            query: BulkCreateAssignmentsDocument,
+            variables: {
+              input: {
+                employeeIds: ["emp-1", "emp-2"],
+                projectId: "prj-1",
+                periodStart: "2025-07-01",
+                periodEnd: undefined,
+              },
+            },
+          },
+          result: {
+            data: {
+              bulkCreateAssignments: {
+                __typename: "BulkAssignmentResult",
+                succeeded: [],
+                failed: [
+                  {
+                    __typename: "BulkAssignmentItemResult",
+                    index: 0,
+                    employeeId: "emp-1",
+                    assignment: null,
+                    error: {
+                      __typename: "BulkAssignmentError",
+                      code: "NOT_ASSIGNABLE",
+                      message: "Talent tidak aktif atau tidak assignable.",
+                    },
+                  },
+                  {
+                    __typename: "BulkAssignmentItemResult",
+                    index: 1,
+                    employeeId: "emp-2",
+                    assignment: null,
+                    error: {
+                      __typename: "BulkAssignmentError",
+                      code: "NOT_ASSIGNABLE",
+                      message: "Talent tidak aktif atau tidak assignable.",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        listRefreshMock,
+      )
+    );
+    await openBulkCreateModal();
+    pickTalents("Andi Pratama", "Budi Santoso");
+    fillBulkForm();
+    fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
+
+    const summary = await screen.findByRole("status");
+    expect(summary).toHaveTextContent("0 berhasil, 2 gagal.");
+    expect(summary).toHaveTextContent("Andi Pratama — Talent tidak aktif atau tidak assignable.");
+    expect(summary).toHaveTextContent("Budi Santoso — Talent tidak aktif atau tidak assignable.");
+    expect(screen.getByRole("dialog", { name: /buat assignment massal/i })).toBeInTheDocument();
+  });
+
+  it("filters candidate talents by search", async () => {
+    renderBulkPage(bulkMocks());
+    await openBulkCreateModal();
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Cari talent" }), {
+      target: { value: "budi" },
+    });
+    const candidates = screen.getByRole("list", { name: "Kandidat talent" });
+    expect(within(candidates).getByRole("button", { name: /Budi Santoso/ })).toBeInTheDocument();
+    expect(within(candidates).queryByRole("button", { name: /Andi Pratama/ })).toBeNull();
+  });
+
+  it("guards the 100-row batch limit on the client (FR-07)", async () => {
+    const manyTalents = Array.from({ length: 101 }, (_, i) => ({
+      __typename: "Employee",
+      id: `bulk-emp-${i + 1}`,
+      fullName: `Talent Massal ${i + 1}`,
+      nomorInduk: `EMP-${String(i + 1).padStart(3, "0")}`,
+    }));
+    renderBulkPage([
+      {
+        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        result: {
+          data: {
+            assignableTalents: {
+              __typename: "EmployeeConnection",
+              edges: manyTalents.map((node) => ({ __typename: "EmployeeEdge", cursor: node.id, node })),
+            },
+          },
+        },
+      },
+      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: twoAssignmentsResult },
+    ]);
+    await openBulkCreateModal();
+
+    const candidates = screen.getByRole("list", { name: "Kandidat talent" });
+    const candidateButtons = within(candidates).getAllByRole("button");
+    expect(candidateButtons).toHaveLength(101);
+    candidateButtons.forEach((button) => fireEvent.click(button));
+
+    expect(screen.getByText("Maksimum 100 talent per operasi massal.")).toBeInTheDocument();
+    const last = within(candidates).getByRole("button", { name: /^Talent Massal 101 EMP-/ });
+    expect(last).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("hides selection and bulk actions from non-managing roles (T033/FR-08)", async () => {
+    auth.role = "OPERATION";
+    renderBulkPage([
+      { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
+      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: twoAssignmentsResult },
+    ]);
+
+    expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByRole("button", { name: /\+ buat massal/i })).toBeNull();
+    expect(screen.queryByRole("toolbar")).toBeNull();
+  });
+
+  it("edits selected running assignments and skips completed rows (US2-1/US2-2, FR-03)", async () => {
+    renderBulkPage(
+      bulkMocks(
+        {
+          request: {
+            query: BulkUpdateAssignmentsDocument,
+            variables: {
+              input: { ids: ["asg-1"], projectId: "prj-1", periodStart: undefined, periodEnd: undefined },
+            },
+          },
+          result: {
+            data: {
+              bulkUpdateAssignments: {
+                __typename: "BulkAssignmentResult",
+                succeeded: [updatedRow(0, "asg-1", "Andi Pratama")],
+                failed: [],
+              },
+            },
+          },
+        },
+        listRefreshMock,
+      )
+    );
+    await selectRow("Andi Pratama");
+    await selectRow("Budi Santoso");
+
+    const toolbar = screen.getByRole("toolbar", { name: "Aksi massal assignment" });
+    expect(toolbar).toHaveTextContent("2 dipilih");
+    expect(toolbar).toHaveTextContent(/baris berstatus selesai dilewati/);
+
+    fireEvent.click(within(toolbar).getByRole("button", { name: /ubah massal/i }));
+    const editForm = screen.getByRole("form", { name: /ubah assignment massal/i });
+    fireEvent.change(within(editForm).getByRole("combobox", { name: /project baru/i }), {
+      target: { value: "prj-1" },
+    });
+    fireEvent.submit(editForm);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/1 assignment berhasil diubah massal/);
+    expect(screen.queryByRole("dialog", { name: /ubah assignment massal/i })).toBeNull();
+  });
+
+  it("requires at least one change before sending the bulk edit (FR-03)", async () => {
+    renderBulkPage(bulkMocks());
+    await selectRow("Andi Pratama");
+    fireEvent.click(screen.getByRole("button", { name: /ubah massal/i }));
+
+    fireEvent.submit(screen.getByRole("form", { name: /ubah assignment massal/i }));
+
+    expect(await screen.findByText(/isi minimal satu perubahan/i)).toBeInTheDocument();
+  });
+
+  it("confirms bulk delete with a count before executing (US3-4, FR-06)", async () => {
+    renderBulkPage(
+      bulkMocks(
+        {
+          request: { query: BulkDeleteAssignmentsDocument, variables: { ids: ["asg-1"] } },
+          result: {
+            data: {
+              bulkDeleteAssignments: {
+                __typename: "BulkAssignmentResult",
+                succeeded: [{ __typename: "BulkAssignmentItemResult", index: 0, assignmentId: "asg-1" }],
+                failed: [],
+              },
+            },
+          },
+        },
+        listRefreshMock,
+      )
+    );
+    await selectRow("Andi Pratama");
+    fireEvent.click(screen.getByRole("button", { name: /hapus massal/i }));
+
+    const dialog = screen.getByRole("dialog", { name: /hapus assignment massal/i });
+    expect(dialog).toHaveTextContent("Hapus 1 assignment berjalan yang dipilih?");
+    const confirmButton = within(dialog).getByRole("button", { name: "Hapus 1 assignment" });
+
+    fireEvent.click(confirmButton);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/1 assignment terhapus/);
+    expect(screen.queryByRole("dialog", { name: /hapus assignment massal/i })).toBeNull();
+  });
+
+  it("reports a rejected delete per row and keeps the dialog open (US3-2/US3-3, FR-05)", async () => {
+    renderBulkPage(
+      bulkMocks(
+        {
+          request: { query: BulkDeleteAssignmentsDocument, variables: { ids: ["asg-1"] } },
+          result: {
+            data: {
+              bulkDeleteAssignments: {
+                __typename: "BulkAssignmentResult",
+                succeeded: [],
+                failed: [
+                  {
+                    __typename: "BulkAssignmentItemResult",
+                    index: 0,
+                    assignmentId: "asg-1",
+                    error: {
+                      __typename: "BulkAssignmentError",
+                      code: "REFERENCED",
+                      message: "Assignment masih dirujuk aktivitas kerja personal dan tidak dapat dihapus.",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        listRefreshMock,
+      )
+    );
+    await selectRow("Andi Pratama");
+    fireEvent.click(screen.getByRole("button", { name: /hapus massal/i }));
+    const dialog = screen.getByRole("dialog", { name: /hapus assignment massal/i });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Hapus 1 assignment" }));
+
+    const summary = await screen.findByRole("status");
+    expect(summary).toHaveTextContent("0 berhasil, 1 gagal.");
+    expect(summary).toHaveTextContent(
+      "Andi Pratama → Network Modernization — Assignment masih dirujuk aktivitas kerja personal dan tidak dapat dihapus."
+    );
+    expect(screen.getByRole("dialog", { name: /hapus assignment massal/i })).toBeInTheDocument();
   });
 });

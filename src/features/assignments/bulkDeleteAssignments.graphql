@@ -1,0 +1,16 @@
+mutation BulkDeleteAssignments($ids: [ID!]!) {
+  bulkDeleteAssignments(ids: $ids) {
+    succeeded {
+      index
+      assignmentId
+    }
+    failed {
+      index
+      assignmentId
+      error {
+        code
+        message
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import type { ApolloError } from "@apollo/client";
+import type { BulkAssignmentErrorCode } from "@/generated/graphql/types";
 
 /**
  * `extensions.code` values the served backend returns (contracts/api-conventions.md §3).
@@ -133,6 +134,24 @@ export function errorMessage(
   // leak the raw transport detail (constitution §IX).
   return fallback;
 }
+
+/**
+ * Pesan fallback Indonesia untuk kegagalan satu baris operasi massal
+ * assignment (TAN-337) — `BulkAssignmentError.message` dari server sudah
+ * berbahasa Indonesia dan ditampilkan apa adanya; label ini hanya dipakai
+ * bila baris gagal tanpa pesan yang bisa dipakai.
+ */
+export const BULK_ASSIGNMENT_ERROR_LABEL: Record<BulkAssignmentErrorCode, string> = {
+  OUT_OF_SCOPE: "Data tidak ditemukan atau di luar cakupan chapter Anda.",
+  NOT_ASSIGNABLE: "Talent tidak aktif atau tidak assignable.",
+  PROJECT_INACTIVE: "Project tidak aktif.",
+  INVALID_PERIOD: "Tanggal selesai tidak boleh lebih awal dari tanggal mulai.",
+  DUPLICATE_ACTIVE: "Talent sudah memiliki assignment aktif pada project tersebut.",
+  NOT_ACTIVE: "Assignment sudah selesai dan tidak dapat diubah atau dihapus.",
+  REFERENCED: "Assignment masih dirujuk data lain dan tidak dapat dihapus.",
+  BATCH_LIMIT: "Melebihi batas 100 baris per operasi massal.",
+  INVALID: "Input tidak valid.",
+};
 
 export type SubmitError = { field: string | null; message: string };
 

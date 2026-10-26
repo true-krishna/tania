@@ -1,0 +1,31 @@
+mutation BulkUpdateAssignments($input: BulkUpdateAssignmentsInput!) {
+  bulkUpdateAssignments(input: $input) {
+    succeeded {
+      index
+      assignmentId
+      assignment {
+        id
+        status
+        periodStart
+        periodEnd
+        talent {
+          id
+          fullName
+          nomorInduk
+        }
+        project {
+          id
+          name
+        }
+      }
+    }
+    failed {
+      index
+      assignmentId
+      error {
+        code
+        message
+      }
+    }
+  }
+}
