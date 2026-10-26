@@ -5,6 +5,7 @@ import {
   BulkCreateAssignmentsDocument,
   BulkDeleteAssignmentsDocument,
   BulkUpdateAssignmentsDocument,
+  ImportAssignmentsDocument,
 } from "@/generated/graphql";
 
 /**
@@ -26,6 +27,16 @@ export const BULK_ASSIGNMENT_MAX_ROWS = 100;
  */
 export function useBulkCreateAssignments() {
   return useMutation(BulkCreateAssignmentsDocument, { refetchQueries: ["Assignments"] });
+}
+
+/**
+ * Impor assignment massal dari berkas templat (TAN-337, keputusan pemilik produk
+ * pada thread TAN-337): satu assignment lengkap per baris — employee_id,
+ * project_id, period_start, period_end — seperti pembuatan tunggal. Referensi
+ * diselesaikan di server (nomor induk / nama project aktif atau ID).
+ */
+export function useImportAssignments() {
+  return useMutation(ImportAssignmentsDocument, { refetchQueries: ["Assignments"] });
 }
 
 export function useBulkUpdateAssignments() {

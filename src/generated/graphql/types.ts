@@ -53,6 +53,37 @@ export type ActivityStatus = {
   sortOrder: Scalars['Int']['output'];
 };
 
+/** Jumlah aktivitas per status pada satu periode (FR-008). */
+export type ActivityStatusCount = {
+  __typename?: 'ActivityStatusCount';
+  count: Scalars['Int']['output'];
+  statusId: Scalars['ID']['output'];
+  statusName: Scalars['String']['output'];
+};
+
+/** Rekap aktivitas satu bulan (FR-008); `periodId` berformat `YYYY-MM`. */
+export type ActivitySummary = {
+  __typename?: 'ActivitySummary';
+  endDate: Scalars['Date']['output'];
+  periodId: Scalars['ID']['output'];
+  startDate: Scalars['Date']['output'];
+  statusCounts: Array<ActivityStatusCount>;
+  totalCount: Scalars['Int']['output'];
+  typeCounts: Array<ActivityTypeCount>;
+};
+
+/** Jenis aktivitas pribadi talent (FR-003). */
+export type ActivityType =
+  | 'training'
+  | 'working';
+
+/** Jumlah aktivitas per jenis pada satu periode (FR-008). */
+export type ActivityTypeCount = {
+  __typename?: 'ActivityTypeCount';
+  activityType: ActivityType;
+  count: Scalars['Int']['output'];
+};
+
 export type AddIdpReviewInput = {
   followUp?: InputMaybe<Scalars['String']['input']>;
   reviewDate: Scalars['Date']['input'];
@@ -98,6 +129,13 @@ export type AssignmentFilter = {
   employeeId?: InputMaybe<Scalars['ID']['input']>;
   projectId?: InputMaybe<Scalars['ID']['input']>;
   status?: InputMaybe<AssignmentStatus>;
+};
+
+export type AssignmentImportRowInput = {
+  employeeId: Scalars['ID']['input'];
+  periodEnd?: InputMaybe<Scalars['Date']['input']>;
+  periodStart: Scalars['Date']['input'];
+  projectId: Scalars['ID']['input'];
 };
 
 export type AssignmentStatus =
@@ -429,6 +467,19 @@ export type CreateIdpInput = {
   timelineStart: Scalars['Date']['input'];
 };
 
+export type CreatePersonalWorkActivityInput = {
+  activityType: ActivityType;
+  /** Salah satu assignment aktif milik pemanggil (FR-010). */
+  assignmentId: Scalars['ID']['input'];
+  endDate?: InputMaybe<Scalars['Date']['input']>;
+  priorityId: Scalars['ID']['input'];
+  /** Opsional; wajib null untuk training (FR-004). Project working selalu dari assignment. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  startDate: Scalars['Date']['input'];
+  statusId: Scalars['ID']['input'];
+  title: Scalars['String']['input'];
+};
+
 /** Input pembuatan role kustom: template menentukan cakupan servernya. */
 export type CreateRoleInput = {
   label: Scalars['String']['input'];
@@ -610,6 +661,7 @@ export type EmployeeEdge = {
 
 export type EmployeeFilter = {
   assignableOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  /** chapter pemilik job role pada kontrak aktif */
   chapterId?: InputMaybe<Scalars['ID']['input']>;
   jobRoleId?: InputMaybe<Scalars['ID']['input']>;
   /** nama / email / nomor induk (via kontrak aktif) */
@@ -891,6 +943,11 @@ export type IdpStatusCount = {
   status: IdpStatus;
 };
 
+export type ImportAssignmentsInput = {
+  /** Maksimum 100 baris per operasi (FR-07). */
+  rows: Array<AssignmentImportRowInput>;
+};
+
 /** Master Data Role — peran jabatan/fungsional (bukan peran akses, FR-20). */
 export type JobRole = {
   __typename?: 'JobRole';
@@ -945,6 +1002,7 @@ export type Mutation = {
   createEvaluationTemplate: EvaluationTemplate;
   createIdp: Idp;
   createJobRole: JobRole;
+  createPersonalWorkActivity: PersonalWorkActivity;
   createProject: Project;
   /** Buat role kustom dari salah satu template bawaan. Khusus Admin. */
   createRole: Role;
@@ -961,9 +1019,13 @@ export type Mutation = {
   deleteCvEducation: Scalars['Boolean']['output'];
   deleteCvSkill: Scalars['Boolean']['output'];
   deleteDevelopmentAction: Scalars['Boolean']['output'];
+  /** Soft-delete; baris dan jejak audit tetap tersimpan (FR-009). */
+  deletePersonalWorkActivity: PersonalWorkActivity;
   /** Hapus role kustom yang tidak dipakai akun mana pun. Khusus Admin. */
   deleteRole: Scalars['Boolean']['output'];
   endAssignment: Assignment;
+  /** Impor assignment massal dari berkas templat: satu assignment per baris. Chapter + Admin. */
+  importAssignments: BulkAssignmentResult;
   login: AuthPayload;
   /** Publik. Menukar authorization code dengan sesi Tania (FR-003/FR-004). */
   loginWithEntra: AuthPayload;
@@ -1028,6 +1090,7 @@ export type Mutation = {
   updateEvaluationTemplate: EvaluationTemplate;
   updateIdp: Idp;
   updateJobRole: JobRole;
+  updatePersonalWorkActivity: PersonalWorkActivity;
   updateProject: Project;
   /** Ubah label role kustom; nama mesin immutable. Khusus Admin. */
   updateRole: Role;
@@ -1132,6 +1195,11 @@ export type MutationCreateJobRoleArgs = {
 };
 
 
+export type MutationCreatePersonalWorkActivityArgs = {
+  input: CreatePersonalWorkActivityInput;
+};
+
+
 export type MutationCreateProjectArgs = {
   name: Scalars['String']['input'];
   unitId: Scalars['ID']['input'];
@@ -1184,6 +1252,11 @@ export type MutationDeleteDevelopmentActionArgs = {
 };
 
 
+export type MutationDeletePersonalWorkActivityArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteRoleArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1192,6 +1265,11 @@ export type MutationDeleteRoleArgs = {
 export type MutationEndAssignmentArgs = {
   id: Scalars['ID']['input'];
   periodEnd: Scalars['Date']['input'];
+};
+
+
+export type MutationImportAssignmentsArgs = {
+  input: ImportAssignmentsInput;
 };
 
 
@@ -1415,6 +1493,12 @@ export type MutationUpdateJobRoleArgs = {
 };
 
 
+export type MutationUpdatePersonalWorkActivityArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdatePersonalWorkActivityInput;
+};
+
+
 export type MutationUpdateProjectArgs = {
   id: Scalars['ID']['input'];
   name: Scalars['String']['input'];
@@ -1505,6 +1589,61 @@ export type PerformanceEvaluationStatus =
   | 'DRAFT'
   | 'SUBMITTED';
 
+/**
+ * Aktivitas kerja/pelatihan milik seorang talent (FR-008–FR-010).
+ *
+ * Aktivitas disimpan di Tania dan selalu terikat pada satu assignment milik
+ * pemiliknya; satu talent boleh punya beberapa assignment, dan setiap aktivitas
+ * memilih salah satunya. `talent` selalu berasal dari sesi saat create.
+ */
+export type PersonalWorkActivity = {
+  __typename?: 'PersonalWorkActivity';
+  activityType: ActivityType;
+  /** Assignment pemilik aktivitas; wajib aktif saat create (FR-010). */
+  assignment: Assignment;
+  createdAt: Scalars['Time']['output'];
+  /** Penanda soft-delete; null = masih aktif (FR-009). */
+  deletedAt?: Maybe<Scalars['Time']['output']>;
+  endDate?: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  priority: ActivityPriority;
+  /** Turunan assignment; null untuk activityType training (FR-004). */
+  project?: Maybe<Project>;
+  startDate: Scalars['Date']['output'];
+  status: ActivityStatus;
+  /** Pemilik aktivitas; diisi server dari sesi, tidak bisa di-set klien (FR-010). */
+  talent: Employee;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type PersonalWorkActivityConnection = {
+  __typename?: 'PersonalWorkActivityConnection';
+  edges: Array<PersonalWorkActivityEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type PersonalWorkActivityEdge = {
+  __typename?: 'PersonalWorkActivityEdge';
+  cursor: Scalars['String']['output'];
+  node: PersonalWorkActivity;
+};
+
+export type PersonalWorkActivityFilter = {
+  activityType?: InputMaybe<ActivityType>;
+  assignmentId?: InputMaybe<Scalars['ID']['input']>;
+  /** Batas atas inklusif startDate. */
+  endDate?: InputMaybe<Scalars['Date']['input']>;
+  /** Project mengikuti assignment aktivitas. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Batas bawah inklusif startDate. */
+  startDate?: InputMaybe<Scalars['Date']['input']>;
+  statusId?: InputMaybe<Scalars['ID']['input']>;
+  /** Hanya untuk Chapter/Operation/Admin — Talent selalu dibatasi ke dirinya sendiri. */
+  talentId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 /** Project master data; wajib merujuk tepat satu Unit (FR-19). */
 export type Project = {
   __typename?: 'Project';
@@ -1518,10 +1657,14 @@ export type Project = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Satu aktivitas yang terlihat pemanggil; baris orang lain atau terhapus → NOT_FOUND. */
+  activity?: Maybe<PersonalWorkActivity>;
   /** Referensi prioritas aktivitas, urut terendah → tertinggi. */
   activityPriorities: Array<ActivityPriority>;
   /** Referensi status aktivitas, urut siklus hidup. */
   activityStatuses: Array<ActivityStatus>;
+  /** Rekap aktivitas satu bulan (`periodId` = YYYY-MM) sesuai scope pemanggil. */
+  activitySummary: ActivitySummary;
   /** Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35). */
   assignableTalents: EmployeeConnection;
   assignments: AssignmentConnection;
@@ -1559,6 +1702,8 @@ export type Query = {
   jobRoles: Array<JobRole>;
   /** Profil user yang sedang login. */
   me: User;
+  /** Aktivitas milik pemanggil; Chapter/Operation/Admin boleh menyaring ke talent dalam scope (tanpa query allActivities). */
+  myActivities: PersonalWorkActivityConnection;
   myCvProfile?: Maybe<CvProfile>;
   /** IDP milik Talent yang sedang login; null = belum ada IDP (FR-14). */
   myIdp?: Maybe<Idp>;
@@ -1589,6 +1734,16 @@ export type Query = {
   /** Referensi Unit level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Data karyawan); 2026-10-16 clarify 8. */
   units: Array<Unit>;
   users: Array<User>;
+};
+
+
+export type QueryActivityArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryActivitySummaryArgs = {
+  periodId: Scalars['ID']['input'];
 };
 
 
@@ -1720,6 +1875,13 @@ export type QueryIdpsArgs = {
 
 export type QueryJobRolesArgs = {
   includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryMyActivitiesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<PersonalWorkActivityFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1982,6 +2144,18 @@ export type UpdateIdpInput = {
   successIndicators?: InputMaybe<Scalars['String']['input']>;
   timelineEnd?: InputMaybe<Scalars['Date']['input']>;
   timelineStart?: InputMaybe<Scalars['Date']['input']>;
+};
+
+export type UpdatePersonalWorkActivityInput = {
+  activityType?: InputMaybe<ActivityType>;
+  assignmentId?: InputMaybe<Scalars['ID']['input']>;
+  endDate?: InputMaybe<Scalars['Date']['input']>;
+  priorityId?: InputMaybe<Scalars['ID']['input']>;
+  /** Opsional; wajib null untuk training (FR-004). */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  startDate?: InputMaybe<Scalars['Date']['input']>;
+  statusId?: InputMaybe<Scalars['ID']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpsertCvProfileInput = {

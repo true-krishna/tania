@@ -8,6 +8,9 @@ export type BulkRowResult = {
   index: number;
   employeeId?: string | null;
   assignmentId?: string | null;
+  assignment?: {
+    talent?: { fullName: string } | null;
+  } | null;
   error?: { code: BulkAssignmentErrorCode; message: string } | null;
 };
 
