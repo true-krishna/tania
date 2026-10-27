@@ -1,0 +1,59 @@
+mutation ImportUnits($input: ImportUnitsInput!) {
+  importUnits(input: $input) {
+    succeeded {
+      index
+    }
+    failed {
+      index
+      error {
+        code
+        message
+      }
+    }
+  }
+}
+
+mutation ImportProjects($input: ImportProjectsInput!) {
+  importProjects(input: $input) {
+    succeeded {
+      index
+    }
+    failed {
+      index
+      error {
+        code
+        message
+      }
+    }
+  }
+}
+
+mutation ImportJobRoles($input: ImportJobRolesInput!) {
+  importJobRoles(input: $input) {
+    succeeded {
+      index
+    }
+    failed {
+      index
+      error {
+        code
+        message
+      }
+    }
+  }
+}
+
+mutation ImportChapters($input: ImportChaptersInput!) {
+  importChapters(input: $input) {
+    succeeded {
+      index
+    }
+    failed {
+      index
+      error {
+        code
+        message
+      }
+    }
+  }
+}

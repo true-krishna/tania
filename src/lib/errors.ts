@@ -1,5 +1,8 @@
 import type { ApolloError } from "@apollo/client";
-import type { BulkAssignmentErrorCode } from "@/generated/graphql/types";
+import type {
+  BulkAssignmentErrorCode,
+  BulkMasterDataErrorCode,
+} from "@/generated/graphql/types";
 
 /**
  * `extensions.code` values the served backend returns (contracts/api-conventions.md §3).
@@ -149,6 +152,21 @@ export const BULK_ASSIGNMENT_ERROR_LABEL: Record<BulkAssignmentErrorCode, string
   DUPLICATE_ACTIVE: "Talent sudah memiliki assignment aktif pada project tersebut.",
   NOT_ACTIVE: "Assignment sudah selesai dan tidak dapat diubah atau dihapus.",
   REFERENCED: "Assignment masih dirujuk data lain dan tidak dapat dihapus.",
+  BATCH_LIMIT: "Melebihi batas 100 baris per operasi massal.",
+  INVALID: "Input tidak valid.",
+};
+
+/**
+ * Pesan fallback Indonesia untuk kegagalan satu baris operasi master data
+ * massal (TAN-348) — `BulkMasterDataError.message` dari server sudah
+ * berbahasa Indonesia dan ditampilkan apa adanya; label ini hanya dipakai
+ * bila baris gagal tanpa pesan yang bisa dipakai.
+ */
+export const BULK_MASTER_DATA_ERROR_LABEL: Record<BulkMasterDataErrorCode, string> = {
+  CONFLICT: "Nilai sudah dipakai entri lain.",
+  REF_NOT_FOUND: "Referensi tidak ditemukan.",
+  REF_INACTIVE: "Referensi nonaktif.",
+  REF_AMBIGUOUS: "Nilai referensi dipakai lebih dari satu entitas aktif.",
   BATCH_LIMIT: "Melebihi batas 100 baris per operasi massal.",
   INVALID: "Input tidak valid.",
 };

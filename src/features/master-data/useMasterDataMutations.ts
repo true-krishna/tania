@@ -24,7 +24,7 @@ import {
 
 export type MasterDataMutationValue = { name: string; selectValue?: string; code?: string };
 
-function refetch(
+export function refetch(
   doc: DocumentNode,
 ): { query: typeof doc; variables: { includeInactive: boolean } }[] {
   return [{ query: doc, variables: { includeInactive: true } }];

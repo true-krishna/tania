@@ -6,6 +6,7 @@ import {
   MasterDataSection,
   type MasterDataItem,
 } from "@/features/master-data/MasterDataSection";
+import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useJobRoleMutations } from "@/features/master-data/useMasterDataMutations";
 
 type JobRole = MasterDataItem & { chapter?: { id: string; name: string } | null };
@@ -32,6 +33,9 @@ export default function JobRolesPage() {
       emptyMessage="Belum ada job role. Tambahkan job role pertama."
       error={error}
       extraColumn={{ label: "Chapter", render: (role) => role.chapter?.name ?? "Tanpa chapter" }}
+      importSlot={({ close, onImported, open }) => (
+        <MasterDataImportModal entity="jobRole" onClose={close} onImported={onImported} open={open} />
+      )}
       items={data}
       nameLabel="Nama Job Role"
       onCreate={({ name, selectValue }) =>

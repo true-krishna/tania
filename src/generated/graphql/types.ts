@@ -261,12 +261,90 @@ export type BulkAssignmentResult = {
   succeeded: Array<BulkAssignmentItemResult>;
 };
 
+/** Hasil satu baris impor Chapter. */
+export type BulkChapterItemResult = {
+  __typename?: 'BulkChapterItemResult';
+  /** Chapter hasil — terisi bila baris berhasil. */
+  chapter?: Maybe<Chapter>;
+  error?: Maybe<BulkMasterDataError>;
+  index: Scalars['Int']['output'];
+};
+
+export type BulkChapterResult = {
+  __typename?: 'BulkChapterResult';
+  failed: Array<BulkChapterItemResult>;
+  succeeded: Array<BulkChapterItemResult>;
+};
+
 export type BulkCreateAssignmentsInput = {
   /** Maksimum 100 talent per operasi (FR-07). */
   employeeIds: Array<Scalars['ID']['input']>;
   periodEnd?: InputMaybe<Scalars['Date']['input']>;
   periodStart: Scalars['Date']['input'];
   projectId: Scalars['ID']['input'];
+};
+
+/** Hasil satu baris impor Job Role. */
+export type BulkJobRoleItemResult = {
+  __typename?: 'BulkJobRoleItemResult';
+  error?: Maybe<BulkMasterDataError>;
+  index: Scalars['Int']['output'];
+  /** Job Role hasil — terisi bila baris berhasil. */
+  jobRole?: Maybe<JobRole>;
+};
+
+export type BulkJobRoleResult = {
+  __typename?: 'BulkJobRoleResult';
+  failed: Array<BulkJobRoleItemResult>;
+  succeeded: Array<BulkJobRoleItemResult>;
+};
+
+/** Kegagalan satu baris pada operasi master data massal. */
+export type BulkMasterDataError = {
+  __typename?: 'BulkMasterDataError';
+  code: BulkMasterDataErrorCode;
+  /** Pesan siap tampil kepada pengguna (berbahasa Indonesia). */
+  message: Scalars['String']['output'];
+};
+
+export type BulkMasterDataErrorCode =
+  | 'BATCH_LIMIT'
+  | 'CONFLICT'
+  | 'INVALID'
+  | 'REF_AMBIGUOUS'
+  | 'REF_INACTIVE'
+  | 'REF_NOT_FOUND';
+
+/** Hasil satu baris impor Project (Initiative). */
+export type BulkProjectItemResult = {
+  __typename?: 'BulkProjectItemResult';
+  error?: Maybe<BulkMasterDataError>;
+  index: Scalars['Int']['output'];
+  /** Project hasil — terisi bila baris berhasil. */
+  project?: Maybe<Project>;
+};
+
+export type BulkProjectResult = {
+  __typename?: 'BulkProjectResult';
+  failed: Array<BulkProjectItemResult>;
+  succeeded: Array<BulkProjectItemResult>;
+};
+
+/** Hasil satu baris impor Unit. */
+export type BulkUnitItemResult = {
+  __typename?: 'BulkUnitItemResult';
+  /** Kegagalan baris — terisi bila baris gagal. */
+  error?: Maybe<BulkMasterDataError>;
+  /** Posisi baris pada input (0-based). */
+  index: Scalars['Int']['output'];
+  /** Unit hasil — terisi bila baris berhasil. */
+  unit?: Maybe<Unit>;
+};
+
+export type BulkUnitResult = {
+  __typename?: 'BulkUnitResult';
+  failed: Array<BulkUnitItemResult>;
+  succeeded: Array<BulkUnitItemResult>;
 };
 
 export type BulkUpdateAssignmentsInput = {
@@ -305,6 +383,10 @@ export type ChapterDashboard = {
   idpStatusDistribution: Array<IdpStatusCount>;
   idpsNeedingReview: Scalars['Int']['output'];
   unassignedTalents: Array<Employee>;
+};
+
+export type ChapterImportRowInput = {
+  name: Scalars['String']['input'];
 };
 
 /** Percakapan asisten milik satu pemanggil. */
@@ -948,6 +1030,26 @@ export type ImportAssignmentsInput = {
   rows: Array<AssignmentImportRowInput>;
 };
 
+export type ImportChaptersInput = {
+  /** Maksimum 100 baris per operasi (FR-06). */
+  rows: Array<ChapterImportRowInput>;
+};
+
+export type ImportJobRolesInput = {
+  /** Maksimum 100 baris per operasi (FR-06). */
+  rows: Array<JobRoleImportRowInput>;
+};
+
+export type ImportProjectsInput = {
+  /** Maksimum 100 baris per operasi (FR-06). */
+  rows: Array<ProjectImportRowInput>;
+};
+
+export type ImportUnitsInput = {
+  /** Maksimum 100 baris per operasi (FR-06). */
+  rows: Array<UnitImportRowInput>;
+};
+
 /** Master Data Role — peran jabatan/fungsional (bukan peran akses, FR-20). */
 export type JobRole = {
   __typename?: 'JobRole';
@@ -958,6 +1060,12 @@ export type JobRole = {
   isActive: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   updatedAt: Scalars['Time']['output'];
+};
+
+export type JobRoleImportRowInput = {
+  /** Chapter pemilik — nama chapter atau ID; kosong berarti tanpa chapter (FR-20). */
+  chapter?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type LocalLoginInput = {
@@ -1026,6 +1134,14 @@ export type Mutation = {
   endAssignment: Assignment;
   /** Impor assignment massal dari berkas templat: satu assignment per baris. Chapter + Admin. */
   importAssignments: BulkAssignmentResult;
+  /** Impor Chapter massal dari berkas templat: satu Chapter per baris. Khusus Admin. */
+  importChapters: BulkChapterResult;
+  /** Impor Job Role massal dari berkas templat: satu Job Role per baris. Khusus Admin. */
+  importJobRoles: BulkJobRoleResult;
+  /** Impor Project (Initiative) massal dari berkas templat: satu Project per baris. Khusus Admin. */
+  importProjects: BulkProjectResult;
+  /** Impor Unit massal dari berkas templat: satu Unit per baris. Khusus Admin. */
+  importUnits: BulkUnitResult;
   login: AuthPayload;
   /** Publik. Menukar authorization code dengan sesi Tania (FR-003/FR-004). */
   loginWithEntra: AuthPayload;
@@ -1270,6 +1386,26 @@ export type MutationEndAssignmentArgs = {
 
 export type MutationImportAssignmentsArgs = {
   input: ImportAssignmentsInput;
+};
+
+
+export type MutationImportChaptersArgs = {
+  input: ImportChaptersInput;
+};
+
+
+export type MutationImportJobRolesArgs = {
+  input: ImportJobRolesInput;
+};
+
+
+export type MutationImportProjectsArgs = {
+  input: ImportProjectsInput;
+};
+
+
+export type MutationImportUnitsArgs = {
+  input: ImportUnitsInput;
 };
 
 
@@ -1653,6 +1789,12 @@ export type Project = {
   name: Scalars['String']['output'];
   unit: Unit;
   updatedAt: Scalars['Time']['output'];
+};
+
+export type ProjectImportRowInput = {
+  name: Scalars['String']['input'];
+  /** Unit in Charge — kode Unit (unik) atau ID unit (FR-19). */
+  unit: Scalars['ID']['input'];
 };
 
 export type Query = {
@@ -2102,6 +2244,12 @@ export type UnitCount = {
   __typename?: 'UnitCount';
   count: Scalars['Int']['output'];
   unit: Unit;
+};
+
+export type UnitImportRowInput = {
+  /** Kode unik satuan kerja (pembeda utama antar unit, FR-18). */
+  code: Scalars['String']['input'];
+  name: Scalars['String']['input'];
 };
 
 export type UpdateAssignmentInput = {

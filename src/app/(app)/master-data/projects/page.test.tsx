@@ -64,6 +64,24 @@ describe("ProjectsPage (Apollo)", () => {
     expect(screen.getByText("Digital Business & Technology")).toBeInTheDocument();
   });
 
+  it("opens the initiative import modal with the official template link (TAN-350)", async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <ToastProvider>
+          <ProjectsPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Enterprise Network")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "+ Unggah Massal" }));
+    expect(screen.getByRole("dialog", { name: "Unggah Massal Initiative" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Unduh Template" })).toHaveAttribute(
+      "href",
+      "/templates/template-buat-initiative-massal.xlsx",
+    );
+  });
+
   it("surfaces the server validation message when deactivation is rejected", async () => {
     const serverMessage = "Proyek masih digunakan oleh assignment, tidak dapat dinonaktifkan.";
     const failingMocks = [

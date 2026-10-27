@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import ChaptersPage from "@/app/(app)/master-data/chapters/page";
 import { ChaptersDocument } from "@/generated/graphql";
@@ -47,6 +47,23 @@ const mocks = [
 ];
 
 describe("ChaptersPage (Apollo)", () => {
+  it("opens the chapter import modal with the official template link (TAN-350)", async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <ToastProvider>
+          <ChaptersPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "+ Unggah Massal" }));
+    expect(screen.getByRole("dialog", { name: "Unggah Massal Chapter" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Unduh Template" })).toHaveAttribute(
+      "href",
+      "/templates/template-buat-chapter-massal.xlsx",
+    );
+  });
   it("renders chapters and their job roles after the query resolves", async () => {
     render(
       <MockedProvider mocks={mocks}>
