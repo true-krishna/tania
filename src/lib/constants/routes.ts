@@ -72,6 +72,3 @@ export const MASTER_DATA_UNITS = "/master-data/units";
 export const MASTER_DATA_CHAPTERS = "/master-data/chapters";
 export const MASTER_DATA_JOB_ROLES = "/master-data/job-roles";
 export const MASTER_DATA_PROJECTS = "/master-data/projects";
-
-// REPORTS
-export const REPORT_TALENT = "/reports/talent";

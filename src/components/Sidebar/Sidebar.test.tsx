@@ -47,8 +47,9 @@ describe("Sidebar", () => {
   });
 
   // Placement amendment (TAN-154, commit c5d8443): the Talent Report content
-  // replaced the Dashboard content for Operation & Chapter, the nav entry was
-  // removed for every role, and /reports/talent now only redirects there.
+  // replaced the Dashboard content for Operation & Chapter and the nav entry was
+  // removed for every role; the legacy /reports/talent route is gone entirely
+  // (TAN-345 — Laporan Talent = Dashboard).
   it("no longer lists Laporan Talent in the nav for any role", () => {
     for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
       const view = renderSidebar({ role });
