@@ -11,6 +11,8 @@ export interface Session {
   refreshToken: string;
   refreshTokenExpiresAt: string;
   accessRole: AccessRole;
+  /** Machine name of the assigned role (built-in or custom); absent in older sessions. */
+  roleName?: string;
   /** Profile name from `login`/`refreshSession`; absent in sessions stored before these fields existed. */
   fullName?: string;
   email?: string;
@@ -42,6 +44,7 @@ export function decodeSession(raw: string): Session | null {
         refreshToken: session.refreshToken,
         refreshTokenExpiresAt: session.refreshTokenExpiresAt,
         accessRole: session.accessRole as AccessRole,
+        roleName: typeof session.roleName === "string" ? session.roleName : undefined,
         fullName: typeof session.fullName === "string" ? session.fullName : undefined,
         email: typeof session.email === "string" ? session.email : undefined,
       };

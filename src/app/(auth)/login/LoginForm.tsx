@@ -14,6 +14,7 @@ import { EntraSsoStartDocument, LoginDocument } from "@/generated/graphql";
 import { authConfig } from "@/lib/auth/config";
 import { beginEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/entra-pkce";
 import { setSession } from "@/lib/auth/token-store";
+import { resetApolloStore } from "@/lib/apollo";
 import { DASHBOARD } from "@/lib/constants/routes";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
@@ -105,11 +106,13 @@ export default function LoginForm() {
           refreshToken,
           refreshTokenExpiresAt,
           accessRole: user.accessRole,
+          roleName: user.roleName,
           fullName: user.fullName,
           email: user.email,
         },
         { remember },
       );
+      await resetApolloStore();
       router.replace(DASHBOARD);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan.";

@@ -9,6 +9,7 @@ mutation Login($input: LocalLoginInput!) {
       email
       fullName
       accessRole
+      roleName
       status
     }
   }

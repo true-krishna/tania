@@ -22,6 +22,43 @@ export { decodeSession, encodeSession };
 /** 4KB is the practical per-cookie size ceiling. */
 const MAX_COOKIE_LENGTH = 4096;
 
+type SessionListener = () => void;
+
+const listeners = new Set<SessionListener>();
+
+let snapshot: Session | null | undefined;
+let snapshotRaw: string | null | undefined;
+
+function notify() {
+  for (const listener of [...listeners]) listener();
+}
+
+export function subscribeToSession(listener: SessionListener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** Stable snapshot for `useSyncExternalStore`; decoded once per cookie write. */
+export function getSessionSnapshot(): Session | null {
+  if (typeof document === "undefined") return null;
+  const raw = readCookieValue(document.cookie);
+  if (snapshot === undefined || raw !== snapshotRaw) {
+    snapshotRaw = raw;
+    snapshot = raw ? decodeSession(raw) : null;
+  }
+  return snapshot;
+}
+
+export function getServerSessionSnapshot(): Session | null {
+  return null;
+}
+
+function readSession(): Session | null {
+  if (typeof document === "undefined") return null;
+  const raw = readCookieValue(document.cookie);
+  return raw ? decodeSession(raw) : null;
+}
+
 /** "Ingat saya" persistence window; actual validity still ends with the
  * backend-issued refresh token, so this only keeps the cookie across browser
  * restarts, it never extends token life. */
@@ -41,9 +78,7 @@ function cookieAttributes(): string {
 }
 
 export function getSession(): Session | null {
-  if (typeof document === "undefined") return null;
-  const raw = readCookieValue(document.cookie);
-  return raw ? decodeSession(raw) : null;
+  return readSession();
 }
 
 export function setSession(
@@ -64,9 +99,15 @@ export function setSession(
   // browser signs the user out. With it, the cookie survives restarts.
   const maxAge = options?.remember ? `; Max-Age=${REMEMBER_ME_MAX_AGE}` : "";
   document.cookie = `${SESSION_COOKIE}=${encoded}; ${cookieAttributes()}${maxAge}`;
+  snapshot = next;
+  snapshotRaw = encoded;
+  notify();
 }
 
 export function clearSession(): void {
   if (typeof document === "undefined") return;
   document.cookie = `${SESSION_COOKIE}=; ${cookieAttributes()}; Max-Age=0`;
+  snapshot = null;
+  snapshotRaw = null;
+  notify();
 }
