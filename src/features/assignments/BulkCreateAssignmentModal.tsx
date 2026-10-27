@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { ApolloError } from "@apollo/client";
+import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
+import { cn } from "@/lib/cn";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { errorMessage } from "@/lib/errors";
@@ -53,16 +54,18 @@ export function BulkCreateAssignmentModal({
   const isRetry = retryRows !== null;
   const hasRows = rowsToSend.length > 0;
 
-  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
-    e.target.value = "";
-    setFileError(null);
-    setFormError(null);
+  function clearFile() {
     setParsedRows(null);
     setInvalidRows([]);
     setFileName(null);
+    setFileError(null);
     setResult(null);
     setSentRows(null);
+    setFormError(null);
+  }
+
+  async function acceptFile(file: File | null) {
+    clearFile();
     if (!file) return;
     setParsing(true);
     try {
@@ -84,6 +87,18 @@ export function BulkCreateAssignmentModal({
       setParsing(false);
     }
   }
+
+  const onDrop = React.useCallback((accepted: readonly File[], rejected: readonly { file: File }[]) => {
+    void acceptFile(accepted[0] ?? rejected[0]?.file ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] },
+    disabled: parsing,
+    multiple: false,
+    noDragEventsBubbling: true,
+    onDrop,
+  });
 
   function toVariables(rows: readonly ImportTemplateRow[]): ImportVariables[] {
     return rows.map((row) => ({
@@ -152,14 +167,7 @@ export function BulkCreateAssignmentModal({
           helper={`Unduh template, isi employee_id (nomor induk atau ID talent), project_id (nama project aktif atau ID), period_start; period_end opsional (kosong = berjalan). Maksimum ${BULK_ASSIGNMENT_MAX_ROWS} baris.`}
           label="Daftar Assignment (berkas Excel)"
         >
-          <div className="flex items-center gap-2">
-            <Input
-              accept=".xlsx"
-              aria-label="Unggah berkas Excel assignment"
-              disabled={parsing}
-              onChange={onFileChange}
-              type="file"
-            />
+          <div className="mb-2 flex items-center justify-end gap-2">
             <a
               className="shrink-0 text-sm font-medium text-tp-ink-info underline hover:opacity-80"
               download
@@ -167,6 +175,38 @@ export function BulkCreateAssignmentModal({
             >
               Unduh Template
             </a>
+          </div>
+          <div
+            {...getRootProps({
+              className: cn(
+                "cursor-pointer rounded-lg border-2 border-dashed px-4 py-6 text-center text-sm transition-colors",
+                isDragActive ? "border-tp-ink-info bg-tp-tint-info" : "border-tp-line bg-tp-bg hover:border-tp-ink-info",
+                parsing && "cursor-default opacity-60",
+              ),
+            })}
+          >
+            <input {...getInputProps({ "aria-label": "Unggah berkas Excel assignment" })} />
+            {fileName ? (
+              <span className="inline-flex items-center gap-2 rounded-full border border-tp-line bg-tp-surface px-3 py-1.5 text-sm text-tp-text">
+                {fileName}
+                <button
+                  aria-label="Hapus berkas terpilih"
+                  className="text-tp-muted hover:text-tp-ink-peach"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearFile();
+                  }}
+                  type="button"
+                >
+                  ×
+                </button>
+              </span>
+            ) : (
+              <p className="text-tp-muted">
+                Tarik dan letakkan berkas .xlsx di sini, atau{" "}
+                <span className="font-medium text-tp-ink-info underline">pilih berkas</span>.
+              </p>
+            )}
           </div>
         </InputControl>
         {parsing ? <p className="text-sm text-tp-muted">Membaca berkas…</p> : null}

@@ -1338,6 +1338,28 @@ describe("Bulk assignment (TAN-337)", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers a drag-and-drop upload area and a removable file chip (react-dropzone)", async () => {
+    renderBulkPage(bulkMocks());
+    await openBulkCreateModal();
+
+    expect(screen.getByText(/tarik dan letakkan berkas .xlsx di sini/i)).toBeInTheDocument();
+
+    await uploadAssignmentFile([["EMP-001", "Network Modernization", "2025-07-01", ""]]);
+    expect(screen.getByText("assignment.xlsx")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Hapus berkas terpilih" }));
+    expect(screen.getByText(/tarik dan letakkan berkas .xlsx di sini/i)).toBeInTheDocument();
+    expect(screen.queryByText("assignment.xlsx")).toBeNull();
+  });
+
+  it("rejects files that are not .xlsx", async () => {
+    renderBulkPage(bulkMocks());
+    await openBulkCreateModal();
+
+    await uploadAssignmentFile([["EMP-001", "Network Modernization", "2025-07-01", ""]], { awaitRead: false, name: "talent.csv" });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Berkas harus berformat .xlsx.");
+  });
+
   it("guards the 100-row batch limit on the client (FR-07)", async () => {
     renderBulkPage(bulkMocks());
     await openBulkCreateModal();
