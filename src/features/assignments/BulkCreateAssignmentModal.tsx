@@ -2,10 +2,9 @@
 
 import * as React from "react";
 import { ApolloError } from "@apollo/client";
-import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/Button";
 import { InputControl } from "@/components/InputControl";
-import { cn } from "@/lib/cn";
+import { InputDropzone } from "@/components/InputDropzone";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { errorMessage } from "@/lib/errors";
@@ -88,18 +87,6 @@ export function BulkCreateAssignmentModal({
     }
   }
 
-  const onDrop = React.useCallback((accepted: readonly File[], rejected: readonly { file: File }[]) => {
-    void acceptFile(accepted[0] ?? rejected[0]?.file ?? null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] },
-    disabled: parsing,
-    multiple: false,
-    noDragEventsBubbling: true,
-    onDrop,
-  });
-
   function toVariables(rows: readonly ImportTemplateRow[]): ImportVariables[] {
     return rows.map((row) => ({
       employeeId: row.employeeId,
@@ -176,38 +163,19 @@ export function BulkCreateAssignmentModal({
               Unduh Template
             </a>
           </div>
-          <div
-            {...getRootProps({
-              className: cn(
-                "cursor-pointer rounded-lg border-2 border-dashed px-4 py-6 text-center text-sm transition-colors",
-                isDragActive ? "border-tp-ink-info bg-tp-tint-info" : "border-tp-line bg-tp-bg hover:border-tp-ink-info",
-                parsing && "cursor-default opacity-60",
-              ),
-            })}
-          >
-            <input {...getInputProps({ "aria-label": "Unggah berkas Excel assignment" })} />
-            {fileName ? (
-              <span className="inline-flex items-center gap-2 rounded-full border border-tp-line bg-tp-surface px-3 py-1.5 text-sm text-tp-text">
-                {fileName}
-                <button
-                  aria-label="Hapus berkas terpilih"
-                  className="text-tp-muted hover:text-tp-ink-peach"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearFile();
-                  }}
-                  type="button"
-                >
-                  ×
-                </button>
-              </span>
-            ) : (
-              <p className="text-tp-muted">
+          <InputDropzone
+            accept={{ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] }}
+            ariaLabel="Unggah berkas Excel assignment"
+            disabled={parsing}
+            hint={
+              <>
                 Tarik dan letakkan berkas .xlsx di sini, atau{" "}
                 <span className="font-medium text-tp-ink-info underline">pilih berkas</span>.
-              </p>
-            )}
-          </div>
+              </>
+            }
+            onFileSelect={(file) => void acceptFile(file)}
+            selectedName={fileName}
+          />
         </InputControl>
         {parsing ? <p className="text-sm text-tp-muted">Membaca berkas…</p> : null}
         {fileName && parsedRows ? (

@@ -19,6 +19,7 @@ export { Pagination, useTablePagination } from "./Pagination";
 export { Card } from "./Card";
 export { Input } from "./Input";
 export { InputControl } from "./InputControl";
+export { InputDropzone } from "./InputDropzone";
 export { PageHeader } from "./PageHeader";
 export { Select } from "./Select";
 export { Brand } from "./Brand";
