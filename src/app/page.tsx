@@ -1,6 +1,17 @@
-import { redirect } from "next/navigation";
-import { DASHBOARD } from "@/lib/constants/routes";
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { useSessionRole } from "@/lib/auth/guard";
+import { landingRoute } from "@/lib/auth/landing";
 
 export default function Home() {
-  redirect(DASHBOARD);
+  const router = useRouter();
+  const role = useSessionRole();
+
+  React.useEffect(() => {
+    router.replace(landingRoute(role));
+  }, [router, role]);
+
+  return null;
 }

@@ -3,9 +3,9 @@
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import ProfilePage from "@/app/(app)/profile/page";
-import { MyIdpDocument, ProfileDocument } from "@/generated/graphql";
+import { MyIdpDocument, ProfileDocument, ProfileHistoryDocument } from "@/generated/graphql";
 
 const h = vi.hoisted(() => ({
   role: { current: "TALENT" as string | null },
@@ -122,10 +122,30 @@ const myIdpResult = {
   },
 };
 
-const profileMocks = [
+const profileMocks: MockedResponse[] = [
   { request: { query: ProfileDocument }, result: profileResult },
   { request: { query: MyIdpDocument }, result: myIdpResult },
 ];
+
+// Riwayat kontrak & assignment kueri terpisah (TAN-343) — hanya untuk peran
+// dengan sel `contracts`/`assignments` (Operation/Chapter).
+const historyResult = {
+  data: {
+    me: {
+      __typename: "User",
+      id: "usr-1",
+      employee: {
+        __typename: "Employee",
+        id: "emp-001",
+        contracts: employee.contracts,
+        assignments: employee.assignments,
+      },
+    },
+  },
+};
+
+const historyMock: MockedResponse = { request: { query: ProfileHistoryDocument }, result: historyResult };
+const profileWithHistoryMocks: MockedResponse[] = [...profileMocks, historyMock];
 
 function renderProfile(mocks = profileMocks) {
   return render(
@@ -154,7 +174,9 @@ describe("ProfilePage (TAN-188)", () => {
   });
 
   it("shows the contract history on the Kontrak tab", async () => {
-    renderProfile();
+    // TAN-343: tab Kontrak hanya untuk peran dengan selnya (Operation/Chapter).
+    h.role.current = "OPERATION";
+    renderProfile(profileWithHistoryMocks);
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
     fireEvent.click(screen.getByRole("tab", { name: "Kontrak" }));
@@ -165,7 +187,9 @@ describe("ProfilePage (TAN-188)", () => {
   });
 
   it("shows own assignments on the Assignment tab", async () => {
-    renderProfile();
+    // TAN-343: tab Assignment hanya untuk peran dengan selnya (Operation/Chapter).
+    h.role.current = "OPERATION";
+    renderProfile(profileWithHistoryMocks);
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
     fireEvent.click(screen.getByRole("tab", { name: "Assignment" }));
@@ -197,12 +221,14 @@ describe("ProfilePage (TAN-188)", () => {
     // akses (Talent melihat rencananya sendiri).
     expect(screen.getByRole("tab", { name: "IDP Saya" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Informasi pribadi" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Kontrak" })).toBeInTheDocument();
+    // TAN-343: Talent tanpa sel Kontrak/Assignment — tabnya disembunyikan.
+    expect(screen.queryByRole("tab", { name: "Kontrak" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: "Assignment" })).toBeNull();
   });
 
   it("menampilkan tab IDP untuk peran lain juga", async () => {
     h.role.current = "OPERATION";
-    renderProfile();
+    renderProfile(profileWithHistoryMocks);
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
     expect(screen.getByRole("tab", { name: "IDP Saya" })).toBeInTheDocument();

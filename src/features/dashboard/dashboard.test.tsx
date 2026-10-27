@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import DashboardPage from "@/app/(app)/dashboard/page";
 import { DashboardDocument } from "@/generated/graphql";
@@ -52,6 +52,21 @@ vi.mock("echarts/components", () => ({
 vi.mock("echarts/renderers", () => ({ CanvasRenderer: {} }));
 
 vi.stubGlobal("ResizeObserver", echartsMock.ResizeObserverStub);
+
+// Kontrol peran & navigasi untuk guard TAN-343 (default null = sesi belum
+// terbaca, perilaku lama — varian dashboard tetap terender seperti biasa).
+const h = vi.hoisted(() => ({
+  role: { current: null as string | null },
+  replace: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/guard", () => ({
+  useSessionRole: () => h.role.current,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: h.replace, push: vi.fn(), back: vi.fn(), refresh: vi.fn() }),
+}));
 
 const chapter = { __typename: "Chapter", id: "ch-1", name: "Backend" };
 
@@ -270,5 +285,24 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
     expect(screen.queryByText("Tenggat Aksi Terdekat")).toBeNull();
     expect(screen.queryByText("Evaluasi terakhir")).toBeNull();
     expect(screen.queryByRole("link", { name: /IDP saya/ })).toBeNull();
+  });
+
+  it("mengalihkan peran tanpa sel Dashboard ke landing-nya (TAN-343)", async () => {
+    // Admin & Talent tidak memegang sel Dashboard — langsung ke landing peran.
+    for (const [role, landing] of [
+      ["ADMIN", "/accounts"],
+      ["TALENT", "/employees"],
+    ] as const) {
+      h.role.current = role;
+      h.replace.mockClear();
+      const view = render(
+        <MockedProvider mocks={[]}>
+          <DashboardPage />
+        </MockedProvider>
+      );
+      await waitFor(() => expect(h.replace).toHaveBeenCalledWith(landing));
+      expect(screen.queryByText("Dashboard")).toBeNull();
+      view.unmount();
+    }
   });
 });

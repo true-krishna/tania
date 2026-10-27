@@ -19,6 +19,11 @@ import type { AccessRole } from "@/generated/graphql";
  * only reads, Talent only its own records, and the pages mirror that. Period &
  * template administration stays Admin-only (global config), exactly like the
  * server's `RequireRole(Admin)` on their writes.
+ *
+ * 2026-10-27 (TAN-343): sel default mengikuti definisi peran baru — Admin hanya
+ * fokus RBAC + Master Data + Audit (tanpa Karyawan/Kontrak/Assignment/Entra/
+ * Dashboard), Dashboard hanya Operation & Chapter, dan Talent tanpa Assignment
+ * & Dashboard (fitur self-service ditunda). Backend tetap titik penegakan.
  */
 export type Module =
   | "dashboard"
@@ -38,13 +43,14 @@ export type Module =
 const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
 
 export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
-  dashboard: ALL,
+  // TAN-343: dashboard hanya Operation & Chapter.
+  dashboard: ["OPERATION", "CHAPTER"],
   activities: ALL,
   workload: ALL,
-  employees: ["OPERATION", "ADMIN", "CHAPTER", "TALENT"],
-  entra: ["OPERATION", "ADMIN"],
-  contracts: ["CHAPTER", "OPERATION", "ADMIN"],
-  assignments: ["CHAPTER", "OPERATION", "TALENT", "ADMIN"],
+  employees: ["OPERATION", "CHAPTER", "TALENT"],
+  entra: ["OPERATION"],
+  contracts: ["CHAPTER", "OPERATION"],
+  assignments: ["CHAPTER", "OPERATION"],
   // Aktif sejak 2026-10-16 (klarifikasi 9): Admin kelola · Operation lihat ·
   // Chapter kelola cakupan · Talent kelola miliknya.
   idp: ALL,
@@ -56,9 +62,10 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
 };
 
 const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
-  employees: ["OPERATION", "ADMIN"],
-  assignments: ["CHAPTER", "ADMIN"],
-  contracts: ["OPERATION", "ADMIN"],
+  // TAN-343: kelola Operation/Chapter saja — Admin memegang tanpa sel.
+  employees: ["OPERATION"],
+  assignments: ["CHAPTER"],
+  contracts: ["OPERATION"],
   masterData: ["ADMIN"],
   // IDP & evaluasi: Chapter menilai/mengelola dalam cakupannya, Admin penuh;
   // Operation hanya membaca dan Talent hanya miliknya (kontrol "miliknya" ada di

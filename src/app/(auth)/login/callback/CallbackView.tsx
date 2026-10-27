@@ -7,7 +7,8 @@ import { IconAlertCircle } from "@tabler/icons-react";
 import { LoginWithEntraDocument } from "@/generated/graphql";
 import { takeEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/entra-pkce";
 import { setSession } from "@/lib/auth/token-store";
-import { DASHBOARD, LOGIN } from "@/lib/constants/routes";
+import { landingRoute } from "@/lib/auth/landing";
+import { LOGIN } from "@/lib/constants/routes";
 import Link from "next/link";
 
 export default function CallbackView() {
@@ -48,7 +49,7 @@ export default function CallbackView() {
         fullName: user.fullName,
         email: user.email,
       });
-      router.replace(DASHBOARD);
+      router.replace(landingRoute(user.accessRole));
     } catch (err) {
       const message =
         err instanceof Error && err.message

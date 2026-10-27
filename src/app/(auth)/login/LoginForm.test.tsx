@@ -239,7 +239,7 @@ describe("jalur email + kata sandi (FR-002 — tidak boleh teregresi)", () => {
     fireEvent.click(screen.getByRole("button", LOGIN_BUTTON));
   }
 
-  it("signs in and goes to the dashboard", async () => {
+  it("signs in and goes to the role landing (TAN-343)", async () => {
     const capture = captureCookieWrites();
     try {
       renderLogin(loginMocks());
@@ -248,7 +248,8 @@ describe("jalur email + kata sandi (FR-002 — tidak boleh teregresi)", () => {
 
       await waitFor(() => {
         expect(tokenStore.getSession()?.accessToken).toBe("token-abc");
-        expect(routerReplace).toHaveBeenCalledWith("/dashboard");
+        // TAN-343: Admin mendarat di Accounts, bukan dashboard.
+        expect(routerReplace).toHaveBeenCalledWith("/accounts");
       });
       // Without "Ingat saya" the session cookie stays browser-scoped.
       expect(capture.writes.join(" ")).not.toContain("Max-Age=");

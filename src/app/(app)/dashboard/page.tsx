@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { BarList } from "@/components/BarList";
 import { Card } from "@/components/Card";
 import { Chip, type ChipVariant } from "@/components/Chip";
@@ -17,6 +18,9 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { orDash } from "@/lib/cell";
+import { useSessionRole } from "@/lib/auth/guard";
+import { landingRoute } from "@/lib/auth/landing";
+import { canAccess } from "@/lib/auth/matrix";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
 import { TalentReportContent } from "@/features/talent-report/TalentReportPageView";
@@ -54,7 +58,16 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashboardPage() {
+  const role = useSessionRole();
+  const router = useRouter();
   const { status, data, error } = useDashboard();
+
+  const denied = role !== null && !canAccess(role, "dashboard");
+  React.useEffect(() => {
+    if (denied) router.replace(landingRoute(role));
+  }, [denied, role, router]);
+
+  if (denied) return null;
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat dashboard."} />;

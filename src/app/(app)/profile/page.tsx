@@ -10,16 +10,17 @@ import {
   PersonalInfoSection,
   WorkloadSection,
   useProfile,
+  useProfileHistory,
 } from "@/features/profile";
 import { useSessionRole } from "@/lib/auth/guard";
-import { canAccess } from "@/lib/auth/matrix";
+import { canAccess, type Module } from "@/lib/auth/matrix";
 
 type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp";
 
-const PROFILE_TABS: { id: ProfileTab; label: string; module?: "idp" }[] = [
+const PROFILE_TABS: { id: ProfileTab; label: string; module?: Module }[] = [
   { id: "personal", label: "Informasi pribadi" },
-  { id: "contracts", label: "Kontrak" },
-  { id: "assignments", label: "Assignment" },
+  { id: "contracts", label: "Kontrak", module: "contracts" },
+  { id: "assignments", label: "Assignment", module: "assignments" },
   { id: "workload", label: "Workload" },
   { id: "idp", label: "IDP Saya", module: "idp" },
 ];
@@ -32,6 +33,9 @@ export default function ProfilePage() {
   const employee = data;
   const tabs = PROFILE_TABS.filter((item) => !item.module || canAccess(role, item.module));
   const selectedTab: ProfileTab = tabs.some((item) => item.id === tab) ? tab : "personal";
+  const history = useProfileHistory(
+    tabs.some((item) => item.id === "contracts" || item.id === "assignments")
+  );
 
   return (
     <section className="flex flex-col gap-4">
@@ -79,9 +83,21 @@ export default function ProfilePage() {
       ) : !employee ? (
         <PersonalInfoSection employee={undefined} />
       ) : selectedTab === "contracts" ? (
-        <ContractsSection contracts={employee.contracts.edges.map((edge) => edge.node)} />
+        history.status === "loading" ? (
+          <LoadingState />
+        ) : history.status === "error" ? (
+          <ErrorState message={history.error ?? "Gagal memuat riwayat kontrak."} />
+        ) : (
+          <ContractsSection contracts={history.data?.contracts ?? []} />
+        )
       ) : selectedTab === "assignments" ? (
-        <AssignmentsSection assignments={employee.assignments.edges.map((edge) => edge.node)} />
+        history.status === "loading" ? (
+          <LoadingState />
+        ) : history.status === "error" ? (
+          <ErrorState message={history.error ?? "Gagal memuat riwayat assignment."} />
+        ) : (
+          <AssignmentsSection assignments={history.data?.assignments ?? []} />
+        )
       ) : (
         <PersonalInfoSection employee={employee} />
       )}

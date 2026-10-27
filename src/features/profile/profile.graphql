@@ -32,6 +32,20 @@ query Profile {
         id
         name
       }
+    }
+  }
+}
+
+# Riwayat kontrak & assignment milik sendiri. Query terpisah dari `Profile`
+# (TAN-343): subfield `contracts`/`assignments` me-return FORBIDDEN untuk peran
+# tanpa sel, dan propagasi non-null di GraphQL akan menggugurkan seluruh
+# `me.employee` bila digabung. Hanya dijalankan untuk peran yang memegang
+# selnya (Operation/Chapter).
+query ProfileHistory {
+  me {
+    id
+    employee {
+      id
       contracts(first: 50) {
         totalCount
         edges {

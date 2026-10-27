@@ -61,7 +61,8 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
     const drawn = drawnMenu();
     expect(drawn.find((item) => item.label === "IDP")).toBeUndefined();
     // The rest of the Talent menu survives: closing one cell is surgical.
-    expect(drawn.find((item) => item.label === "Dashboard")).toBeDefined();
+    // (TAN-343: Talent tidak punya Dashboard — Data Karyawan jadi pembanding.)
+    expect(drawn.find((item) => item.label === "Data Karyawan")).toBeDefined();
     expect(drawn.find((item) => item.label === "Evaluasi Saya")).toBeDefined();
   });
 

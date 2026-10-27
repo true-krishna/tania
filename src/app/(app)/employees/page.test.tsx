@@ -341,7 +341,7 @@ describe("EmployeesPage per role (T034)", () => {
     expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
   });
 
-  it("lets Admin manage the directory (TAN-212 clarify 4)", async () => {
+  it("no longer shows the add action to Admin (TAN-343)", async () => {
     auth.role = "ADMIN";
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
@@ -349,7 +349,8 @@ describe("EmployeesPage per role (T034)", () => {
       </MockedProvider>
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
+    // TAN-343: Admin tidak memegang sel Data Karyawan — tanpa aksi kelola.
+    expect(screen.queryByRole("button", { name: /tambah karyawan/i })).toBeNull();
   });
 
   it("lists scoped talents for Chapter via assignableTalents", async () => {
