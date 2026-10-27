@@ -12,8 +12,7 @@ import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { TableFilterBar } from "@/components/TableFilterBar";
-import { useSessionRole } from "@/lib/auth/guard";
-import { canManage } from "@/lib/auth/matrix";
+import { useModuleAccess } from "@/lib/auth/access";
 
 export type MasterDataItem = { id: string; name: string; isActive: boolean };
 
@@ -59,8 +58,7 @@ export function MasterDataSection<T extends MasterDataItem>({
   onUpdate,
   onToggleActive,
 }: MasterDataSectionProps<T>) {
-  const role = useSessionRole();
-  const manage = canManage(role, "masterData");
+  const manage = useModuleAccess("masterData").canManage;
   const [creating, setCreating] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [name, setName] = React.useState("");

@@ -99,3 +99,23 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
     expect(hrefs).toContain("/assignments");
   });
 });
+
+describe("Sidebar saat grid belum tersedia (W3)", () => {
+  it("menampilkan skeleton saat konfigurasi masih dimuat, bukan menu statis", () => {
+    render(<Sidebar menuStatus="loading" pathname="/dashboard" role="ADMIN" />);
+    expect(screen.getByText("Memuat menu…")).toBeInTheDocument();
+    expect(drawnMenu()).toEqual([]);
+  });
+
+  it("tidak menggambar menu fallback ketika konfigurasi gagal dimuat", () => {
+    render(<Sidebar menuStatus="error" pathname="/dashboard" role="ADMIN" />);
+    expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
+    expect(drawnMenu()).toEqual([]);
+  });
+
+  it("tidak menggambar menu fallback ketika server mengembalikan grid kosong", () => {
+    render(<Sidebar menuStatus="empty" pathname="/dashboard" role="ADMIN" />);
+    expect(screen.getAllByText("Tidak ada menu untuk peran ini.").length).toBeGreaterThan(0);
+    expect(drawnMenu()).toEqual([]);
+  });
+});

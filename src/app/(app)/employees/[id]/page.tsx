@@ -27,8 +27,8 @@ import {
   EmployeesDocument,
   type EmployeeQuery,
 } from "@/generated/graphql";
+import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import { canAccess, canManage } from "@/lib/auth/matrix";
 import {
   CONTRACT_NEW,
   CONTRACT_DETAIL,
@@ -48,10 +48,10 @@ type ContractRow = NonNullable<EmployeeQuery["employee"]>["contracts"]["edges"][
 export default function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const role = useSessionRole();
-  const manage = canManage(role, "employees");
+  const manage = useModuleAccess("employees").canManage;
   const showHistory = role === "OPERATION" || role === "ADMIN";
-  const showEntra = canAccess(role, "entra");
-  const linkContracts = canAccess(role, "contracts");
+  const showEntra = useModuleAccess("entra").canRead;
+  const linkContracts = useModuleAccess("contracts").canRead;
   const { status, data, error } = useEmployee(id);
   const [tab, setTab] = React.useState<DetailTab>("overview");
   const [deactivate, { loading: deactivating }] = useMutation(DeactivateEmployeeDocument, {
