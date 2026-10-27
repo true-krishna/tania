@@ -68,7 +68,10 @@ export function CustomRolesPanel({
             <Button
               disabled={busy}
               onClick={() => {
-                void onRename(role.id, editLabel.trim()).finally(() => setEditingId(null));
+                void onRename(role.id, editLabel.trim()).then(
+                  () => setEditingId(null),
+                  () => undefined,
+                );
               }}
               type="button"
             >
@@ -111,7 +114,12 @@ export function CustomRolesPanel({
             <span className="text-xs text-zinc-600">Hapus role {role.label}?</span>
             <Button
               disabled={busy}
-              onClick={() => void onDelete(role.id).finally(() => setConfirmDeleteId(null))}
+              onClick={() => {
+                void onDelete(role.id).then(
+                  () => setConfirmDeleteId(null),
+                  () => undefined,
+                );
+              }}
               type="button"
             >
               Ya, hapus
@@ -135,7 +143,9 @@ export function CustomRolesPanel({
             <Button
               disabled={busy}
               onClick={() =>
-                void onSetStatus(role.id, role.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")
+                void onSetStatus(role.id, role.status === "ACTIVE" ? "INACTIVE" : "ACTIVE").catch(
+                  () => undefined,
+                )
               }
               type="button"
               variant="ghost"
