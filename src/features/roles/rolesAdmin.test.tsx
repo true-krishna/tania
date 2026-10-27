@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
+import { GraphQLError } from "graphql";
 import { ToastProvider } from "@/components/Toast";
 import {
   CreateRoleDocument,
@@ -128,6 +129,35 @@ describe("halaman Menu & Akses per Role — bagian grid", () => {
     expect(roleHeader("ADMIN").getByRole("button", { name: "Simpan" })).toBeDisabled();
   });
 
+  it("mempertahankan draft role lain saat satu role disimpan", async () => {
+    const expectedGrid = expectedTalentGrid("idp", "READ");
+    renderSection([
+      ROLES_QUERY,
+      CONFIG_QUERY,
+      {
+        request: {
+          query: SetRoleMenuAccessDocument,
+          variables: { roleId: "role-talent", entries: gridInput(expectedGrid) },
+        },
+        result: { data: { setRoleMenuAccess: [] } },
+      },
+      CONFIG_QUERY,
+      ROLES_QUERY,
+    ]);
+
+    await screen.findByText("Grid Menu × Role");
+    fireEvent.change(screen.getByLabelText("IDP untuk Talent"), { target: { value: "READ" } });
+    fireEvent.change(screen.getByLabelText("IDP untuk Chapter"), { target: { value: "NONE" } });
+    fireEvent.click(roleHeader("TALENT").getByRole("button", { name: "Simpan" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Konfigurasi menu Talent tersimpan.",
+    );
+    // The refetch after the save must not discard the Chapter column.
+    expect(screen.getByLabelText("IDP untuk Chapter")).toHaveValue("NONE");
+    expect(roleHeader("CHAPTER").getByRole("button", { name: "Simpan" })).toBeEnabled();
+  });
+
   it("mengunci sel yang tidak boleh diubah role tersebut", async () => {
     renderSection([ROLES_QUERY, CONFIG_QUERY]);
     await screen.findByText("Grid Menu × Role");
@@ -227,5 +257,34 @@ describe("halaman Menu & Akses per Role — role kustom", () => {
     const rows = screen.getAllByText("Role bawaan — tidak dapat diubah.");
     expect(rows).toHaveLength(ROLES.length);
     expect(screen.queryByRole("button", { name: "Hapus" })).toBeNull();
+  });
+
+  it("tidak menutup form role kustom ketika server menolak", async () => {
+    renderSection([
+      ROLES_QUERY,
+      CONFIG_QUERY,
+      {
+        request: {
+          query: CreateRoleDocument,
+          variables: {
+            input: { name: "PM_CHAPTER", label: "PM Chapter", templateRole: "CHAPTER" },
+          },
+        },
+        result: { errors: [new GraphQLError("Nama role sudah dipakai.")] },
+      },
+    ]);
+
+    await screen.findByText("Role Kustom");
+    fireEvent.click(screen.getByRole("button", { name: "Tambah Role" }));
+    fireEvent.change(screen.getByLabelText("Nama mesin"), { target: { value: "pm_chapter" } });
+    fireEvent.change(screen.getByLabelText("Label"), { target: { value: "PM Chapter" } });
+
+    const form = screen.getByLabelText("Nama mesin").closest("form");
+    if (!form) throw new Error("form not found");
+    fireEvent.click(within(form).getByRole("button", { name: "Simpan" }));
+
+    expect((await screen.findAllByText("Nama role sudah dipakai.")).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Nama mesin")).toHaveValue("PM_CHAPTER");
+    expect(screen.getByRole("button", { name: "Batal" })).toBeInTheDocument();
   });
 });

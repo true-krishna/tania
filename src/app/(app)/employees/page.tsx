@@ -20,17 +20,18 @@ import { useChapters, useUnits } from "@/features/master-data/useMasterData";
 import type { EmployeeStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
+import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import { canManage } from "@/lib/auth/matrix";
 import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 export default function EmployeesPage() {
   const role = useSessionRole();
+  const manage = useModuleAccess("employees").canManage;
   if (role === "TALENT") return <OwnEmployeeRedirect />;
   if (role === "CHAPTER") return <ChapterTalentList />;
   return (
     <ToastProvider>
-      <EmployeeDirectory manage={canManage(role, "employees")} />
+      <EmployeeDirectory manage={manage} />
     </ToastProvider>
   );
 }

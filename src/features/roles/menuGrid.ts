@@ -115,9 +115,10 @@ export function cellOf(level: MenuAccessLevel): MenuAccessCell {
 /** The writable payload of one role's grid, in catalog order. */
 export function gridInput(
   grid: RoleGrid,
+  fallback: RoleGrid = {},
 ): { menuEntryId: string; visible: boolean; accessLevel: MenuAccessLevel }[] {
   return MENU_ROWS.map((row) => {
-    const cell = grid[row.id] ?? cellOf("NONE");
+    const cell = grid[row.id] ?? fallback[row.id] ?? cellOf("NONE");
     return {
       menuEntryId: row.id,
       visible: cell.visible && cell.accessLevel !== "NONE",

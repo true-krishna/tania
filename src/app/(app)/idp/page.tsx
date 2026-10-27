@@ -16,8 +16,8 @@ import { CreateIdpForm } from "@/features/idp/CreateIdpForm";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { MyIdpView } from "@/features/idp/MyIdpView";
 import { useIdps } from "@/features/idp/useIdps";
+import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import { canManage } from "@/lib/auth/matrix";
 import { orDash } from "@/lib/cell";
 import { IDP_DETAIL } from "@/lib/constants/routes";
 import type { IdpStatus } from "@/generated/graphql/types";
@@ -41,8 +41,9 @@ function actionProgress(row: IdpListRow) {
 
 export default function IdpPage() {
   const role = useSessionRole();
+  const managing = useModuleAccess("idp").canManage;
   if (role === "TALENT") return <MyIdpView />;
-  return <IdpRosterView managing={canManage(role, "idp")} />;
+  return <IdpRosterView managing={managing} />;
 }
 
 function IdpRosterView({ managing }: { managing: boolean }) {

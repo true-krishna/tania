@@ -2,21 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSessionRole } from "@/lib/auth/guard";
+import { useMenuEntryAccess } from "@/lib/auth/access";
 import { PageHeader } from "@/components/PageHeader";
 import { EVALUATIONS, EVALUATION_PERIODS, EVALUATION_TEMPLATES } from "@/lib/constants/routes";
 
 export function EvaluationsShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const role = useSessionRole();
+  const roster = useMenuEntryAccess("evaluations");
+  const periods = useMenuEntryAccess("evaluations/periods");
+  const templates = useMenuEntryAccess("evaluations/templates");
 
   const tabs = [
-    { href: EVALUATIONS, label: "Roster", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-    { href: EVALUATION_PERIODS, label: "Periode", roles: ["ADMIN"] },
-    { href: EVALUATION_TEMPLATES, label: "Template", roles: ["ADMIN"] },
-  ].filter((t) => !role || (t.roles as readonly string[]).includes(role));
+    { href: EVALUATIONS, label: "Roster", visible: roster.visible },
+    { href: EVALUATION_PERIODS, label: "Periode", visible: periods.visible },
+    { href: EVALUATION_TEMPLATES, label: "Template", visible: templates.visible },
+  ].filter((tab) => tab.visible);
 
-  const showTabs = tabs.length > 0 && role !== "TALENT";
+  const showTabs = tabs.length > 0;
 
   return (
     <div className="flex flex-col gap-4">

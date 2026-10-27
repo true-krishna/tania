@@ -7,6 +7,7 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
 import type { AccessRole, MenuAccessLevel, RoleStatus } from "@/generated/graphql/types";
+import { DEFAULT_MENU_ACCESS } from "@/lib/auth/menuAccess";
 import { CustomRolesPanel } from "./CustomRolesPanel";
 import { MenuGrid, type GridDraft } from "./RoleMenuGrid";
 import { SidebarPreview } from "./SidebarPreview";
@@ -22,30 +23,48 @@ import {
   type RoleGrid,
 } from "./menuGrid";
 
+function baselineGrid(role: Role): RoleGrid {
+  return {
+    ...(DEFAULT_MENU_ACCESS[role.templateRole] ?? {}),
+    ...(DEFAULT_MENU_ACCESS[role.name] ?? {}),
+  };
+}
+
+function seedGrid(role: Role, cells: readonly GridCell[]): RoleGrid {
+  return { ...baselineGrid(role), ...gridOf(cells, role.name) };
+}
+
 export function RolesAdminSection() {
   const roles = useRoles(true);
   const config = useRoleMenuConfig();
   const mutations = useRoleMutations();
   const { pushToast } = useToast();
 
-  const [draft, setDraft] = React.useState<GridDraft>({});
+  const [edits, setEdits] = React.useState<GridDraft>({});
+  const [dirty, setDirty] = React.useState<Record<string, boolean>>({});
   const [busyRoleId, setBusyRoleId] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [confirmReset, setConfirmReset] = React.useState<Role | null>(null);
   const [previewRole, setPreviewRole] = React.useState<Role | null>(null);
 
+  const allRoles = React.useMemo(() => roles.data ?? [], [roles.data]);
+
   const saved = React.useMemo<GridDraft>(() => {
     const cells = config.data ?? [];
     const next: GridDraft = {};
-    for (const role of roles.data ?? []) next[role.id] = gridOf(cells, role.name);
+    for (const role of allRoles) next[role.id] = seedGrid(role, cells);
     return next;
-  }, [roles.data, config.data]);
+  }, [allRoles, config.data]);
 
-  const [seeded, setSeeded] = React.useState<GridDraft | null>(null);
-  if (seeded !== saved) {
-    setSeeded(saved);
-    setDraft(saved);
-  }
+  const draft = React.useMemo<GridDraft>(() => {
+    const next: GridDraft = {};
+    for (const role of allRoles) {
+      next[role.id] = dirty[role.id]
+        ? { ...(saved[role.id] ?? {}), ...(edits[role.id] ?? {}) }
+        : (saved[role.id] ?? {});
+    }
+    return next;
+  }, [allRoles, dirty, edits, saved]);
 
   if (roles.status === "loading" || config.status === "loading") return <LoadingState />;
   if (roles.status === "error") return <ErrorState message={roles.error ?? "Gagal memuat role."} />;
@@ -53,13 +72,22 @@ export function RolesAdminSection() {
     return <ErrorState message={config.error ?? "Gagal memuat konfigurasi menu."} />;
   }
 
-  const allRoles = roles.data ?? [];
-
   function changeCell(roleId: string, entryId: string, level: MenuAccessLevel) {
-    setDraft((current) => ({
+    setEdits((current) => ({
       ...current,
       [roleId]: { ...(current[roleId] ?? {}), [entryId]: cellOf(level) },
     }));
+    setDirty((current) => ({ ...current, [roleId]: true }));
+  }
+
+  function clearRoleDraft(roleId: string) {
+    setEdits((current) => {
+      if (!(roleId in current)) return current;
+      const next = { ...current };
+      delete next[roleId];
+      return next;
+    });
+    setDirty((current) => ({ ...current, [roleId]: false }));
   }
 
   async function report(fn: () => Promise<unknown>, ok: string) {
@@ -70,6 +98,7 @@ export function RolesAdminSection() {
       pushToast("success", ok);
     } catch (err) {
       pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan konfigurasi.");
+      throw err;
     } finally {
       setSaving(false);
       setBusyRoleId(null);
@@ -78,19 +107,33 @@ export function RolesAdminSection() {
 
   async function saveRole(role: Role) {
     setBusyRoleId(role.id);
-    await report(
-      () => mutations.saveMenuAccess(role.id, gridInput(draft[role.id] ?? {})),
-      `Konfigurasi menu ${role.label} tersimpan.`,
-    );
+    try {
+      await report(
+        () =>
+          mutations.saveMenuAccess(
+            role.id,
+            gridInput(draft[role.id] ?? {}, baselineGrid(role)),
+          ),
+        `Konfigurasi menu ${role.label} tersimpan.`,
+      );
+      clearRoleDraft(role.id);
+    } catch {
+      return;
+    }
   }
 
   async function resetRole(role: Role) {
     setConfirmReset(null);
     setBusyRoleId(role.id);
-    await report(
-      () => mutations.resetMenuConfig(role.id),
-      `Konfigurasi menu ${role.label} kembali ke default.`,
-    );
+    try {
+      await report(
+        () => mutations.resetMenuConfig(role.id),
+        `Konfigurasi menu ${role.label} kembali ke default.`,
+      );
+      clearRoleDraft(role.id);
+    } catch {
+      return;
+    }
   }
 
   const previewCells: GridCell[] = previewRole
@@ -162,7 +205,11 @@ export function RolesAdminSection() {
         onCreate={(name, label, templateRole: AccessRole) =>
           report(() => mutations.createRole(name, label, templateRole), `Role "${label}" dibuat.`)
         }
-        onDelete={(id) => report(() => mutations.deleteRole(id), "Role dihapus.")}
+        onDelete={async (id) => {
+          await report(() => mutations.deleteRole(id), "Role dihapus.");
+          clearRoleDraft(id);
+          setPreviewRole((current) => (current?.id === id ? null : current));
+        }}
         onRename={(id, label) =>
           report(() => mutations.renameRole(id, label), "Label role diperbarui.")
         }

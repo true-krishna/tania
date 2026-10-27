@@ -11,8 +11,7 @@ import {
   WorkloadSection,
   useProfile,
 } from "@/features/profile";
-import { useSessionRole } from "@/lib/auth/guard";
-import { canAccess } from "@/lib/auth/matrix";
+import { useModuleAccess } from "@/lib/auth/access";
 
 type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp";
 
@@ -25,12 +24,14 @@ const PROFILE_TABS: { id: ProfileTab; label: string; module?: "idp" }[] = [
 ];
 
 export default function ProfilePage() {
-  const role = useSessionRole();
+  const idpAccess = useModuleAccess("idp");
   const { status, data, error, session } = useProfile();
   const [tab, setTab] = React.useState<ProfileTab>("personal");
 
   const employee = data;
-  const tabs = PROFILE_TABS.filter((item) => !item.module || canAccess(role, item.module));
+  const tabs = PROFILE_TABS.filter(
+    (item) => !item.module || (item.module === "idp" && idpAccess.canRead),
+  );
   const selectedTab: ProfileTab = tabs.some((item) => item.id === tab) ? tab : "personal";
 
   return (

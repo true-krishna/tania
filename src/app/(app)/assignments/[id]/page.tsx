@@ -16,8 +16,7 @@ import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBa
 import { useAssignment, useUpdateAssignment } from "@/features/assignments/useAssignment";
 import { EndAssignmentDocument, type AssignmentsQuery } from "@/generated/graphql";
 import { errorMessage, mapAssignmentSubmitError } from "@/lib/errors";
-import { useSessionRole } from "@/lib/auth/guard";
-import { canManage } from "@/lib/auth/matrix";
+import { useModuleAccess } from "@/lib/auth/access";
 import { TALENT_ASSIGNMENT } from "@/lib/constants/routes";
 
 type AssignmentNode = AssignmentsQuery["assignments"]["edges"][number]["node"];
@@ -25,7 +24,7 @@ type AssignmentNode = AssignmentsQuery["assignments"]["edges"][number]["node"];
 export default function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data, error } = useAssignment(id);
-  const manage = canManage(useSessionRole(), "assignments");
+  const manage = useModuleAccess("assignments").canManage;
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;

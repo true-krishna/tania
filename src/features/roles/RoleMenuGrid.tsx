@@ -105,6 +105,9 @@ function roleHeader(
     <div className="flex flex-col items-start gap-1">
       <span className="font-medium">{role.label}</span>
       <span className="text-xs text-tp-muted">{role.name}</span>
+      {role.status !== "ACTIVE" ? (
+        <span className="text-xs text-tp-ink-peach">Nonaktif</span>
+      ) : null}
       <span className="flex gap-1">
         <Button
           disabled={!dirty || busyRoleId === role.id}

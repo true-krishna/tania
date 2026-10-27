@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { AuthGuard } from "@/lib/auth/guard";
+import { MenuAccessGuard } from "@/lib/auth/access";
 
 export default function MasterDataLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGuard module="masterData">
+    <MenuAccessGuard module="masterData">
       <div className="flex flex-col gap-4">{children}</div>
-    </AuthGuard>
+    </MenuAccessGuard>
   );
 }

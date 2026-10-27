@@ -11,8 +11,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { TableFilterBar } from "@/components/TableFilterBar";
-import { canManage } from "@/lib/auth/matrix";
-import { useSessionRole } from "@/lib/auth/guard";
+import { useModuleAccess } from "@/lib/auth/access";
 import { useEmploymentContracts } from "@/features/contracts/useContracts";
 import { CreateContractModal } from "@/features/contracts/CreateContractModal";
 import { RenewContractModal } from "@/features/contracts/RenewContractModal";
@@ -32,7 +31,7 @@ import { CONTRACT_DETAIL, EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 
 export default function ContractsPage() {
   const router = useRouter();
-  const manage = canManage(useSessionRole(), "contracts");
+  const manage = useModuleAccess("contracts").canManage;
   const [createOpen, setCreateOpen] = React.useState(false);
   const [renewContractId, setRenewContractId] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
