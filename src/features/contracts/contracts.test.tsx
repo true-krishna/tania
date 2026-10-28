@@ -172,7 +172,7 @@ function fillValidForm() {
 }
 
 function submitForm() {
-  const form = screen.getByRole("button", { name: /simpan/i }).closest("form");
+  const form = screen.getByRole("dialog").querySelector("form");
   if (!form) throw new Error("form not found");
   fireEvent.submit(form);
 }

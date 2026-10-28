@@ -2,7 +2,7 @@
 
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { useTablePagination } from "@/components/Pagination/useTablePagination";
+import { useTablePagination } from "@/components/Pagination";
 
 const ROWS = Array.from({ length: 57 }, (_, i) => i);
 

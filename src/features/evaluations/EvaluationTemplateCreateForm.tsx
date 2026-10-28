@@ -16,11 +16,17 @@ import type { EvaluationAnswerType } from "@/generated/graphql/types";
 type CriterionRow = { label: string; answerType: EvaluationAnswerType };
 
 interface EvaluationTemplateCreateFormProps {
+  formId: string;
+  onBusyChange: (busy: boolean) => void;
   onClose: () => void;
 }
 
-export function EvaluationTemplateCreateForm({ onClose }: EvaluationTemplateCreateFormProps) {
-  const [createTemplate, { loading }] = useMutation(CreateEvaluationTemplateDocument, {
+export function EvaluationTemplateCreateForm({
+  formId,
+  onBusyChange,
+  onClose,
+}: EvaluationTemplateCreateFormProps) {
+  const [createTemplate] = useMutation(CreateEvaluationTemplateDocument, {
     refetchQueries: [EvaluationTemplatesDocument],
   });
   const { pushToast } = useToast();
@@ -56,6 +62,7 @@ export function EvaluationTemplateCreateForm({ onClose }: EvaluationTemplateCrea
     const nextErrors = validate();
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+    onBusyChange(true);
     try {
       await createTemplate({
         variables: {
@@ -75,11 +82,13 @@ export function EvaluationTemplateCreateForm({ onClose }: EvaluationTemplateCrea
       onClose();
     } catch (err) {
       pushToast("error", err instanceof Error ? err.message : "Gagal membuat template.");
+    } finally {
+      onBusyChange(false);
     }
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
       <InputControl error={errors.name} label="Nama Template">
         <Input onChange={(e) => setName(e.target.value)} placeholder="cth: Framework Performa 2025" value={name} />
       </InputControl>
@@ -128,15 +137,6 @@ export function EvaluationTemplateCreateForm({ onClose }: EvaluationTemplateCrea
       <div>
         <Button onClick={addCriterion} type="button" variant="secondary">
           + Tambah Kriteria
-        </Button>
-      </div>
-
-      <div className="flex gap-2">
-        <Button disabled={loading} type="submit">
-          Simpan
-        </Button>
-        <Button onClick={onClose} type="button" variant="secondary">
-          Batal
         </Button>
       </div>
     </form>

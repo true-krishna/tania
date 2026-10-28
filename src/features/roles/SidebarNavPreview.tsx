@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { visibleNavEntries, type NavSubmenu } from "@/components/Sidebar/nav";
+import { visibleNavEntries, type NavSubmenu } from "@/components/Sidebar";
 import type { MenuAccessConfig } from "@/lib/auth/menuAccess";
 
 export function SidebarNavPreview({

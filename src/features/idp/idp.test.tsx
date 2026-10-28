@@ -365,22 +365,26 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
 
   function renderForm() {
     const onSuccess = vi.fn();
-    const onCancel = vi.fn();
+    const onBusyChange = vi.fn();
     render(
       <MockedProvider mocks={newMocks}>
         <ToastProvider>
-          <CreateIdpForm onCancel={onCancel} onSuccess={onSuccess} />
+          <CreateIdpForm
+            formId="idp-form"
+            onBusyChange={onBusyChange}
+            onSuccess={onSuccess}
+          />
         </ToastProvider>
       </MockedProvider>
     );
-    return { onSuccess, onCancel };
+    return { onSuccess, onBusyChange };
   }
 
   it("shows required-field errors on an empty submit", async () => {
     renderForm();
     expect(await screen.findByRole("combobox", { name: /talent/i })).toBeInTheDocument();
 
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+    fireEvent.submit(document.querySelector("form")!);
 
     expect(screen.getByText(/talent wajib dipilih/i)).toBeInTheDocument();
     expect(screen.getByText(/development objective wajib diisi/i)).toBeInTheDocument();
@@ -418,7 +422,7 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
     });
     fireEvent.change(screen.getByLabelText(/metode/i), { target: { value: "TRAINING" } });
 
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+    fireEvent.submit(document.querySelector("form")!);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
     expect(onSuccess).toHaveBeenCalled();
@@ -450,7 +454,7 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
     render(
       <MockedProvider mocks={failingMocks}>
         <ToastProvider>
-          <CreateIdpForm onCancel={() => {}} />
+          <CreateIdpForm formId="idp-form" onBusyChange={() => {}} />
         </ToastProvider>
       </MockedProvider>
     );
@@ -472,7 +476,7 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
       target: { value: "Selesaikan 3 fitur" },
     });
 
-    fireEvent.submit(screen.getByRole("button", { name: /simpan/i }).closest("form")!);
+    fireEvent.submit(document.querySelector("form")!);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/gagal membuat idp/i);
   });

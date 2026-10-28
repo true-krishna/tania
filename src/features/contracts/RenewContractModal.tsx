@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ApolloError, useMutation, useQuery } from "@apollo/client";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Input } from "@/components/Input";
@@ -107,24 +107,31 @@ function validateAttributes(
 
 interface RenewFormProps {
   contract: SourceContract;
+  formId: string;
   initialValues: FormValues;
-  units: ReturnType<typeof useUnits>;
   jobRoles: ReturnType<typeof useJobRoles>;
+  onBusyChange: (busy: boolean) => void;
+  onStepChange: (step: 1 | 2) => void;
   onSuccess: () => void;
+  step: 1 | 2;
+  units: ReturnType<typeof useUnits>;
 }
 
 function RenewContractForm({
   contract,
+  formId,
   initialValues: init,
   units,
   jobRoles,
+  onBusyChange,
+  onStepChange,
   onSuccess,
+  step,
 }: RenewFormProps) {
-  const [renew, { loading }] = useMutation(RenewEmploymentContractDocument, {
+  const [renew] = useMutation(RenewEmploymentContractDocument, {
     refetchQueries: [{ query: EmploymentContractsDocument }],
   });
   const { pushToast } = useToast();
-  const [step, setStep] = React.useState<1 | 2>(1);
   const [values, setValues] = React.useState<FormValues>(init);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
@@ -145,7 +152,7 @@ function RenewContractForm({
     setErrors(nextErrors);
     setFormError(null);
     if (Object.keys(nextErrors).length > 0) return;
-    setStep(2);
+    onStepChange(2);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -178,6 +185,7 @@ function RenewContractForm({
     if (optional.jobTitle) input.jobTitle = optional.jobTitle;
     if (optional.jobLevel) input.jobLevel = optional.jobLevel;
     if (optional.notes) input.notes = optional.notes;
+    onBusyChange(true);
     try {
       const result = await renew({ variables: { input } });
       const created = result.data?.renewEmploymentContract;
@@ -200,11 +208,17 @@ function RenewContractForm({
       } else {
         setFormError(submitError.message);
       }
+    } finally {
+      onBusyChange(false);
     }
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={step === 1 ? goToAttributes : onSubmit}>
+    <form
+      className="flex flex-col gap-4"
+      id={formId}
+      onSubmit={step === 1 ? goToAttributes : onSubmit}
+    >
       {formError ? <ErrorState message={formError} /> : null}
       <p className="text-xs font-medium text-zinc-500">
         Langkah {step} dari 2 — {step === 1 ? "Periode kontrak baru" : "Atribut & penempatan"}
@@ -254,9 +268,6 @@ function RenewContractForm({
               />
             </InputControl>
           ) : null}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="submit">Lanjut</Button>
-          </div>
         </>
       ) : (
         <>
@@ -357,14 +368,6 @@ function RenewContractForm({
               value={values.notes}
             />
           </InputControl>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button onClick={() => setStep(1)} type="button" variant="secondary">
-              Kembali
-            </Button>
-            <Button disabled={loading} type="submit">
-              {loading ? "Menyimpan…" : "Simpan perpanjangan"}
-            </Button>
-          </div>
         </>
       )}
     </form>
@@ -386,46 +389,106 @@ export function RenewContractModal({
     EmploymentContractDocument,
     { variables: { id: contractId ?? "" }, skip: !open || !contractId },
   );
+  const liveContract = contractData?.employmentContract ?? null;
+  const [lastContract, setLastContract] = React.useState<SourceContract | null>(null);
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [wasOpen, setWasOpen] = React.useState(open);
+  const formId = React.useId();
 
-  if (!open || !contractId) return null;
+  if (open && !wasOpen) {
+    setWasOpen(true);
+    setStep(1);
+    setSubmitting(false);
+  }
+  if (!open && wasOpen) {
+    setWasOpen(false);
+  }
 
-  if (contractLoading || !contractData?.employmentContract)
+  if (liveContract && liveContract.id !== lastContract?.id) {
+    setLastContract(liveContract);
+  }
+
+  const contract = liveContract ?? (open ? null : lastContract);
+
+  if (contractLoading || !contract)
     return (
-      <Modal onClose={onClose} open={open} size="lg" title="Perpanjang Kontrak">
+      <RenewContractModalFrame onClose={onClose} open={open}>
         <LoadingState />
-      </Modal>
+      </RenewContractModalFrame>
     );
-
-  const contract = contractData.employmentContract;
 
   if (units.status === "loading" || jobRoles.status === "loading")
     return (
-      <Modal onClose={onClose} open={open} size="lg" title="Perpanjang Kontrak">
+      <RenewContractModalFrame onClose={onClose} open={open}>
         <LoadingState />
-      </Modal>
+      </RenewContractModalFrame>
     );
   if (units.status === "error")
     return (
-      <Modal onClose={onClose} open={open} size="lg" title="Perpanjang Kontrak">
+      <RenewContractModalFrame onClose={onClose} open={open}>
         <ErrorState message={units.error ?? "Gagal memuat unit."} />
-      </Modal>
+      </RenewContractModalFrame>
     );
   if (jobRoles.status === "error")
     return (
-      <Modal onClose={onClose} open={open} size="lg" title="Perpanjang Kontrak">
+      <RenewContractModalFrame onClose={onClose} open={open}>
         <ErrorState message={jobRoles.error ?? "Gagal memuat job role."} />
-      </Modal>
+      </RenewContractModalFrame>
     );
 
   return (
-    <Modal onClose={onClose} open={open} size="lg" title="Perpanjang Kontrak">
+    <RenewContractModalFrame
+      actions={
+        step === 1 ? (
+          <Button form={formId} type="submit">
+            Lanjut
+          </Button>
+        ) : (
+          <>
+            <Button onClick={() => setStep(1)} type="button" variant="secondary">
+              Kembali
+            </Button>
+            <Button disabled={submitting} form={formId} type="submit">
+              {submitting ? "Menyimpan…" : "Simpan perpanjangan"}
+            </Button>
+          </>
+        )
+      }
+      onClose={onClose}
+      open={open}
+    >
       <RenewContractForm
         contract={contract}
+        formId={formId}
         initialValues={initialValues(contract)}
         jobRoles={jobRoles}
+        onBusyChange={setSubmitting}
+        onStepChange={setStep}
         onSuccess={onClose}
+        step={step}
         units={units}
       />
+    </RenewContractModalFrame>
+  );
+}
+
+function RenewContractModalFrame({
+  open,
+  onClose,
+  actions,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Modal onClose={onClose} open={open} size="lg">
+      <ModalTitle>Perpanjang Kontrak</ModalTitle>
+      <ModalContent>{children}</ModalContent>
+      {actions ? <ModalActions>{actions}</ModalActions> : null}
     </Modal>
   );
 }

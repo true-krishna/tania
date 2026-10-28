@@ -136,8 +136,13 @@ export function useEmployees(filter: EmployeeFilter = {}, first = 25): Employees
   };
 }
 
-export function useAssignableTalents(): QueryState<Array<AssignableTalentNode> | undefined> {
-  const result = useQuery(AssignableTalentsDocument, { variables: { first: 100 } });
+export function useAssignableTalents({
+  skip = false,
+}: { skip?: boolean } = {}): QueryState<Array<AssignableTalentNode> | undefined> {
+  const result = useQuery(AssignableTalentsDocument, {
+    variables: { first: 100 },
+    skip,
+  });
   return toQueryState({
     ...result,
     data: result.data?.assignableTalents?.edges.map((edge) => edge.node),

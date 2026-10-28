@@ -129,7 +129,9 @@ describe("EvaluationPeriodsPage — create modal", () => {
 
     await screen.findByText("Q3 2025");
     fireEvent.click(screen.getByRole("button", { name: /buat periode/i }));
-    fireEvent.click(await screen.findByRole("button", { name: "Simpan" }));
+    const submit = await screen.findByRole("button", { name: "Simpan" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
 
     expect(await screen.findByText("Nama periode wajib diisi.")).toBeInTheDocument();
     expect(screen.getByText("Template evaluasi wajib dipilih.")).toBeInTheDocument();

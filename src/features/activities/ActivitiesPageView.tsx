@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/Button";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { ActivityForm } from "./ActivityForm";
@@ -52,6 +52,7 @@ export function ActivitiesPageView() {
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<PersonalWorkActivity | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
+  const formId = React.useId();
 
   const { status, data, error, reload } = useActivities(toFilter(filter));
   const { create, loading: creating, error: createError } = useCreateActivity();
@@ -163,23 +164,41 @@ export function ActivitiesPageView() {
         </p>
       ) : null}
 
-      <Modal
-        onClose={closeForm}
-        open={formOpen}
-        size="md"
-        title={editing ? "Ubah aktivitas" : "Catat aktivitas"}
-      >
-        <ActivityForm
-          initial={editing}
-          key={editing?.id ?? "new"}
-          onCancel={closeForm}
-          onSubmit={handleSubmit}
-          priorities={ACTIVITY_PRIORITIES}
-          projects={ACTIVITY_PROJECTS}
-          serverError={editing ? updateError : createError}
-          statuses={ACTIVITY_STATUSES}
-          submitting={creating || updating}
-        />
+      <Modal onClose={closeForm} open={formOpen} size="md">
+        <ModalTitle>{editing ? "Ubah aktivitas" : "Catat aktivitas"}</ModalTitle>
+        <ModalContent>
+          <ActivityForm
+            formId={formId}
+            initial={editing}
+            key={editing?.id ?? "new"}
+            onSubmit={handleSubmit}
+            priorities={ACTIVITY_PRIORITIES}
+            projects={ACTIVITY_PROJECTS}
+            serverError={editing ? updateError : createError}
+            statuses={ACTIVITY_STATUSES}
+          />
+        </ModalContent>
+        <ModalActions>
+          <Button
+            disabled={creating || updating}
+            form={formId}
+            type="submit"
+          >
+            {creating || updating
+              ? "Menyimpan…"
+              : editing
+                ? "Simpan perubahan"
+                : "Simpan aktivitas"}
+          </Button>
+          <Button
+            disabled={creating || updating}
+            onClick={closeForm}
+            type="button"
+            variant="secondary"
+          >
+            Batal
+          </Button>
+        </ModalActions>
       </Modal>
 
       <ActivityList

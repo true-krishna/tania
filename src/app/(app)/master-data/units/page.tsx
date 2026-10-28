@@ -28,7 +28,6 @@ export default function UnitsPage() {
   return (
     <MasterDataSection<Unit>
       addLabel="Tambah Unit"
-      bulkEntity="unit"
       caption="Daftar unit"
       codeLabel="Kode Unit"
       codeOf={(unit) => unit.code}

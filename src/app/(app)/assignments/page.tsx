@@ -303,22 +303,21 @@ export default function AssignmentsPage() {
          />
        )}
 
-       {manage && bulkCreateOpen ? (
-         <BulkCreateAssignmentModal
-           onClose={() => setBulkCreateOpen(false)}
-           onCreated={resetPage}
-           open={bulkCreateOpen}
-         />
-       ) : null}
-
-       {manage && createOpen ? (
-         <CreateAssignmentModal
-           onClose={() => setCreateOpen(false)}
-           onCreated={() => {
-             resetPage();
-           }}
-           open={createOpen}
-         />
+       {manage ? (
+         <>
+           <BulkCreateAssignmentModal
+             onClose={() => setBulkCreateOpen(false)}
+             onCreated={resetPage}
+             open={bulkCreateOpen}
+           />
+           <CreateAssignmentModal
+             onClose={() => setCreateOpen(false)}
+             onCreated={() => {
+               resetPage();
+             }}
+             open={createOpen}
+           />
+         </>
        ) : null}
      </section>
    );

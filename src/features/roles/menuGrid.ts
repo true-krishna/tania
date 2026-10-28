@@ -1,5 +1,5 @@
 import type { AccessRole } from "@/generated/graphql";
-import { NAV, type NavEntry } from "@/components/Sidebar/nav";
+import { NAV, type NavEntry } from "@/components/Sidebar";
 import {
   menuEntryIdForHref,
   type MenuAccessCell,

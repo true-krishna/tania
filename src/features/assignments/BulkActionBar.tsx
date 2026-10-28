@@ -5,7 +5,7 @@ import { ApolloError } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { useProjects } from "@/features/master-data/useMasterData";
@@ -92,22 +92,20 @@ export function BulkActionBar({ rows, onClear, onDone }: BulkActionBarProps) {
           Bersihkan
         </Button>
       </div>
-      {editOpen ? (
-        <BulkEditModal
-          eligible={eligible}
-          onClear={onClear}
-          onClose={() => setEditOpen(false)}
-          onDone={onDone}
-        />
-      ) : null}
-      {deleteOpen ? (
-        <BulkDeleteDialog
-          eligible={eligible}
-          onClear={onClear}
-          onClose={() => setDeleteOpen(false)}
-          onDone={onDone}
-        />
-      ) : null}
+      <BulkEditModal
+        eligible={eligible}
+        onClear={onClear}
+        onClose={() => setEditOpen(false)}
+        onDone={onDone}
+        open={editOpen}
+      />
+      <BulkDeleteDialog
+        eligible={eligible}
+        onClear={onClear}
+        onClose={() => setDeleteOpen(false)}
+        onDone={onDone}
+        open={deleteOpen}
+      />
     </>
   );
 }
@@ -117,13 +115,15 @@ function BulkEditModal({
   onClose,
   onClear,
   onDone,
+  open,
 }: {
   eligible: readonly AssignmentRow[];
   onClose: () => void;
   onClear: () => void;
   onDone: () => void;
+  open: boolean;
 }) {
-  const projects = useProjects();
+  const projects = useProjects({ skip: !open });
   const [bulkUpdate, { loading }] = useBulkUpdateAssignments();
   const [projectId, setProjectId] = React.useState("");
   const [periodStart, setPeriodStart] = React.useState("");
@@ -131,8 +131,23 @@ function BulkEditModal({
   const [errors, setErrors] = React.useState<EditFieldErrors>({});
   const [formError, setFormError] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<BulkOutcome | null>(null);
+  const [wasOpen, setWasOpen] = React.useState(open);
   const { pushToast } = useToast();
   const { markAttempted, handleClose } = useBulkDialogClose(onClose, onClear);
+  const formId = React.useId();
+
+  if (open && !wasOpen) {
+    setWasOpen(true);
+    setProjectId("");
+    setPeriodStart("");
+    setPeriodEnd("");
+    setErrors({});
+    setFormError(null);
+    setResult(null);
+  }
+  if (!open && wasOpen) {
+    setWasOpen(false);
+  }
 
   const retryIds = result
     ? result.failed.map((row) => row.assignmentId).filter((id): id is string => !!id)
@@ -191,55 +206,63 @@ function BulkEditModal({
   }
 
   return (
-    <Modal onClose={handleClose} open size="md" title="Ubah Assignment Massal">
-      <form aria-label="Ubah Assignment Massal" className="flex flex-col gap-4" onSubmit={onSubmit}>
-        {formError || errors.changes ? (
-          <p className="text-sm text-red-700" role="alert">
-            {formError ?? errors.changes}
-          </p>
-        ) : null}
-        {result ? (
-          <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
-        ) : null}
-        <p className="text-sm text-tp-muted">
-          Perubahan yang sama diterapkan ke {idsToSend.length} assignment berjalan. Talent tidak
-          berganti; pengakhiran tetap melalui alur akhiri assignment.
-        </p>
-        <InputControl label="Project baru">
-          <Select
-            onChange={(e) => setProjectId(e.target.value)}
-            options={[
-              { value: "", label: "— tidak diubah —" },
-              ...(projects.data ?? [])
-                .filter((p) => p.isActive)
-                .map((p) => ({ value: p.id, label: p.name })),
-            ]}
-            value={projectId}
-          />
-        </InputControl>
-        <InputControl label="Tanggal mulai baru">
-          <Input onChange={(e) => setPeriodStart(e.target.value)} type="date" value={periodStart} />
-        </InputControl>
-        <InputControl
-          error={errors.periodEnd}
-          helper="(tidak mengosongkan tanggal selesai yang sudah terisi)"
-          label="Tanggal selesai baru"
+    <Modal onClose={handleClose} open={open} size="md">
+      <ModalTitle>Ubah Assignment Massal</ModalTitle>
+      <ModalContent>
+        <form
+          aria-label="Ubah Assignment Massal"
+          className="flex flex-col gap-4"
+          id={formId}
+          onSubmit={onSubmit}
         >
-          <Input onChange={(e) => setPeriodEnd(e.target.value)} type="date" value={periodEnd} />
-        </InputControl>
-        <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-          <Button disabled={loading} onClick={handleClose} type="button" variant="secondary">
-            {result ? "Tutup" : "Batal"}
-          </Button>
-          <Button disabled={loading} type="submit">
-            {loading
-              ? "Menyimpan…"
-              : isRetry
-                ? `Ulangi ${idsToSend.length} baris gagal`
-                : `Terapkan ke ${idsToSend.length} assignment`}
-          </Button>
-        </div>
-      </form>
+          {formError || errors.changes ? (
+            <p className="text-sm text-red-700" role="alert">
+              {formError ?? errors.changes}
+            </p>
+          ) : null}
+          {result ? (
+            <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
+          ) : null}
+          <p className="text-sm text-tp-muted">
+            Perubahan yang sama diterapkan ke {idsToSend.length} assignment berjalan. Talent tidak
+            berganti; pengakhiran tetap melalui alur akhiri assignment.
+          </p>
+          <InputControl label="Project baru">
+            <Select
+              onChange={(e) => setProjectId(e.target.value)}
+              options={[
+                { value: "", label: "— tidak diubah —" },
+                ...(projects.data ?? [])
+                  .filter((p) => p.isActive)
+                  .map((p) => ({ value: p.id, label: p.name })),
+              ]}
+              value={projectId}
+            />
+          </InputControl>
+          <InputControl label="Tanggal mulai baru">
+            <Input onChange={(e) => setPeriodStart(e.target.value)} type="date" value={periodStart} />
+          </InputControl>
+          <InputControl
+            error={errors.periodEnd}
+            helper="(tidak mengosongkan tanggal selesai yang sudah terisi)"
+            label="Tanggal selesai baru"
+          >
+            <Input onChange={(e) => setPeriodEnd(e.target.value)} type="date" value={periodEnd} />
+          </InputControl>
+        </form>
+      </ModalContent>
+      <ModalActions>
+        <Button disabled={loading} onClick={handleClose} type="button" variant="secondary">
+          {result ? "Tutup" : "Batal"}
+        </Button>
+        <Button disabled={loading} form={formId} type="submit">
+          {loading
+            ? "Menyimpan…"
+            : isRetry
+              ? `Ulangi ${idsToSend.length} baris gagal`
+              : `Terapkan ke ${idsToSend.length} assignment`}
+        </Button>
+      </ModalActions>
     </Modal>
   );
 }
@@ -249,17 +272,29 @@ function BulkDeleteDialog({
   onClose,
   onClear,
   onDone,
+  open,
 }: {
   eligible: readonly AssignmentRow[];
   onClose: () => void;
   onClear: () => void;
   onDone: () => void;
+  open: boolean;
 }) {
   const [bulkDelete, { loading }] = useBulkDeleteAssignments();
   const [result, setResult] = React.useState<BulkOutcome | null>(null);
   const [formError, setFormError] = React.useState<string | null>(null);
+  const [wasOpen, setWasOpen] = React.useState(open);
   const { pushToast } = useToast();
   const { markAttempted, handleClose } = useBulkDialogClose(onClose, onClear);
+
+  if (open && !wasOpen) {
+    setWasOpen(true);
+    setResult(null);
+    setFormError(null);
+  }
+  if (!open && wasOpen) {
+    setWasOpen(false);
+  }
 
   function labelFor(row: BulkRowResult): string {
     const found = eligible.find((r) => r.id === row.assignmentId);
@@ -290,44 +325,48 @@ function BulkDeleteDialog({
   }
 
   return (
-    <Modal onClose={handleClose} open size="md" title="Hapus Assignment Massal">
-      <div className="flex flex-col gap-4">
-        {formError ? (
-          <p className="text-sm text-red-700" role="alert">
-            {formError}
-          </p>
-        ) : null}
-        {result ? (
-          <>
+    <Modal onClose={handleClose} open={open} size="md">
+      <ModalTitle>Hapus Assignment Massal</ModalTitle>
+      <ModalContent>
+        <div className="flex flex-col gap-4">
+          {formError ? (
+            <p className="text-sm text-red-700" role="alert">
+              {formError}
+            </p>
+          ) : null}
+          {result ? (
             <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
-            <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-              <Button onClick={handleClose} type="button" variant="secondary">
-                Tutup
-              </Button>
-            </div>
-          </>
+          ) : (
+            <>
+              <p className="text-sm text-tp-text">
+                Hapus {eligible.length} assignment berjalan yang dipilih? Tindakan ini tidak dapat
+                dibatalkan.
+              </p>
+              <ul className="flex flex-col gap-1 text-sm text-tp-muted">
+                {eligible.map((row) => (
+                  <li key={row.id}>{rowLabel(row)}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </ModalContent>
+      <ModalActions>
+        {result ? (
+          <Button onClick={handleClose} type="button" variant="secondary">
+            Tutup
+          </Button>
         ) : (
           <>
-            <p className="text-sm text-tp-text">
-              Hapus {eligible.length} assignment berjalan yang dipilih? Tindakan ini tidak dapat
-              dibatalkan.
-            </p>
-            <ul className="flex flex-col gap-1 text-sm text-tp-muted">
-              {eligible.map((row) => (
-                <li key={row.id}>{rowLabel(row)}</li>
-              ))}
-            </ul>
-            <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-              <Button disabled={loading} onClick={handleClose} type="button" variant="secondary">
-                Batal
-              </Button>
-              <Button disabled={loading} onClick={onConfirm} type="button">
-                {loading ? "Menghapus…" : `Hapus ${eligible.length} assignment`}
-              </Button>
-            </div>
+            <Button disabled={loading} onClick={handleClose} type="button" variant="secondary">
+              Batal
+            </Button>
+            <Button disabled={loading} onClick={onConfirm} type="button">
+              {loading ? "Menghapus…" : `Hapus ${eligible.length} assignment`}
+            </Button>
           </>
         )}
-      </div>
+      </ModalActions>
     </Modal>
   );
 }

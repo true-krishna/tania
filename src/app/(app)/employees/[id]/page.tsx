@@ -22,7 +22,7 @@ import {
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { EmployeeWorkloadTab } from "@/features/workload";
 import { EmployeeEntraProvisionCard } from "@/features/entra/EmployeeEntraProvisionCard";
-import { ToastProvider } from "@/components/Toast/Toast";
+import { ToastProvider } from "@/components/Toast";
 import {
   DeactivateEmployeeDocument,
   type EmployeeQuery,
