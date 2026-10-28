@@ -9,6 +9,7 @@ import { ErrorState, LoadingState } from "@/components/DataState";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
 import { useEmployee } from "@/features/employees/useEmployee";
+import { EmployeeFormModal } from "@/features/employees/EmployeeFormModal";
 import { EMPLOYEE_STATUS_LABEL, GENDER_LABEL } from "@/features/employees/labels";
 import {
   BAND_POSITION_LABEL,
@@ -21,20 +22,14 @@ import {
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { EmployeeWorkloadTab } from "@/features/workload";
 import { EmployeeEntraProvisionCard } from "@/features/entra/EmployeeEntraProvisionCard";
+import { ToastProvider } from "@/components/Toast/Toast";
 import {
   DeactivateEmployeeDocument,
-  EmployeeDocument,
-  EmployeesDocument,
   type EmployeeQuery,
 } from "@/generated/graphql";
 import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import {
-  CONTRACT_NEW,
-  CONTRACT_DETAIL,
-  EMPLOYEES,
-  EMPLOYEE_EDIT,
-} from "@/lib/constants/routes";
+import { CONTRACT_NEW, CONTRACT_DETAIL, EMPLOYEES } from "@/lib/constants/routes";
 
 type DetailTab = "overview" | "workload";
 
@@ -47,6 +42,14 @@ type ContractRow = NonNullable<EmployeeQuery["employee"]>["contracts"]["edges"][
 
 export default function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
+  return (
+    <ToastProvider>
+      <EmployeeDetailView employeeId={id} />
+    </ToastProvider>
+  );
+}
+
+function EmployeeDetailView({ employeeId: id }: { employeeId: string }) {
   const role = useSessionRole();
   const manage = useModuleAccess("employees").canManage;
   const showHistory = role === "OPERATION" || role === "ADMIN";
@@ -54,8 +57,9 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   const linkContracts = useModuleAccess("contracts").canRead;
   const { status, data, error } = useEmployee(id);
   const [tab, setTab] = React.useState<DetailTab>("overview");
+  const [editOpen, setEditOpen] = React.useState(false);
   const [deactivate, { loading: deactivating }] = useMutation(DeactivateEmployeeDocument, {
-    refetchQueries: [{ query: EmployeesDocument }, { query: EmployeeDocument, variables: { id } }],
+    refetchQueries: ["Employees", "Employee"],
   });
 
   const employee = data;
@@ -71,9 +75,9 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
       <PageHeader
         actions={
           employee && manage ? (
-            <Link className="no-underline" href={EMPLOYEE_EDIT(id)}>
-              <Button variant="secondary">Ubah data</Button>
-            </Link>
+            <Button onClick={() => setEditOpen(true)} variant="secondary">
+              Ubah data
+            </Button>
           ) : undefined
         }
         subtitle={
@@ -236,6 +240,12 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
           )}
         </>
       )}
+      <EmployeeFormModal
+        employeeId={id}
+        mode="edit"
+        onClose={() => setEditOpen(false)}
+        open={editOpen}
+      />
     </section>
   );
 }

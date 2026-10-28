@@ -13,7 +13,6 @@ import { useEmployee } from "@/features/employees/useEmployee";
 import {
   CreateEmployeeDocument,
   UpdateEmployeeDocument,
-  EmployeesDocument,
   type CreateEmployeeInput,
   type EmployeeStatus,
   type Gender,
@@ -124,7 +123,7 @@ export function EmployeeFormModal({ open, onClose, mode, employeeId }: EmployeeF
 function CreateEmployeeForm({ onClose }: { onClose: () => void }) {
   const { pushToast } = useToast();
   const [createEmployee, { loading }] = useMutation(CreateEmployeeDocument, {
-    refetchQueries: [{ query: EmployeesDocument, variables: { filter: {}, first: 25 } }],
+    refetchQueries: ["Employees"],
   });
 
   const [values, setValues] = React.useState<CreateFormValues>(CREATE_EMPTY);
@@ -330,7 +329,7 @@ function EditEmployeeForm({
 }) {
   const { pushToast } = useToast();
   const [updateEmployee, { loading }] = useMutation(UpdateEmployeeDocument, {
-    refetchQueries: [{ query: EmployeesDocument, variables: { filter: {}, first: 25 } }],
+    refetchQueries: ["Employees"],
   });
 
   const [values, setValues] = React.useState<EditFormValues>({
