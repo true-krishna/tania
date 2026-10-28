@@ -570,17 +570,3 @@ describe("EmployeesPage — edit modal (TAN-315)", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
-
-describe("Old routes redirect to /employees (TAN-315)", () => {
-  it("redirects from /employees/new to /employees", async () => {
-    const NewPage = (await import("./new/page")).default;
-    render(
-      <MockedProvider mocks={[]}>
-        <NewPage />
-      </MockedProvider>
-    );
-    await waitFor(() => {
-      expect(nav.replace).toHaveBeenCalledWith("/employees");
-    });
-  });
-});

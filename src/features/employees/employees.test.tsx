@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import EmployeeDetailPage from "@/app/(app)/employees/[id]/page";
 import {
   AuditLogsDocument,
   EmployeeDocument,
   EmployeeEntraProvisionDocument,
+  UpdateEmployeeDocument,
 } from "@/generated/graphql";
 
 const auth = vi.hoisted(() => ({ role: "OPERATION" as string | null }));
@@ -289,6 +290,73 @@ describe("EmployeeDetailPage per role (T034)", () => {
     expect(screen.queryByText(/riwayat perubahan/i)).toBeNull();
     expect(screen.queryByText(/provisi akun entra/i)).toBeNull();
     expect(screen.queryByRole("link", { name: "PKWT/2025/002" })).toBeNull();
+  });
+});
+
+describe("EmployeeDetailPage — edit modal (TAN-357)", () => {
+  const updatePhoneMock = {
+    request: {
+      query: UpdateEmployeeDocument,
+      variables: {
+        id: "emp-1",
+        input: {
+          fullName: "Andi Pratama",
+          email: "andi@tania.id",
+          birthDate: "1990-01-01",
+          gender: "MALE",
+          phone: "0822222222",
+          address: "Jl. Satu",
+          joinedAt: "2024-01-01",
+          status: "ACTIVE",
+        },
+      },
+    },
+    result: {
+      data: {
+        updateEmployee: {
+          __typename: "Employee",
+          id: "emp-1",
+          fullName: "Andi Pratama",
+          nikMasked: "************1234",
+          email: "andi@tania.id",
+          birthDate: "1990-01-01",
+          gender: "MALE",
+          phone: "0822222222",
+          address: "Jl. Satu",
+          latestEducation: null,
+          institutionName: null,
+          major: null,
+          joinedAt: "2024-01-01",
+          status: "ACTIVE",
+        },
+      },
+    },
+  };
+
+  it("opens the edit modal from the Ubah data button and refreshes the record after save", async () => {
+    await act(async () => {
+      renderDetail([employeeMock, auditLogsMock, entraProvisionMock, updatePhoneMock]);
+    });
+
+    expect(await screen.findByText("************1234")).toBeInTheDocument();
+    expect(screen.getByText("0811111111")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /ubah data/i }));
+    const dialog = await screen.findByRole("dialog", { name: /ubah data/i });
+    expect(within(dialog).getByLabelText(/^telepon/i)).toHaveValue("0811111111");
+
+    fireEvent.change(within(dialog).getByLabelText(/^telepon/i), {
+      target: { value: "0822222222" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Simpan" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /perubahan data andi pratama berhasil disimpan/i
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    // Detail terbaca ulang dari entity cache hasil mutasi — data terbaru.
+    expect(screen.getByText("0822222222")).toBeInTheDocument();
   });
 });
 

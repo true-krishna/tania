@@ -1,6 +1,6 @@
 # Tania Design Constitution
 
-**Version**: 4.6.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-22
+**Version**: 4.6.1 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-28
 **Source of record (two layers, one canon)**:
 1. **Owner-approved TANIA navy+red brand direction** — brand-role mapping and values are defined in Principle I from the approved TAN-99 exploration. It supersedes the prior Legion Violet brand mapping only. Amendment 4.3.0 extends it with the brand owner's **TANIA Brand Color Kit** (Color Guideline v1.2, Logo Guideline v1.1) and the owner's five decisions of 2026-10-13 (informational status, active red accent roles, danger distinctness, official logo assets, kit surfaces). Amendment 4.3.1 closes the deviations reported against that review: the kit's chart series order and the dark-theme active-navigation pair. Amendment 4.5.0 ratifies the tosca/sky/warm-white accent layer from the latest TAN-99 exploration (`tania-login-tosca-v2.html`, 2026-10-21).
 2. **The `tania-design-system` package (TANIA Pulse)** — executable structural adaptation: Pulse components, radius scale, shadow, themes, icon set, app shell, and reference pages. Existing non-brand Pulse rules remain in force unless amended below.
@@ -73,7 +73,7 @@ The workflow remains **fully agentic** (Principle X): the constitution, the Legi
   - **Accessibility**: `role="dialog"`, `aria-modal="true"`, focus trap inside modal while open, first focusable element focused on open, focus returns to trigger on close, `aria-labelledby` points to title.
   - **Motion**: 200ms ease-in-out fade-in for scrim, scale-in for card; honor `prefers-reduced-motion`.
   - **Pattern for list pages**: "Tambah" button in page header opens create modal; row action menu "Ubah" opens edit modal with pre-filled data. No route change for create/edit.
-  - **Exception**: detail pages with inline edits (e.g. contract detail, assignment detail) keep their existing inline pattern — only the list-page create/edit flows move to modals.
+  - **Exception**: detail pages with inline edits (e.g. contract detail, assignment detail) keep their existing inline pattern — only the list-page create/edit flows move to modals. The employee detail page has no inline edit: its record edit ("Ubah data") opens the same employee modal as the list page (TAN-357).
 
 - **Button** (`.tp-btn`): Nunito Sans 600 14px, min-height 40px, padding 0 18px, pill, 1.5px ink (`--tp-text`) border, transparent bg; hover = `--tp-bg`. **Primary** (`.tp-btn--primary`): `--tp-brand-navy` fill, white text; hover/press = `--tp-brand-navy-deep`. Validate contrast (VI). Icon accents inside yield to white only if contrast passes. Inline-flex, 8px icon gap.
 - **Input** (`.tp-input`): min-height 44px, padding 0 16px, 1px `--tp-line`, pill, surface bg, 400 14px.
@@ -160,6 +160,7 @@ Navy+red brand roles and the tosca/sky/warm-white accent layer are owner-approve
 
 | Version | Date | Change |
 |---|---|---|
+| 4.6.1 | 2026-10-28 | Owner decision (TAN-357): the employee detail record edit ("Ubah data") opens the same modal as the employee list instead of navigating to a separate edit page; the `/employees/[id]/edit` and `/employees/new` redirect stubs are removed. §V exception now scopes detail-page exceptions to inline edits (contract, assignment) and places the employee detail record edit inside the modal pattern. |
 | 4.6.0 | 2026-10-22 | Promoted modal/dialog from Known Gaps to §V (Principle V). Defined the standard pattern for CRUD forms on table-based list pages: all create and edit forms open in a centered modal dialog instead of navigating to a separate page. Specified structure (card on scrim), three size tiers (420/560/720px), header/content/footer layout, accessibility requirements (role=dialog, focus trap, aria-labelledby), dismiss behaviors (scrim click, Escape, close button), motion timing, and the list-page trigger pattern (Tambah in header, Ubah in row actions). Detail-page inline edits are explicitly excluded from this pattern. |
 | 4.5.0 | 2026-10-21 | Ratified the latest TAN-99 mockup (`tania-login-tosca-v2.html`, 2026-10-20) as the accent layer: tosca `#00A99D` / soft `#D9F5F0` / ink `#066B66` (5.5:1) as decorative/content accent, sky `#DFF2FF`/`#A9DCFF`/`#F5F9FD` and warm-white `#FDFCFB` as canvas/panel surfaces (I); hero/illustration panels may use the light warm-white + red-tint wash + flat wave recipe and the dark card becomes max-one (II, Additional Constraints); tosca added to the accent share and excluded from status/interaction roles (IX); legacy alias cleanup during propagation made explicit (I). Non-brand rules and the navy+red mapping are unchanged — primary buttons stay navy, the focus ring stays the ratified 2px `--tp-brand-red` + 2px offset. Package propagation of the new accent tokens (tokens.css + Tailwind mirror) and dark-theme pairs remain follow-up work. (Renumbered from the colliding 4.3.0 of the TAN-63 delivery, following the 2026-10-14 governance-repair precedent.) |
 | 4.4.0 | 2026-10-13 | Owner decision (TAN-170): §VIII content widths — the 1160px centered content container is retired; main is fluid with 24px side gutters and fills the viewport minus the 268px sidebar so content adapts to large viewports. Topbar horizontal padding 28px → 24px to stay aligned with the content gutter. Pages keep self-constrained widths (standard 860–900px, narrow/forms 560px). (Renumbered from a colliding 4.3.0 to 4.4.0 during the 2026-10-14 governance repair, owner-approved.) |
@@ -173,4 +174,4 @@ Navy+red brand roles and the tosca/sky/warm-white accent layer are owner-approve
 | 2.0.0 | 2026-09-30 | Owner decisions: visual values over tokens; 24px gutter + general-reference grid/breakpoints; light mode only; general references for non-Legion gaps. |
 | 1.0.0 | 2026-09-25 | Initial ratification from `DESIGN-legion.md`. |
 
-**Version**: 4.6.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-22
+**Version**: 4.6.1 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-28
