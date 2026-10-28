@@ -19,7 +19,6 @@ export const PROFILE = "/profile";
 
 // EMPLOYEES
 export const EMPLOYEES = "/employees";
-export const EMPLOYEE_NEW = "/employees/new";
 export const EMPLOYEE_DETAIL = (id: string) => `/employees/${id}`;
 
 // CONTRACTS
