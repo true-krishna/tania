@@ -2218,7 +2218,7 @@ export type TalentReportPeriodInput = {
   startMonth: Scalars['String']['input'];
 };
 
-/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest s.d. Desember tahun berjalan. */
+/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest (tidak lebih awal dari 2022) s.d. Desember tahun berjalan. */
 export type TalentReportRange = {
   __typename?: 'TalentReportRange';
   endMonth: Scalars['String']['output'];
