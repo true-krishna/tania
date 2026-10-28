@@ -14,8 +14,9 @@ import { EntraSsoStartDocument, LoginDocument } from "@/generated/graphql";
 import { authConfig } from "@/lib/auth/config";
 import { beginEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/entra-pkce";
 import { setSession } from "@/lib/auth/token-store";
+import { useSessionRole } from "@/lib/auth/guard";
+import { landingRoute } from "@/lib/auth/landing";
 import { resetApolloStore } from "@/lib/apollo";
-import { DASHBOARD } from "@/lib/constants/routes";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Brand } from "@/components/Brand";
@@ -23,6 +24,7 @@ import { BrandPanel } from "./BrandPanel";
 
 export default function LoginForm() {
   const router = useRouter();
+  const sessionRole = useSessionRole();
   const searchParams = useSearchParams();
   const returnReason = searchParams.get("sso");
   const entraCode =
@@ -56,8 +58,8 @@ export default function LoginForm() {
   }, []);
 
   React.useEffect(() => {
-    if (authConfig.localOnly) router.replace(DASHBOARD);
-  }, [router]);
+    if (authConfig.localOnly) router.replace(landingRoute(sessionRole));
+  }, [router, sessionRole]);
 
   const { data, error: ssoError } = useQuery(EntraSsoStartDocument, {
     skip: authConfig.localOnly || !attempt || !codeChallenge,
@@ -113,7 +115,7 @@ export default function LoginForm() {
         { remember },
       );
       await resetApolloStore();
-      router.replace(DASHBOARD);
+      router.replace(landingRoute(user.accessRole));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
       setError(message);

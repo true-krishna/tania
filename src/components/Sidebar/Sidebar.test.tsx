@@ -6,7 +6,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Sidebar } from "@/components/Sidebar";
 
 function renderSidebar(props: Partial<React.ComponentProps<typeof Sidebar>> = {}) {
-  return render(<Sidebar pathname="/dashboard" role="ADMIN" {...props} />);
+  return render(<Sidebar pathname="/dashboard" role="OPERATION" {...props} />);
 }
 
 function desktopNav() {
@@ -20,7 +20,8 @@ function compactNav() {
 describe("Sidebar", () => {
   it("hides sections the current role cannot access", () => {
     renderSidebar({ role: "TALENT" });
-    expect(desktopNav().getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    // TAN-343: Talent tanpa sel Dashboard/Assignment.
+    expect(desktopNav().queryByRole("link", { name: "Dashboard" })).toBeNull();
     // Master data is closed to Talent (matrix: —, 2026-10-16 clarify 6).
     expect(screen.queryByText("Master Data")).toBeNull();
     expect(screen.queryByText("Accounts")).toBeNull();
@@ -63,7 +64,8 @@ describe("Sidebar", () => {
     const talent = renderSidebar({ role: "TALENT" });
     fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
     expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
-    expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
+    // TAN-343: Talent tanpa Assignments (self-service ditunda) dan Kontrak.
+    expect(desktopNav().queryByRole("link", { name: "Assignments" })).toBeNull();
     expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
     talent.unmount();
 
@@ -74,10 +76,9 @@ describe("Sidebar", () => {
     expect(desktopNav().getByRole("link", { name: "Kontrak" })).toBeInTheDocument();
     chapter.unmount();
 
+    // TAN-343: Admin tidak memegang sel Employee — tanpa grup sama sekali.
     const admin = renderSidebar({ role: "ADMIN" });
-    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
-    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
-    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    expect(desktopNav().queryByRole("button", { name: "Employee" })).toBeNull();
     admin.unmount();
 
     renderSidebar({ role: "OPERATION" });
@@ -87,7 +88,8 @@ describe("Sidebar", () => {
   });
 
   it("merges Employees, Kontrak, and Assignments under one Employee section (TAN-173)", () => {
-    renderSidebar({ role: "ADMIN", pathname: "/employees" });
+    // Operation memegang ketiganya (TAN-343: Admin tidak lagi punya sel ini).
+    renderSidebar({ role: "OPERATION", pathname: "/employees" });
     const group = desktopNav().getByRole("button", { name: "Employee" });
     expect(group).toHaveAttribute("aria-expanded", "true");
     expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("href", "/employees");
@@ -137,7 +139,8 @@ describe("Sidebar", () => {
   it("shows only the role-scoped child of a section", () => {
     renderSidebar({ role: "TALENT", pathname: "/employees/emp-1" });
     expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("aria-current", "page");
-    expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
+    // TAN-343: Assignments & Kontrak bukan milik Talent.
+    expect(desktopNav().queryByRole("link", { name: "Assignments" })).toBeNull();
     expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
   });
 

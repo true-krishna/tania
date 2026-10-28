@@ -8,7 +8,8 @@ import { LoginWithEntraDocument } from "@/generated/graphql";
 import { takeEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/entra-pkce";
 import { resetApolloStore } from "@/lib/apollo";
 import { setSession } from "@/lib/auth/token-store";
-import { DASHBOARD, LOGIN } from "@/lib/constants/routes";
+import { landingRoute } from "@/lib/auth/landing";
+import { LOGIN } from "@/lib/constants/routes";
 import Link from "next/link";
 
 export default function CallbackView() {
@@ -51,7 +52,7 @@ export default function CallbackView() {
         email: user.email,
       });
       await resetApolloStore();
-      router.replace(DASHBOARD);
+      router.replace(landingRoute(user.accessRole));
     } catch (err) {
       const message =
         err instanceof Error && err.message

@@ -104,19 +104,22 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
   const all: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
   const execs: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER"];
 
-  set("dashboard", "READ", all);
+  // TAN-343: dashboard hanya Operation & Chapter (sel default).
+  set("dashboard", "READ", ["OPERATION", "CHAPTER"]);
   set("activities", "READ", all);
   // Talent gets the single Workload link; the other roles get the group pages.
   set("workload", "READ", ["TALENT"]);
   set("workload/executive", "READ", execs);
   set("workload/talent", "READ", execs);
-  set("employees", "MANAGE", ["ADMIN", "OPERATION"]);
+  // TAN-343: Admin memegang tanpa sel pada employees/contracts/assignments/
+  // entra; Talent tanpa Assignment (fitur self-service ditunda).
+  set("employees", "MANAGE", ["OPERATION"]);
   set("employees", "READ", ["CHAPTER", "TALENT"]);
-  set("contracts", "MANAGE", ["ADMIN", "OPERATION"]);
+  set("contracts", "MANAGE", ["OPERATION"]);
   set("contracts", "READ", ["CHAPTER"]);
-  set("assignments", "MANAGE", ["ADMIN", "CHAPTER"]);
-  set("assignments", "READ", ["OPERATION", "TALENT"]);
-  set("entra", "MANAGE", ["ADMIN", "OPERATION"]);
+  set("assignments", "MANAGE", ["CHAPTER"]);
+  set("assignments", "READ", ["OPERATION"]);
+  set("entra", "MANAGE", ["OPERATION"]);
   // IDP: Chapter manages its scope, Talent its own record, Operation reads.
   set("idp", "MANAGE", ["ADMIN", "CHAPTER", "TALENT"]);
   set("idp", "READ", ["OPERATION"]);

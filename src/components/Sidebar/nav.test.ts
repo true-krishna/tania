@@ -245,19 +245,21 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
     expect(accessLevel(hidden, "OPERATION", "idp")).toBe("READ");
   });
 
-  it("konfigurasi default identik baseline 002 per entry", () => {
+  it("konfigurasi default identik matriks default per entry (TAN-343)", () => {
     // Every entry of the 21-leaf registry carries the same level the server's
     // fallback matrix gives, so an empty `role_menu_config` changes nothing.
+    // Sejak TAN-343: dashboard hanya Operation/Chapter, Employee tanpa Admin,
+    // Assignments tanpa Admin & Talent, Entra hanya Operation.
     const expected: Record<string, Record<string, MenuAccessLevel>> = {
-      dashboard: { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ", TALENT: "READ" },
+      dashboard: { OPERATION: "READ", CHAPTER: "READ" },
       activities: { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ", TALENT: "READ" },
       workload: { TALENT: "READ" },
       "workload/executive": { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ" },
       "workload/talent": { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ" },
-      employees: { ADMIN: "MANAGE", OPERATION: "MANAGE", CHAPTER: "READ", TALENT: "READ" },
-      contracts: { ADMIN: "MANAGE", OPERATION: "MANAGE", CHAPTER: "READ" },
-      assignments: { ADMIN: "MANAGE", CHAPTER: "MANAGE", OPERATION: "READ", TALENT: "READ" },
-      entra: { ADMIN: "MANAGE", OPERATION: "MANAGE" },
+      employees: { OPERATION: "MANAGE", CHAPTER: "READ", TALENT: "READ" },
+      contracts: { OPERATION: "MANAGE", CHAPTER: "READ" },
+      assignments: { CHAPTER: "MANAGE", OPERATION: "READ" },
+      entra: { OPERATION: "MANAGE" },
       idp: { ADMIN: "MANAGE", CHAPTER: "MANAGE", TALENT: "MANAGE", OPERATION: "READ" },
       cv: { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ", TALENT: "MANAGE" },
       evaluations: { ADMIN: "MANAGE", CHAPTER: "MANAGE", OPERATION: "READ" },

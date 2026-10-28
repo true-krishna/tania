@@ -128,14 +128,15 @@ describe("verifikasi state (tanpa memanggil backend)", () => {
 });
 
 describe("pertukaran kode berhasil", () => {
-  it("forms the session and goes to the dashboard", async () => {
+  it("forms the session and goes to the role landing (TAN-343)", async () => {
     saveEntraAuthAttempt(ATTEMPT);
     params = new URLSearchParams("code=code-1&state=state-xyz");
     renderCallback([exchangeMock()]);
 
     await waitFor(() => {
       expect(tokenStore.getSession()?.accessToken).toBe("token-abc");
-      expect(routerReplace).toHaveBeenCalledWith("/dashboard");
+      // TAN-343: Admin mendarat di Accounts, bukan dashboard.
+      expect(routerReplace).toHaveBeenCalledWith("/accounts");
     });
   });
 });

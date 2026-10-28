@@ -96,9 +96,13 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * global), Evaluasi Saya untuk Talent. `nav.test.ts` menjaga invariannya: tidak
  * ada tautan mati, dan setiap peran yang boleh membuka modul melihat minimal
  * satu entri modul itu.
+ *
+ * 2026-10-27 (TAN-343): sel default mengikuti definisi peran baru — Dashboard
+ * hanya Operation & Chapter, Employee tanpa Admin, Assignments hanya
+ * Chapter/Operation (Talent ditunda), Provisi Entra hanya Operation.
  */
 export const NAV: readonly NavEntry[] = [
-  { kind: "link", href: DASHBOARD, label: "Dashboard", icon: IconLayoutGrid, roles: ALL },
+  { kind: "link", href: DASHBOARD, label: "Dashboard", icon: IconLayoutGrid, roles: ["CHAPTER", "OPERATION"] },
   { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
   /**
    * Umpan balik pemilik produk (TAN-227): level user memakai satu menu
@@ -122,14 +126,14 @@ export const NAV: readonly NavEntry[] = [
     id: "employee",
     label: "Employee",
     icon: IconUsers,
-    roles: ALL,
+    roles: ["TALENT", "CHAPTER", "OPERATION"],
     children: [
-      { href: EMPLOYEES, label: "Data Karyawan", roles: ALL },
-      { href: CONTRACTS, label: "Kontrak", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: TALENT_ASSIGNMENT, label: "Assignments", roles: ALL },
+      { href: EMPLOYEES, label: "Data Karyawan", roles: ["TALENT", "CHAPTER", "OPERATION"] },
+      { href: CONTRACTS, label: "Kontrak", roles: ["CHAPTER", "OPERATION"] },
+      { href: TALENT_ASSIGNMENT, label: "Assignments", roles: ["CHAPTER", "OPERATION"] },
     ],
   },
-  { kind: "link", href: ENTRA, label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION", "ADMIN"] },
+  { kind: "link", href: ENTRA, label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION"] },
   { kind: "link", href: IDP, label: "IDP", icon: IconTarget, roles: ALL },
   { kind: "link", href: CV, label: "CV", icon: IconFileCv, roles: ALL },
   {

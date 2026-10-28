@@ -41,7 +41,7 @@ beforeEach(() => {
 });
 
 describe("LoginForm", () => {
-  it("saves the session and redirects to the dashboard after a successful login", async () => {
+  it("saves the session and redirects to the role landing after a successful login (TAN-343)", async () => {
     render(
       <MockedProvider
         mocks={[
@@ -74,7 +74,8 @@ describe("LoginForm", () => {
       const session = tokenStore.getSession();
       expect(session?.accessToken).toBe("token-abc");
       expect(session?.accessRole).toBe("ADMIN");
-      expect(replace).toHaveBeenCalledWith("/dashboard");
+      // TAN-343: Admin tidak memegang sel Dashboard — mendarat di Accounts.
+      expect(replace).toHaveBeenCalledWith("/accounts");
     });
   });
 

@@ -246,16 +246,19 @@ describe("EmployeeDetailPage per role (T034)", () => {
     expect(screen.getByRole("button", { name: /ya, nonaktifkan/i })).toBeInTheDocument();
   });
 
-  it("lets Admin manage the record (TAN-212 clarify 4)", async () => {
+  it("is read-only for Admin, keeping only the audit history (TAN-343)", async () => {
+    // Admin fokus RBAC + Master Data + Audit: record terlihat, riwayat
+    // perubahan tetap ada, semua permukaan kelola hilang.
     auth.role = "ADMIN";
     await act(async () => {
       renderDetail([employeeMock, auditLogsMock, entraProvisionMock]);
     });
 
     expect(await screen.findByText("************1234")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /ubah data/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /tambah kontrak/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /ya, nonaktifkan/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /ubah data/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /tambah kontrak/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /ya, nonaktifkan/i })).toBeNull();
+    expect(screen.getByText(/riwayat perubahan/i)).toBeInTheDocument();
   });
 
   it("is read-only for CHAPTER, which may still follow the contract link", async () => {
