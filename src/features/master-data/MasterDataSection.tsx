@@ -13,6 +13,8 @@ import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { useModuleAccess } from "@/lib/auth/access";
+import { MasterDataBulkBar, type MasterDataBulkTarget } from "./MasterDataBulkBar";
+import type { MasterDataImportEntity } from "./masterDataImportTemplate";
 
 export type MasterDataItem = { id: string; name: string; isActive: boolean };
 
@@ -33,6 +35,7 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
 
   extraColumn?: { label: string; render: (item: T) => React.ReactNode };
   searchable?: boolean;
+  bulkEntity?: MasterDataImportEntity;
   onCreate: (values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
   onUpdate: (id: string, values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
@@ -55,6 +58,7 @@ export function MasterDataSection<T extends MasterDataItem>({
   codeOf,
   extraColumn,
   searchable = false,
+  bulkEntity,
   onCreate,
   onUpdate,
   onToggleActive,
@@ -72,6 +76,32 @@ export function MasterDataSection<T extends MasterDataItem>({
   const [selectError, setSelectError] = React.useState<string | undefined>();
   const [busy, setBusy] = React.useState(false);
   const [query, setQuery] = React.useState("");
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+
+  const bulkTarget: MasterDataBulkTarget | undefined = select
+    ? { label: select.label, options: select.options, required: selectRequired }
+    : undefined;
+  const selectionEnabled = manage && bulkEntity !== undefined;
+  const selectedIdSet = new Set(selectedIds);
+  const selectedRows = React.useMemo(
+    () => (items ?? []).filter((item) => selectedIds.includes(item.id)),
+    [items, selectedIds],
+  );
+
+  function toggleRow(id: string, checked: boolean) {
+    setSelectedIds((prev) =>
+      checked && !prev.includes(id) ? [...prev, id] : prev.filter((value) => value !== id),
+    );
+  }
+
+  function toggleAllRows(checked: boolean) {
+    const pageIds = pageRows.map((item) => item.id);
+    setSelectedIds((prev) =>
+      checked
+        ? Array.from(new Set([...prev, ...pageIds]))
+        : prev.filter((id) => !pageIds.includes(id)),
+    );
+  }
 
   const needle = query.trim().toLowerCase();
   const visibleItems = React.useMemo(
@@ -148,6 +178,31 @@ export function MasterDataSection<T extends MasterDataItem>({
   const editing = creating || editingId !== null;
 
   const columns: TableColumn<T>[] = [
+    ...(selectionEnabled
+      ? [
+          {
+            key: "select",
+            title: (
+              <input
+                aria-label="Pilih semua baris di halaman ini"
+                checked={pageRows.length > 0 && pageRows.every((item) => selectedIdSet.has(item.id))}
+                className="h-4 w-4"
+                onChange={(e) => toggleAllRows(e.target.checked)}
+                type="checkbox"
+              />
+            ),
+            render: (_value: unknown, item: T) => (
+              <input
+                aria-label={`Pilih ${item.name}`}
+                checked={selectedIdSet.has(item.id)}
+                className="h-4 w-4"
+                onChange={(e) => toggleRow(item.id, e.target.checked)}
+                type="checkbox"
+              />
+            ),
+          } satisfies TableColumn<T>,
+        ]
+      : []),
     {
       key: "name",
       title: nameLabel,
@@ -280,6 +335,15 @@ export function MasterDataSection<T extends MasterDataItem>({
             open: importing,
           })
         : null}
+
+      {manage && bulkEntity && selectedRows.length > 0 ? (
+        <MasterDataBulkBar
+          entity={bulkEntity}
+          onClear={() => setSelectedIds([])}
+          rows={selectedRows.map((item) => ({ id: item.id, label: item.name }))}
+          target={bulkTarget}
+        />
+      ) : null}
 
       {!items || items.length === 0 ? (
         <EmptyState message={emptyMessage} />
