@@ -46,9 +46,18 @@ function cellsOf(role: string): GridCell[] {
 }
 
 describe("MENU_ROWS mengikuti katalog menu", () => {
-  it("memuat tepat entri yang dirender sidebar", () => {
-    expect(MENU_ROWS.map((row) => row.id)).toEqual(NAV_ENTRY_IDS);
+  it("memuat entri sidebar plus entri tanpa rute", () => {
+    // "assistant" (TAN-344) adalah entri tanpa rute: punya baris grid, tidak
+    // punya item nav. Urutannya tetap entri sidebar lebih dulu.
+    expect(MENU_ROWS.map((row) => row.id)).toEqual([...NAV_ENTRY_IDS, "assistant"]);
     expect(new Set(MENU_ROWS.map((row) => row.id)).size).toBe(MENU_ROWS.length);
+  });
+
+  it("entri tanpa rute tampil sebagai baris grid tanpa induk", () => {
+    expect(MENU_ROWS.find((row) => row.id === "assistant")).toEqual({
+      id: "assistant",
+      label: "Asisten data",
+    });
   });
 
   it("setiap entri punya default di matriks 002 — tidak ada menu tanpa akses awal", () => {

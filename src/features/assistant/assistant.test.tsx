@@ -13,6 +13,7 @@ import {
 } from "@/generated/graphql";
 import { AssistantBubble } from "./AssistantBubble";
 import { AnswerText, unansweredUserMessages } from "./AssistantPanel";
+import { MenuAccessProvider } from "@/lib/auth/access";
 
 // Peran datang dari guard sesi (dipakai bubble & panel).
 const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
@@ -148,6 +149,41 @@ describe("T028 — panel & bubble asisten", () => {
       expect(screen.queryByRole("dialog")).toBeNull();
       unmount();
     }
+  });
+
+  it("mengikuti sel myMenuConfig (sumber sel hidup), bukan daftar peran statis", () => {
+    // ADMIN dibuka oleh konfigurasi: bubble tampil meski default-nya NONE.
+    auth.role = "ADMIN";
+    const opened = render(
+      <MockedProvider mocks={[]}>
+        <ToastProvider>
+          <MenuAccessProvider
+            config={{ ADMIN: { assistant: { visible: true, accessLevel: "READ" } } }}
+            roleName="ADMIN"
+          >
+            <AssistantBubble />
+          </MenuAccessProvider>
+        </ToastProvider>
+      </MockedProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Buka asisten data" })).toBeInTheDocument();
+    opened.unmount();
+
+    // CHAPTER ditutup oleh konfigurasi: bubble hilang meski default-nya READ.
+    auth.role = "CHAPTER";
+    render(
+      <MockedProvider mocks={[]}>
+        <ToastProvider>
+          <MenuAccessProvider
+            config={{ CHAPTER: { assistant: { visible: false, accessLevel: "NONE" } } }}
+            roleName="CHAPTER"
+          >
+            <AssistantBubble />
+          </MenuAccessProvider>
+        </ToastProvider>
+      </MockedProvider>,
+    );
+    expect(screen.queryByRole("button", { name: "Buka asisten data" })).toBeNull();
   });
 
   it("membuka panel dari bubble, memindahkan fokus ke input, dan menutup dengan Escape", async () => {

@@ -39,8 +39,15 @@ function rowsOf(entry: NavEntry): MenuGridRow[] {
   }));
 }
 
-/** Every configurable menu entry, in sidebar order. */
-export const MENU_ROWS: readonly MenuGridRow[] = NAV.flatMap(rowsOf);
+/**
+ * Configurable entries without a sidebar route (TAN-344): the assistant is a
+ * global bubble, so its grid row exists but it never becomes a nav item and the
+ * sidebar preview simply ignores it.
+ */
+const ROUTELESS_ROWS: readonly MenuGridRow[] = [{ id: "assistant", label: "Asisten data" }];
+
+/** Every configurable menu entry, in sidebar order, plus the route-less ones. */
+export const MENU_ROWS: readonly MenuGridRow[] = [...NAV.flatMap(rowsOf), ...ROUTELESS_ROWS];
 
 export const LEVEL_LABEL: Record<MenuAccessLevel, string> = {
   NONE: "Tidak tampil",

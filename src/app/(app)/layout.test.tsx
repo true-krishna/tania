@@ -6,8 +6,8 @@ import * as tokenStore from "@/lib/auth/token-store";
 import { notifySessionExpired } from "@/lib/auth/session-expiry";
 import AppLayout from "./layout";
 
-// Guard peran asisten diuji di sisi shell (T027); panel/bubble sendiri diuji di
-// src/features/assistant/assistant.test.tsx.
+// Guard peran asisten diuji di sisi shell (T027/TAN-344); panel/bubble sendiri
+// diuji di src/features/assistant/assistant.test.tsx.
 vi.mock("@/features/assistant/AssistantBubble", () => ({
   AssistantBubble: () => <button type="button">Asisten data</button>,
 }));
@@ -18,16 +18,21 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
 }));
 
+/** State kueri yang dapat diatur per test — "belum dimuat" secara default. */
+const queryState = vi.hoisted(() => ({
+  current: { data: undefined as unknown, loading: true, error: undefined as unknown },
+}));
+
 vi.mock("@apollo/client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@apollo/client")>();
-  // The shell's menu configuration query is stubbed to "not loaded yet": the
-  // sidebar then keeps its static role lists, which is what these tests cover.
-  // Sidebar behaviour under an active configuration is covered by
-  // src/components/Sidebar/nav.test.ts.
+  // Shell's menu configuration query defaults to "not loaded yet": the
+  // bubble then falls back to the default matrix, which is what the FR-01
+  // tests cover. Behaviour under an active configuration is covered by the
+  // myMenuConfig tests below.
   return {
     ...actual,
     useMutation: () => [vi.fn()],
-    useQuery: () => ({ data: undefined, loading: true, error: undefined }),
+    useQuery: () => queryState.current,
   };
 });
 
@@ -46,6 +51,7 @@ beforeEach(() => {
   delete process.env.NEXT_PUBLIC_DEFAULT_ACCESS_ROLE;
   replace.mockClear();
   tokenStore.clearSession();
+  queryState.current = { data: undefined, loading: true, error: undefined };
 });
 
 afterEach(() => {
@@ -87,5 +93,49 @@ describe("AppLayout asisten data (FR-01)", () => {
     render(<AppLayout><main>konten</main></AppLayout>);
 
     expect(screen.queryByRole("button", { name: "Asisten data" })).toBeNull();
+  });
+
+  it("mengikuti sel myMenuConfig: bubble hilang untuk CHAPTER saat selnya ditutup", () => {
+    tokenStore.setSession({ ...SESSION, accessRole: "CHAPTER" });
+    queryState.current = {
+      data: {
+        myMenuConfig: [
+          {
+            roleId: "role-chapter",
+            roleName: "CHAPTER",
+            menuEntryId: "assistant",
+            visible: false,
+            accessLevel: "NONE",
+          },
+        ],
+      },
+      loading: false,
+      error: undefined,
+    };
+    render(<AppLayout><main>konten</main></AppLayout>);
+
+    expect(screen.queryByRole("button", { name: "Asisten data" })).toBeNull();
+  });
+
+  it("mengikuti sel myMenuConfig: bubble muncul untuk ADMIN saat selnya dibuka", () => {
+    tokenStore.setSession(SESSION);
+    queryState.current = {
+      data: {
+        myMenuConfig: [
+          {
+            roleId: "role-admin",
+            roleName: "ADMIN",
+            menuEntryId: "assistant",
+            visible: true,
+            accessLevel: "READ",
+          },
+        ],
+      },
+      loading: false,
+      error: undefined,
+    };
+    render(<AppLayout><main>konten</main></AppLayout>);
+
+    expect(screen.getByRole("button", { name: "Asisten data" })).toBeInTheDocument();
   });
 });
