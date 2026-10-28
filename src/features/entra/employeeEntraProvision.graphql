@@ -5,6 +5,9 @@ query EmployeeEntraProvision($id: ID!) {
       status
       action
       upn
+      notifyStatus
+      notifyError
+      needsReprovision
       lastError
       updatedAt
     }

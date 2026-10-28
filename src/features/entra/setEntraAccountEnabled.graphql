@@ -1,0 +1,16 @@
+mutation SetEntraAccountEnabled($employeeId: ID!, $enabled: Boolean!) {
+  setEntraAccountEnabled(employeeId: $employeeId, enabled: $enabled) {
+    id
+    fullName
+    entraProvision {
+      status
+      action
+      upn
+      notifyStatus
+      notifyError
+      needsReprovision
+      lastError
+      updatedAt
+    }
+  }
+}

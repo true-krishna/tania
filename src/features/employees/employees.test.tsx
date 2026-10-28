@@ -184,6 +184,9 @@ const createdProvisionMock = {
           status: "CREATED",
           action: "CREATE",
           upn: "rina.kusuma@digitaltelkom.id",
+          notifyStatus: "SENT",
+          notifyError: null,
+          needsReprovision: false,
           lastError: null,
           updatedAt: "2026-10-12T10:00:00Z",
         },
@@ -383,17 +386,18 @@ describe("EmployeeDetailPage provisi akun Entra (TAN-272 U1)", () => {
     expect(await screen.findByText("Belum pernah diprovisi.")).toBeInTheDocument();
   });
 
-  it("marks a CREATED outcome as menunggu aktivasi (TAN-273 Opsi A)", async () => {
+  it("marks a CREATED outcome as dibuat dengan email aktivasi (TAN-359)", async () => {
     await act(async () => {
       renderDetail([employeeMock, auditLogsMock, createdProvisionMock]);
     });
 
     expect(await screen.findByText("************1234")).toBeInTheDocument();
     const card = screen.getByText("Provisi akun Entra").closest("div") as HTMLElement;
-    expect(await within(card).findByText("Menunggu aktivasi")).toBeInTheDocument();
+    expect(await within(card).findByText("Akun dibuat")).toBeInTheDocument();
+    expect(within(card).getByText("Email aktivasi terkirim")).toBeInTheDocument();
     expect(within(card).getByText("rina.kusuma@digitaltelkom.id")).toBeInTheDocument();
     expect(
-      within(card).getByText(/diaktifkan di luar aplikasi/i)
+      within(card).getByText(/wajib ganti password pada login pertama/i)
     ).toBeInTheDocument();
   });
 });

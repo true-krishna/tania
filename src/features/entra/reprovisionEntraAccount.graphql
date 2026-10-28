@@ -1,0 +1,16 @@
+mutation ReprovisionEntraAccount($employeeId: ID!) {
+  reprovisionEntraAccount(employeeId: $employeeId) {
+    id
+    fullName
+    entraProvision {
+      status
+      action
+      upn
+      notifyStatus
+      notifyError
+      needsReprovision
+      lastError
+      updatedAt
+    }
+  }
+}

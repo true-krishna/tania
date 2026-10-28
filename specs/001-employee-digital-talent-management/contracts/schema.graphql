@@ -54,9 +54,9 @@ enum EmployeeStatus {
 
 """Status hasil provisi akun Entra (FR-44/FR-45); tanpa record = belum dibuat."""
 enum EntraProvisionStatus {
-  """Undangan Entra terkirim (email telkom.co.id, FR-45)."""
+  """Undangan Entra terkirim (jenis kontrak jalur invite, TAN-359)."""
   INVITED
-  """Akun dibuat dengan UPN digitaltelkom.id (domain lain, FR-45)."""
+  """Akun dibuat dengan UPN digitaltelkom.id (jenis kontrak jalur create, TAN-359)."""
   CREATED
   """Provisi gagal — menunggu provisioning ulang (FR-44)."""
   FAILED
@@ -68,6 +68,14 @@ enum EntraProvisionStatus {
 enum EntraProvisionAction {
   INVITE
   CREATE
+}
+
+"""Status pengiriman email aktivasi jalur create (TAN-359)."""
+enum EntraNotifyStatus {
+  """Email aktivasi terkirim ke email pribadi karyawan."""
+  SENT
+  """Email aktivasi gagal terkirim — kirim ulang tersedia (TAN-359)."""
+  FAILED
 }
 
 """Kolom yang dapat diurutkan pada daftar provisi Entra (FR-44)."""
@@ -93,6 +101,12 @@ type EntraProvision {
   objectId: String
   """Pesan kegagalan terakhir; null bila berhasil (FR-44)."""
   lastError: String
+  """Status email aktivasi (jalur create); null = tidak berlaku (jalur invite) (TAN-359)."""
+  notifyStatus: EntraNotifyStatus
+  """Alasan kegagalan pengiriman email aktivasi; kosong bila terkirim (TAN-359)."""
+  notifyError: String
+  """Penanda "perlu provisi ulang": jenis akun tidak cocok dengan contract_type kontrak aktif (TAN-360)."""
+  needsReprovision: Boolean!
   updatedAt: Time!
 }
 
@@ -1026,7 +1040,7 @@ input TalentReportPeriodInput {
   endMonth: String!
 }
 
-"""Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest (tidak lebih awal dari 2022) s.d. Desember tahun berjalan."""
+"""Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest s.d. Desember tahun berjalan."""
 type TalentReportRange {
   startMonth: String!
   endMonth: String!
@@ -1219,7 +1233,10 @@ type Query {
   employeesNeedingFollowUp(first: Int = 25, after: String): EmployeeConnection!
   """Usia pensiun (tahun) dari setelan aplikasi Admin — default 55 (FR-40, T042)."""
   retirementAge: Int!
-  """Talent yang belum memiliki akun Entra (FR-44), dengan pencarian nama dan pengurutan."""
+  """Talent yang belum memiliki akun Entra (FR-44), ditambah talent terlink yang
+jenis akunnya tidak cocok dengan contract_type kontrak aktif (penanda
+"perlu provisi ulang" pada entraProvision, TAN-360) — dengan pencarian nama dan
+pengurutan."""
   employeesWithoutEntra(
     search: String
     sortBy: EntraEmployeeSortField = FULL_NAME
@@ -1338,8 +1355,21 @@ type Mutation {
 
   # --- Provisi Entra (Operation/Admin, FR-43–FR-46) ---
   """Provisioning manual/ulang akun Entra untuk talent yang belum punya (FR-44).
-Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FAILED) tanpa menggagalkan mutasi."""
+Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FAILED) tanpa menggagalkan mutasi.
+Keputusan create/invite mengikuti contract_type kontrak aktif (TAN-359)."""
   provisionEntraAccount(employeeId: ID!): Employee!
+  """Kirim ulang email aktivasi akun hasil create (TAN-359): password sementara baru
+di-set di Entra (tetap wajib ganti pada login pertama) lalu email baru dikirim ke
+email pribadi karyawan. Status hasil terlihat pada entraProvision."""
+  resendEntraActivationEmail(employeeId: ID!): Employee!
+  """Aktifkan/nonaktifkan akun Entra terlink secara manual (TAN-360), member maupun
+guest — enable tanpa menunggu perpanjangan kontrak. Permintaan yang tidak
+mengubah keadaan bersifat no-op; setiap perubahan tercatat di jejak audit."""
+  setEntraAccountEnabled(employeeId: ID!, enabled: Boolean!): Employee!
+  """Provisi ulang satu langkah (TAN-360): akun lama dinonaktifkan lalu diganti
+create/invite sesuai contract_type kontrak aktif — untuk akun yang jenisnya tidak
+cocok lagi setelah mutasi. Hasil terlihat pada entraProvision."""
+  reprovisionEntraAccount(employeeId: ID!): Employee!
 
   # --- Assignment (Chapter) ---
   createAssignment(input: CreateAssignmentInput!): Assignment!
@@ -1591,6 +1621,7 @@ enum BulkMasterDataErrorCode {
   REF_AMBIGUOUS  # nilai referensi dipakai lebih dari satu entitas aktif
   BATCH_LIMIT    # jumlah baris melebihi batas 100
   INVALID        # input tidak valid lainnya
+  REFERENCED     # baris masih direferensikan data lain / masih memiliki bawahan wajib — penonaktifan ditolak (FR-21)
 }
 
 """Hasil satu baris impor Unit."""
@@ -1656,4 +1687,36 @@ extend type Mutation {
   importJobRoles(input: ImportJobRolesInput!): BulkJobRoleResult!
   """Impor Chapter massal dari berkas templat: satu Chapter per baris. Khusus Admin."""
   importChapters(input: ImportChaptersInput!): BulkChapterResult!
+}
+
+
+# --- Perubahan sama & nonaktif massal master data (TAN-349) ------------------
+# Satu perubahan yang sama diterapkan pada banyak entri terpilih dalam satu
+# daftar master data: Job Role → chapter pemilik, Project (Initiative) → Unit
+# in Charge, dan status aktif/non-aktif untuk semua daftar (FR-03); perubahan
+# nilai berbeda per baris (mis. rename massal) tetap melalui edit tunggal.
+# Nonaktif massal adalah padanan "delete" yang disepakati — tidak ada mutasi
+# hapus master data (FR-21 tetap utuh): baris yang masih direferensikan data
+# lain atau masih memiliki bawahan wajib ditolak per baris dengan penjelasan
+# dependensinya (kode REFERENCED), baris lain tetap tereksekusi (FR-04). Baris
+# yang sudah berada pada status tujuan dilaporkan apa adanya tanpa perubahan,
+# tidak dihitung gagal. Satu operasi maksimum 100 id — lebih dari itu
+# permintaan ditolak utuh (FR-06); kegagalan satu baris tidak memengaruhi
+# baris lain (FR-02); jejak audit terekam per entri (FR-08); otorisasi Admin
+# ditegakkan di server (FR-07). Modal konfirmasi ringkasan sebelum eksekusi
+# nonaktif massal ditangani dashboard (FR-05).
+
+extend type Mutation {
+  """Ubah status aktif/non-aktif banyak Unit sekaligus dengan satu aksi. Khusus Admin."""
+  bulkSetUnitActive(ids: [ID!]!, isActive: Boolean!): BulkUnitResult!
+  """Ubah status aktif/non-aktif banyak Project (Initiative) sekaligus dengan satu aksi. Khusus Admin."""
+  bulkSetProjectActive(ids: [ID!]!, isActive: Boolean!): BulkProjectResult!
+  """Ubah status aktif/non-aktif banyak Job Role sekaligus dengan satu aksi. Khusus Admin."""
+  bulkSetJobRoleActive(ids: [ID!]!, isActive: Boolean!): BulkJobRoleResult!
+  """Ubah status aktif/non-aktif banyak Chapter sekaligus dengan satu aksi. Khusus Admin."""
+  bulkSetChapterActive(ids: [ID!]!, isActive: Boolean!): BulkChapterResult!
+  """Pindahkan chapter pemilik pada banyak Job Role sekaligus; chapterId kosong berarti melepas kepemilikan. Khusus Admin."""
+  bulkSetJobRoleChapter(ids: [ID!]!, chapterId: ID): BulkJobRoleResult!
+  """Pindahkan Unit in Charge pada banyak Project (Initiative) sekaligus. Khusus Admin."""
+  bulkSetProjectUnit(ids: [ID!]!, unitId: ID!): BulkProjectResult!
 }

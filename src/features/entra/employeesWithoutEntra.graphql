@@ -23,6 +23,9 @@ query EmployeesWithoutEntra(
           status
           action
           upn
+          notifyStatus
+          notifyError
+          needsReprovision
           lastError
           updatedAt
         }
