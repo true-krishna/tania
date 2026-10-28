@@ -182,6 +182,25 @@ describe("EmployeeFormModal — create mode (TAN-315)", () => {
     expect(screen.getByLabelText(/nama lengkap/i)).toHaveValue("");
   });
 
+  it("places footer actions outside the form and links submit by form id", () => {
+    render(
+      <MockedProvider mocks={[employeesMock, employeesMock]}>
+        <ToastProvider>
+          <EmployeeFormModal mode="create" onClose={() => {}} open={true} />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    const form = document.querySelector("form");
+    const submit = screen.getByRole("button", { name: "Simpan" });
+    const cancel = screen.getByRole("button", { name: "Batal" });
+
+    expect(form).not.toBeNull();
+    expect(form?.contains(submit)).toBe(false);
+    expect(form?.contains(cancel)).toBe(false);
+    expect(submit).toHaveAttribute("form", form?.id);
+  });
+
   it("shows required-field errors when submitting empty form", () => {
     render(
       <MockedProvider mocks={[employeesMock, employeesMock]}>

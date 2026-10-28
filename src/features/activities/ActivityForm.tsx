@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { Select } from "@/components/Select";
@@ -27,15 +26,14 @@ interface FormValues {
 type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 export interface ActivityFormProps {
+  formId: string;
   initial?: PersonalWorkActivity | null;
   projects: ActivityProject[];
   priorities: ActivityReference[];
   statuses: ActivityReference[];
-  submitting?: boolean;
   serverError?: string | null;
   successMessage?: string | null;
   onSubmit: (input: ActivityInput) => void | Promise<void>;
-  onCancel?: () => void;
 }
 
 function toValues(initial?: PersonalWorkActivity | null): FormValues {
@@ -66,15 +64,14 @@ function validate(values: FormValues): FormErrors {
 }
 
 export function ActivityForm({
+  formId,
   initial,
   projects,
   priorities,
   statuses,
-  submitting = false,
   serverError = null,
   successMessage = null,
   onSubmit,
-  onCancel,
 }: ActivityFormProps) {
   const [values, setValues] = React.useState<FormValues>(() => toValues(initial));
   const [errors, setErrors] = React.useState<FormErrors>({});
@@ -113,7 +110,7 @@ export function ActivityForm({
   }
 
   return (
-    <form className="flex flex-col gap-4" noValidate onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-4" id={formId} noValidate onSubmit={handleSubmit}>
       {successMessage ? (
         <p
           className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800"
@@ -216,17 +213,6 @@ export function ActivityForm({
             value={values.statusId}
           />
         </InputControl>
-      </div>
-
-      <div className="flex gap-2">
-        <Button disabled={submitting} type="submit">
-          {submitting ? "Menyimpan…" : initial ? "Simpan perubahan" : "Simpan aktivitas"}
-        </Button>
-        {onCancel ? (
-          <Button disabled={submitting} onClick={onCancel} type="button" variant="secondary">
-            Batal
-          </Button>
-        ) : null}
       </div>
     </form>
   );

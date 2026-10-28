@@ -7,7 +7,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { Chip } from "@/components/Chip";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
@@ -50,6 +50,8 @@ function IdpRosterView({ managing }: { managing: boolean }) {
   const router = useRouter();
   const [status, setStatus] = React.useState("");
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const formId = React.useId();
   const { status: query, data, error, refetch } = useIdps({
     status: (status || undefined) as IdpStatus | undefined,
   });
@@ -201,17 +203,25 @@ function IdpRosterView({ managing }: { managing: boolean }) {
         />
       )}
 
-      <Modal
-        onClose={() => setCreateOpen(false)}
-        open={createOpen}
-        size="lg"
-        subtitle="Rancang Individual Development Plan untuk talent (Chapter)."
-        title="Buat IDP"
-      >
-        <CreateIdpForm
-          onCancel={() => setCreateOpen(false)}
-          onSuccess={handleCreateSuccess}
-        />
+      <Modal onClose={() => setCreateOpen(false)} open={createOpen} size="lg">
+        <ModalTitle subtitle="Rancang Individual Development Plan untuk talent (Chapter).">
+          Buat IDP
+        </ModalTitle>
+        <ModalContent>
+          <CreateIdpForm
+            formId={formId}
+            onBusyChange={setSubmitting}
+            onSuccess={handleCreateSuccess}
+          />
+        </ModalContent>
+        <ModalActions>
+          <Button disabled={submitting} form={formId} type="submit">
+            Simpan
+          </Button>
+          <Button onClick={() => setCreateOpen(false)} type="button" variant="secondary">
+            Batal
+          </Button>
+        </ModalActions>
       </Modal>
     </section>
   );

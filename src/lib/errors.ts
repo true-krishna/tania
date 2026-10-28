@@ -169,7 +169,6 @@ export const BULK_MASTER_DATA_ERROR_LABEL: Record<BulkMasterDataErrorCode, strin
   REF_AMBIGUOUS: "Nilai referensi dipakai lebih dari satu entitas aktif.",
   BATCH_LIMIT: "Melebihi batas 100 baris per operasi massal.",
   INVALID: "Input tidak valid.",
-  REFERENCED: "Entri masih direferensikan data lain — pindahkan referensinya terlebih dahulu.",
 };
 
 export type SubmitError = { field: string | null; message: string };

@@ -4,7 +4,7 @@ import * as React from "react";
 import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { TableFilterBar } from "@/components/TableFilterBar";
@@ -22,6 +22,8 @@ export default function EvaluationPeriodsPage() {
   }, [data, search]);
   const { pageRows, pagination } = useTablePagination(visiblePeriods);
   const [modalOpen, setModalOpen] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const formId = React.useId();
 
   const actions = (
     <Button onClick={() => setModalOpen(true)} variant="primary">
@@ -97,8 +99,23 @@ export default function EvaluationPeriodsPage() {
           rowKey={(period) => period.id}
         />
       )}
-      <Modal onClose={() => setModalOpen(false)} open={modalOpen} title="Buat Periode Evaluasi">
-        <EvaluationPeriodCreateForm onClose={() => setModalOpen(false)} />
+      <Modal onClose={() => setModalOpen(false)} open={modalOpen}>
+        <ModalTitle>Buat Periode Evaluasi</ModalTitle>
+        <ModalContent>
+          <EvaluationPeriodCreateForm
+            formId={formId}
+            onBusyChange={setSubmitting}
+            onClose={() => setModalOpen(false)}
+          />
+        </ModalContent>
+        <ModalActions>
+          <Button disabled={submitting} form={formId} type="submit">
+            Simpan
+          </Button>
+          <Button onClick={() => setModalOpen(false)} type="button" variant="secondary">
+            Batal
+          </Button>
+        </ModalActions>
       </Modal>
     </section>
   );

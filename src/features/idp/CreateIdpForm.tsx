@@ -50,17 +50,23 @@ const BLOCK =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm outline-none transition-colors focus:border-tp-brand-red focus:ring-2 focus:ring-tp-brand-red/20";
 
 export interface CreateIdpFormProps {
-  onCancel: () => void;
+  formId: string;
+  onBusyChange: (busy: boolean) => void;
   onSuccess?: () => void;
 }
 
-export function CreateIdpForm({ onCancel, onSuccess }: CreateIdpFormProps) {
+export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpFormProps) {
   const talents = useAssignableTalents();
-  const [createIdp, { loading }] = useMutation(CreateIdpDocument);
+  const [createIdp] = useMutation(CreateIdpDocument);
   const [values, setValues] = React.useState<FormValues>(EMPTY);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});
   const [actions, setActions] = React.useState<ActionRow[]>([]);
   const { pushToast } = useToast();
+
+  React.useEffect(() => {
+    onBusyChange(talents.status !== "ready");
+    return () => onBusyChange(false);
+  }, [onBusyChange, talents.status]);
 
   function set<K extends keyof FormValues>(key: K, value: string) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -88,6 +94,7 @@ export function CreateIdpForm({ onCancel, onSuccess }: CreateIdpFormProps) {
     const nextErrors = validate(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+    onBusyChange(true);
     try {
       await createIdp({
         variables: {
@@ -113,6 +120,8 @@ export function CreateIdpForm({ onCancel, onSuccess }: CreateIdpFormProps) {
       onSuccess?.();
     } catch (err) {
       pushToast("error", err instanceof Error ? err.message : "Gagal membuat IDP.");
+    } finally {
+      onBusyChange(false);
     }
   }
 
@@ -129,7 +138,7 @@ export function CreateIdpForm({ onCancel, onSuccess }: CreateIdpFormProps) {
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
       <InputControl error={errors.employeeId} label="Talent">
         <Select
           onChange={(e) => set("employeeId", e.target.value)}
@@ -254,15 +263,6 @@ export function CreateIdpForm({ onCancel, onSuccess }: CreateIdpFormProps) {
           </Button>
         </div>
       </Card>
-
-      <div className="flex gap-2">
-        <Button disabled={loading} type="submit">
-          Simpan
-        </Button>
-        <Button onClick={onCancel} type="button" variant="secondary">
-          Batal
-        </Button>
-      </div>
     </form>
   );
 }

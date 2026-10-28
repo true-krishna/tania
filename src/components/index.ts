@@ -24,4 +24,14 @@ export { InputDropzone } from "./InputDropzone";
 export { PageHeader } from "./PageHeader";
 export { Select } from "./Select";
 export { Brand } from "./Brand";
-export { Modal, type ModalSize, type ModalFooterAction } from "./Modal";
+export {
+  Modal,
+  ModalActions,
+  ModalContent,
+  ModalTitle,
+  type ModalActionsProps,
+  type ModalContentProps,
+  type ModalProps,
+  type ModalSize,
+  type ModalTitleProps,
+} from "./Modal";

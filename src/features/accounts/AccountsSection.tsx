@@ -7,7 +7,7 @@ import { Chip } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
@@ -68,6 +68,7 @@ export function AccountsSection({
   const [formError, setFormError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [confirmRevokeId, setConfirmRevokeId] = React.useState<string | null>(null);
+  const formId = React.useId();
 
   const [search, setSearch] = React.useState("");
   const filteredAccounts = React.useMemo(() => {
@@ -230,50 +231,53 @@ export function AccountsSection({
         />
       ) : null}
 
-      <Modal onClose={resetForm} open={creating} size="md" title="Tambah Akun">
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <EmployeePicker
-            error={fieldErrors.employeeId}
-            label="Karyawan"
-            onChange={setEmployeeId}
-            required
-            value={employeeId}
-          />
-          <InputControl error={fieldErrors.email} label="Email">
-            <Input
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="cth: nama@telkom.co.id"
-              type="email"
-              value={email}
+      <Modal onClose={resetForm} open={creating} size="md">
+        <ModalTitle>Tambah Akun</ModalTitle>
+        <ModalContent>
+          <form className="flex flex-col gap-4" id={formId} onSubmit={handleSubmit}>
+            <EmployeePicker
+              error={fieldErrors.employeeId}
+              label="Karyawan"
+              onChange={setEmployeeId}
+              required
+              value={employeeId}
             />
-          </InputControl>
-          <InputControl error={fieldErrors.roleName} label="Peran Akses">
-            <Select
-              onChange={(e) => setRoleName(e.target.value)}
-              options={[
-                { value: "", label: "— Pilih peran —" },
-                ...options.map((option) => ({ value: option.value, label: option.label })),
-              ]}
-              value={roleName}
-            />
-          </InputControl>
-          <InputControl label="Kata Sandi Sementara (opsional)">
-            <Input
-              onChange={(e) => setTemporaryPassword(e.target.value)}
-              type="password"
-              value={temporaryPassword}
-            />
-          </InputControl>
-          {formError ? <span className="text-xs text-red-600">{formError}</span> : null}
-          <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-            <Button disabled={busy} type="submit">
-              Simpan
-            </Button>
-            <Button disabled={busy} onClick={resetForm} type="button" variant="secondary">
-              Batal
-            </Button>
-          </div>
-        </form>
+            <InputControl error={fieldErrors.email} label="Email">
+              <Input
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="cth: nama@telkom.co.id"
+                type="email"
+                value={email}
+              />
+            </InputControl>
+            <InputControl error={fieldErrors.roleName} label="Peran Akses">
+              <Select
+                onChange={(e) => setRoleName(e.target.value)}
+                options={[
+                  { value: "", label: "— Pilih peran —" },
+                  ...options.map((option) => ({ value: option.value, label: option.label })),
+                ]}
+                value={roleName}
+              />
+            </InputControl>
+            <InputControl label="Kata Sandi Sementara (opsional)">
+              <Input
+                onChange={(e) => setTemporaryPassword(e.target.value)}
+                type="password"
+                value={temporaryPassword}
+              />
+            </InputControl>
+            {formError ? <span className="text-xs text-red-600">{formError}</span> : null}
+          </form>
+        </ModalContent>
+        <ModalActions>
+          <Button disabled={busy} form={formId} type="submit">
+            Simpan
+          </Button>
+          <Button disabled={busy} onClick={resetForm} type="button" variant="secondary">
+            Batal
+          </Button>
+        </ModalActions>
       </Modal>
 
       {!accounts || accounts.length === 0 ? (

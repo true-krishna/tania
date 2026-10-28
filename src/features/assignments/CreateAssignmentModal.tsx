@@ -5,7 +5,7 @@ import { ApolloError, useMutation } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
@@ -34,13 +34,25 @@ type CreateAssignmentModalProps = {
 };
 
 export function CreateAssignmentModal({ open, onClose, onCreated }: CreateAssignmentModalProps) {
-  const projects = useProjects();
-  const talents = useAssignableTalents();
+  const projects = useProjects({ skip: !open });
+  const talents = useAssignableTalents({ skip: !open });
   const [createAssignment, { loading }] = useMutation(CreateAssignmentDocument);
   const [values, setValues] = React.useState<FormValues>(EMPTY);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
+  const [wasOpen, setWasOpen] = React.useState(open);
   const { pushToast } = useToast();
+  const formId = React.useId();
+
+  if (open && !wasOpen) {
+    setWasOpen(true);
+    setValues(EMPTY);
+    setErrors({});
+    setFormError(null);
+  }
+  if (!open && wasOpen) {
+    setWasOpen(false);
+  }
 
   function set<K extends keyof FormValues>(key: K, value: string) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -116,75 +128,92 @@ export function CreateAssignmentModal({ open, onClose, onCreated }: CreateAssign
         : null;
 
   return (
-    <Modal onClose={onClose} open={open} size="md" title="Buat Assignment">
-      <form aria-label="Buat Assignment" className="flex flex-col gap-4" onSubmit={onSubmit}>
-        {loadingData ? (
-          <p className="text-sm text-tp-muted">Memuat data…</p>
-        ) : dataError ? (
-          <p className="text-sm text-red-700" role="alert">
-            {dataError}
-          </p>
-        ) : (
-          <>
-            {formError ? (
-              <p className="text-sm text-red-700" role="alert">
-                {formError}
-              </p>
-            ) : null}
-            <InputControl error={errors.employeeId} label="Talent">
-              <Select
-                onChange={(e) => set("employeeId", e.target.value)}
-                options={[
-                  { value: "", label: "— pilih talent (assignable) —" },
-                  ...(talents.data ?? []).map((emp) => ({
-                    value: emp.id,
-                    label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
-                  })),
-                ]}
-                value={values.employeeId}
-              />
-            </InputControl>
-            <InputControl error={errors.projectId} label="Project">
-              <Select
-                onChange={(e) => set("projectId", e.target.value)}
-                options={[
-                  { value: "", label: "— pilih project —" },
-                  ...(projects.data ?? [])
-                    .filter((p) => p.isActive)
-                    .map((p) => ({ value: p.id, label: p.name })),
-                ]}
-                value={values.projectId}
-              />
-            </InputControl>
-            <InputControl error={errors.periodStart} label="Tanggal Mulai">
-              <Input
-                onChange={(e) => set("periodStart", e.target.value)}
-                type="date"
-                value={values.periodStart}
-              />
-            </InputControl>
-            <InputControl
-              error={errors.periodEnd}
-              helper="(opsional, kosong = aktif)"
-              label="Tanggal Selesai"
-            >
-              <Input
-                onChange={(e) => set("periodEnd", e.target.value)}
-                type="date"
-                value={values.periodEnd}
-              />
-            </InputControl>
-          </>
+    <Modal onClose={onClose} open={open} size="md">
+      <ModalTitle>Buat Assignment</ModalTitle>
+      <ModalContent>
+        <form
+          aria-label="Buat Assignment"
+          className="flex flex-col gap-4"
+          id={formId}
+          onSubmit={onSubmit}
+        >
+          {loadingData ? (
+            <p className="text-sm text-tp-muted">Memuat data…</p>
+          ) : dataError ? (
+            <p className="text-sm text-red-700" role="alert">
+              {dataError}
+            </p>
+          ) : (
+            <>
+              {formError ? (
+                <p className="text-sm text-red-700" role="alert">
+                  {formError}
+                </p>
+              ) : null}
+              <InputControl error={errors.employeeId} label="Talent">
+                <Select
+                  onChange={(e) => set("employeeId", e.target.value)}
+                  options={[
+                    { value: "", label: "— pilih talent (assignable) —" },
+                    ...(talents.data ?? []).map((emp) => ({
+                      value: emp.id,
+                      label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
+                    })),
+                  ]}
+                  value={values.employeeId}
+                />
+              </InputControl>
+              <InputControl error={errors.projectId} label="Project">
+                <Select
+                  onChange={(e) => set("projectId", e.target.value)}
+                  options={[
+                    { value: "", label: "— pilih project —" },
+                    ...(projects.data ?? [])
+                      .filter((p) => p.isActive)
+                      .map((p) => ({ value: p.id, label: p.name })),
+                  ]}
+                  value={values.projectId}
+                />
+              </InputControl>
+              <InputControl error={errors.periodStart} label="Tanggal Mulai">
+                <Input
+                  onChange={(e) => set("periodStart", e.target.value)}
+                  type="date"
+                  value={values.periodStart}
+                />
+              </InputControl>
+              <InputControl
+                error={errors.periodEnd}
+                helper="(opsional, kosong = aktif)"
+                label="Tanggal Selesai"
+              >
+                <Input
+                  onChange={(e) => set("periodEnd", e.target.value)}
+                  type="date"
+                  value={values.periodEnd}
+                />
+              </InputControl>
+            </>
         )}
-        <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-          <Button disabled={loading || loadingData} onClick={onClose} type="button" variant="secondary">
-            Batal
-          </Button>
-          <Button disabled={loading || loadingData || !!dataError} type="submit">
-            Simpan
-          </Button>
-        </div>
       </form>
+      </ModalContent>
+      <ModalActions>
+        <Button
+          disabled={loading || loadingData}
+          onClick={onClose}
+          type="button"
+          variant="secondary"
+        >
+          Batal
+        </Button>
+        <Button
+          disabled={loading || loadingData || !!dataError}
+          form={formId}
+          type="submit"
+        >
+          Simpan
+        </Button>
+      </ModalActions>
     </Modal>
   );
 }

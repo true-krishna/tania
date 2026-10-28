@@ -697,6 +697,9 @@ describe("master-data create Job Role (US2, FR-002/FR-003/FR-022)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent('Job role "Backend Engineer" berhasil dibuat.');
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { hidden: true })).not.toBeInTheDocument(),
+    );
     expect(await screen.findByText("Backend Engineer")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
   });
@@ -765,6 +768,9 @@ describe("master-data create Initiative/Project (US3, FR-006)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent('Initiative "Alpha Transformation" berhasil dibuat.');
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { hidden: true })).not.toBeInTheDocument(),
+    );
     expect(await screen.findByText("Alpha Transformation")).toBeInTheDocument();
     expect(screen.getByText("Digital Business")).toBeInTheDocument();
   });

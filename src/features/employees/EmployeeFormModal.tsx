@@ -5,7 +5,7 @@ import { useMutation, ApolloError } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { Select } from "@/components/Select";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { EMPLOYEE_STATUS_LABEL, GENDER_LABEL } from "@/features/employees/labels";
@@ -80,6 +80,8 @@ interface EmployeeFormModalProps {
 
 export function EmployeeFormModal({ open, onClose, mode, employeeId }: EmployeeFormModalProps) {
   const isEdit = mode === "edit";
+  const formId = React.useId();
+  const [submitting, setSubmitting] = React.useState(false);
   const { status: employeeStatus, data: employee, error: employeeError } = useEmployee(
     isEdit && employeeId ? employeeId : ""
   );
@@ -100,29 +102,46 @@ export function EmployeeFormModal({ open, onClose, mode, employeeId }: EmployeeF
       <EditEmployeeForm
         employee={employee}
         employeeId={employeeId ?? ""}
+        formId={formId}
+        onBusyChange={setSubmitting}
         onClose={onClose}
       />
     )
   ) : (
-    <CreateEmployeeForm onClose={onClose} />
+    <CreateEmployeeForm formId={formId} onBusyChange={setSubmitting} onClose={onClose} />
   );
 
+  const hasForm = !isEdit || (employeeStatus === "ready" && Boolean(employee));
+
   return (
-    <Modal
-      onClose={onClose}
-      open={open}
-      size="lg"
-      subtitle={subtitle}
-      title={title}
-    >
-      {content}
+    <Modal onClose={onClose} open={open} size="lg">
+      <ModalTitle subtitle={subtitle}>{title}</ModalTitle>
+      <ModalContent>{content}</ModalContent>
+      {hasForm ? (
+        <ModalActions>
+          <Button onClick={onClose} type="button" variant="secondary">
+            Batal
+          </Button>
+          <Button disabled={submitting} form={formId} type="submit">
+            Simpan
+          </Button>
+        </ModalActions>
+      ) : null}
     </Modal>
   );
 }
 
-function CreateEmployeeForm({ onClose }: { onClose: () => void }) {
+function CreateEmployeeForm({
+  formId,
+  onBusyChange,
+  onClose,
+}: {
+  formId: string;
+  onBusyChange: (busy: boolean) => void;
+  onClose: () => void;
+}) {
   const { pushToast } = useToast();
-  const [createEmployee, { loading }] = useMutation(CreateEmployeeDocument, {
+  const [createEmployee] = useMutation(CreateEmployeeDocument, {
     refetchQueries: ["Employees"],
   });
 
@@ -179,6 +198,7 @@ function CreateEmployeeForm({ onClose }: { onClose: () => void }) {
     if (optional.latestEducation) input.latestEducation = optional.latestEducation;
     if (optional.institutionName) input.institutionName = optional.institutionName;
     if (optional.major) input.major = optional.major;
+    onBusyChange(true);
     try {
       await createEmployee({ variables: { input } });
       pushToast("success", `Karyawan ${values.fullName} berhasil dibuat.`);
@@ -197,14 +217,13 @@ function CreateEmployeeForm({ onClose }: { onClose: () => void }) {
       } else {
         setFormError(submitError.message);
       }
+    } finally {
+      onBusyChange(false);
     }
   }
 
   return (
-    <form
-      className="flex flex-col gap-4"
-      onSubmit={onSubmit}
-    >
+    <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
       {formError ? <ErrorState message={formError} /> : null}
       <InputControl error={errors.nik} label="NIK">
         <Input
@@ -306,14 +325,6 @@ function CreateEmployeeForm({ onClose }: { onClose: () => void }) {
           value={values.joinedAt}
         />
       </InputControl>
-      <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-        <Button onClick={onClose} type="button" variant="secondary">
-          Batal
-        </Button>
-        <Button disabled={loading} type="submit">
-          Simpan
-        </Button>
-      </div>
     </form>
   );
 }
@@ -321,14 +332,18 @@ function CreateEmployeeForm({ onClose }: { onClose: () => void }) {
 function EditEmployeeForm({
   employee,
   employeeId,
+  formId,
+  onBusyChange,
   onClose,
 }: {
   employee: EmployeeData;
   employeeId: string;
+  formId: string;
+  onBusyChange: (busy: boolean) => void;
   onClose: () => void;
 }) {
   const { pushToast } = useToast();
-  const [updateEmployee, { loading }] = useMutation(UpdateEmployeeDocument, {
+  const [updateEmployee] = useMutation(UpdateEmployeeDocument, {
     refetchQueries: ["Employees"],
   });
 
@@ -399,6 +414,7 @@ function EditEmployeeForm({
     if (optional.latestEducation) input.latestEducation = optional.latestEducation;
     if (optional.institutionName) input.institutionName = optional.institutionName;
     if (optional.major) input.major = optional.major;
+    onBusyChange(true);
     try {
       await updateEmployee({ variables: { id: employeeId, input } });
       pushToast("success", `Perubahan data ${values.fullName} berhasil disimpan.`);
@@ -417,14 +433,13 @@ function EditEmployeeForm({
       } else {
         setFormError(submitError.message);
       }
+    } finally {
+      onBusyChange(false);
     }
   }
 
   return (
-    <form
-      className="flex flex-col gap-4"
-      onSubmit={onSubmit}
-    >
+    <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
       {formError ? <ErrorState message={formError} /> : null}
       <div className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
         <span>NIK saat ini</span>
@@ -539,14 +554,6 @@ function EditEmployeeForm({
           value={values.status}
         />
       </InputControl>
-      <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-        <Button onClick={onClose} type="button" variant="secondary">
-          Batal
-        </Button>
-        <Button disabled={loading} type="submit">
-          Simpan
-        </Button>
-      </div>
     </form>
   );
 }

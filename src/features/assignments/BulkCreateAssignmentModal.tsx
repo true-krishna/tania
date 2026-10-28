@@ -5,7 +5,7 @@ import { ApolloError } from "@apollo/client";
 import { Button } from "@/components/Button";
 import { InputControl } from "@/components/InputControl";
 import { InputDropzone } from "@/components/InputDropzone";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { errorMessage } from "@/lib/errors";
 import { BulkResultSummary, type BulkRowResult } from "./BulkResultSummary";
@@ -44,7 +44,24 @@ export function BulkCreateAssignmentModal({
   const [sentRows, setSentRows] = React.useState<readonly ImportTemplateRow[] | null>(null);
   const [formError, setFormError] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<BulkOutcome | null>(null);
+  const [wasOpen, setWasOpen] = React.useState(open);
   const { pushToast } = useToast();
+  const formId = React.useId();
+
+  if (open && !wasOpen) {
+    setWasOpen(true);
+    setParsedRows(null);
+    setInvalidRows([]);
+    setFileName(null);
+    setFileError(null);
+    setParsing(false);
+    setSentRows(null);
+    setFormError(null);
+    setResult(null);
+  }
+  if (!open && wasOpen) {
+    setWasOpen(false);
+  }
 
   const retryRows = result
     ? result.failed.map((row) => sentRows?.[row.index]).filter((row): row is ImportTemplateRow => !!row)
@@ -139,73 +156,86 @@ export function BulkCreateAssignmentModal({
   }
 
   return (
-    <Modal onClose={onClose} open={open} size="md" title="Buat Assignment Massal">
-      <form aria-label="Buat Assignment Massal" className="flex flex-col gap-4" onSubmit={onSubmit}>
-        {formError ? (
-          <p className="text-sm text-red-700" role="alert">
-            {formError}
-          </p>
-        ) : null}
-        {result ? (
-          <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
-        ) : null}
-        <InputControl
-          error={fileError ?? undefined}
-          helper={`Unduh template, isi employee_id (nomor induk atau ID talent), project_id (nama project aktif atau ID), period_start; period_end opsional (kosong = berjalan). Maksimum ${BULK_ASSIGNMENT_MAX_ROWS} baris.`}
-          label="Daftar Assignment (berkas Excel)"
+    <Modal onClose={onClose} open={open} size="md">
+      <ModalTitle>Buat Assignment Massal</ModalTitle>
+      <ModalContent>
+        <form
+          aria-label="Buat Assignment Massal"
+          className="flex flex-col gap-4"
+          id={formId}
+          onSubmit={onSubmit}
         >
-          <div className="mb-2 flex items-center justify-end gap-2">
-            <a
-              className="shrink-0 text-sm font-medium text-tp-ink-info underline hover:opacity-80"
-              download
-              href={TEMPLATE_URL}
-            >
-              Unduh Template
-            </a>
-          </div>
-          <InputDropzone
-            accept={{ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] }}
-            ariaLabel="Unggah berkas Excel assignment"
-            disabled={parsing}
-            hint={
-              <>
-                Tarik dan letakkan berkas .xlsx di sini, atau{" "}
-                <span className="font-medium text-tp-ink-info underline">pilih berkas</span>.
-              </>
-            }
-            onFileSelect={(file) => void acceptFile(file)}
-            selectedName={fileName}
-          />
-        </InputControl>
-        {parsing ? <p className="text-sm text-tp-muted">Membaca berkas…</p> : null}
-        {fileName && parsedRows ? (
-          <p aria-live="polite" className="text-sm text-tp-muted">
-            {fileName} — {parsedRows.length} baris assignment terbaca
-            {invalidRows.length > 0 ? `, ${invalidRows.length} baris tidak valid` : ""}.
-          </p>
-        ) : null}
-        {invalidRows.length > 0 ? (
-          <ul aria-label="Baris tidak valid" className="rounded-lg border border-tp-line">
-            {invalidRows.map((row) => (
-              <li className="px-3 py-2 text-sm text-red-700" key={row.rowNumber}>
-                Baris {row.rowNumber}: {row.reason}.
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-          <Button disabled={loading || parsing} onClick={onClose} type="button" variant="secondary">
-            {result ? "Tutup" : "Batal"}
-          </Button>
-          <Button disabled={loading || parsing} type="submit">
-            {loading
-              ? "Menyimpan…"
-              : isRetry
-                ? `Ulangi ${rowsToSend.length} baris gagal`
-                : "Simpan Massal"}
-          </Button>
-        </div>
-      </form>
+          {formError ? (
+            <p className="text-sm text-red-700" role="alert">
+              {formError}
+            </p>
+          ) : null}
+          {result ? (
+            <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
+          ) : null}
+          <InputControl
+            error={fileError ?? undefined}
+            helper={`Unduh template, isi employee_id (nomor induk atau ID talent), project_id (nama project aktif atau ID), period_start; period_end opsional (kosong = berjalan). Maksimum ${BULK_ASSIGNMENT_MAX_ROWS} baris.`}
+            label="Daftar Assignment (berkas Excel)"
+          >
+            <div className="mb-2 flex items-center justify-end gap-2">
+              <a
+                className="shrink-0 text-sm font-medium text-tp-ink-info underline hover:opacity-80"
+                download
+                href={TEMPLATE_URL}
+              >
+                Unduh Template
+              </a>
+            </div>
+            <InputDropzone
+              accept={{ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] }}
+              ariaLabel="Unggah berkas Excel assignment"
+              disabled={parsing}
+              hint={
+                <>
+                  Tarik dan letakkan berkas .xlsx di sini, atau{" "}
+                  <span className="font-medium text-tp-ink-info underline">pilih berkas</span>.
+                </>
+              }
+              onFileSelect={(file) => void acceptFile(file)}
+              selectedName={fileName}
+            />
+          </InputControl>
+          {parsing ? <p className="text-sm text-tp-muted">Membaca berkas…</p> : null}
+          {fileName && parsedRows ? (
+            <p aria-live="polite" className="text-sm text-tp-muted">
+              {fileName} — {parsedRows.length} baris assignment terbaca
+              {invalidRows.length > 0 ? `, ${invalidRows.length} baris tidak valid` : ""}.
+            </p>
+          ) : null}
+          {invalidRows.length > 0 ? (
+            <ul aria-label="Baris tidak valid" className="rounded-lg border border-tp-line">
+              {invalidRows.map((row) => (
+                <li className="px-3 py-2 text-sm text-red-700" key={row.rowNumber}>
+                  Baris {row.rowNumber}: {row.reason}.
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </form>
+      </ModalContent>
+      <ModalActions>
+        <Button
+          disabled={loading || parsing}
+          onClick={onClose}
+          type="button"
+          variant="secondary"
+        >
+          {result ? "Tutup" : "Batal"}
+        </Button>
+        <Button disabled={loading || parsing} form={formId} type="submit">
+          {loading
+            ? "Menyimpan…"
+            : isRetry
+              ? `Ulangi ${rowsToSend.length} baris gagal`
+              : "Simpan Massal"}
+        </Button>
+      </ModalActions>
     </Modal>
   );
 }

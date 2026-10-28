@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import { GraphQLError, Kind, parse, visit, type FieldNode } from "graphql";
 import ExcelJS from "exceljs";
@@ -402,6 +402,25 @@ describe("CreateAssignmentModal (TAN-316)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /batal/i }));
     expect(screen.queryByRole("dialog", { name: /buat assignment/i })).toBeNull();
+  });
+
+  it("resets the create form when reopened", async () => {
+    renderListWithCreate();
+    await openCreateModal();
+    fillCreateForm();
+
+    expect(screen.getByRole("combobox", { name: /talent/i })).toHaveValue("emp-1");
+    expect(screen.getByRole("combobox", { name: /project/i })).toHaveValue("prj-1");
+
+    fireEvent.click(screen.getByRole("button", { name: /batal/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { hidden: true })).not.toBeInTheDocument(),
+    );
+
+    await openCreateModal();
+    expect(screen.getByRole("combobox", { name: /talent/i })).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: /project/i })).toHaveValue("");
+    expect(screen.getByLabelText(/tanggal mulai/i)).toHaveValue("");
   });
 
   it("only offers assignable talents on the form", async () => {

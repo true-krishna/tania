@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMutation, ApolloError } from "@apollo/client";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
@@ -81,6 +81,7 @@ export function CreateContractModal({
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
   const [wasOpen, setWasOpen] = React.useState(false);
+  const formId = React.useId();
 
   if (open && !wasOpen) {
     setWasOpen(true);
@@ -92,31 +93,29 @@ export function CreateContractModal({
     setWasOpen(false);
   }
 
-  if (!open) return null;
-
   if (units.status === "loading" || jobRoles.status === "loading" || employees.status === "loading")
     return (
-      <Modal onClose={onClose} open={open} size="lg" title="Tambah Kontrak">
+      <CreateContractModalFrame onClose={onClose} open={open}>
         <LoadingState />
-      </Modal>
+      </CreateContractModalFrame>
     );
   if (units.status === "error")
     return (
-      <Modal onClose={onClose} open={open} size="lg" title="Tambah Kontrak">
+      <CreateContractModalFrame onClose={onClose} open={open}>
         <ErrorState message={units.error ?? "Gagal memuat unit."} />
-      </Modal>
+      </CreateContractModalFrame>
     );
   if (jobRoles.status === "error")
     return (
-      <Modal onClose={onClose} open={open} size="lg" title="Tambah Kontrak">
+      <CreateContractModalFrame onClose={onClose} open={open}>
         <ErrorState message={jobRoles.error ?? "Gagal memuat job role."} />
-      </Modal>
+      </CreateContractModalFrame>
     );
   if (employees.status === "error")
     return (
-      <Modal onClose={onClose} open={open} size="lg" title="Tambah Kontrak">
+      <CreateContractModalFrame onClose={onClose} open={open}>
         <ErrorState message={employees.error ?? "Gagal memuat karyawan."} />
-      </Modal>
+      </CreateContractModalFrame>
     );
 
   function set<K extends keyof FormValues>(key: K, value: string) {
@@ -201,8 +200,21 @@ export function CreateContractModal({
   }
 
   return (
-    <Modal onClose={onClose} open={open} size="lg" title="Tambah Kontrak">
-      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+    <CreateContractModalFrame
+      actions={
+        <>
+          <Button onClick={onClose} type="button" variant="secondary">
+            Batal
+          </Button>
+          <Button disabled={loading} form={formId} type="submit">
+            {loading ? "Menyimpan…" : "Simpan"}
+          </Button>
+        </>
+      }
+      onClose={onClose}
+      open={open}
+    >
+      <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
         {formError ? <ErrorState message={formError} /> : null}
         <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Identitas kontrak
@@ -348,16 +360,27 @@ export function CreateContractModal({
         <InputControl error={errors.notes} helper="(opsional)" label="Catatan">
           <Input onChange={(e) => set("notes", e.target.value)} type="text" value={values.notes} />
         </InputControl>
-
-        <div className="flex justify-end gap-2 pt-2">
-          <Button onClick={onClose} type="button" variant="secondary">
-            Batal
-          </Button>
-          <Button disabled={loading} type="submit">
-            {loading ? "Menyimpan…" : "Simpan"}
-          </Button>
-        </div>
       </form>
+    </CreateContractModalFrame>
+  );
+}
+
+function CreateContractModalFrame({
+  open,
+  onClose,
+  actions,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Modal onClose={onClose} open={open} size="lg">
+      <ModalTitle>Tambah Kontrak</ModalTitle>
+      <ModalContent>{children}</ModalContent>
+      {actions ? <ModalActions>{actions}</ModalActions> : null}
     </Modal>
   );
 }

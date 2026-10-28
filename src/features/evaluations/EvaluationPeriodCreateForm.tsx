@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useMutation } from "@apollo/client";
-import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
@@ -18,17 +17,28 @@ type FormValues = { name: string; templateId: string; startDate: string; endDate
 const EMPTY: FormValues = { name: "", templateId: "", startDate: "", endDate: "" };
 
 interface EvaluationPeriodCreateFormProps {
+  formId: string;
+  onBusyChange: (busy: boolean) => void;
   onClose: () => void;
 }
 
-export function EvaluationPeriodCreateForm({ onClose }: EvaluationPeriodCreateFormProps) {
+export function EvaluationPeriodCreateForm({
+  formId,
+  onBusyChange,
+  onClose,
+}: EvaluationPeriodCreateFormProps) {
   const templates = useEvaluationTemplates();
-  const [createPeriod, { loading }] = useMutation(CreateEvaluationPeriodDocument, {
+  const [createPeriod] = useMutation(CreateEvaluationPeriodDocument, {
     refetchQueries: [EvaluationPeriodsDocument],
   });
   const { pushToast } = useToast();
   const [values, setValues] = React.useState<FormValues>(EMPTY);
   const [errors, setErrors] = React.useState<Partial<Record<keyof FormValues, string>>>({});
+
+  React.useEffect(() => {
+    onBusyChange(templates.status !== "ready");
+    return () => onBusyChange(false);
+  }, [onBusyChange, templates.status]);
 
   if (templates.status === "loading") return <LoadingState />;
   if (templates.status === "error")
@@ -55,6 +65,7 @@ export function EvaluationPeriodCreateForm({ onClose }: EvaluationPeriodCreateFo
     const nextErrors = validate(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+    onBusyChange(true);
     try {
       await createPeriod({
         variables: {
@@ -71,11 +82,13 @@ export function EvaluationPeriodCreateForm({ onClose }: EvaluationPeriodCreateFo
       onClose();
     } catch (err) {
       pushToast("error", err instanceof Error ? err.message : "Gagal membuat periode.");
+    } finally {
+      onBusyChange(false);
     }
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
       <InputControl error={errors.name} label="Nama Periode">
         <Input onChange={(e) => set("name", e.target.value)} placeholder="cth: Q3 2025" value={values.name} />
       </InputControl>
@@ -96,14 +109,6 @@ export function EvaluationPeriodCreateForm({ onClose }: EvaluationPeriodCreateFo
         <InputControl error={errors.endDate} label="Tanggal Selesai">
           <Input onChange={(e) => set("endDate", e.target.value)} type="date" value={values.endDate} />
         </InputControl>
-      </div>
-      <div className="flex gap-2">
-        <Button disabled={loading} type="submit">
-          Simpan
-        </Button>
-        <Button onClick={onClose} type="button" variant="secondary">
-          Batal
-        </Button>
       </div>
     </form>
   );

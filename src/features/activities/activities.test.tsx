@@ -18,6 +18,7 @@ import {
 import type { PersonalWorkActivity } from "./types";
 
 const FORM_PROPS = {
+  formId: "activity-form",
   projects: ACTIVITY_PROJECTS,
   priorities: ACTIVITY_PRIORITIES,
   statuses: ACTIVITY_STATUSES,
@@ -67,7 +68,7 @@ describe("ActivityForm — training clears and disables the project field", () =
     fireEvent.change(screen.getByLabelText("Status"), {
       target: { value: "status-todo" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Simpan aktivitas" }));
+    fireEvent.submit(document.querySelector("form")!);
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({
@@ -81,7 +82,7 @@ describe("ActivityForm — training clears and disables the project field", () =
     const onSubmit = vi.fn();
     render(<ActivityForm {...FORM_PROPS} onSubmit={onSubmit} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Simpan aktivitas" }));
+    fireEvent.submit(document.querySelector("form")!);
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText("Judul aktivitas wajib diisi.")).toBeInTheDocument();
@@ -101,7 +102,7 @@ describe("ActivityForm — training clears and disables the project field", () =
     fireEvent.change(screen.getByLabelText("Tanggal selesai (opsional)"), {
       target: { value: "2026-10-01" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Simpan aktivitas" }));
+    fireEvent.submit(document.querySelector("form")!);
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(
@@ -109,9 +110,9 @@ describe("ActivityForm — training clears and disables the project field", () =
     ).toBeInTheDocument();
   });
 
-  it("disables the submit button while a mutation is in flight", () => {
-    render(<ActivityForm {...FORM_PROPS} onSubmit={vi.fn()} submitting />);
-    expect(screen.getByRole("button", { name: "Menyimpan…" })).toBeDisabled();
+  it("exposes the passed form id for the external footer submit button", () => {
+    render(<ActivityForm {...FORM_PROPS} onSubmit={vi.fn()} />);
+    expect(document.querySelector("form")).toHaveAttribute("id", "activity-form");
   });
 });
 
@@ -182,6 +183,19 @@ describe("ActivityList — states and ownership", () => {
 });
 
 describe("ActivitiesPageView — create, edit, delete against the store", () => {
+  it("places footer actions outside the activity form", async () => {
+    renderWorkspace();
+    await screen.findByText("Implementasi form aktivitas");
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Catat aktivitas" }));
+    const form = document.querySelector("form");
+    const submit = screen.getByRole("button", { name: "Simpan aktivitas" });
+
+    expect(form).not.toBeNull();
+    expect(form?.contains(submit)).toBe(false);
+    expect(submit).toHaveAttribute("form", form?.id);
+  });
+
   it("creates an activity end-to-end and shows the success state", async () => {
     renderWorkspace();
     await screen.findByText("Implementasi form aktivitas");

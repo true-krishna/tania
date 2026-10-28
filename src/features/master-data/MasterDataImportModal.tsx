@@ -4,9 +4,8 @@ import * as React from "react";
 import { Button } from "@/components/Button";
 import { InputControl } from "@/components/InputControl";
 import { InputDropzone } from "@/components/InputDropzone";
-import { Modal } from "@/components/Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { MasterDataBulkReport } from "./MasterDataBulkReport";
 import {
   MASTER_DATA_IMPORT_TEMPLATES,
   type MasterDataImportEntity,
@@ -47,6 +46,7 @@ export function MasterDataImportModal({
   const [progress, setProgress] = React.useState<{ current: number; total: number } | null>(null);
   const [result, setResult] = React.useState<MergedImportReport | null>(null);
   const { pushToast } = useToast();
+  const formId = React.useId();
 
   const unfinishedRowNumbers = React.useMemo(() => {
     if (!result) return null;
@@ -121,79 +121,133 @@ export function MasterDataImportModal({
   }
 
   return (
-    <Modal onClose={onClose} open={open} size="md" title={`Unggah Massal ${config.label}`}>
-      <form aria-label={`Unggah Massal ${config.label}`} className="flex flex-col gap-4" onSubmit={onSubmit}>
-        {formError ? (
-          <p className="text-sm text-red-700" role="alert">
-            {formError}
-          </p>
-        ) : null}
-        {result ? (
-          <MasterDataBulkReport
-            formatEntry={(entry) => `Baris ${entry.rowNumber} (${entry.label})`}
-            hint="Baris yang berhasil tetap tersimpan; perbaiki baris yang gagal lalu ulangi."
-            report={result}
-            stopPrefix="Impor dihentikan"
-          />
-        ) : null}
-        <InputControl
-          error={fileError ?? undefined}
-          helper={`${config.helperText} Maksimum ${MASTER_DATA_IMPORT_MAX_ROWS} baris per operasi — berkas dengan baris lebih banyak diproses otomatis per potongan ${MASTER_DATA_IMPORT_MAX_ROWS} baris.`}
-          label={`Daftar ${config.label} (berkas Excel)`}
+    <Modal onClose={onClose} open={open} size="md">
+      <ModalTitle>{`Unggah Massal ${config.label}`}</ModalTitle>
+      <ModalContent>
+        <form
+          aria-label={`Unggah Massal ${config.label}`}
+          className="flex flex-col gap-4"
+          id={formId}
+          onSubmit={onSubmit}
         >
-          <div className="mb-2 flex items-center justify-end gap-2">
-            <a
-              className="shrink-0 text-sm font-medium text-tp-ink-info underline hover:opacity-80"
-              download
-              href={config.templateUrl}
+          {formError ? (
+            <p className="text-sm text-red-700" role="alert">
+              {formError}
+            </p>
+          ) : null}
+          {result ? (
+            <div
+              className="flex flex-col gap-2 rounded-lg border border-tp-line bg-tp-bg px-3 py-2 text-sm"
+              role="status"
             >
-              Unduh Template
-            </a>
-          </div>
-          <InputDropzone
-            accept={{ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] }}
-            ariaLabel={`Unggah berkas Excel ${noun}`}
-            disabled={parsing || running}
-            hint={
-              <>
-                Tarik dan letakkan berkas .xlsx di sini, atau{" "}
-                <span className="font-medium text-tp-ink-info underline">pilih berkas</span>.
-              </>
-            }
-            onFileSelect={(file) => void acceptFile(file)}
-            selectedName={fileName}
-          />
-        </InputControl>
-        {parsing ? <p className="text-sm text-tp-muted">Membaca berkas…</p> : null}
-        {running && progress ? (
-          <p aria-live="polite" className="text-sm text-tp-muted">
-            Mengimpor potongan {progress.current} dari {progress.total}…
-          </p>
-        ) : null}
-        {fileName && parsedRows ? (
-          <p aria-live="polite" className="text-sm text-tp-muted">
-            {fileName} — {parsedRows.length} baris {noun} terbaca
-            {invalidRows.length > 0 ? `, ${invalidRows.length} baris tidak valid` : ""}.
-          </p>
-        ) : null}
-        {invalidRows.length > 0 ? (
-          <ul aria-label="Baris tidak valid" className="rounded-lg border border-tp-line">
-            {invalidRows.map((row) => (
-              <li className="px-3 py-2 text-sm text-red-700" key={row.rowNumber}>
-                Baris {row.rowNumber}: {row.reason}.
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <div className="flex justify-end gap-2 border-t border-tp-line pt-3">
-          <Button disabled={parsing || running} onClick={onClose} type="button" variant="secondary">
-            {result ? "Tutup" : "Batal"}
-          </Button>
-          <Button disabled={parsing || running} type="submit">
-            {running ? "Menyimpan…" : isRetry ? `Ulangi ${rowsToSend.length} baris belum berhasil` : "Simpan Massal"}
-          </Button>
-        </div>
-      </form>
+              <p className="font-medium text-tp-text">
+                {result.succeeded.length} baris berhasil
+                {result.failed.length > 0 ? `, ${result.failed.length} gagal` : ""}
+                {result.notExecuted.length > 0
+                  ? `, ${result.notExecuted.length} belum dieksekusi`
+                  : ""}
+                .
+              </p>
+              {result.stopReason ? (
+                <p className="text-red-700" role="alert">
+                  Impor dihentikan: {result.stopReason}
+                </p>
+              ) : null}
+              {result.failed.length > 0 ? (
+                <ul className="flex flex-col gap-1">
+                  {result.failed.map((row) => (
+                    <li className="text-red-700" key={row.rowNumber}>
+                      <span className="font-medium">Baris {row.rowNumber} ({row.label})</span>
+                      {" — "}
+                      {row.reason}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {result.notExecuted.length > 0 ? (
+                <ul aria-label="Baris tidak dieksekusi" className="flex flex-col gap-1">
+                  {result.notExecuted.map((row) => (
+                    <li className="text-tp-muted" key={row.rowNumber}>
+                      Baris {row.rowNumber} ({row.label}) — tidak dieksekusi.
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {result.failed.length > 0 ? (
+                <p className="text-xs text-tp-muted">
+                  Baris yang berhasil tetap tersimpan; perbaiki baris yang gagal lalu ulangi.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <InputControl
+            error={fileError ?? undefined}
+            helper={`${config.helperText} Maksimum ${MASTER_DATA_IMPORT_MAX_ROWS} baris per operasi — berkas dengan baris lebih banyak diproses otomatis per potongan ${MASTER_DATA_IMPORT_MAX_ROWS} baris.`}
+            label={`Daftar ${config.label} (berkas Excel)`}
+          >
+            <div className="mb-2 flex items-center justify-end gap-2">
+              <a
+                className="shrink-0 text-sm font-medium text-tp-ink-info underline hover:opacity-80"
+                download
+                href={config.templateUrl}
+              >
+                Unduh Template
+              </a>
+            </div>
+            <InputDropzone
+              accept={{ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] }}
+              ariaLabel={`Unggah berkas Excel ${noun}`}
+              disabled={parsing || running}
+              hint={
+                <>
+                  Tarik dan letakkan berkas .xlsx di sini, atau{" "}
+                  <span className="font-medium text-tp-ink-info underline">pilih berkas</span>.
+                </>
+              }
+              onFileSelect={(file) => void acceptFile(file)}
+              selectedName={fileName}
+            />
+          </InputControl>
+          {parsing ? <p className="text-sm text-tp-muted">Membaca berkas…</p> : null}
+          {running && progress ? (
+            <p aria-live="polite" className="text-sm text-tp-muted">
+              Mengimpor potongan {progress.current} dari {progress.total}…
+            </p>
+          ) : null}
+          {fileName && parsedRows ? (
+            <p aria-live="polite" className="text-sm text-tp-muted">
+              {fileName} — {parsedRows.length} baris {noun} terbaca
+              {invalidRows.length > 0 ? `, ${invalidRows.length} baris tidak valid` : ""}.
+            </p>
+          ) : null}
+          {invalidRows.length > 0 ? (
+            <ul aria-label="Baris tidak valid" className="rounded-lg border border-tp-line">
+              {invalidRows.map((row) => (
+                <li className="px-3 py-2 text-sm text-red-700" key={row.rowNumber}>
+                  Baris {row.rowNumber}: {row.reason}.
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </form>
+      </ModalContent>
+      <ModalActions>
+        <Button
+          disabled={parsing || running}
+          onClick={onClose}
+          type="button"
+          variant="secondary"
+        >
+          {result ? "Tutup" : "Batal"}
+        </Button>
+        <Button disabled={parsing || running} form={formId} type="submit">
+          {running
+            ? "Menyimpan…"
+            : isRetry
+              ? `Ulangi ${rowsToSend.length} baris belum berhasil`
+              : "Simpan Massal"}
+        </Button>
+      </ModalActions>
     </Modal>
   );
 }
