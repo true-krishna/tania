@@ -236,13 +236,15 @@ test("T028 — Chapter hanya melihat cakupan chapter-nya (SC-05)", async ({ page
   expect(totals.movement).toBeLessThan(OPERATION_FULL_RANGE.movement);
 });
 
-test("T028 — Talent tidak melihat laporan; rute lama redirect ke Dashboard (FR-01)", async ({ page }) => {
+test("T028 — Talent tidak melihat laporan; rute warisan /reports/talent dihapus (FR-01)", async ({ page }) => {
   await loginAs(page, SEED_USERS.TALENT);
 
-  // Amandemen penempatan: rute /reports/talent hanya redirect — konten laporan
-  // bukan bagian dashboard Talent, dan penegakan authz tetap di server (FR-01).
-  await page.goto("/reports/talent");
-  await page.waitForURL(/\/dashboard/);
+  // Laporan Talent = Dashboard (TAN-345): rute warisan dihapus, bukan redirect —
+  // permintaan berakhir di 404, dan penegakan authz tetap di server (FR-01).
+  const response = await page.goto("/reports/talent");
+  expect(response?.status()).toBe(404);
+
+  await page.goto("/dashboard");
   await expect(chartOf(page, "Talent per role")).toHaveCount(0);
   await expect(page.getByText(/Penugasan aktif|Aktivitas/).first()).toBeVisible();
 });

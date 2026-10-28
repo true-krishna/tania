@@ -90,7 +90,7 @@ guard peran) tidak memanggil model, jadi jalannya tanpa provider:
 
 ## Skenario T028
 
-1. Operation login → `/reports/talent` → 5 grafik (V-1…V-5) tampil.
+1. Operation login → `/dashboard` → 5 grafik (V-1…V-5) tampil.
 2. Ubah filter → angka kelima grafik berubah bersama (SC-04).
 3. Unduh PNG per grafik — event unduhan, pola nama
    `<nama-grafik>-<mulai>-<akhir>.png`, dimensi PNG ≥ 2× ukuran tampil (SC-03).
