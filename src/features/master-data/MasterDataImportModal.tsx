@@ -6,6 +6,7 @@ import { InputControl } from "@/components/InputControl";
 import { InputDropzone } from "@/components/InputDropzone";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
+import { MasterDataBulkReport } from "./MasterDataBulkReport";
 import {
   MASTER_DATA_IMPORT_TEMPLATES,
   type MasterDataImportEntity,
@@ -128,49 +129,12 @@ export function MasterDataImportModal({
           </p>
         ) : null}
         {result ? (
-          <div
-            className="flex flex-col gap-2 rounded-lg border border-tp-line bg-tp-bg px-3 py-2 text-sm"
-            role="status"
-          >
-            <p className="font-medium text-tp-text">
-              {result.succeeded.length} baris berhasil
-              {result.failed.length > 0 ? `, ${result.failed.length} gagal` : ""}
-              {result.notExecuted.length > 0
-                ? `, ${result.notExecuted.length} belum dieksekusi`
-                : ""}
-              .
-            </p>
-            {result.stopReason ? (
-              <p className="text-red-700" role="alert">
-                Impor dihentikan: {result.stopReason}
-              </p>
-            ) : null}
-            {result.failed.length > 0 ? (
-              <ul className="flex flex-col gap-1">
-                {result.failed.map((row) => (
-                  <li className="text-red-700" key={row.rowNumber}>
-                    <span className="font-medium">Baris {row.rowNumber} ({row.label})</span>
-                    {" — "}
-                    {row.reason}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {result.notExecuted.length > 0 ? (
-              <ul aria-label="Baris tidak dieksekusi" className="flex flex-col gap-1">
-                {result.notExecuted.map((row) => (
-                  <li className="text-tp-muted" key={row.rowNumber}>
-                    Baris {row.rowNumber} ({row.label}) — tidak dieksekusi.
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {result.failed.length > 0 ? (
-              <p className="text-xs text-tp-muted">
-                Baris yang berhasil tetap tersimpan; perbaiki baris yang gagal lalu ulangi.
-              </p>
-            ) : null}
-          </div>
+          <MasterDataBulkReport
+            formatEntry={(entry) => `Baris ${entry.rowNumber} (${entry.label})`}
+            hint="Baris yang berhasil tetap tersimpan; perbaiki baris yang gagal lalu ulangi."
+            report={result}
+            stopPrefix="Impor dihentikan"
+          />
         ) : null}
         <InputControl
           error={fileError ?? undefined}

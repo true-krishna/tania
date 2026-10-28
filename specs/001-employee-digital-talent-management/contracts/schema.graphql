@@ -1591,6 +1591,7 @@ enum BulkMasterDataErrorCode {
   REF_AMBIGUOUS  # nilai referensi dipakai lebih dari satu entitas aktif
   BATCH_LIMIT    # jumlah baris melebihi batas 100
   INVALID        # input tidak valid lainnya
+  REFERENCED     # baris masih direferensikan data lain / masih memiliki bawahan wajib — penonaktifan ditolak (FR-21)
 }
 
 """Hasil satu baris impor Unit."""
@@ -1656,4 +1657,36 @@ extend type Mutation {
   importJobRoles(input: ImportJobRolesInput!): BulkJobRoleResult!
   """Impor Chapter massal dari berkas templat: satu Chapter per baris. Khusus Admin."""
   importChapters(input: ImportChaptersInput!): BulkChapterResult!
+}
+
+
+# --- Perubahan sama & nonaktif massal master data (TAN-349) ------------------
+# Satu perubahan yang sama diterapkan pada banyak entri terpilih dalam satu
+# daftar master data: Job Role → chapter pemilik, Project (Initiative) → Unit
+# in Charge, dan status aktif/non-aktif untuk semua daftar (FR-03); perubahan
+# nilai berbeda per baris (mis. rename massal) tetap melalui edit tunggal.
+# Nonaktif massal adalah padanan "delete" yang disepakati — tidak ada mutasi
+# hapus master data (FR-21 tetap utuh): baris yang masih direferensikan data
+# lain atau masih memiliki bawahan wajib ditolak per baris dengan penjelasan
+# dependensinya (kode REFERENCED), baris lain tetap tereksekusi (FR-04). Baris
+# yang sudah berada pada status tujuan dilaporkan apa adanya tanpa perubahan,
+# tidak dihitung gagal. Satu operasi maksimum 100 id — lebih dari itu
+# permintaan ditolak utuh (FR-06); kegagalan satu baris tidak memengaruhi
+# baris lain (FR-02); jejak audit terekam per entri (FR-08); otorisasi Admin
+# ditegakkan di server (FR-07). Modal konfirmasi ringkasan sebelum eksekusi
+# nonaktif massal ditangani dashboard (FR-05).
+
+extend type Mutation {
+  """Ubah status aktif/non-aktif banyak Unit sekaligus dengan satu aksi. Khusus Admin."""
+  bulkSetUnitActive(ids: [ID!]!, isActive: Boolean!): BulkUnitResult!
+  """Ubah status aktif/non-aktif banyak Project (Initiative) sekaligus dengan satu aksi. Khusus Admin."""
+  bulkSetProjectActive(ids: [ID!]!, isActive: Boolean!): BulkProjectResult!
+  """Ubah status aktif/non-aktif banyak Job Role sekaligus dengan satu aksi. Khusus Admin."""
+  bulkSetJobRoleActive(ids: [ID!]!, isActive: Boolean!): BulkJobRoleResult!
+  """Ubah status aktif/non-aktif banyak Chapter sekaligus dengan satu aksi. Khusus Admin."""
+  bulkSetChapterActive(ids: [ID!]!, isActive: Boolean!): BulkChapterResult!
+  """Pindahkan chapter pemilik pada banyak Job Role sekaligus; chapterId kosong berarti melepas kepemilikan. Khusus Admin."""
+  bulkSetJobRoleChapter(ids: [ID!]!, chapterId: ID): BulkJobRoleResult!
+  """Pindahkan Unit in Charge pada banyak Project (Initiative) sekaligus. Khusus Admin."""
+  bulkSetProjectUnit(ids: [ID!]!, unitId: ID!): BulkProjectResult!
 }

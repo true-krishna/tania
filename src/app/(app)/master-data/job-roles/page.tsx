@@ -29,6 +29,7 @@ export default function JobRolesPage() {
   return (
     <MasterDataSection<JobRole>
       addLabel="Tambah Job Role"
+      bulkEntity="jobRole"
       caption="Daftar job role"
       emptyMessage="Belum ada job role. Tambahkan job role pertama."
       error={error}

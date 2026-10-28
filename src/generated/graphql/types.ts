@@ -311,6 +311,7 @@ export type BulkMasterDataErrorCode =
   | 'BATCH_LIMIT'
   | 'CONFLICT'
   | 'INVALID'
+  | 'REFERENCED'
   | 'REF_AMBIGUOUS'
   | 'REF_INACTIVE'
   | 'REF_NOT_FOUND';
@@ -1097,6 +1098,18 @@ export type Mutation = {
   bulkCreateAssignments: BulkAssignmentResult;
   /** Hapus banyak assignment aktif sekaligus (selesai tidak dapat dihapus). Chapter + Admin. */
   bulkDeleteAssignments: BulkAssignmentResult;
+  /** Ubah status aktif/non-aktif banyak Chapter sekaligus dengan satu aksi. Khusus Admin. */
+  bulkSetChapterActive: BulkChapterResult;
+  /** Ubah status aktif/non-aktif banyak Job Role sekaligus dengan satu aksi. Khusus Admin. */
+  bulkSetJobRoleActive: BulkJobRoleResult;
+  /** Pindahkan chapter pemilik pada banyak Job Role sekaligus; chapterId kosong berarti melepas kepemilikan. Khusus Admin. */
+  bulkSetJobRoleChapter: BulkJobRoleResult;
+  /** Ubah status aktif/non-aktif banyak Project (Initiative) sekaligus dengan satu aksi. Khusus Admin. */
+  bulkSetProjectActive: BulkProjectResult;
+  /** Pindahkan Unit in Charge pada banyak Project (Initiative) sekaligus. Khusus Admin. */
+  bulkSetProjectUnit: BulkProjectResult;
+  /** Ubah status aktif/non-aktif banyak Unit sekaligus dengan satu aksi. Khusus Admin. */
+  bulkSetUnitActive: BulkUnitResult;
   /** Terapkan satu perubahan (project dan/atau periode) ke banyak assignment aktif. Chapter + Admin. */
   bulkUpdateAssignments: BulkAssignmentResult;
   closeIdp: Idp;
@@ -1257,6 +1270,42 @@ export type MutationBulkCreateAssignmentsArgs = {
 
 export type MutationBulkDeleteAssignmentsArgs = {
   ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationBulkSetChapterActiveArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  isActive: Scalars['Boolean']['input'];
+};
+
+
+export type MutationBulkSetJobRoleActiveArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  isActive: Scalars['Boolean']['input'];
+};
+
+
+export type MutationBulkSetJobRoleChapterArgs = {
+  chapterId?: InputMaybe<Scalars['ID']['input']>;
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationBulkSetProjectActiveArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  isActive: Scalars['Boolean']['input'];
+};
+
+
+export type MutationBulkSetProjectUnitArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  unitId: Scalars['ID']['input'];
+};
+
+
+export type MutationBulkSetUnitActiveArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  isActive: Scalars['Boolean']['input'];
 };
 
 

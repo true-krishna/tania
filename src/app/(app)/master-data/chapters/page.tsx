@@ -28,6 +28,7 @@ export default function ChaptersPage() {
   return (
     <MasterDataSection<Chapter>
       addLabel="Tambah Chapter"
+      bulkEntity="chapter"
       caption="Daftar chapter"
       emptyMessage="Belum ada chapter. Tambahkan chapter pertama."
       error={error}
