@@ -16,7 +16,9 @@ import {
 } from "@/generated/graphql";
 import type { MenuAccessLevel, RoleStatus, AccessRole } from "@/generated/graphql/types";
 import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
-import type { MenuAccessConfig } from "@/lib/auth/menuAccess";
+import { authConfig } from "@/lib/auth/config";
+import type { MenuAccessConfig, MenuConfigStatus } from "@/lib/auth/menuAccess";
+import { useSession } from "@/lib/auth/session-store";
 import { gridOf, type GridCell, type RoleGrid } from "./menuGrid";
 
 export type Role = RolesQuery["roles"][number];
@@ -52,18 +54,71 @@ export function useRoleMenuConfig(roleId?: string): RefetchableQueryState<MenuCe
   };
 }
 
+export interface MyMenuConfig {
+  config: MenuAccessConfig | null;
+  roleName: string | null;
+  status: MenuConfigStatus;
+  error: string | null;
+  refetch: () => Promise<unknown>;
+}
+
 /**
  * The caller's own menu grid, shaped for `visibleByConfig` so the sidebar and
  * the invariant tests read it exactly like the default matrix.
+ *
+ * The query is `network-only` and re-runs whenever the session identity changes:
+ * the cache is shared by every user of the browser, and a root field without
+ * arguments would otherwise serve one role's grid to the next sign-in.
  */
-export function useMyMenuConfig(): { config: MenuAccessConfig | null; roleName: string | null } {
-  const { data } = useQuery(MyMenuConfigDocument);
+export function useMyMenuConfig(): MyMenuConfig {
+  const session = useSession();
+  const result = useQuery(MyMenuConfigDocument, {
+    fetchPolicy: "network-only",
+    skip: authConfig.localOnly,
+    notifyOnNetworkStatusChange: true,
+  });
+
+  const sessionKey = [
+    session?.accessRole ?? "",
+    session?.roleName ?? "",
+    session?.refreshToken ?? "",
+  ].join(":");
+
+  const lastSessionKey = React.useRef<string | null>(null);
+  const { refetch } = result;
+  React.useEffect(() => {
+    if (lastSessionKey.current === null) {
+      lastSessionKey.current = sessionKey;
+      return;
+    }
+    if (lastSessionKey.current === sessionKey) return;
+    lastSessionKey.current = sessionKey;
+    if (!authConfig.localOnly) void refetch?.();
+  }, [sessionKey, refetch]);
+
   return React.useMemo(() => {
-    const cells = data?.myMenuConfig;
-    if (!cells?.length) return { config: null, roleName: null };
-    const roleName = cells[0].roleName;
-    return { roleName, config: { [roleName]: gridOf(cells, roleName) } };
-  }, [data]);
+    if (authConfig.localOnly) {
+      return { config: null, roleName: null, status: "ready", error: null, refetch };
+    }
+    const cells = result.data?.myMenuConfig;
+    const roleName = cells?.[0]?.roleName ?? null;
+    const config = cells?.length && roleName ? { [roleName]: gridOf(cells, roleName) } : null;
+    const status: MenuConfigStatus =
+      result.loading && !cells
+        ? "loading"
+        : result.error && !cells
+          ? "error"
+          : config
+            ? "ready"
+            : "empty";
+    return {
+      config,
+      roleName,
+      status,
+      error: result.error?.message ?? null,
+      refetch,
+    };
+  }, [result.data, result.error, result.loading, refetch]);
 }
 
 export type RoleMenuAccessInput = {
@@ -73,12 +128,17 @@ export type RoleMenuAccessInput = {
 };
 
 export function useRoleMutations() {
-  const [writeMenuAccess] = useMutation(SetRoleMenuAccessDocument);
-  const [resetRoleMenuConfig] = useMutation(ResetRoleMenuConfigDocument);
-  const [createRole] = useMutation(CreateRoleDocument);
-  const [updateRoleLabel] = useMutation(UpdateRoleDocument);
-  const [setStatus] = useMutation(SetRoleStatusDocument);
-  const [removeRole] = useMutation(DeleteRoleDocument);
+  const refetchMenu = [{ query: MyMenuConfigDocument }];
+  const [writeMenuAccess] = useMutation(SetRoleMenuAccessDocument, {
+    refetchQueries: refetchMenu,
+  });
+  const [resetRoleMenuConfig] = useMutation(ResetRoleMenuConfigDocument, {
+    refetchQueries: refetchMenu,
+  });
+  const [createRole] = useMutation(CreateRoleDocument, { refetchQueries: refetchMenu });
+  const [updateRoleLabel] = useMutation(UpdateRoleDocument, { refetchQueries: refetchMenu });
+  const [setStatus] = useMutation(SetRoleStatusDocument, { refetchQueries: refetchMenu });
+  const [removeRole] = useMutation(DeleteRoleDocument, { refetchQueries: refetchMenu });
 
   return {
     saveMenuAccess: (roleId: string, entries: RoleMenuAccessInput[]) =>

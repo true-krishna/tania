@@ -143,6 +143,21 @@ describe("draft grid", () => {
     expect(input.filter((cell) => cell.visible)).toHaveLength(1);
   });
 
+  it("sel yang belum ada di draft memakai baseline role, bukan NONE", () => {
+    const baseline = DEFAULT_MENU_ACCESS["CHAPTER"];
+    const input = gridInput({ idp: cellOf("MANAGE") }, baseline);
+    expect(input.find((cell) => cell.menuEntryId === "employees")).toEqual({
+      menuEntryId: "employees",
+      visible: true,
+      accessLevel: "READ",
+    });
+    expect(input.find((cell) => cell.menuEntryId === "idp")).toEqual({
+      menuEntryId: "idp",
+      visible: true,
+      accessLevel: "MANAGE",
+    });
+  });
+
   it("gridDirty hanya melihat level, bukan objeknya", () => {
     const saved: RoleGrid = { idp: cellOf("READ") };
     expect(gridDirty({ idp: { visible: true, accessLevel: "READ" } }, saved)).toBe(false);

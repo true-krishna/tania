@@ -15,8 +15,8 @@ import { Select } from "@/components/Select";
 import { ToastStack } from "@/components/Toast";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useIdp } from "@/features/idp/useIdp";
+import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import { canManage } from "@/lib/auth/matrix";
 import {
   AddDevelopmentActionDocument,
   AddIdpReviewDocument,
@@ -61,7 +61,7 @@ type ToastItem = { id: number; variant: "error" | "success"; message: string };
 export default function IdpDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const role = useSessionRole();
-  const managing = canManage(role, "idp");
+  const managing = useModuleAccess("idp").canManage;
   const canUpdateStatus = managing || role === "TALENT";
   const { status, data, error } = useIdp(id);
 

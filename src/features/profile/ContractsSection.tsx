@@ -10,8 +10,7 @@ import {
   CONTRACT_TYPE_LABEL,
   WORK_LOCATION_LABEL,
 } from "@/features/contracts/labels";
-import { canAccess } from "@/lib/auth/matrix";
-import { useSessionRole } from "@/lib/auth/guard";
+import { useModuleAccess } from "@/lib/auth/access";
 import { CONTRACT_DETAIL } from "@/lib/constants/routes";
 import type { ProfileContract } from "./useProfile";
 
@@ -20,7 +19,7 @@ export function ContractsSection({
 }: {
   contracts: readonly ProfileContract[];
 }) {
-  const linked = canAccess(useSessionRole(), "contracts");
+  const linked = useModuleAccess("contracts").canRead;
 
   if (contracts.length === 0) {
     return <EmptyState message="Belum ada kontrak tercatat." />;

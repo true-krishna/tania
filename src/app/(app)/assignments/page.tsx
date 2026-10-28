@@ -20,8 +20,8 @@ import { useAssignableTalents, useEmployees } from "@/features/employees/useEmpl
 import { useProjects } from "@/features/master-data/useMasterData";
 import type { AccessRole, AssignmentFilter, AssignmentStatus } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
+import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import { canManage } from "@/lib/auth/matrix";
 import { ASSIGNMENT_DETAIL } from "@/lib/constants/routes";
 
 const SUBTITLE: Partial<Record<AccessRole, string>> = {
@@ -99,7 +99,7 @@ function ChapterTalentOptions({
 export default function AssignmentsPage() {
   const router = useRouter();
   const role = useSessionRole();
-  const manage = canManage(role, "assignments");
+  const manage = useModuleAccess("assignments").canManage;
   const ownOnly = role === "TALENT";
   const [filters, setFilters] = React.useState<{
     talentId: string;

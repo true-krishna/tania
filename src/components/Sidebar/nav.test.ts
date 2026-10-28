@@ -84,6 +84,7 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
     expect(sectionForPath("/employees/emp-1")).toBe("Employee");
     expect(sectionForPath("/assignments")).toBe("Employee");
     expect(sectionForPath("/master-data/units")).toBe("Master Data");
+    expect(sectionForPath("/admin/roles")).toBe("Menu & Akses");
   });
 });
 

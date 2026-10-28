@@ -16,6 +16,9 @@ import type { Module } from "./matrix";
  */
 export type MenuAccessLevel = "NONE" | "READ" | "MANAGE";
 
+/** Lifecycle of the caller's grid, so the sidebar never mistakes "not loaded" for "allow everything". */
+export type MenuConfigStatus = "loading" | "ready" | "error" | "empty";
+
 export interface MenuAccessCell {
   /** Sidebar visibility — a UI hint only. */
   visible: boolean;
@@ -41,8 +44,7 @@ export function menuEntryIdForHref(href: string): string {
  * Sidebar href → matrix module. Promoted from `nav.test.ts` so the sidebar and
  * the invariant tests read the same registry.
  */
-export const MODULE_OF_HREF: Record<string, Module> = {
-  "/dashboard": "dashboard",
+export const MODULE_OF_HREF: Record<string, Module> = {  "/dashboard": "dashboard",
   "/activities": "activities",
   "/workload": "workload",
   "/workload/executive": "workload",
@@ -63,6 +65,34 @@ export const MODULE_OF_HREF: Record<string, Module> = {
   "/master-data/projects": "masterData",
   "/accounts": "accounts",
   "/audit": "audit",
+};
+
+/**
+ * Menu entries that make up one module. A module is readable/manageable when at
+ * least one of its page-level entries grants that level — the same meaning the
+ * server applies per request. Pages and tabs resolve their effective rights
+ * through this map instead of the static built-in matrix whenever the caller's
+ * grid is available.
+ */
+export const MODULE_ENTRIES: Record<Module, readonly string[]> = {
+  dashboard: ["dashboard"],
+  activities: ["activities"],
+  workload: ["workload", "workload/executive", "workload/talent"],
+  employees: ["employees"],
+  entra: ["entra"],
+  contracts: ["contracts"],
+  assignments: ["assignments"],
+  idp: ["idp"],
+  evaluations: ["evaluations", "evaluations/periods", "evaluations/templates", "evaluations/my"],
+  cv: ["cv"],
+  masterData: [
+    "master-data/units",
+    "master-data/chapters",
+    "master-data/job-roles",
+    "master-data/projects",
+  ],
+  accounts: ["accounts"],
+  audit: ["audit"],
 };
 
 function buildDefaultMenuAccess(): MenuAccessConfig {
@@ -149,4 +179,31 @@ export function serverAllows(
 export function visibleByConfig(config: MenuAccessConfig, role: string, entry: string): boolean {
   const cell = config[role]?.[entry];
   return !!cell && cell.visible && cell.accessLevel !== "NONE";
+}
+
+/** Effective read right for a module under the caller's grid. */
+export function moduleReadable(
+  config: MenuAccessConfig,
+  role: string,
+  module: Module,
+): boolean {
+  return MODULE_ENTRIES[module].some((entry) => serverAllows(config, role, entry, "READ"));
+}
+
+/** Effective manage right for a module under the caller's grid. */
+export function moduleManageable(
+  config: MenuAccessConfig,
+  role: string,
+  module: Module,
+): boolean {
+  return MODULE_ENTRIES[module].some((entry) => serverAllows(config, role, entry, "MANAGE"));
+}
+
+/** Baseline entry right for callers that have no grid yet (custom roles inherit their template). */
+export function defaultEntryReadable(role: AccessRole, entry: string): boolean {
+  return serverAllows(DEFAULT_MENU_ACCESS, role, entry, "READ");
+}
+
+export function defaultEntryManageable(role: AccessRole, entry: string): boolean {
+  return serverAllows(DEFAULT_MENU_ACCESS, role, entry, "MANAGE");
 }

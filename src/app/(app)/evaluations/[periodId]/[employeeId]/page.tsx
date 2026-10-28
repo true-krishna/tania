@@ -17,8 +17,7 @@ import {
   SubmitPerformanceEvaluationDocument,
   UpsertPerformanceEvaluationDocument,
 } from "@/generated/graphql";
-import { useSessionRole } from "@/lib/auth/guard";
-import { canManage } from "@/lib/auth/matrix";
+import { useModuleAccess } from "@/lib/auth/access";
 import type { EvaluationAnswerType, EvaluationPeriodState } from "@/generated/graphql/types";
 import { EVALUATIONS } from "@/lib/constants/routes";
 
@@ -127,9 +126,9 @@ function EvaluationForm({
   const [upsert, upsertState] = useMutation(UpsertPerformanceEvaluationDocument);
   const [submit, submitState] = useMutation(SubmitPerformanceEvaluationDocument);
   const { pushToast } = useToast();
-  const role = useSessionRole();
+  const canManageEvaluations = useModuleAccess("evaluations").canManage;
 
-  const readOnly = period.state === "CLOSED" || !canManage(role, "evaluations");
+  const readOnly = period.state === "CLOSED" || !canManageEvaluations;
 
   const [answersState, setAnswersState] = React.useState<Record<string, string>>(() =>
     Object.fromEntries(

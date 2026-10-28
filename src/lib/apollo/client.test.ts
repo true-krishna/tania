@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { gql } from "@apollo/client";
-import { createApolloClient } from "./client";
+import { createApolloClient, resetApolloStore } from "./client";
 import { clearSession, getSession, setSession, type Session } from "@/lib/auth/token-store";
 import { onSessionExpired } from "@/lib/auth/session-expiry";
 
@@ -12,6 +12,7 @@ const SESSION: Session = {
   refreshToken: "refresh-1",
   refreshTokenExpiresAt: "2099-01-01T00:00:00Z",
   accessRole: "ADMIN",
+  roleName: "ADMIN",
   fullName: "Ada Lovelace",
   email: "ada@tania.id",
 };
@@ -41,6 +42,7 @@ const refreshAccepted = {
         email: NEXT_SESSION.email,
         fullName: NEXT_SESSION.fullName,
         accessRole: NEXT_SESSION.accessRole,
+        roleName: NEXT_SESSION.roleName,
         status: "ACTIVE",
       },
     },
@@ -142,5 +144,42 @@ describe("Apollo client session expiry", () => {
     expect(getSession()?.accessToken).toBe("token-new");
     expect(JSON.parse(calls[1].body).variables.refreshToken).toBe("refresh-1");
     expect(calls[2].headers.authorization).toBe("Bearer token-new");
+  });
+
+  it("drops every cached result at a session boundary", async () => {
+    const client = createApolloClient();
+    client.cache.writeQuery({ query: PING, data: { ping: "pong" } });
+    expect(client.cache.extract()).not.toEqual({});
+
+    await resetApolloStore();
+
+    expect(client.cache.extract()).toEqual({});
+  });
+
+  it("clears the cache when a token refresh changes the role", async () => {
+    setSession(SESSION);
+    stubFetch([
+      () => gqlResponse(unauthorized),
+      () =>
+        gqlResponse({
+          data: {
+            refreshSession: {
+              ...refreshAccepted.data.refreshSession,
+              user: { ...refreshAccepted.data.refreshSession.user, accessRole: "CHAPTER", roleName: "CHAPTER" },
+            },
+          },
+        }),
+      () => gqlResponse({ data: { ping: "pong" } }),
+    ]);
+
+    const client = createApolloClient();
+    client.cache.writeQuery({ query: PING, data: { ping: "cached-before-refresh" } });
+    const clear = vi.spyOn(client, "clearStore");
+
+    await client.query({ query: PING, fetchPolicy: "network-only" });
+
+    expect(clear).toHaveBeenCalledTimes(1);
+    expect(getSession()?.accessRole).toBe("CHAPTER");
+    expect(getSession()?.roleName).toBe("CHAPTER");
   });
 });

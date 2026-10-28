@@ -16,6 +16,7 @@ import { beginEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/en
 import { setSession } from "@/lib/auth/token-store";
 import { useSessionRole } from "@/lib/auth/guard";
 import { landingRoute } from "@/lib/auth/landing";
+import { resetApolloStore } from "@/lib/apollo";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Brand } from "@/components/Brand";
@@ -107,11 +108,13 @@ export default function LoginForm() {
           refreshToken,
           refreshTokenExpiresAt,
           accessRole: user.accessRole,
+          roleName: user.roleName,
           fullName: user.fullName,
           email: user.email,
         },
         { remember },
       );
+      await resetApolloStore();
       router.replace(landingRoute(user.accessRole));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan.";

@@ -6,6 +6,7 @@ import { useMutation } from "@apollo/client";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { LoginWithEntraDocument } from "@/generated/graphql";
 import { takeEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/entra-pkce";
+import { resetApolloStore } from "@/lib/apollo";
 import { setSession } from "@/lib/auth/token-store";
 import { landingRoute } from "@/lib/auth/landing";
 import { LOGIN } from "@/lib/constants/routes";
@@ -46,9 +47,11 @@ export default function CallbackView() {
         refreshToken,
         refreshTokenExpiresAt,
         accessRole: user.accessRole,
+        roleName: user.roleName,
         fullName: user.fullName,
         email: user.email,
       });
+      await resetApolloStore();
       router.replace(landingRoute(user.accessRole));
     } catch (err) {
       const message =

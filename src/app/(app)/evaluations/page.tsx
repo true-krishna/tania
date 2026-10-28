@@ -15,8 +15,8 @@ import {
   PeriodStateBadge,
 } from "@/features/evaluations/EvaluationBadges";
 import { orDash } from "@/lib/cell";
+import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import { canManage } from "@/lib/auth/matrix";
 import {
   EVALUATIONS_MY,
   EVALUATION_PERIODS,
@@ -25,6 +25,7 @@ import {
 
 export default function EvaluationsPage() {
   const role = useSessionRole();
+  const canManageEvaluations = useModuleAccess("evaluations").canManage;
   const router = useRouter();
   const current = useCurrentEvaluationPeriod();
   const roster = useEvaluationRoster(current.data?.id ?? null);
@@ -83,7 +84,7 @@ export default function EvaluationsPage() {
 
   const entries = roster.data ?? [];
   const evaluated = entries.filter((e) => e.fillState === "EVALUATED").length;
-  const readOnly = period.state === "CLOSED" || !canManage(role, "evaluations");
+  const readOnly = period.state === "CLOSED" || !canManageEvaluations;
 
   return (
     <section className="flex flex-col gap-4">

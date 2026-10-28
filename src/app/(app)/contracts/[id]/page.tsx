@@ -21,8 +21,7 @@ import {
 } from "@/features/contracts/labels";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { ContractCycleActions } from "@/features/contracts/ContractCycleActions";
-import { canManage } from "@/lib/auth/matrix";
-import { useSessionRole } from "@/lib/auth/guard";
+import { useModuleAccess } from "@/lib/auth/access";
 import {
   EmploymentContractDocument,
   UpdateEmploymentContractDocument,
@@ -54,7 +53,7 @@ const CONFLICT_MESSAGE = "Nomor kontrak sudah dipakai. Periksa kembali isian ter
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { status, data: contract, error } = useEmploymentContract(id);
-  const manage = canManage(useSessionRole(), "contracts");
+  const manage = useModuleAccess("contracts").canManage;
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data kontrak."} />;

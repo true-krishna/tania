@@ -13,6 +13,18 @@ import { refreshSessionToken } from "@/lib/auth/refresh";
 import { notifySessionExpired } from "@/lib/auth/session-expiry";
 import { getGraphqlEndpoint } from "@/lib/apollo/endpoint";
 
+let activeClient: ApolloClient<unknown> | null = null;
+
+/**
+ * Drops every cached query result and discards active watches. Called whenever
+ * the session identity changes (sign-in, sign-out, unrecoverable expiry), so a
+ * new user never sees the previous user's cache — `MyMenuConfig`, `me`, or any
+ * other user-scoped root field — as its first render.
+ */
+export async function resetApolloStore(): Promise<void> {
+  await activeClient?.clearStore();
+}
+
 /**
  * Normalized cache with type policies aligned to the served schema contract.
  * Default ID uses `id`; `Type`/enums without `id` use `__typename` keying.
@@ -80,6 +92,7 @@ export function createApolloClient(): ApolloClient<unknown> {
     const session = getSession();
     if (!session?.refreshToken) {
       clearSession();
+      void resetApolloStore();
       notifySessionExpired();
       return;
     }
@@ -92,19 +105,25 @@ export function createApolloClient(): ApolloClient<unknown> {
 
       refreshSessionToken(session.refreshToken)
         .then((next) => {
+          const roleChanged =
+            session.accessRole !== next.user.accessRole ||
+            (!!session.roleName && session.roleName !== next.user.roleName);
           setSession({
             accessToken: next.accessToken,
             accessTokenExpiresAt: next.accessTokenExpiresAt,
             refreshToken: next.refreshToken,
             refreshTokenExpiresAt: next.refreshTokenExpiresAt,
             accessRole: next.user.accessRole,
+            roleName: next.user.roleName,
             fullName: next.user.fullName,
             email: next.user.email,
           });
+          if (roleChanged) void resetApolloStore();
           inner = forward(operation).subscribe(subscriber);
         })
         .catch(() => {
           clearSession();
+          void resetApolloStore();
           notifySessionExpired();
           if (!subscriber.closed) {
             subscriber.error(new Error("Session expired. Please sign in again."));
@@ -115,9 +134,11 @@ export function createApolloClient(): ApolloClient<unknown> {
     });
   });
 
-  return new ApolloClient({
+  const client = new ApolloClient({
     link: from([errorLink, authLink, httpLink]),
     cache: createCache(),
     devtools: { enabled: typeof window !== "undefined" },
   });
+  activeClient = client;
+  return client;
 }

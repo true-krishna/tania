@@ -2,23 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import type { AccessRole } from "@/generated/graphql";
-import { getSession } from "@/lib/auth/token-store";
 import { authConfig } from "@/lib/auth/config";
 import { canAccess, canManage, type Module } from "@/lib/auth/matrix";
+import { isSessionExpired } from "@/lib/auth/session-codec";
+import { useSession, useSessionRole } from "@/lib/auth/session-store";
+import { getSession } from "@/lib/auth/token-store";
 import { LOGIN } from "@/lib/constants/routes";
 
-export function useSessionRole(): AccessRole | null {
-  const [role] = React.useState<AccessRole | null>(() => {
-    if (authConfig.localOnly) {
-      return (authConfig.defaultAccessRole as AccessRole | undefined) ?? "TALENT";
-    }
-    const session = getSession();
-    return session ? session.accessRole : null;
-  });
-
-  return role;
-}
+export { useSession, useSessionRole } from "@/lib/auth/session-store";
 
 export function AuthGuard({
   module,
@@ -31,21 +22,23 @@ export function AuthGuard({
 }) {
   const router = useRouter();
   const role = useSessionRole();
+  const session = useSession();
 
   React.useEffect(() => {
-    if (!authConfig.localOnly && role === null) {
-      router.replace(LOGIN);
-    }
-  }, [role, router]);
+    if (authConfig.localOnly) return;
+    if (session) return;
+    const stored = getSession();
+    if (stored && !isSessionExpired(stored)) return;
+    router.replace(LOGIN);
+  }, [session, router]);
 
-  const allowed = (r: AccessRole | null | undefined) =>
-    !module || (manage ? canManage(r, module) : canAccess(r, module));
+  const allowed = !module || (manage ? canManage(role, module) : canAccess(role, module));
 
-  if (!authConfig.localOnly && role !== null && !allowed(role)) {
+  if (!authConfig.localOnly && role !== null && !allowed) {
     return null;
   }
 
-  if (authConfig.localOnly && !allowed(authConfig.defaultAccessRole as AccessRole | undefined)) {
+  if (authConfig.localOnly && !allowed) {
     return null;
   }
 

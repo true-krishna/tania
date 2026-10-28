@@ -10,7 +10,7 @@ import {
 import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/cn";
 import type { AccessRole } from "@/generated/graphql";
-import type { MenuAccessConfig } from "@/lib/auth/menuAccess";
+import type { MenuAccessConfig, MenuConfigStatus } from "@/lib/auth/menuAccess";
 import {
   NAV,
   visibleNavEntries,
@@ -22,6 +22,7 @@ interface SidebarProps {
   role: AccessRole | null;
   pathname: string;
   menuConfig?: MenuAccessConfig | null;
+  menuStatus?: MenuConfigStatus;
   roleName?: string | null;
 }
 
@@ -46,11 +47,22 @@ function useActiveHref(
   }, [pathname, role, entries, roleScoped]);
 }
 
-export function Sidebar({ role, pathname, menuConfig = null, roleName = null }: SidebarProps) {
+export function Sidebar({
+  role,
+  pathname,
+  menuConfig = null,
+  menuStatus = "ready",
+  roleName = null,
+}: SidebarProps) {
   const configured = !!menuConfig && !!roleName;
   const entries = React.useMemo(
-    () => (configured ? visibleNavEntries(menuConfig, roleName) : NAV),
-    [configured, menuConfig, roleName],
+    () =>
+      configured
+        ? visibleNavEntries(menuConfig, roleName)
+        : menuStatus === "ready"
+          ? NAV
+          : [],
+    [configured, menuConfig, menuStatus, roleName],
   );
   const activeHref = useActiveHref(pathname, role, entries, !configured);
   const [openOverride, setOpenOverride] = React.useState<Record<string, boolean>>({});
@@ -64,6 +76,13 @@ export function Sidebar({ role, pathname, menuConfig = null, roleName = null }: 
   const hidden = (entry: NavEntry) => !configured && !!role && !entry.roles.includes(role);
   const childrenOf = (entry: NavSubmenu) =>
     configured ? entry.children : entry.children.filter((child) => !role || child.roles.includes(role));
+
+  const menuNotice =
+    menuStatus === "error"
+      ? "Gagal memuat menu akses. Muat ulang halaman untuk mencoba lagi."
+      : entries.length === 0
+        ? "Tidak ada menu untuk peran ini."
+        : null;
 
   const toggle = (
     <button
@@ -106,136 +125,167 @@ export function Sidebar({ role, pathname, menuConfig = null, roleName = null }: 
       </div>
 
       <nav aria-label="Main navigation" className="hidden min-w-0 flex-1 flex-col overflow-y-auto min-[861px]:flex">
-        <ul className="flex flex-col gap-1">
-          {entries.map((entry) => {
-            if (hidden(entry)) return null;
+        {menuStatus === "loading" && !configured ? (
+          <div aria-hidden className="flex flex-col gap-1">
+            {[0, 1, 2, 3, 4].map((row) => (
+              <div
+                className={cn("h-9 animate-pulse rounded-md bg-tp-bg", collapsed && "w-full")}
+                key={row}
+              />
+            ))}
+          </div>
+        ) : menuNotice ? (
+          <p
+            className="px-2 py-1 text-sm text-tp-muted"
+            role={menuStatus === "error" ? "alert" : undefined}
+          >
+            {menuNotice}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {entries.map((entry) => {
+              if (hidden(entry)) return null;
 
-            if (entry.kind === "link") {
-              const active = activeHref === entry.href;
-              return (
-                <li key={entry.href}>
-                  <Link
-                    aria-current={active ? "page" : undefined}
-                    className="tp-nav-item"
-                    href={entry.href}
-                    title={collapsed ? entry.label : undefined}
-                  >
-                    <entry.icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
-                    <span className={collapsed ? "sr-only" : "min-w-0 truncate"}>{entry.label}</span>
-                  </Link>
-                </li>
-              );
-            }
+              if (entry.kind === "link") {
+                const active = activeHref === entry.href;
+                return (
+                  <li key={entry.href}>
+                    <Link
+                      aria-current={active ? "page" : undefined}
+                      className="tp-nav-item"
+                      href={entry.href}
+                      title={collapsed ? entry.label : undefined}
+                    >
+                      <entry.icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
+                      <span className={collapsed ? "sr-only" : "min-w-0 truncate"}>{entry.label}</span>
+                    </Link>
+                  </li>
+                );
+              }
 
-            const children = childrenOf(entry);
+              const children = childrenOf(entry);
 
-            if (collapsed) {
-              const first = children[0];
-              if (!first) return null;
+              if (collapsed) {
+                const first = children[0];
+                if (!first) return null;
+                return (
+                  <li key={entry.id}>
+                    <Link
+                      aria-current={activeGroupId === entry.id ? "page" : undefined}
+                      className="tp-nav-item"
+                      href={first.href}
+                      title={entry.label}
+                    >
+                      <entry.icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
+                      <span className="sr-only">{entry.label}</span>
+                    </Link>
+                  </li>
+                );
+              }
+
+              const open = openOverride[entry.id] ?? activeGroupId === entry.id;
+
               return (
                 <li key={entry.id}>
-                  <Link
-                    aria-current={activeGroupId === entry.id ? "page" : undefined}
-                    className="tp-nav-item"
-                    href={first.href}
-                    title={entry.label}
+                  <button
+                    aria-controls={`nav-group-${entry.id}`}
+                    aria-expanded={open}
+                    className="tp-nav-item w-full"
+                    onClick={() => setOpenOverride((prev) => ({ ...prev, [entry.id]: !open }))}
+                    type="button"
                   >
                     <entry.icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
-                    <span className="sr-only">{entry.label}</span>
-                  </Link>
+                    <span className="min-w-0 flex-1 truncate text-left">{entry.label}</span>
+                    <IconChevronDown
+                      aria-hidden
+                      className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")}
+                    />
+                  </button>
+                  {open ? (
+                    <ul
+                      className="ml-[22px] mt-0.5 flex flex-col gap-1 pl-2"
+                      id={`nav-group-${entry.id}`}
+                    >
+                      {children.map((child) => {
+                        const active = activeHref === child.href;
+                        return (
+                          <li key={child.href}>
+                            <Link
+                              aria-current={active ? "page" : undefined}
+                              className="tp-nav-item"
+                              href={child.href}
+                            >
+                              <span className="min-w-0 truncate">{child.label}</span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
                 </li>
               );
-            }
-
-            const open = openOverride[entry.id] ?? activeGroupId === entry.id;
-
-            return (
-              <li key={entry.id}>
-                <button
-                  aria-controls={`nav-group-${entry.id}`}
-                  aria-expanded={open}
-                  className="tp-nav-item w-full"
-                  onClick={() => setOpenOverride((prev) => ({ ...prev, [entry.id]: !open }))}
-                  type="button"
-                >
-                  <entry.icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
-                  <span className="min-w-0 flex-1 truncate text-left">{entry.label}</span>
-                  <IconChevronDown
-                    aria-hidden
-                    className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")}
-                  />
-                </button>
-                {open ? (
-                  <ul
-                    className="ml-[22px] mt-0.5 flex flex-col gap-1 pl-2"
-                    id={`nav-group-${entry.id}`}
-                  >
-                    {children.map((child) => {
-                      const active = activeHref === child.href;
-                      return (
-                        <li key={child.href}>
-                          <Link
-                            aria-current={active ? "page" : undefined}
-                            className="tp-nav-item"
-                            href={child.href}
-                          >
-                            <span className="min-w-0 truncate">{child.label}</span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
+            })}
+          </ul>
+        )}
       </nav>
 
       <nav
         aria-label="Main navigation (compact)"
         className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto min-[861px]:hidden"
       >
-        {entries.map((entry) => {
-          if (hidden(entry)) return null;
+        {menuStatus === "loading" && !configured ? (
+          <span className="flex-none animate-pulse px-2 text-sm text-tp-muted" role="status">
+            Memuat menu…
+          </span>
+        ) : menuNotice ? (
+          <span
+            className="flex-none whitespace-nowrap px-2 text-sm text-tp-muted"
+            role={menuStatus === "error" ? "alert" : undefined}
+          >
+            {menuStatus === "error" ? "Menu akses gagal dimuat." : menuNotice}
+          </span>
+        ) : (
+          entries.map((entry) => {
+            if (hidden(entry)) return null;
 
-          if (entry.kind === "link") {
-            const active = activeHref === entry.href;
+            if (entry.kind === "link") {
+              const active = activeHref === entry.href;
+              return (
+                <Link
+                  aria-current={active ? "page" : undefined}
+                  className="tp-nav-item flex-none"
+                  href={entry.href}
+                  key={entry.href}
+                >
+                  <entry.icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
+                  <span className="whitespace-nowrap">{entry.label}</span>
+                </Link>
+              );
+            }
+
+            const children = childrenOf(entry);
+            if (children.length === 0) return null;
+
             return (
-              <Link
-                aria-current={active ? "page" : undefined}
-                className="tp-nav-item flex-none"
-                href={entry.href}
-                key={entry.href}
-              >
-                <entry.icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
-                <span className="whitespace-nowrap">{entry.label}</span>
-              </Link>
+              <React.Fragment key={entry.id}>
+                <span className="flex-none whitespace-nowrap px-2 text-tp-muted">{entry.label}</span>
+                {children.map((child) => {
+                  const active = activeHref === child.href;
+                  return (
+                    <Link
+                      aria-current={active ? "page" : undefined}
+                      className="tp-nav-item flex-none"
+                      href={child.href}
+                      key={child.href}
+                    >
+                      <span className="whitespace-nowrap">{child.label}</span>
+                    </Link>
+                  );
+                })}
+              </React.Fragment>
             );
-          }
-
-          const children = childrenOf(entry);
-          if (children.length === 0) return null;
-
-          return (
-            <React.Fragment key={entry.id}>
-              <span className="flex-none whitespace-nowrap px-2 text-tp-muted">{entry.label}</span>
-              {children.map((child) => {
-                const active = activeHref === child.href;
-                return (
-                  <Link
-                    aria-current={active ? "page" : undefined}
-                    className="tp-nav-item flex-none"
-                    href={child.href}
-                    key={child.href}
-                  >
-                    <span className="whitespace-nowrap">{child.label}</span>
-                  </Link>
-                );
-              })}
-            </React.Fragment>
-          );
-        })}
+          })
+        )}
       </nav>
     </aside>
   );

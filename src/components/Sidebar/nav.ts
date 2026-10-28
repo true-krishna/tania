@@ -36,6 +36,7 @@ import {
   MASTER_DATA_JOB_ROLES,
   MASTER_DATA_PROJECTS,
   MASTER_DATA_UNITS,
+  ROLES_ADMIN,
   TALENT_ASSIGNMENT,
   WORKLOAD,
   WORKLOAD_EXECUTIVE,
@@ -200,6 +201,9 @@ export function visibleNavEntries(
 
 /** Sidebar section label for the current route, shown in the top bar. */
 export function sectionForPath(pathname: string): string {
+  if (pathname === ROLES_ADMIN || pathname.startsWith(`${ROLES_ADMIN}/`)) {
+    return "Menu & Akses";
+  }
   let bestLabel = "Tania";
   let bestLength = -1;
   for (const entry of NAV) {
