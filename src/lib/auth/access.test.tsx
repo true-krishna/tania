@@ -59,6 +59,47 @@ describe("effective menu access", () => {
     expect(screen.getByText("halaman master data")).toBeInTheDocument();
   });
 
+  it("shows an access-denied panel when the grid denies the module", () => {
+    render(
+      <MenuAccessProvider config={CHAPTER_ON_MASTER_DATA} roleName="TALENT">
+        <MenuAccessGuard module="masterData">
+          <span>halaman master data</span>
+        </MenuAccessGuard>
+      </MenuAccessProvider>,
+    );
+
+    expect(screen.queryByText("halaman master data")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Akses ditolak");
+    expect(screen.getByRole("link", { name: /buka dashboard/i })).toHaveAttribute(
+      "href",
+      "/dashboard",
+    );
+  });
+
+  it("explains the read-only limit when manage is required", () => {
+    render(
+      <MenuAccessProvider config={CHAPTER_ON_MASTER_DATA} roleName="CHAPTER">
+        <MenuAccessGuard manage module="masterData">
+          <span>kelola master data</span>
+        </MenuAccessGuard>
+      </MenuAccessProvider>,
+    );
+
+    expect(screen.queryByText("kelola master data")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Akses terbatas");
+  });
+
+  it("renders nothing while the role is unknown", () => {
+    render(
+      <MenuAccessGuard module="masterData">
+        <span>halaman master data</span>
+      </MenuAccessGuard>,
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText("halaman master data")).not.toBeInTheDocument();
+  });
+
   it("reads a single entry for tabs and sections", () => {
     render(
       <MenuAccessProvider config={CHAPTER_ON_MASTER_DATA} roleName="CHAPTER">
