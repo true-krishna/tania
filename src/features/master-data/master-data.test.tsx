@@ -525,6 +525,40 @@ describe("master-data read-only per role (matrix: lihat untuk semua peran)", () 
     expect(screen.queryByRole("button", { name: "Tambah Chapter" })).toBeNull();
   });
 });
+
+describe("master-data bulk import entry (TAN-350)", () => {
+  it("opens the unit import modal with the official template link", async () => {
+    render(
+      <MockedProvider mocks={[UNITS_QUERY]}>
+        <ToastProvider>
+          <UnitsPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "+ Unggah Massal" }));
+    expect(screen.getByRole("dialog", { name: "Unggah Massal Unit" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Unduh Template" })).toHaveAttribute(
+      "href",
+      "/templates/template-buat-unit-massal.xlsx",
+    );
+  });
+
+  it("hides the bulk upload action from read-only roles", async () => {
+    auth.role = "CHAPTER";
+    render(
+      <MockedProvider mocks={[UNITS_QUERY]}>
+        <ToastProvider>
+          <UnitsPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "+ Unggah Massal" })).toBeNull();
+  });
+});
 // --- Create Job Role (US2) & Initiative/Project (US3) — TAN-187, 004-master-data-create ---
 
 const CHAPTERS_QUERY = {

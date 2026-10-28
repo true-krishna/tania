@@ -36,6 +36,7 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   onCreate: (values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
   onUpdate: (id: string, values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
+  importSlot?: (controls: { close: () => void; onImported: () => void; open: boolean }) => React.ReactNode;
 };
 
 export function MasterDataSection<T extends MasterDataItem>({
@@ -57,9 +58,11 @@ export function MasterDataSection<T extends MasterDataItem>({
   onCreate,
   onUpdate,
   onToggleActive,
+  importSlot,
 }: MasterDataSectionProps<T>) {
   const manage = useModuleAccess("masterData").canManage;
   const [creating, setCreating] = React.useState(false);
+  const [importing, setImporting] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [name, setName] = React.useState("");
   const [code, setCode] = React.useState("");
@@ -78,7 +81,7 @@ export function MasterDataSection<T extends MasterDataItem>({
         : items,
     [items, needle, searchable],
   );
-  const { pageRows, pagination } = useTablePagination(visibleItems);
+  const { pageRows, pagination, resetPage } = useTablePagination(visibleItems);
 
   const searchLabel = `Cari ${nameLabel.toLowerCase()}`;
 
@@ -197,9 +200,16 @@ export function MasterDataSection<T extends MasterDataItem>({
       <PageHeader
         actions={
           !manage ? undefined : (
-            <Button onClick={openCreate} type="button">
-              {addLabel}
-            </Button>
+            <>
+              {importSlot ? (
+                <Button onClick={() => setImporting(true)} type="button" variant="secondary">
+                  + Unggah Massal
+                </Button>
+              ) : null}
+              <Button onClick={openCreate} type="button">
+                {addLabel}
+              </Button>
+            </>
           )
         }
         subtitle={
@@ -262,6 +272,14 @@ export function MasterDataSection<T extends MasterDataItem>({
           </div>
         </form>
       </Modal>
+
+      {importSlot
+        ? importSlot({
+            close: () => setImporting(false),
+            onImported: resetPage,
+            open: importing,
+          })
+        : null}
 
       {!items || items.length === 0 ? (
         <EmptyState message={emptyMessage} />

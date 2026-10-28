@@ -58,6 +58,23 @@ const mocks = [
 ];
 
 describe("JobRolesPage (Apollo)", () => {
+  it("opens the job role import modal with the official template link (TAN-350)", async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <ToastProvider>
+          <JobRolesPage />
+        </ToastProvider>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText("Software Engineer")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "+ Unggah Massal" }));
+    expect(screen.getByRole("dialog", { name: "Unggah Massal Job Role" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Unduh Template" })).toHaveAttribute(
+      "href",
+      "/templates/template-buat-jobrole-massal.xlsx",
+    );
+  });
   it("renders job roles with their chapter after queries resolve", async () => {
     render(
       <MockedProvider mocks={mocks}>

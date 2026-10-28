@@ -1520,3 +1520,140 @@ extend type Mutation {
   """Impor assignment massal dari berkas templat: satu assignment per baris. Chapter + Admin."""
   importAssignments(input: ImportAssignmentsInput!): BulkAssignmentResult!
 }
+
+
+# --- Impor master data massal (TAN-348) -------------------------------------
+# Impor massal master data dari berkas templat Excel yang dibaca di klien:
+# satu baris = satu entri lengkap seperti pembuatan tunggal (Unit: kode +
+# nama; Project/Initiative: nama + Unit in Charge; Job Role: nama + chapter
+# pemilik opsional; Chapter: nama). Kolom referensi menerima nilai manusiawi
+# atau ID — `unit` diisi kode Unit (unik) atau ID unit, `chapter` diisi nama
+# chapter atau ID; nilai ambigu (dipakai lebih dari satu entitas aktif)
+# ditolak per baris. Referensi wajib ada dan aktif (FR-09). Maksimum 100
+# baris per operasi — lebih dari itu permintaan ditolak utuh (FR-06);
+# duplikat di dalam berkas ditolak pada baris duplikatnya (FR-11); kegagalan
+# satu baris tidak memengaruhi baris lain (FR-02). Jejak audit terekam per
+# entri (FR-08); otorisasi Admin ditegakkan di server (FR-07).
+
+input UnitImportRowInput {
+  """Kode unik satuan kerja (pembeda utama antar unit, FR-18)."""
+  code: String!
+  name: String!
+}
+
+input ProjectImportRowInput {
+  name: String!
+  """Unit in Charge — kode Unit (unik) atau ID unit (FR-19)."""
+  unit: ID!
+}
+
+input JobRoleImportRowInput {
+  name: String!
+  """Chapter pemilik — nama chapter atau ID; kosong berarti tanpa chapter (FR-20)."""
+  chapter: ID
+}
+
+input ChapterImportRowInput {
+  name: String!
+}
+
+input ImportUnitsInput {
+  """Maksimum 100 baris per operasi (FR-06)."""
+  rows: [UnitImportRowInput!]!
+}
+
+input ImportProjectsInput {
+  """Maksimum 100 baris per operasi (FR-06)."""
+  rows: [ProjectImportRowInput!]!
+}
+
+input ImportJobRolesInput {
+  """Maksimum 100 baris per operasi (FR-06)."""
+  rows: [JobRoleImportRowInput!]!
+}
+
+input ImportChaptersInput {
+  """Maksimum 100 baris per operasi (FR-06)."""
+  rows: [ChapterImportRowInput!]!
+}
+
+"""Kegagalan satu baris pada operasi master data massal."""
+type BulkMasterDataError {
+  code: BulkMasterDataErrorCode!
+  """Pesan siap tampil kepada pengguna (berbahasa Indonesia)."""
+  message: String!
+}
+
+enum BulkMasterDataErrorCode {
+  CONFLICT       # kode/nama sudah dipakai entri lain (termasuk duplikat di dalam berkas)
+  REF_NOT_FOUND  # referensi tidak ada
+  REF_INACTIVE   # referensi nonaktif
+  REF_AMBIGUOUS  # nilai referensi dipakai lebih dari satu entitas aktif
+  BATCH_LIMIT    # jumlah baris melebihi batas 100
+  INVALID        # input tidak valid lainnya
+}
+
+"""Hasil satu baris impor Unit."""
+type BulkUnitItemResult {
+  """Posisi baris pada input (0-based)."""
+  index: Int!
+  """Unit hasil — terisi bila baris berhasil."""
+  unit: Unit
+  """Kegagalan baris — terisi bila baris gagal."""
+  error: BulkMasterDataError
+}
+
+"""Hasil satu baris impor Project (Initiative)."""
+type BulkProjectItemResult {
+  index: Int!
+  """Project hasil — terisi bila baris berhasil."""
+  project: Project
+  error: BulkMasterDataError
+}
+
+"""Hasil satu baris impor Job Role."""
+type BulkJobRoleItemResult {
+  index: Int!
+  """Job Role hasil — terisi bila baris berhasil."""
+  jobRole: JobRole
+  error: BulkMasterDataError
+}
+
+"""Hasil satu baris impor Chapter."""
+type BulkChapterItemResult {
+  index: Int!
+  """Chapter hasil — terisi bila baris berhasil."""
+  chapter: Chapter
+  error: BulkMasterDataError
+}
+
+type BulkUnitResult {
+  succeeded: [BulkUnitItemResult!]!
+  failed: [BulkUnitItemResult!]!
+}
+
+type BulkProjectResult {
+  succeeded: [BulkProjectItemResult!]!
+  failed: [BulkProjectItemResult!]!
+}
+
+type BulkJobRoleResult {
+  succeeded: [BulkJobRoleItemResult!]!
+  failed: [BulkJobRoleItemResult!]!
+}
+
+type BulkChapterResult {
+  succeeded: [BulkChapterItemResult!]!
+  failed: [BulkChapterItemResult!]!
+}
+
+extend type Mutation {
+  """Impor Unit massal dari berkas templat: satu Unit per baris. Khusus Admin."""
+  importUnits(input: ImportUnitsInput!): BulkUnitResult!
+  """Impor Project (Initiative) massal dari berkas templat: satu Project per baris. Khusus Admin."""
+  importProjects(input: ImportProjectsInput!): BulkProjectResult!
+  """Impor Job Role massal dari berkas templat: satu Job Role per baris. Khusus Admin."""
+  importJobRoles(input: ImportJobRolesInput!): BulkJobRoleResult!
+  """Impor Chapter massal dari berkas templat: satu Chapter per baris. Khusus Admin."""
+  importChapters(input: ImportChaptersInput!): BulkChapterResult!
+}

@@ -6,6 +6,7 @@ import {
   MasterDataSection,
   type MasterDataItem,
 } from "@/features/master-data/MasterDataSection";
+import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useUnitMutations } from "@/features/master-data/useMasterDataMutations";
 
 type Unit = MasterDataItem & { code: string; projects: { length: number } };
@@ -34,6 +35,9 @@ export default function UnitsPage() {
       emptyMessage="Belum ada unit. Tambahkan unit pertama."
       error={error}
       extraColumn={{ label: "Initiative", render: (unit) => unit.projects.length }}
+      importSlot={({ close, onImported, open }) => (
+        <MasterDataImportModal entity="unit" onClose={close} onImported={onImported} open={open} />
+      )}
       items={data}
       nameLabel="Nama Unit"
       onCreate={({ name, code }) =>

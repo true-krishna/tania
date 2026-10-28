@@ -6,6 +6,7 @@ import {
   MasterDataSection,
   type MasterDataItem,
 } from "@/features/master-data/MasterDataSection";
+import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useChapterMutations } from "@/features/master-data/useMasterDataMutations";
 
 type Chapter = MasterDataItem & { jobRoles: { length: number } };
@@ -31,6 +32,9 @@ export default function ChaptersPage() {
       emptyMessage="Belum ada chapter. Tambahkan chapter pertama."
       error={error}
       extraColumn={{ label: "Job Role", render: (chapter) => chapter.jobRoles.length }}
+      importSlot={({ close, onImported, open }) => (
+        <MasterDataImportModal entity="chapter" onClose={close} onImported={onImported} open={open} />
+      )}
       items={data}
       nameLabel="Nama Chapter"
       onCreate={({ name }) => detectError(() => chapterMutations.create({ name }), `Chapter "${name}" berhasil dibuat.`)}

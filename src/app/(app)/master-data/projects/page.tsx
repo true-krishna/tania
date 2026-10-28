@@ -6,6 +6,7 @@ import {
   MasterDataSection,
   type MasterDataItem,
 } from "@/features/master-data/MasterDataSection";
+import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useProjectMutations } from "@/features/master-data/useMasterDataMutations";
 
 type Project = MasterDataItem & { unit: { id: string; name: string } };
@@ -32,6 +33,9 @@ export default function ProjectsPage() {
       emptyMessage="Belum ada initiative. Tambahkan initiative pertama."
       error={error}
       extraColumn={{ label: "Unit", render: (project) => project.unit.name }}
+      importSlot={({ close, onImported, open }) => (
+        <MasterDataImportModal entity="project" onClose={close} onImported={onImported} open={open} />
+      )}
       items={data}
       nameLabel="Nama Initiative"
       onCreate={({ name, selectValue }) =>
