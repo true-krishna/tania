@@ -28,7 +28,7 @@ const ROLES = [
   { id: "role-talent", name: "TALENT", label: "Talent", templateRole: "TALENT", builtIn: true, status: "ACTIVE", __typename: "Role" },
 ] as const;
 
-/** The server's grid: the default matrix, 21 entries per role. */
+/** The server's grid: the default matrix, 22 entries per role (termasuk baris tanpa rute "Asisten data"). */
 const CONFIG_CELLS = ROLES.flatMap((role) =>
   MENU_ROWS.map((row) => {
     const cell = DEFAULT_MENU_ACCESS[role.name][row.id] ?? { visible: false, accessLevel: "NONE" as const };
@@ -81,7 +81,7 @@ function expectedTalentGrid(entryId: string, level: MenuAccessLevel): RoleGrid {
 }
 
 describe("halaman Menu & Akses per Role — bagian grid", () => {
-  it("menampilkan grid 21 entri dan menghitung menu yang tampil", async () => {
+  it("menampilkan grid 22 entri dan menghitung menu yang tampil", async () => {
     renderSection([ROLES_QUERY, CONFIG_QUERY]);
     expect(await screen.findByText("Grid Menu × Role")).toBeInTheDocument();
     for (const row of MENU_ROWS) {
@@ -203,6 +203,9 @@ describe("halaman Menu & Akses per Role — bagian grid", () => {
     const preview = within(screen.getByRole("navigation", { name: "Pratinjau menu TALENT" }));
     expect(preview.getByText("IDP")).toBeInTheDocument();
     expect(preview.queryByText("Accounts")).toBeNull();
+    // Entri tanpa rute (TAN-344) punya baris grid, tetapi tidak pernah jadi
+    // item nav di pratinjau — tanpa error.
+    expect(preview.queryByText("Asisten data")).toBeNull();
 
     // Hide IDP in the draft: the preview must follow it, before any save.
     fireEvent.change(screen.getByLabelText("IDP untuk Talent"), { target: { value: "NONE" } });

@@ -14,6 +14,7 @@ import { resetApolloStore } from "@/lib/apollo";
 import { MenuAccessProvider } from "@/lib/auth/access";
 import { authConfig } from "@/lib/auth/config";
 import { AuthGuard, useSession, useSessionRole } from "@/lib/auth/guard";
+import { defaultEntryReadable, serverAllows } from "@/lib/auth/menuAccess";
 import { onSessionExpired } from "@/lib/auth/session-expiry";
 import { clearSession, getSession } from "@/lib/auth/token-store";
 import { ACTIVITIES, LOGIN, PROFILE, WORKLOAD } from "@/lib/constants/routes";
@@ -38,6 +39,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     () => menuConfig ?? (menuStatus === "error" || menuStatus === "empty" ? {} : null),
     [menuConfig, menuStatus],
   );
+  const assistantAllowed = React.useMemo(() => {
+    if (accessConfig && accessRoleName) {
+      return serverAllows(accessConfig, accessRoleName, "assistant", "READ");
+    }
+    return role != null && defaultEntryReadable(role, "assistant");
+  }, [accessConfig, accessRoleName, role]);
 
   async function handleLogout() {
     const refreshToken = getSession()?.refreshToken;
@@ -83,7 +90,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </main>
           </div>
         </div>
-        {(role === "CHAPTER" || role === "OPERATION") && <AssistantBubble />}
+        {assistantAllowed && <AssistantBubble />}
       </MenuAccessProvider>
     </AuthGuard>
   );

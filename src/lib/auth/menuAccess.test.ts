@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_MENU_ACCESS,
   MODULE_ENTRIES,
+  defaultEntryReadable,
   moduleManageable,
   moduleReadable,
 } from "./menuAccess";
@@ -37,5 +38,14 @@ describe("module access from the effective grid", () => {
     };
     expect(moduleReadable(config, "TALENT", "idp")).toBe(false);
     expect(moduleManageable(config, "TALENT", "idp")).toBe(false);
+  });
+
+  it("mencerminkan default asisten data (TAN-344): Operation & Chapter READ", () => {
+    // Mirror dari `set("assistant", "READ", ["OPERATION", "CHAPTER"])` —
+    // gerbang statis lama sebagai akses efektif bawaan.
+    expect(defaultEntryReadable("OPERATION", "assistant")).toBe(true);
+    expect(defaultEntryReadable("CHAPTER", "assistant")).toBe(true);
+    expect(defaultEntryReadable("ADMIN", "assistant")).toBe(false);
+    expect(defaultEntryReadable("TALENT", "assistant")).toBe(false);
   });
 });

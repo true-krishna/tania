@@ -141,6 +141,9 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
     set(entry, "READ", ["CHAPTER", "OPERATION"]);
   }
   set("audit", "READ", ["ADMIN"]);
+  // Asisten data (TAN-344): entri tanpa rute sidebar — bubble global yang
+  // sel grid-nya memutus siapa yang memakainya. Default = gerbang statis lama.
+  set("assistant", "READ", ["OPERATION", "CHAPTER"]);
 
   const config: MenuAccessConfig = {};
   for (const [entry, roles] of Object.entries(matrix)) {

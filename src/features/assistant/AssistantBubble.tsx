@@ -3,11 +3,10 @@
 import * as React from "react";
 import { IconSparkles } from "@tabler/icons-react";
 import { AssistantPanel } from "./AssistantPanel";
-import { useSessionRole } from "@/lib/auth/guard";
+import { useMenuEntryAccess } from "@/lib/auth/access";
 
 export function AssistantBubble() {
-  const role = useSessionRole();
-  const allowed = role === "CHAPTER" || role === "OPERATION";
+  const { canRead: allowed } = useMenuEntryAccess("assistant");
   const [open, setOpen] = React.useState(false);
   const triggerRef = React.useRef<HTMLButtonElement | null>(null);
 
