@@ -4,7 +4,7 @@
 // server enforces.
 
 import { describe, expect, it } from "vitest";
-import { NAV } from "@/components/Sidebar/nav";
+import { NAV } from "@/components/Sidebar";
 import {
   DEFAULT_MENU_ACCESS,
   menuEntryIdForHref,

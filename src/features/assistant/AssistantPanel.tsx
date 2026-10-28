@@ -14,7 +14,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { useToast } from "@/components/Toast";
 import { cn } from "@/lib/cn";
-import { CHIP_VARIANTS } from "@/components/Chip/Chip";
+import { CHIP_VARIANTS } from "@/components/Chip";
 import { useSessionRole } from "@/lib/auth/guard";
 import { errorMessage, errorRetryAfterSeconds, graphQLErrorCode } from "@/lib/errors";
 

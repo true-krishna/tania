@@ -19,7 +19,7 @@ import {
   type UpdateEmployeeInput,
 } from "@/generated/graphql";
 import { mapSubmitError } from "@/lib/errors";
-import { useToast } from "@/components/Toast/Toast";
+import { useToast } from "@/components/Toast";
 
 type Mode = "create" | "edit";
 

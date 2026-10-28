@@ -6,7 +6,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
 import { EmployeeFormModal } from "./EmployeeFormModal";
-import { ToastProvider } from "@/components/Toast/Toast";
+import { ToastProvider } from "@/components/Toast";
 import {
   CreateEmployeeDocument,
   EmployeeDocument,

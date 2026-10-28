@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { TableFilterBar } from "@/components/TableFilterBar";
-import { ToastProvider } from "@/components/Toast/Toast";
+import { ToastProvider } from "@/components/Toast";
 import { useAssignableTalents, useEmployees } from "@/features/employees/useEmployees";
 import { useMyEmployeeId } from "@/features/employees/useMyEmployee";
 import { EMPLOYEE_STATUS_LABEL, EMPLOYEE_STATUS_VARIANT } from "@/features/employees/labels";
