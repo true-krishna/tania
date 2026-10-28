@@ -1,3 +1,4 @@
+export { AccessDenied } from "./AccessDenied";
 export { BarList, type BarItem } from "./BarList";
 export { StatCard } from "./StatCard";
 export { Sidebar } from "./Sidebar";
