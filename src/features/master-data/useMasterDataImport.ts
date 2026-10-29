@@ -44,7 +44,7 @@ export type MergedImportReport = {
   stopReason: string | null;
 };
 
-type WireChunkResult = {
+export type WireChunkResult = {
   succeeded?: ReadonlyArray<{ index: number } | null> | null;
   failed?: ReadonlyArray<{
     index: number;
@@ -52,7 +52,7 @@ type WireChunkResult = {
   }> | null;
 } | null | undefined;
 
-function normalizeChunk(result: WireChunkResult): ChunkOutcome {
+export function normalizeChunk(result: WireChunkResult): ChunkOutcome {
   return {
     succeeded: (result?.succeeded ?? []).flatMap((item) => (item ? [item.index] : [])),
     failed: (result?.failed ?? []).flatMap((item) => {
@@ -82,6 +82,8 @@ export async function importRowsInChunks<
   toVariables: (row: Row) => Vars;
   importChunk: (variables: Vars[]) => Promise<ChunkOutcome>;
   maxRowsPerChunk?: number;
+  /** Pesan fallback bila sebuah potongan gagal utuh (default: impor massal). */
+  fallbackMessage?: string;
   onProgress?: (chunkIndex: number, chunkTotal: number) => void;
 }): Promise<MergedImportReport> {
   const {
@@ -90,6 +92,7 @@ export async function importRowsInChunks<
     toVariables,
     importChunk,
     maxRowsPerChunk = MASTER_DATA_IMPORT_MAX_ROWS,
+    fallbackMessage = "Gagal mengimpor data massal.",
     onProgress,
   } = options;
 
@@ -112,7 +115,7 @@ export async function importRowsInChunks<
         if (row) failed.push({ rowNumber: row.rowNumber, label: describeRow(row), reason: failure.message });
       }
     } catch (err) {
-      stopReason = errorMessage(err instanceof ApolloError ? err : null, "Gagal mengimpor data massal.");
+      stopReason = errorMessage(err instanceof ApolloError ? err : null, fallbackMessage);
       break;
     }
   }
