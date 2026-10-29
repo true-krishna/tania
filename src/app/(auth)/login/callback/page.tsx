@@ -1,9 +1,10 @@
-"use client";
+import type { Metadata } from "next";
+import LoginCallbackPage from "./LoginCallbackPage";
 
-import dynamic from "next/dynamic";
+export const metadata: Metadata = {
+  title: "Masuk",
+};
 
-const CallbackView = dynamic(() => import("./CallbackView"), { ssr: false });
-
-export default function LoginCallbackPage() {
-  return <CallbackView />;
+export default function Page() {
+  return <LoginCallbackPage />;
 }

@@ -1,9 +1,10 @@
-"use client";
+import type { Metadata } from "next";
+import LoginPage from "./LoginPage";
 
-import dynamic from "next/dynamic";
+export const metadata: Metadata = {
+  title: "Masuk",
+};
 
-const LoginForm = dynamic(() => import("./LoginForm"), { ssr: false });
-
-export default function LoginPage() {
-  return <LoginForm />;
+export default function Page() {
+  return <LoginPage />;
 }

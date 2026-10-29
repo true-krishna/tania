@@ -1,23 +1,10 @@
-"use client";
+import type { Metadata } from "next";
+import WorkloadPage from "./WorkloadPage";
 
-import * as React from "react";
-import { WorkloadPageView, WorkloadSkeleton } from "@/features/workload";
-import { TalentOwnWorkloadView } from "@/features/workload-report";
-import { useSessionRole } from "@/lib/auth/guard";
+export const metadata: Metadata = {
+  title: "Workload",
+};
 
-function WorkloadLanding() {
-  const role = useSessionRole();
-
-  if (role === "TALENT") {
-    return <TalentOwnWorkloadView />;
-  }
-  return <WorkloadPageView />;
-}
-
-export default function WorkloadPage() {
-  return (
-    <React.Suspense fallback={<WorkloadSkeleton />}>
-      <WorkloadLanding />
-    </React.Suspense>
-  );
+export default function Page() {
+  return <WorkloadPage />;
 }

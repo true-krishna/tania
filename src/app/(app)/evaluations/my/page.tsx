@@ -1,73 +1,10 @@
-"use client";
+import type { Metadata } from "next";
+import MyEvaluationsPage from "./MyEvaluationsPage";
 
-import * as React from "react";
-import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { Card } from "@/components/Card";
-import { Chip } from "@/components/Chip";
-import { useMyPerformanceEvaluations } from "@/features/evaluations/useMyPerformanceEvaluations";
-import type { EvaluationAnswerType } from "@/generated/graphql/types";
+export const metadata: Metadata = {
+  title: "Evaluasi Saya",
+};
 
-export default function MyEvaluationsPage() {
-  const { status, data, error } = useMyPerformanceEvaluations();
-
-  if (status === "loading") return <LoadingState />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat evaluasi."} />;
-  if (!data || data.length === 0)
-    return (
-      <EmptyState message="Belum ada evaluasi performa untuk Anda pada periode ini." />
-    );
-
-  return (
-    <section className="flex flex-col gap-4">
-      {data.map((evaluation) => (
-        <Card className="flex flex-col gap-3" key={evaluation.id}>
-          <header className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-base font-semibold text-zinc-900">{evaluation.period.name}</h2>
-              <p className="text-xs text-zinc-500">
-                {evaluation.period.startDate} — {evaluation.period.endDate}
-              </p>
-            </div>
-            <Chip
-              size="small"
-              variant={evaluation.status === "SUBMITTED" ? "success" : "warning"}
-            >
-              {evaluation.status === "SUBMITTED" ? "Diserahkan" : "Draf"}
-            </Chip>
-          </header>
-
-          <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs font-medium text-zinc-500">Ringkasan pencapaian</dt>
-              <dd className="text-sm text-zinc-800">{evaluation.summaryAchievement || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium text-zinc-500">Catatan pengembangan</dt>
-              <dd className="text-sm text-zinc-800">{evaluation.developmentNotes || "—"}</dd>
-            </div>
-          </dl>
-
-          <ul className="flex flex-col gap-1.5">
-            {evaluation.answers.map((answer) => (
-              <li className="flex items-start justify-between gap-3 text-sm" key={answer.criterion.id}>
-                <span className="text-zinc-700">{answer.criterion.label}</span>
-                <span className="font-medium text-zinc-900">
-                  {formatAnswer(answer.criterion.answerType, answer)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      ))}
-    </section>
-  );
-}
-
-function formatAnswer(
-  answerType: EvaluationAnswerType,
-  answer: { valueNumeric?: number | null; valueBool?: boolean | null; valueText?: string | null },
-): string {
-  if (answer.valueBool !== null && answer.valueBool !== undefined) return answer.valueBool ? "Ya" : "Tidak";
-  if (answer.valueNumeric !== null && answer.valueNumeric !== undefined) return String(answer.valueNumeric);
-  return answer.valueText || "—";
+export default function Page() {
+  return <MyEvaluationsPage />;
 }
