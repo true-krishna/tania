@@ -5,14 +5,10 @@ import { Card } from "@/components/Card";
 import { DescriptionItem } from "@/components/DescriptionItem";
 import { Chip, type ChipVariant } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
+import { IdpStatusChip } from "./IdpStatusChip";
 import { useMyIdp } from "@/features/idp/talent/useMyIdp";
 import { IDP_MY } from "@/lib/constants/routes";
-import type {
-  DevelopmentActionStatus,
-  DevelopmentMethod,
-  IdpStatus,
-} from "@/generated/graphql/types";
+import type { DevelopmentActionStatus, DevelopmentMethod } from "@/generated/graphql/types";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -97,13 +93,5 @@ export function IdpSection() {
         </Link>
       </Card>
     </div>
-  );
-}
-
-function IdpStatusChip({ status }: { status: IdpStatus }) {
-  return (
-    <Chip size="small" variant={IDP_STATUS_VARIANT[status]}>
-      {IDP_STATUS_LABEL[status]}
-    </Chip>
   );
 }

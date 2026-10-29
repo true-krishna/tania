@@ -11,3 +11,5 @@ export { ContractsSection } from "./ContractsSection";
 export { IdpSection } from "./IdpSection";
 export { PersonalInfoSection } from "./PersonalInfoSection";
 export { WorkloadSection } from "./WorkloadSection";
+export { ContractRow } from "./ContractRow";
+export { IdpStatusChip } from "./IdpStatusChip";

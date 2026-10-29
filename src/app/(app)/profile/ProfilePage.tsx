@@ -1,19 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
-import {
-  AssignmentsSection,
-  ContractsSection,
-  IdpSection,
-  PersonalInfoSection,
-  WorkloadSection,
-  useProfile,
-  useProfileHistory,
-} from "@/features/profile";
+import { useProfile, useProfileHistory } from "@/features/profile";
 import { useModuleAccess } from "@/lib/auth/access";
 import type { Module } from "@/lib/auth/matrix";
+import { ProfileTabContent } from "./ProfileTabContent";
 
 type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp";
 
@@ -80,35 +72,13 @@ export default function ProfilePage() {
         })}
       </div>
 
-      {selectedTab === "workload" ? (
-        <WorkloadSection />
-      ) : selectedTab === "idp" ? (
-        <IdpSection />
-      ) : status === "loading" ? (
-        <LoadingState />
-      ) : status === "error" ? (
-        <ErrorState message={error ?? "Gagal memuat profil."} />
-      ) : !employee ? (
-        <PersonalInfoSection employee={undefined} />
-      ) : selectedTab === "contracts" ? (
-        history.status === "loading" ? (
-          <LoadingState />
-        ) : history.status === "error" ? (
-          <ErrorState message={history.error ?? "Gagal memuat riwayat kontrak."} />
-        ) : (
-          <ContractsSection contracts={history.data?.contracts ?? []} />
-        )
-      ) : selectedTab === "assignments" ? (
-        history.status === "loading" ? (
-          <LoadingState />
-        ) : history.status === "error" ? (
-          <ErrorState message={history.error ?? "Gagal memuat riwayat assignment."} />
-        ) : (
-          <AssignmentsSection assignments={history.data?.assignments ?? []} />
-        )
-      ) : (
-        <PersonalInfoSection employee={employee} />
-      )}
+      <ProfileTabContent
+        employee={employee}
+        error={error}
+        history={history}
+        selectedTab={selectedTab}
+        status={status}
+      />
     </section>
   );
 }
