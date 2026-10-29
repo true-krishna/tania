@@ -1,25 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { Table } from "@/components/Table";
 import { useTablePagination } from "@/components/Pagination";
-import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { useCurrentEvaluationPeriod } from "@/features/evaluations/useCurrentEvaluationPeriod";
 import { useEvaluationRoster } from "@/features/evaluations/useEvaluationRoster";
-import { FillStateBadge, PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
-import { orDash } from "@/lib/cell";
+import { PeriodStateBadge } from "@/features/evaluations/PeriodStateBadge";
 import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import { EVALUATIONS_MY, EVALUATION_PERIODS, EVALUATION_DETAIL } from "@/lib/constants/routes";
+import { EVALUATIONS_MY, EVALUATION_PERIODS } from "@/lib/constants/routes";
+import { EvaluationsTable } from "./EvaluationsTable";
 
 export default function EvaluationsPage() {
   const role = useSessionRole();
   const canManageEvaluations = useModuleAccess("evaluations").canManage;
-  const router = useRouter();
   const current = useCurrentEvaluationPeriod();
   const roster = useEvaluationRoster(current.data?.id ?? null);
   const period = current.data;
@@ -107,62 +103,13 @@ export default function EvaluationsPage() {
         }}
       />
 
-      {entries.length === 0 ? (
-        <EmptyState message="Tidak ada talent dalam cakupan chapter untuk periode ini." />
-      ) : pageRows.length === 0 ? (
-        <p className="text-sm text-tp-muted">Tidak ada talent yang cocok dengan pencarian.</p>
-      ) : (
-        <Table
-          caption="Roster evaluasi periode"
-          columns={[
-            {
-              key: "talent",
-              title: "Talent",
-              render: (_value, entry) => (
-                <>
-                  <span className="text-sm font-medium text-zinc-900">{entry.talent.fullName}</span>
-                  <span className="ml-2 text-xs text-zinc-400">
-                    {orDash(entry.talent.nomorInduk)}
-                  </span>
-                </>
-              ),
-            },
-            {
-              key: "jobRole",
-              title: "Job Role",
-              className: "text-zinc-600",
-              render: (_value, entry) => orDash(entry.talent.jobRole?.name),
-            },
-            {
-              key: "status",
-              title: "Status",
-              render: (_value, entry) => <FillStateBadge fillState={entry.fillState} />,
-            },
-            {
-              key: "actions",
-              title: "Aksi",
-              className: "col-action",
-              render: (_value, entry) => {
-                const already = entry.fillState === "EVALUATED";
-                return (
-                  <RowActionsMenu
-                    actions={[
-                      {
-                        label: readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai",
-                        onSelect: () => router.push(EVALUATION_DETAIL(period.id, entry.talent.id)),
-                      },
-                    ]}
-                    label={`Aksi ${entry.talent.fullName}`}
-                  />
-                );
-              },
-            },
-          ]}
-          dataSource={pageRows}
-          pagination={pagination}
-          rowKey={(entry) => entry.talent.id}
-        />
-      )}
+      <EvaluationsTable
+        entries={entries}
+        pageRows={pageRows}
+        pagination={pagination}
+        periodId={period.id}
+        readOnly={readOnly}
+      />
     </section>
   );
 }

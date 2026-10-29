@@ -1,16 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Table } from "@/components/Table";
 import { Button } from "@/components/Button";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { ErrorState, LoadingState } from "@/components/DataState";
 import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { useEvaluationPeriods } from "@/features/evaluations/useEvaluationPeriods";
-import { PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
 import { EvaluationPeriodCreateForm } from "@/features/evaluations/EvaluationPeriodCreateForm";
+import { EvaluationPeriodsTable } from "./EvaluationPeriodsTable";
 
 export default function EvaluationPeriodsPage() {
   const { status, data, error } = useEvaluationPeriods();
@@ -53,52 +52,12 @@ export default function EvaluationPeriodsPage() {
           }}
         />
       )}
-      {isEmpty ? (
-        <EmptyState message="Belum ada periode evaluasi. Buat periode pertama." />
-      ) : visiblePeriods.length === 0 ? (
-        <p className="text-sm text-tp-muted">Tidak ada periode yang cocok dengan pencarian.</p>
-      ) : (
-        <Table
-          caption="Daftar periode evaluasi"
-          columns={[
-            {
-              key: "name",
-              title: "Nama",
-              className: "text-zinc-900",
-              render: (_value, period) => period.name,
-            },
-            {
-              key: "range",
-              title: "Rentang",
-              className: "text-zinc-600",
-              render: (_value, period) => (
-                <>
-                  {period.startDate} — {period.endDate}
-                </>
-              ),
-            },
-            {
-              key: "template",
-              title: "Template",
-              className: "text-zinc-600",
-              render: (_value, period) => period.template.name,
-            },
-            {
-              key: "state",
-              title: "State",
-              render: (_value, period) => <PeriodStateBadge state={period.state} />,
-            },
-            {
-              key: "status",
-              title: "Status",
-              render: (_value, period) => <StatusBadge active={period.isActive} />,
-            },
-          ]}
-          dataSource={pageRows}
-          pagination={pagination}
-          rowKey={(period) => period.id}
-        />
-      )}
+      <EvaluationPeriodsTable
+        isEmpty={isEmpty}
+        pageRows={pageRows}
+        pagination={pagination}
+        visiblePeriods={visiblePeriods}
+      />
       <Modal onClose={() => setModalOpen(false)} open={modalOpen}>
         <ModalTitle>Buat Periode Evaluasi</ModalTitle>
         <ModalContent>
