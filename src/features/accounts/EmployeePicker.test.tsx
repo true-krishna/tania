@@ -3,17 +3,17 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
-import { EmployeesDocument } from "@/generated/graphql";
+import { EmployeeLookupDocument } from "@/generated/graphql";
 import { EmployeePicker } from "./EmployeePicker";
 
 const EMPLOYEES_QUERY = {
   request: {
-    query: EmployeesDocument,
+    query: EmployeeLookupDocument,
     variables: { filter: {}, first: 10, after: null },
   },
   result: {
     data: {
-      employees: {
+      employeeLookup: {
         totalCount: 2,
         edges: [
           {
@@ -22,11 +22,6 @@ const EMPLOYEES_QUERY = {
               fullName: "Ahmad Fauzi",
               nomorInduk: "EMP-0100",
               email: "ahmad@telkom.co.id",
-              status: "ACTIVE",
-              assignable: true,
-              unit: { id: "u-1", name: "Digital", __typename: "Unit" },
-              jobRole: { id: "jr-1", name: "Engineer", __typename: "JobRole" },
-              nikMasked: "************0001",
               __typename: "Employee",
             },
             cursor: "c-emp-1",
@@ -38,11 +33,6 @@ const EMPLOYEES_QUERY = {
               fullName: "Budi Santoso",
               nomorInduk: "EMP-0101",
               email: "budi@telkom.co.id",
-              status: "ACTIVE",
-              assignable: true,
-              unit: { id: "u-1", name: "Digital", __typename: "Unit" },
-              jobRole: { id: "jr-2", name: "Analyst", __typename: "JobRole" },
-              nikMasked: "************0002",
               __typename: "Employee",
             },
             cursor: "c-emp-2",

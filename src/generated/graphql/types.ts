@@ -1919,6 +1919,12 @@ export type Query = {
   cvProfile?: Maybe<CvProfile>;
   dashboard: Dashboard;
   employee?: Maybe<Employee>;
+  /**
+   * Lookup karyawan minimal khusus form Tambah Akun (TAN-371): mengikuti sel
+   * modul Akun (Admin-only), terpisah dari sel Data Karyawan yang Admin tidak
+   * pegang sejak TAN-343.
+   */
+  employeeLookup: EmployeeConnection;
   employees: EmployeeConnection;
   /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation/Admin (US10 skenario 4). */
   employeesNeedingFollowUp: EmployeeConnection;
@@ -2037,6 +2043,13 @@ export type QueryCvProfileArgs = {
 
 export type QueryEmployeeArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryEmployeeLookupArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<EmployeeFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
