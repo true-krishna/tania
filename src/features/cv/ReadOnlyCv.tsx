@@ -1,10 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { Card } from "@/components/Card";
 import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBadge";
 import type { CvFieldsFragment } from "@/generated/graphql";
 import { formatDegree } from "./educationLevels";
+import { ReadOnlySection } from "./ReadOnlySection";
 
 export function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
   return (
@@ -88,14 +87,5 @@ export function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
         )}
       </ReadOnlySection>
     </div>
-  );
-}
-
-function ReadOnlySection({ children, title }: { children: ReactNode; title: string }) {
-  return (
-    <Card className="flex flex-col gap-2">
-      <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
-      {children}
-    </Card>
   );
 }

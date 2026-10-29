@@ -75,14 +75,8 @@ export function useCvCollection<TItem, TValues, TInput>({
       }
       reset();
     } catch (error) {
-      pushToast(
-        "error",
-        error instanceof Error
-          ? error.message
-          : isEditing
-            ? messages.updateFailed
-            : messages.addFailed,
-      );
+      const fallback = isEditing ? messages.updateFailed : messages.addFailed;
+      pushToast("error", errorText(error, fallback));
     }
   }
 

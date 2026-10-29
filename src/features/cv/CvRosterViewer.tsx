@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Select } from "@/components/Select";
 import { useCvProfile } from "@/features/cv/useCvProfile";
 import { useEmployees } from "@/features/employees/useEmployees";
-import { ReadOnlyCv } from "./ReadOnlyCv";
+import { CvRosterContent } from "./CvRosterContent";
 
 type CvAudience = "ADMIN" | "CHAPTER" | "OPERATION";
 
@@ -46,23 +46,12 @@ export function CvRosterViewer({ audience }: { audience: CvAudience }) {
         />
       </InputControl>
 
-      {!selectedEmployeeId ? null : status === "loading" ? (
-        <LoadingState label="Memuat CV…" />
-      ) : status === "error" ? (
-        <ErrorState message={error ?? "Gagal memuat CV."} />
-      ) : !data ? (
-        <EmptyNote message="Talent ini belum memiliki profil CV." />
-      ) : (
-        <ReadOnlyCv cv={data} />
-      )}
+      <CvRosterContent
+        data={data}
+        error={error}
+        selectedEmployeeId={selectedEmployeeId}
+        status={status}
+      />
     </section>
-  );
-}
-
-function EmptyNote({ message }: { message: string }) {
-  return (
-    <div className="rounded-lg border border-dashed border-zinc-300 bg-board p-8 text-center text-sm text-zinc-500 shadow-sm">
-      {message}
-    </div>
   );
 }
