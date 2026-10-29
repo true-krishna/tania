@@ -16,6 +16,7 @@ import { useToast } from "@/components/Toast";
 import { cn } from "@/lib/cn";
 import { CHIP_VARIANTS } from "@/components/Chip";
 import { useSessionRole } from "@/lib/auth/guard";
+import { useMenuEntryAccess } from "@/lib/auth/access";
 import { errorMessage, errorRetryAfterSeconds, graphQLErrorCode } from "@/lib/errors";
 
 export const CHAT_MAX_LENGTH = 2000;
@@ -36,6 +37,18 @@ export const SAMPLE_QUESTIONS: Record<AssistantRole, readonly string[]> = {
     "Siapa saja yang data dirinya belum lengkap?",
   ],
 };
+
+export const SAMPLE_QUESTIONS_OTHER: readonly string[] = [
+  "Ringkas kondisi karyawan dan kontrak",
+  "Siapa saja yang kontraknya berakhir dalam 90 hari?",
+  "Karyawan mana yang perlu ditindaklanjuti kontraknya?",
+  "Siapa saja yang data dirinya belum lengkap?",
+];
+
+function sampleQuestionsFor(role: string | null): readonly string[] {
+  if (role === "CHAPTER" || role === "OPERATION") return SAMPLE_QUESTIONS[role];
+  return SAMPLE_QUESTIONS_OTHER;
+}
 
 type AnswerBlock =
   | { kind: "p"; text: string }
@@ -169,8 +182,8 @@ export function AssistantPanel({
   triggerRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
   const role = useSessionRole();
-  const assistantRole: AssistantRole | null =
-    role === "CHAPTER" || role === "OPERATION" ? role : null;
+  const { canRead: allowed } = useMenuEntryAccess("assistant");
+  const roleLabel = role === "CHAPTER" ? "Chapter" : role === "OPERATION" ? "Operation" : null;
 
   const { pushToast } = useToast();
   const inputRef = React.useRef<HTMLInputElement | null>(null);
@@ -182,7 +195,7 @@ export function AssistantPanel({
   );
 
   const conversations = useQuery(ChatConversationsDocument, {
-    skip: !open || !assistantRole,
+    skip: !open || !allowed,
     fetchPolicy: "cache-and-network",
   });
 
@@ -192,7 +205,7 @@ export function AssistantPanel({
 
   const messages = useQuery(ChatMessagesDocument, {
     variables: { conversationId: activeId ?? "" },
-    skip: !open || !assistantRole || !activeId,
+    skip: !open || !allowed || !activeId,
     fetchPolicy: "cache-and-network",
   });
 
@@ -200,8 +213,8 @@ export function AssistantPanel({
   const [sendMessage, sendState] = useMutation(SendChatMessageDocument);
 
   React.useEffect(() => {
-    if (open && assistantRole) inputRef.current?.focus();
-  }, [open, assistantRole]);
+    if (open && allowed) inputRef.current?.focus();
+  }, [open, allowed]);
 
 
   const quotaWaitMs = (quota?.retryAfterSeconds ?? 0) * 1000;
@@ -298,7 +311,7 @@ export function AssistantPanel({
     }
   }
 
-  if (!open || !assistantRole) return null;
+  if (!open || !allowed) return null;
 
   const conversationNodes =
     conversations.data?.chatConversations.edges.map((edge) => edge.node) ?? [];
@@ -329,8 +342,8 @@ export function AssistantPanel({
           <div>
             <h2 className="text-base font-semibold text-tp-text">Asisten Data</h2>
             <p className="text-xs text-tp-muted">
-              Jawaban berdasar data dalam hak akses Anda (
-              {assistantRole === "CHAPTER" ? "Chapter" : "Operation"}).
+              Jawaban berdasar data dalam hak akses Anda
+              {roleLabel ? ` (${roleLabel})` : ""}.
             </p>
           </div>
           <Button
@@ -453,7 +466,7 @@ export function AssistantPanel({
           <div>
             <p className="mb-2 text-xs font-semibold text-tp-muted">Pertanyaan contoh</p>
             <div className="flex flex-wrap gap-2">
-              {SAMPLE_QUESTIONS[assistantRole].map((question) => (
+              {sampleQuestionsFor(role).map((question) => (
                 <button
                   className={cn("tp-chip", CHIP_VARIANTS.neutral, "text-left")}
                   key={question}

@@ -141,7 +141,7 @@ afterEach(() => {
 });
 
 describe("T028 — panel & bubble asisten", () => {
-  it("tidak merender panel/bubble untuk ADMIN dan TALENT (guard peran)", () => {
+  it("tidak merender panel/bubble untuk ADMIN dan TALENT (default sel NONE)", () => {
     for (const role of ["ADMIN", "TALENT", null]) {
       auth.role = role;
       const { unmount } = renderAssistant([]);
@@ -184,6 +184,35 @@ describe("T028 — panel & bubble asisten", () => {
       </MockedProvider>,
     );
     expect(screen.queryByRole("button", { name: "Buka asisten data" })).toBeNull();
+  });
+
+  it("membuka panel untuk peran di luar Chapter/Operation bila sel asisten dibukakan (T059)", async () => {
+    // Panel mengikuti sel yang sama dengan bubble: tidak ada lagi gerbang peran statis.
+    auth.role = "ADMIN";
+    render(
+      <MockedProvider mocks={[CONVERSATIONS_MOCK, messagesMock([])]}>
+        <ToastProvider>
+          <MenuAccessProvider
+            config={{ ADMIN: { assistant: { visible: true, accessLevel: "READ" } } }}
+            roleName="ADMIN"
+          >
+            <AssistantBubble />
+          </MenuAccessProvider>
+        </ToastProvider>
+      </MockedProvider>,
+    );
+
+    await openPanelWithConversation();
+
+    expect(screen.getByLabelText("Pertanyaan untuk asisten")).toBeInTheDocument();
+    // Label peran hanya disebut untuk Chapter/Operation.
+    expect(screen.getByText(/hak akses Anda\./)).toBeInTheDocument();
+    // Chip netral: tidak menjanjikan cakupan chapter/unit mana pun.
+    expect(
+      screen.getByRole("button", { name: "Ringkas kondisi karyawan dan kontrak" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /di cakupan chapter saya/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /seluruh unit/i })).toBeNull();
   });
 
   it("membuka panel dari bubble, memindahkan fokus ke input, dan menutup dengan Escape", async () => {
