@@ -70,8 +70,7 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "IDP",
     "Evaluations",
     "Master Data",
-    "Accounts",
-    "Audit",
+    "Administration",
   ],
   OPERATION: [
     "Dashboard",
@@ -105,8 +104,16 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
  */
 const NAV_HIDDEN: Record<Role, readonly string[]> = {
   ADMIN: ["CV", "Workload"],
-  OPERATION: ["CV", "Workload", "Accounts", "Audit"],
-  CHAPTER: ["CV", "Workload", "Provisi Entra", "Accounts", "Audit"],
+  OPERATION: ["CV", "Workload", "Administration", "Menu & Akses", "Accounts", "Audit"],
+  CHAPTER: [
+    "CV",
+    "Workload",
+    "Provisi Entra",
+    "Administration",
+    "Menu & Akses",
+    "Accounts",
+    "Audit",
+  ],
   TALENT: [
     "CV",
     "Workload",
@@ -115,6 +122,8 @@ const NAV_HIDDEN: Record<Role, readonly string[]> = {
     "Assignments",
     "Provisi Entra",
     "Master Data",
+    "Administration",
+    "Menu & Akses",
     "Accounts",
     "Audit",
   ],
@@ -155,6 +164,15 @@ test.describe("RBAC matrix (T041)", () => {
         await page.goto("/workload");
         await page.waitForURL(/\/accounts$/);
         await expect(page.getByText("Workload", { exact: true })).toHaveCount(0);
+
+        // TAN-376: Menu & Akses ditemukan dari grup Administration, bukan hanya
+        // tautan di halaman Accounts; top bar menamai seksinya.
+        await page.goto("/activities");
+        await nav.getByRole("button", { name: "Administration", exact: true }).click();
+        await nav.getByRole("link", { name: "Menu & Akses", exact: true }).click();
+        await page.waitForURL(/\/admin\/roles$/);
+        await expect(page.getByRole("heading", { name: /Menu & Akses/ }).first()).toBeVisible();
+        await expect(page.getByRole("banner")).toContainText("Menu & Akses");
       }
     });
   }

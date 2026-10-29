@@ -85,17 +85,24 @@ describe("MENU_ROWS mengikuti katalog menu", () => {
     const nested = MENU_ROWS.filter((row) => row.parent);
     expect(nested.map((row) => row.id)).toContain("evaluations/periods");
     expect(
-      nested.every(
-        (row) =>
-          row.parent === "Evaluations" || row.parent === "Master Data" || row.parent === "Employee",
+      nested.every((row) =>
+        ["Administration", "Evaluations", "Master Data", "Employee"].includes(row.parent ?? ""),
       ),
     ).toBe(true);
+  });
+
+  it("memuat baris Menu & Akses di grup Administration (TAN-376)", () => {
+    expect(MENU_ROWS.find((row) => row.id === "admin/roles")).toEqual({
+      id: "admin/roles",
+      label: "Menu & Akses",
+      parent: "Administration",
+    });
   });
 });
 
 describe("cellRule mencerminkan aturan server", () => {
   it("menu Admin-only terkunci untuk semua role", () => {
-    for (const entry of ["accounts", "audit"]) {
+    for (const entry of ["accounts", "admin/roles", "audit"]) {
       expect(cellRule("ADMIN", entry)).toMatchObject({ allowed: ["MANAGE"], disabled: true });
       for (const role of ["OPERATION", "CHAPTER", "TALENT"] as AccessRole[]) {
         expect(cellRule(role, entry)).toMatchObject({ allowed: ["NONE"], disabled: true });

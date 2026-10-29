@@ -27,6 +27,22 @@ describe("Sidebar", () => {
     expect(screen.queryByText("Accounts")).toBeNull();
   });
 
+  it("menampilkan grup Administration berisi Menu & Akses hanya untuk Admin (TAN-376)", () => {
+    const admin = renderSidebar({ role: "ADMIN" });
+    fireEvent.click(desktopNav().getByRole("button", { name: "Administration" }));
+    expect(desktopNav().getByRole("link", { name: "Menu & Akses" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Accounts" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Audit" })).toBeInTheDocument();
+    admin.unmount();
+
+    for (const role of ["OPERATION", "CHAPTER", "TALENT"] as const) {
+      const view = renderSidebar({ role });
+      expect(screen.queryByText("Administration")).toBeNull();
+      expect(screen.queryByText("Menu & Akses")).toBeNull();
+      view.unmount();
+    }
+  });
+
   it("shows Master Data read-only to Chapter and Operation only", () => {
     for (const role of ["CHAPTER", "OPERATION"] as const) {
       const view = renderSidebar({ role });

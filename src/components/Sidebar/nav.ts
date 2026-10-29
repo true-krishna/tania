@@ -1,6 +1,5 @@
 import {
   IconClipboardCheck,
-  IconClock,
   IconClockHour3,
   IconDatabase,
   IconLayoutGrid,
@@ -100,6 +99,10 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * Chapter/Operation (Talent ditunda), Provisi Entra hanya Operation.
  * Bagian Dashboard/Employee/Entra dari amandemen ini dicabut TAN-374: Admin
  * mengelola seluruh modul operasional lagi.
+ *
+ * 2026-10-29 (TAN-376): Accounts, Menu & Akses (`/admin/roles`), dan Audit
+ * dikelompokkan sebagai "Administration" supaya konfigurasi menu ditemukan
+ * lewat navigasi, bukan hanya tautan di halaman Accounts.
  */
 export const NAV: readonly NavEntry[] = [
   {
@@ -147,7 +150,18 @@ export const NAV: readonly NavEntry[] = [
       { href: EVALUATIONS_MY, label: "Evaluasi Saya", roles: ["TALENT"] },
     ],
   },
-  { kind: "link", href: ACCOUNTS, label: "Accounts", icon: IconUserShield, roles: ["ADMIN"] },
+  {
+    kind: "group",
+    id: "administration",
+    label: "Administration",
+    icon: IconUserShield,
+    roles: ["ADMIN"],
+    children: [
+      { href: ACCOUNTS, label: "Accounts", roles: ["ADMIN"] },
+      { href: ROLES_ADMIN, label: "Menu & Akses", roles: ["ADMIN"] },
+      { href: AUDIT, label: "Audit", roles: ["ADMIN"] },
+    ],
+  },
   {
     kind: "group",
     id: "master-data",
@@ -163,7 +177,6 @@ export const NAV: readonly NavEntry[] = [
       { href: MASTER_DATA_PROJECTS, label: "Initiative", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
     ],
   },
-  { kind: "link", href: AUDIT, label: "Audit", icon: IconClock, roles: ["ADMIN"] },
 ];
 
 /**

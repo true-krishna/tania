@@ -30,6 +30,9 @@ import type { AccessRole } from "@/generated/graphql";
  * 2026-10-29 (TAN-374, keputusan TAN-364): Admin kembali memegang Dashboard,
  * Data Karyawan, Kontrak, Assignments dan Provisi Entra; modul Workload keluar
  * dari matriks (menu disembunyikan sampai TAN-378).
+ *
+ * 2026-10-29 (TAN-376): `/admin/roles` (Menu & Akses) menjadi modul `adminRoles`
+ * yang hanya dimiliki Admin, sejalan dengan entri katalog terkunci TAN-381.
  */
 export type Module =
   | "dashboard"
@@ -42,6 +45,7 @@ export type Module =
   | "evaluations"
   | "masterData"
   | "accounts"
+  | "adminRoles"
   | "audit";
 
 const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
@@ -59,6 +63,7 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   evaluations: ALL,
   masterData: ["CHAPTER", "OPERATION", "ADMIN"],
   accounts: ["ADMIN"],
+  adminRoles: ["ADMIN"],
   audit: ["ADMIN"],
 };
 
@@ -68,6 +73,7 @@ const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
   contracts: ["ADMIN", "OPERATION"],
   entra: ["ADMIN", "OPERATION"],
   masterData: ["ADMIN"],
+  adminRoles: ["ADMIN"],
   // IDP & evaluasi: Chapter menilai/mengelola dalam cakupannya, Admin penuh;
   // Operation hanya membaca dan Talent hanya miliknya (kontrol "miliknya" ada di
   // halaman masing-masing, bukan di `canManage`).

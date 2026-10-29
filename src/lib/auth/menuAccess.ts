@@ -13,6 +13,9 @@ import type { Module } from "./matrix";
  * `defaultMenuAccess`), keyed by the menu entry id that `role_menu_config`
  * stores. `nav.test.ts` uses it to assert that no menu shows a module the
  * server denies on the active configuration.
+ *
+ * 2026-10-29 (TAN-376): `admin/roles` (Menu & Akses) adalah entri katalog
+ * terkunci milik Admin (TAN-381) dengan default `MANAGE` hanya untuk Admin.
  */
 export type MenuAccessLevel = "NONE" | "READ" | "MANAGE";
 
@@ -61,6 +64,7 @@ export const MODULE_OF_HREF: Record<string, Module> = {
   "/master-data/job-roles": "masterData",
   "/master-data/projects": "masterData",
   "/accounts": "accounts",
+  "/admin/roles": "adminRoles",
   "/audit": "audit",
 };
 
@@ -87,6 +91,7 @@ export const MODULE_ENTRIES: Record<Module, readonly string[]> = {
     "master-data/projects",
   ],
   accounts: ["accounts"],
+  adminRoles: ["admin/roles"],
   audit: ["audit"],
 };
 
@@ -119,6 +124,9 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
   set("evaluations/templates", "MANAGE", ["ADMIN"]);
   set("evaluations/my", "MANAGE", ["TALENT"]);
   set("accounts", "MANAGE", ["ADMIN"]);
+  // Menu & Akses (TAN-381): entri terkunci milik Admin, tidak dapat diberikan
+  // ke peran lain maupun disembunyikan dari Admin.
+  set("admin/roles", "MANAGE", ["ADMIN"]);
   for (const entry of [
     "master-data/units",
     "master-data/chapters",

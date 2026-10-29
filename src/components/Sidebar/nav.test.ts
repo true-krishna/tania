@@ -31,6 +31,7 @@ import {
   MASTER_DATA_JOB_ROLES,
   MASTER_DATA_PROJECTS,
   MASTER_DATA_UNITS,
+  ROLES_ADMIN,
   TALENT_ASSIGNMENT,
 } from "@/lib/constants/routes";
 import { NAV, sectionForPath, visibleNavEntries } from "./nav";
@@ -67,11 +68,12 @@ const APPROVED_MENU: Record<AccessRole, readonly string[]> = {
     EVALUATION_PERIODS,
     EVALUATION_TEMPLATES,
     ACCOUNTS,
+    ROLES_ADMIN,
+    AUDIT,
     MASTER_DATA_UNITS,
     MASTER_DATA_CHAPTERS,
     MASTER_DATA_JOB_ROLES,
     MASTER_DATA_PROJECTS,
-    AUDIT,
   ],
   OPERATION: [
     DASHBOARD,
@@ -155,10 +157,34 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
     }
   });
 
+  it("Menu & Akses hanya ada di grup Administration milik Admin (TAN-376)", () => {
+    const administration = NAV.find(
+      (entry) => entry.kind === "group" && entry.id === "administration",
+    );
+    expect(administration?.kind).toBe("group");
+    if (administration?.kind !== "group") return;
+    expect(administration.label).toBe("Administration");
+    expect(administration.roles).toEqual(["ADMIN"]);
+    expect(administration.children.map((child) => child.href)).toEqual([
+      ACCOUNTS,
+      ROLES_ADMIN,
+      AUDIT,
+    ]);
+    for (const child of administration.children) {
+      expect(child.roles).toEqual(["ADMIN"]);
+    }
+    for (const role of ["OPERATION", "CHAPTER", "TALENT"] as AccessRole[]) {
+      expect(LEAVES.filter((leaf) => leaf.roles.includes(role))).not.toContainEqual(
+        expect.objectContaining({ href: ROLES_ADMIN }),
+      );
+    }
+  });
+
   it("menandai seksi aktif dari submenu terdalam", () => {
     expect(sectionForPath("/employees/emp-1")).toBe("Employee");
     expect(sectionForPath("/assignments")).toBe("Employee");
     expect(sectionForPath("/master-data/units")).toBe("Master Data");
+    expect(sectionForPath("/accounts")).toBe("Administration");
     expect(sectionForPath("/admin/roles")).toBe("Menu & Akses");
   });
 });
@@ -261,7 +287,12 @@ describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
     const drawn = visibleNavEntries(config, "ADMIN");
     expect(drawn.some((entry) => entry.kind === "group" && entry.id === "evaluations")).toBe(false);
     // Only that group: the rest of the Admin menu is untouched.
-    expect(drawn.some((entry) => entry.kind === "link" && entry.href === ACCOUNTS)).toBe(true);
+    const administration = drawn.find(
+      (entry) => entry.kind === "group" && entry.id === "administration",
+    );
+    expect(
+      administration?.kind === "group" && administration.children.map((c) => c.href),
+    ).toContain(ACCOUNTS);
   });
 
   it("role kustom memakai konfigurasi miliknya, bukan daftar role statis", () => {
@@ -364,6 +395,7 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
       "evaluations/templates": { ADMIN: "MANAGE" },
       "evaluations/my": { TALENT: "MANAGE" },
       accounts: { ADMIN: "MANAGE" },
+      "admin/roles": { ADMIN: "MANAGE" },
       "master-data/units": { ADMIN: "MANAGE", CHAPTER: "READ", OPERATION: "READ" },
       "master-data/chapters": { ADMIN: "MANAGE", CHAPTER: "READ", OPERATION: "READ" },
       "master-data/job-roles": { ADMIN: "MANAGE", CHAPTER: "READ", OPERATION: "READ" },

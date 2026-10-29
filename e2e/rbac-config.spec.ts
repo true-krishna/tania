@@ -38,7 +38,15 @@ const CHAPTER_NAV = [
   "Master Data",
 ] as const;
 // TAN-372: CV bukan lagi menu — kontennya pindah ke profil talent.
-const CHAPTER_NAV_HIDDEN = ["CV", "Workload", "Provisi Entra", "Accounts", "Audit"] as const;
+const CHAPTER_NAV_HIDDEN = [
+  "CV",
+  "Workload",
+  "Provisi Entra",
+  "Administration",
+  "Menu & Akses",
+  "Accounts",
+  "Audit",
+] as const;
 
 type GraphQLResult = Record<string, unknown>;
 

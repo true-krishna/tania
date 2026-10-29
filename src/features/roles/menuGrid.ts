@@ -58,7 +58,7 @@ export const LEVEL_LABEL: Record<MenuAccessLevel, string> = {
 const ALL_LEVELS: readonly MenuAccessLevel[] = ["NONE", "READ", "MANAGE"];
 
 /** Entries the server keeps Admin-only whatever a row says (W1 catalog + US-C). */
-const ADMIN_ONLY_ENTRIES: readonly string[] = ["accounts", "audit"];
+const ADMIN_ONLY_ENTRIES: readonly string[] = ["accounts", "admin/roles", "audit"];
 
 /**
  * What one cell may be configured to. `disabled` cells are shown but not

@@ -54,9 +54,8 @@ export const EVALUATION_DETAIL = (periodId: string, employeeId: string) =>
 // ACCOUNTS
 export const ACCOUNTS = "/accounts";
 
-// ADMIN — konfigurasi menu & akses per role (FR-03). Bukan entri katalog menu:
-// halaman ini masuk lewat tautan di halaman Accounts, sehingga 21 entri menu
-// default tetap sama dengan baseline (W2/W4).
+// ADMIN — konfigurasi menu & akses per role (FR-03). Entri katalog `admin/roles`
+// (TAN-381) yang terkunci milik Admin, tampil di grup "Administration".
 export const ROLES_ADMIN = "/admin/roles";
 
 // AUDIT
