@@ -1,23 +1,13 @@
 "use client";
 
 import { ErrorState, LoadingState } from "@/components/DataState";
-import type { CvFieldsFragment } from "@/generated/graphql";
-import type { QueryStatus } from "@/lib/apollo/toQueryState";
+import { useCvProfile } from "@/features/cv/useCvProfile";
 import { EmptyNote } from "./EmptyNote";
 import { ReadOnlyCv } from "./ReadOnlyCv";
 
-export function CvRosterContent({
-  selectedEmployeeId,
-  status,
-  data,
-  error,
-}: {
-  selectedEmployeeId: string;
-  status: QueryStatus;
-  data: CvFieldsFragment | undefined;
-  error: string | null;
-}) {
-  if (!selectedEmployeeId) return null;
+export function EmployeeCvContent({ employeeId }: { employeeId: string }) {
+  const { status, data, error } = useCvProfile(employeeId);
+
   if (status === "loading") return <LoadingState label="Memuat CV…" />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat CV."} />;
   if (!data) return <EmptyNote message="Talent ini belum memiliki profil CV." />;

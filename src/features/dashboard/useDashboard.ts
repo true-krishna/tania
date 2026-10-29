@@ -12,9 +12,10 @@ type Dashboard = DashboardQuery["dashboard"];
  * guarantees exactly one member per session role. `cache-and-network` keeps the
  * summary fresh while rendering the cached snapshot immediately (FR-30).
  */
-export function useDashboard(): QueryState<Dashboard | undefined> {
+export function useDashboard(options: { skip?: boolean } = {}): QueryState<Dashboard | undefined> {
   const result = useQuery(DashboardDocument, {
     fetchPolicy: "cache-and-network",
+    skip: options.skip,
   });
   return toQueryState({
     ...result,

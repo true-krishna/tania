@@ -14,13 +14,12 @@ import type {
   ProfileHistory,
   ProfileSession,
 } from "@/features/profile/useProfile";
-import { WorkloadSection } from "@/features/profile/WorkloadSection";
 import type { RefetchableQueryState } from "@/lib/apollo/toQueryState";
 
-export type ProfileTab =
-  "ringkasan" | "keahlian" | "kontrak" | "assignment" | "workload" | "pengembangan";
+export type ProfileTab = "ringkasan" | "keahlian" | "kontrak" | "assignment" | "pengembangan";
 
 interface ProfileTabContentProps {
+  canEditCv: boolean;
   cv: RefetchableQueryState<CvFieldsFragment | undefined>;
   history: RefetchableQueryState<ProfileHistory>;
   idp: RefetchableQueryState<MyIdp | undefined>;
@@ -31,15 +30,15 @@ interface ProfileTabContentProps {
 }
 
 export function ProfileTabContent({
+  canEditCv,
   cv,
   history,
   idp,
   profile,
   selectedTab,
 }: ProfileTabContentProps) {
-  if (selectedTab === "workload") return <WorkloadSection />;
   if (selectedTab === "pengembangan") return <IdpSection idp={idp} />;
-  if (selectedTab === "keahlian") return <SkillsCvSection cv={cv} />;
+  if (selectedTab === "keahlian") return <SkillsCvSection canEdit={canEditCv} cv={cv} />;
   if (selectedTab === "ringkasan") {
     return (
       <SummarySection

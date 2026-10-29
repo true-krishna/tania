@@ -10,15 +10,15 @@ import { ProfileTabs, type ProfileTabItem } from "@/features/profile/ProfileTabs
 import { useProfile, useProfileHistory, type ProfileContract } from "@/features/profile";
 import type { QueryStatus } from "@/lib/apollo/toQueryState";
 import { useModuleAccess } from "@/lib/auth/access";
+import { useSessionRole } from "@/lib/auth/guard";
 import type { Module } from "@/lib/auth/matrix";
 import { ProfileTabContent, type ProfileTab } from "./ProfileTabContent";
 
 const PROFILE_TABS: readonly { id: ProfileTab; label: string; module?: Module }[] = [
   { id: "ringkasan", label: "Ringkasan" },
-  { id: "keahlian", label: "Keahlian & CV", module: "cv" },
+  { id: "keahlian", label: "Keahlian & CV" },
   { id: "kontrak", label: "Kontrak", module: "contracts" },
   { id: "assignment", label: "Assignment", module: "assignments" },
-  { id: "workload", label: "Workload" },
   { id: "pengembangan", label: "Pengembangan saya", module: "idp" },
 ];
 
@@ -34,18 +34,17 @@ function resolveContractHint(canRead: boolean, status: QueryStatus): string {
 }
 
 export default function ProfilePage() {
-  const cvAccess = useModuleAccess("cv");
+  const role = useSessionRole();
   const contractsAccess = useModuleAccess("contracts");
   const assignmentsAccess = useModuleAccess("assignments");
   const idpAccess = useModuleAccess("idp");
   const profile = useProfile();
   const history = useProfileHistory(contractsAccess.canRead || assignmentsAccess.canRead);
-  const cv = useMyCvProfile(cvAccess.canRead);
-  const idp = useMyIdp(idpAccess.canRead);
+  const cv = useMyCvProfile();
+  const idp = useMyIdp({ skip: !idpAccess.canRead });
   const [tab, setTab] = React.useState<ProfileTab>("ringkasan");
 
   const tabs: ProfileTabItem<ProfileTab>[] = PROFILE_TABS.filter((item) => {
-    if (item.module === "cv") return cvAccess.canRead;
     if (item.module === "contracts") return contractsAccess.canRead;
     if (item.module === "assignments") return assignmentsAccess.canRead;
     if (item.module === "idp") return idpAccess.canRead;
@@ -57,7 +56,6 @@ export default function ProfilePage() {
   const metrics = buildProfileMetrics({
     assignmentsCanRead: assignmentsAccess.canRead,
     cv,
-    cvCanRead: cvAccess.canRead,
     history,
     idp,
     idpCanRead: idpAccess.canRead,
@@ -88,6 +86,7 @@ export default function ProfilePage() {
             tabIndex={0}
           >
             <ProfileTabContent
+              canEditCv={role === "TALENT"}
               cv={cv}
               history={history}
               idp={idp}

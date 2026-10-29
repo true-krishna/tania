@@ -4,6 +4,7 @@ import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
+import { ToastProvider } from "@/components/Toast";
 import ProfilePage from "@/app/(app)/profile/page";
 import {
   MyCvProfileDocument,
@@ -195,6 +196,7 @@ const historyResult = {
 const baseMocks: MockedResponse[] = [
   { request: { query: ProfileDocument }, result: profileResult },
   { request: { query: MyCvProfileDocument }, result: cvResult },
+  { request: { query: MyCvProfileDocument }, result: cvResult },
   { request: { query: MyIdpDocument }, result: myIdpResult },
 ];
 
@@ -207,7 +209,9 @@ const profileWithHistoryMocks: MockedResponse[] = [...baseMocks, historyMock];
 function renderProfile(mocks: MockedResponse[] = baseMocks) {
   return render(
     <MockedProvider mocks={mocks}>
-      <ProfilePage />
+      <ToastProvider>
+        <ProfilePage />
+      </ToastProvider>
     </MockedProvider>,
   );
 }
@@ -276,7 +280,7 @@ describe("ProfilePage (TAN-386)", () => {
 
     expect(screen.getByRole("tab", { name: "Ringkasan" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Keahlian & CV" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Workload" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Workload" })).toBeNull();
     expect(screen.getByRole("tab", { name: "Pengembangan saya" })).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Kontrak" })).toBeNull();
     expect(screen.queryByRole("tab", { name: "Assignment" })).toBeNull();
@@ -311,15 +315,6 @@ describe("ProfilePage (TAN-386)", () => {
     expect(within(panel as HTMLElement).getByText("Berjalan")).toBeInTheDocument();
   });
 
-  it("shows the own workload view on the Workload tab", async () => {
-    renderProfile();
-    await screen.findByRole("heading", { name: "Ilham Fadillah" });
-
-    fireEvent.click(screen.getByRole("tab", { name: "Workload" }));
-
-    expect(await screen.findByText("Beban kerja periode ini")).toBeInTheDocument();
-  });
-
   it("relabels the IDP tab and renders the development plan", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
@@ -344,6 +339,21 @@ describe("ProfilePage (TAN-386)", () => {
     expect(within(panel).getByText("Level keahlian belum diisi.")).toBeInTheDocument();
     expect(within(panel).getByLabelText("Mahir: level 75 dari 100")).toBeInTheDocument();
     expect(within(panel).getByText("Migrasi Billing Core")).toBeInTheDocument();
+  });
+
+  it("lets Talent edit their own CV from the Keahlian & CV tab (TAN-372)", async () => {
+    renderProfile();
+    await screen.findByRole("heading", { name: "Ilham Fadillah" });
+    fireEvent.click(screen.getByRole("tab", { name: "Keahlian & CV" }));
+
+    fireEvent.click(await screen.findByRole("button", { name: "Ubah profil CV" }));
+
+    expect(await screen.findByText("Ringkasan Profil")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "+ Tambah Pendidikan" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Selesai mengubah" }));
+
+    expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).toBeNull();
   });
 
   it("runs the Ask TANIA insight through loading, result, and close states", async () => {

@@ -2,9 +2,12 @@
 
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import { ApolloLink, Observable } from "@apollo/client";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import DashboardPage from "@/app/(app)/dashboard/page";
+import { MenuAccessProvider } from "@/lib/auth/access";
+import type { MenuAccessConfig, MenuAccessLevel } from "@/lib/auth/menuAccess";
 import { DashboardDocument } from "@/generated/graphql";
 import {
   TALENT_REPORT_QUERY,
@@ -50,20 +53,35 @@ vi.mock("echarts/renderers", () => ({ CanvasRenderer: {} }));
 
 vi.stubGlobal("ResizeObserver", echartsMock.ResizeObserverStub);
 
-// Kontrol peran & navigasi untuk guard TAN-343 (default null = sesi belum
-// terbaca, perilaku lama — varian dashboard tetap terender seperti biasa).
 const h = vi.hoisted(() => ({
   role: { current: null as string | null },
-  replace: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => h.role.current,
 }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: h.replace, push: vi.fn(), back: vi.fn(), refresh: vi.fn() }),
-}));
+function dashboardConfig(level: MenuAccessLevel, roleName = "TEST"): MenuAccessConfig {
+  return { [roleName]: { dashboard: { visible: level !== "NONE", accessLevel: level } } };
+}
+
+const ADMIN_DASHBOARD = {
+  __typename: "AdminDashboard",
+  talentsPerChapter: [],
+  accountsPerRole: [],
+  inactiveAccounts: 0,
+  masterDataActiveCounts: [],
+};
+
+function recordingLink(operations: string[]): ApolloLink {
+  return new ApolloLink((operation) => {
+    operations.push(operation.operationName);
+    return new Observable((observer) => {
+      observer.next({ data: { dashboard: ADMIN_DASHBOARD } });
+      observer.complete();
+    });
+  });
+}
 
 const chapter = { __typename: "Chapter", id: "ch-1", name: "Backend" };
 
@@ -113,15 +131,17 @@ function talentReportMocks(
 }
 
 function renderDashboard(member: Record<string, unknown>, extraMocks: MockedResponse[] = []) {
-  render(
-    <MockedProvider
-      mocks={[
-        { request: { query: DashboardDocument }, result: { data: { dashboard: member } } },
-        ...extraMocks,
-      ]}
-    >
-      <DashboardPage />
-    </MockedProvider>,
+  return render(
+    <MenuAccessProvider config={dashboardConfig("READ")} roleName="TEST">
+      <MockedProvider
+        mocks={[
+          { request: { query: DashboardDocument }, result: { data: { dashboard: member } } },
+          ...extraMocks,
+        ]}
+      >
+        <DashboardPage />
+      </MockedProvider>
+    </MenuAccessProvider>,
   );
 }
 
@@ -292,22 +312,23 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
     expect(screen.queryByRole("link", { name: /IDP saya/ })).toBeNull();
   });
 
-  it("mengalihkan peran tanpa sel Dashboard ke landing-nya (TAN-343)", async () => {
-    // Admin & Talent tidak memegang sel Dashboard — langsung ke landing peran.
-    for (const [role, landing] of [
-      ["ADMIN", "/accounts"],
-      ["TALENT", "/employees"],
-    ] as const) {
-      h.role.current = role;
-      h.replace.mockClear();
-      const view = render(
-        <MockedProvider mocks={[]}>
+  it("mengikuti sel Dashboard efektif: tersembunyi ditolak, dibuka lewat konfigurasi (TAN-373)", async () => {
+    h.role.current = "ADMIN";
+    const operations: string[] = [];
+    const tree = (level: MenuAccessLevel) => (
+      <MenuAccessProvider config={dashboardConfig(level, "ADMIN")} roleName="ADMIN">
+        <MockedProvider link={recordingLink(operations)}>
           <DashboardPage />
-        </MockedProvider>,
-      );
-      await waitFor(() => expect(h.replace).toHaveBeenCalledWith(landing));
-      expect(screen.queryByText("Dashboard")).toBeNull();
-      view.unmount();
-    }
+        </MockedProvider>
+      </MenuAccessProvider>
+    );
+
+    const view = render(tree("NONE"));
+    expect(screen.getByRole("alert")).toHaveTextContent("Akses ditolak");
+    expect(operations).toEqual([]);
+
+    view.rerender(tree("READ"));
+    expect(await screen.findByText("Data Master Aktif")).toBeInTheDocument();
+    expect(operations).toEqual(["Dashboard"]);
   });
 });

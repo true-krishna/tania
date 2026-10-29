@@ -85,25 +85,44 @@ describe("MENU_ROWS mengikuti katalog menu", () => {
     const nested = MENU_ROWS.filter((row) => row.parent);
     expect(nested.map((row) => row.id)).toContain("evaluations/periods");
     expect(
-      nested.every(
-        (row) =>
-          row.parent === "Evaluations" ||
-          row.parent === "Master Data" ||
-          row.parent === "Employee" ||
-          row.parent === "Workload",
+      nested.every((row) =>
+        ["Administrasi", "Evaluasi", "Master Data", "Karyawan"].includes(row.parent ?? ""),
       ),
     ).toBe(true);
+  });
+
+  it("memuat baris Menu & Akses di grup Administration (TAN-376)", () => {
+    expect(MENU_ROWS.find((row) => row.id === "admin/roles")).toEqual({
+      id: "admin/roles",
+      label: "Menu & Akses",
+      parent: "Administrasi",
+    });
   });
 });
 
 describe("cellRule mencerminkan aturan server", () => {
   it("menu Admin-only terkunci untuk semua role", () => {
-    for (const entry of ["accounts", "audit"]) {
+    for (const entry of ["accounts", "admin/roles"]) {
       expect(cellRule("ADMIN", entry)).toMatchObject({ allowed: ["MANAGE"], disabled: true });
+    }
+    // Audit's default is READ, so the Admin cell must offer it instead of a
+    // blank select (TAN-364 F8).
+    expect(cellRule("ADMIN", "audit")).toMatchObject({
+      allowed: ["READ", "MANAGE"],
+      disabled: true,
+    });
+    for (const entry of ["accounts", "admin/roles", "audit"]) {
       for (const role of ["OPERATION", "CHAPTER", "TALENT"] as AccessRole[]) {
         expect(cellRule(role, entry)).toMatchObject({ allowed: ["NONE"], disabled: true });
       }
     }
+  });
+
+  it("sel terkunci ikut menampilkan level yang sedang dipegang", () => {
+    // Even a value the rule did not anticipate is renderable: never blank.
+    expect(cellRule("ADMIN", "audit", "READ").allowed).toEqual(["READ", "MANAGE"]);
+    expect(cellRule("ADMIN", "accounts", "READ").allowed).toEqual(["READ", "MANAGE"]);
+    expect(cellRule("OPERATION", "audit", "MANAGE").allowed).toEqual(["NONE", "MANAGE"]);
   });
 
   it("master data: Admin terkunci MANAGE, role lain boleh baca atau sembunyikan", () => {

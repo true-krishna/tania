@@ -11,8 +11,10 @@ export type MyIdp = NonNullable<MyIdpQuery["myIdp"]>;
  * `myIdp` is null until a Chapter creates an IDP for the talent; that is an
  * empty state (FR-14), not an error.
  */
-export function useMyIdp(enabled = true): RefetchableQueryState<MyIdp | undefined> {
-  const result = useQuery(MyIdpDocument, { skip: !enabled });
+export function useMyIdp(
+  options: { skip?: boolean } = {},
+): RefetchableQueryState<MyIdp | undefined> {
+  const result = useQuery(MyIdpDocument, { skip: options.skip });
   return {
     ...toQueryState({
       ...result,

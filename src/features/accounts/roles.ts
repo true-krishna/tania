@@ -49,3 +49,27 @@ export function roleOptions(roles: readonly Role[] | undefined): RoleOption[] {
 export function roleLabelFor(name: string, options: readonly RoleOption[]): string {
   return options.find((option) => option.value === name)?.label ?? name;
 }
+
+/**
+ * Display label of the signed-in caller's role.
+ *
+ * The role catalog is Admin-only, so a custom role outside that page answers
+ * with its own machine name instead of the template label ("Chapter"), which
+ * would describe a role the user does not hold. Built-in names keep their
+ * canonical label.
+ */
+export function currentRoleLabel(
+  roleName: string | null,
+  templateRole: AccessRole | null,
+  catalog: readonly Pick<Role, "name" | "label">[] | undefined,
+): string | null {
+  if (roleName) {
+    const catalogLabel = catalog?.find((role) => role.name === roleName)?.label;
+    if (catalogLabel) return catalogLabel;
+    if ((BUILT_IN_ROLES as readonly string[]).includes(roleName)) {
+      return roleLabel[roleName as AccessRole];
+    }
+    return roleName;
+  }
+  return templateRole ? roleLabel[templateRole] : null;
+}

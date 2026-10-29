@@ -52,7 +52,7 @@ const ROLES = [
   },
 ] as const;
 
-/** The server's grid: the default matrix, 22 entries per role (termasuk baris tanpa rute "Asisten data"). */
+/** The server's grid: the default matrix, 18 entries per role (termasuk baris tanpa rute "Asisten data"). */
 const CONFIG_CELLS = ROLES.flatMap((role) =>
   MENU_ROWS.map((row) => {
     const cell = DEFAULT_MENU_ACCESS[role.name][row.id] ?? {
@@ -110,7 +110,7 @@ function expectedTalentGrid(entryId: string, level: MenuAccessLevel): RoleGrid {
 }
 
 describe("halaman Menu & Akses per Role — bagian grid", () => {
-  it("menampilkan grid 22 entri dan menghitung menu yang tampil", async () => {
+  it("menampilkan grid 18 entri dan menghitung menu yang tampil", async () => {
     renderSection([ROLES_QUERY, CONFIG_QUERY]);
     expect(await screen.findByText("Grid Menu × Role")).toBeInTheDocument();
     for (const row of MENU_ROWS) {
@@ -120,6 +120,17 @@ describe("halaman Menu & Akses per Role — bagian grid", () => {
     expect(screen.getAllByRole("combobox").length).toBe(MENU_ROWS.length * ROLES.length);
     expect(screen.getByLabelText("IDP untuk Talent")).toHaveValue("MANAGE");
     expect(screen.getByLabelText("Accounts untuk Talent")).toHaveValue("NONE");
+  });
+
+  it("menampilkan Audit Admin sebagai Lihat dan tidak mengubahnya tanpa aksi eksplisit", async () => {
+    renderSection([ROLES_QUERY, CONFIG_QUERY]);
+    await screen.findByText("Grid Menu × Role");
+
+    // TAN-364 F8: Audit's default is READ, so the locked Admin cell renders
+    // "Lihat" instead of a blank select — and an untouched grid stays unsaved.
+    expect(screen.getByLabelText("Audit untuk Admin")).toHaveValue("READ");
+    expect(screen.getByLabelText("Audit untuk Admin")).toBeDisabled();
+    expect(roleHeader("ADMIN").getByRole("button", { name: "Simpan" })).toBeDisabled();
   });
 
   it("menyimpan satu kolom dengan seluruh katalog, hanya sel yang berubah yang berbeda", async () => {

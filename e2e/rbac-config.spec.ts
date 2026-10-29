@@ -30,16 +30,21 @@ const ADMIN_EMAIL = "admin@tania.test";
 const CHAPTER_NAV = [
   "Dashboard",
   "Aktivitas saya",
-  "Workload",
-  "Data Karyawan",
-  "Kontrak",
-  "Assignments",
+  "Karyawan",
   "IDP",
-  "CV",
-  "Evaluations",
+  "Roster",
   "Master Data",
 ] as const;
-const CHAPTER_NAV_HIDDEN = ["Provisi Entra", "Accounts", "Audit"] as const;
+// TAN-372: CV bukan lagi menu — kontennya pindah ke profil talent.
+const CHAPTER_NAV_HIDDEN = [
+  "CV",
+  "Workload",
+  "Provisi Entra",
+  "Administrasi",
+  "Menu & Akses",
+  "Accounts",
+  "Audit",
+] as const;
 
 type GraphQLResult = Record<string, unknown>;
 

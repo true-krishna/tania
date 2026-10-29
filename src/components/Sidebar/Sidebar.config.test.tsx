@@ -7,7 +7,7 @@
 // the fallback path and the configured path are two different code paths.
 
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Sidebar } from "@/components/Sidebar";
 import { ACCESS_ROLES, DEFAULT_MENU_ACCESS, type MenuAccessConfig } from "@/lib/auth/menuAccess";
@@ -119,10 +119,23 @@ describe("Sidebar saat grid belum tersedia (W3)", () => {
     expect(drawnMenu()).toEqual([]);
   });
 
-  it("tidak menggambar menu fallback ketika konfigurasi gagal dimuat", () => {
+  it("menampilkan menu default dan pemberitahuan saat konfigurasi gagal dimuat", () => {
+    const baseline = render(<Sidebar pathname="/dashboard" role="ADMIN" />);
+    const defaultMenu = drawnMenu();
+    baseline.unmount();
+
     render(<Sidebar menuStatus="error" pathname="/dashboard" role="ADMIN" />);
-    expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
-    expect(drawnMenu()).toEqual([]);
+    expect(screen.getAllByText(/menampilkan akses default/).length).toBeGreaterThan(0);
+    // A transient failure degrades to the matrix the server falls back to,
+    // instead of blanking the sidebar.
+    expect(drawnMenu()).toEqual(defaultMenu);
+  });
+
+  it("menawarkan retry saat konfigurasi gagal dimuat", () => {
+    const retry = vi.fn();
+    render(<Sidebar menuStatus="error" onRetryMenu={retry} pathname="/dashboard" role="ADMIN" />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Coba lagi" })[0]);
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
   it("tidak menggambar menu fallback ketika server mengembalikan grid kosong", () => {

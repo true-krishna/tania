@@ -7,7 +7,6 @@ import type { ProfileHistory } from "./useProfile";
 interface ProfileMetricsInput {
   assignmentsCanRead: boolean;
   cv: RefetchableQueryState<CvFieldsFragment | undefined>;
-  cvCanRead: boolean;
   history: RefetchableQueryState<ProfileHistory>;
   idp: RefetchableQueryState<MyIdp | undefined>;
   idpCanRead: boolean;
@@ -44,13 +43,9 @@ function assignmentMetric(
 }
 
 function certificationMetric(
-  canRead: boolean,
   cv: RefetchableQueryState<CvFieldsFragment | undefined>,
 ): ProfileMetric {
   const base = { id: "certification", label: "Sertifikasi" };
-  if (!canRead) {
-    return { ...base, hint: "Butuh akses modul CV.", state: "unavailable" };
-  }
   if (cv.status === "loading") {
     return { ...base, hint: "Memuat profil CV…", state: "loading" };
   }
@@ -97,7 +92,6 @@ function idpMetric(canRead: boolean, idp: RefetchableQueryState<MyIdp | undefine
 export function buildProfileMetrics({
   assignmentsCanRead,
   cv,
-  cvCanRead,
   history,
   idp,
   idpCanRead,
@@ -110,7 +104,7 @@ export function buildProfileMetrics({
       hint: "Belum ada sumber data utilisasi (menunggu agregat WAD).",
       state: "unavailable",
     },
-    certificationMetric(cvCanRead, cv),
+    certificationMetric(cv),
     idpMetric(idpCanRead, idp),
   ];
 }

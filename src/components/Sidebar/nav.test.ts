@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { AccessRole } from "@/generated/graphql";
 import { canAccess, MODULE_ROLES, type Module } from "@/lib/auth/matrix";
@@ -12,7 +14,26 @@ import {
   serverAllows,
   visibleByConfig,
 } from "@/lib/auth/menuAccess";
-import { ACCOUNTS, IDP } from "@/lib/constants/routes";
+import {
+  ACCOUNTS,
+  ACTIVITIES,
+  AUDIT,
+  CONTRACTS,
+  DASHBOARD,
+  EMPLOYEES,
+  ENTRA,
+  EVALUATIONS,
+  EVALUATIONS_MY,
+  EVALUATION_PERIODS,
+  EVALUATION_TEMPLATES,
+  IDP,
+  MASTER_DATA_CHAPTERS,
+  MASTER_DATA_JOB_ROLES,
+  MASTER_DATA_PROJECTS,
+  MASTER_DATA_UNITS,
+  ROLES_ADMIN,
+  TALENT_ASSIGNMENT,
+} from "@/lib/constants/routes";
 import { NAV, sectionForPath, visibleNavEntries } from "./nav";
 
 const ROLES: readonly AccessRole[] = ACCESS_ROLES;
@@ -29,6 +50,61 @@ const LEAVES: Leaf[] = NAV.flatMap((entry) =>
     : entry.children.map((child) => ({ href: child.href, label: child.label, roles: child.roles })),
 );
 
+/**
+ * Approved persona menu (TAN-364 decisions 2–4, landed by TAN-374). Admin is a
+ * full-access role again; Workload is hidden until TAN-378 and appears for no
+ * persona; Talent keeps only its own-record surfaces.
+ */
+const APPROVED_MENU: Record<AccessRole, readonly string[]> = {
+  ADMIN: [
+    DASHBOARD,
+    ACTIVITIES,
+    EMPLOYEES,
+    CONTRACTS,
+    TALENT_ASSIGNMENT,
+    ENTRA,
+    IDP,
+    EVALUATIONS,
+    EVALUATION_PERIODS,
+    EVALUATION_TEMPLATES,
+    ACCOUNTS,
+    ROLES_ADMIN,
+    AUDIT,
+    MASTER_DATA_UNITS,
+    MASTER_DATA_CHAPTERS,
+    MASTER_DATA_JOB_ROLES,
+    MASTER_DATA_PROJECTS,
+  ],
+  OPERATION: [
+    DASHBOARD,
+    ACTIVITIES,
+    EMPLOYEES,
+    CONTRACTS,
+    TALENT_ASSIGNMENT,
+    ENTRA,
+    IDP,
+    EVALUATIONS,
+    MASTER_DATA_UNITS,
+    MASTER_DATA_CHAPTERS,
+    MASTER_DATA_JOB_ROLES,
+    MASTER_DATA_PROJECTS,
+  ],
+  CHAPTER: [
+    DASHBOARD,
+    ACTIVITIES,
+    EMPLOYEES,
+    CONTRACTS,
+    TALENT_ASSIGNMENT,
+    IDP,
+    EVALUATIONS,
+    MASTER_DATA_UNITS,
+    MASTER_DATA_CHAPTERS,
+    MASTER_DATA_JOB_ROLES,
+    MASTER_DATA_PROJECTS,
+  ],
+  TALENT: [ACTIVITIES, EMPLOYEES, IDP, EVALUATIONS_MY],
+};
+
 /** One configuration with a single cell overridden, for the non-default case. */
 function withCell(
   config: MenuAccessConfig,
@@ -44,6 +120,10 @@ function withCell(
 }
 
 describe("NAV mirrors the role & module matrix (R2.2)", () => {
+  it("tidak punya entri menu CV untuk peran mana pun (TAN-372)", () => {
+    expect(LEAVES.some((leaf) => leaf.label === "CV")).toBe(false);
+  });
+
   for (const leaf of LEAVES) {
     it(`${leaf.href} punya modul matriks`, () => {
       expect(MODULE_OF_HREF[leaf.href], `${leaf.href} tidak dipetakan ke modul`).toBeDefined();
@@ -77,10 +157,34 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
     }
   });
 
+  it("Menu & Akses hanya ada di grup Administration milik Admin (TAN-376)", () => {
+    const administration = NAV.find(
+      (entry) => entry.kind === "group" && entry.id === "administration",
+    );
+    expect(administration?.kind).toBe("group");
+    if (administration?.kind !== "group") return;
+    expect(administration.label).toBe("Administrasi");
+    expect(administration.roles).toEqual(["ADMIN"]);
+    expect(administration.children.map((child) => child.href)).toEqual([
+      ACCOUNTS,
+      ROLES_ADMIN,
+      AUDIT,
+    ]);
+    for (const child of administration.children) {
+      expect(child.roles).toEqual(["ADMIN"]);
+    }
+    for (const role of ["OPERATION", "CHAPTER", "TALENT"] as AccessRole[]) {
+      expect(LEAVES.filter((leaf) => leaf.roles.includes(role))).not.toContainEqual(
+        expect.objectContaining({ href: ROLES_ADMIN }),
+      );
+    }
+  });
+
   it("menandai seksi aktif dari submenu terdalam", () => {
-    expect(sectionForPath("/employees/emp-1")).toBe("Employee");
-    expect(sectionForPath("/assignments")).toBe("Employee");
+    expect(sectionForPath("/employees/emp-1")).toBe("Karyawan");
+    expect(sectionForPath("/assignments")).toBe("Karyawan");
     expect(sectionForPath("/master-data/units")).toBe("Master Data");
+    expect(sectionForPath("/accounts")).toBe("Administrasi");
     expect(sectionForPath("/admin/roles")).toBe("Menu & Akses");
   });
 });
@@ -117,6 +221,33 @@ describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
         .map((child) => child.href);
     });
   }
+
+  it("tabel persona mengunci sidebar keempat peran", () => {
+    for (const role of ROLES) {
+      expect(drawnHrefs(DEFAULT_MENU_ACCESS, role), `konfigurasi default × ${role}`).toEqual(
+        APPROVED_MENU[role],
+      );
+      expect(staticHrefs(role), `filter role statis × ${role}`).toEqual(APPROVED_MENU[role]);
+    }
+  });
+
+  it("setiap menu yang tampil punya halaman untuk peran itu", () => {
+    for (const role of ROLES) {
+      for (const href of APPROVED_MENU[role]) {
+        const page = path.join(process.cwd(), "src/app/(app)", href, "page.tsx");
+        expect(existsSync(page), `${role} melihat ${href} tetapi halamannya tidak ada`).toBe(true);
+      }
+    }
+  });
+
+  it("Workload tidak muncul untuk peran mana pun (TAN-364 keputusan 4)", () => {
+    expect(LEAVES.some((leaf) => leaf.label === "Workload")).toBe(false);
+    for (const role of ROLES) {
+      expect(
+        drawnHrefs(DEFAULT_MENU_ACCESS, role).some((href) => href.startsWith("/workload")),
+      ).toBe(false);
+    }
+  });
 
   it("tanpa konfigurasi sidebar tetap memakai filter role statis NAV", () => {
     // `visibleNavEntries` imposes no filter of its own when there is nothing to
@@ -156,7 +287,12 @@ describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
     const drawn = visibleNavEntries(config, "ADMIN");
     expect(drawn.some((entry) => entry.kind === "group" && entry.id === "evaluations")).toBe(false);
     // Only that group: the rest of the Admin menu is untouched.
-    expect(drawn.some((entry) => entry.kind === "link" && entry.href === ACCOUNTS)).toBe(true);
+    const administration = drawn.find(
+      (entry) => entry.kind === "group" && entry.id === "administration",
+    );
+    expect(
+      administration?.kind === "group" && administration.children.map((c) => c.href),
+    ).toContain(ACCOUNTS);
   });
 
   it("role kustom memakai konfigurasi miliknya, bukan daftar role statis", () => {
@@ -241,28 +377,25 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
     expect(accessLevel(hidden, "OPERATION", "idp")).toBe("READ");
   });
 
-  it("konfigurasi default identik matriks default per entry (TAN-343)", () => {
-    // Every entry of the 21-leaf registry carries the same level the server's
+  it("konfigurasi default identik matriks default per entry (TAN-374)", () => {
+    // Every entry of the sidebar registry carries the same level the server's
     // fallback matrix gives, so an empty `role_menu_config` changes nothing.
-    // Sejak TAN-343: dashboard hanya Operation/Chapter, Employee tanpa Admin,
-    // Assignments tanpa Admin & Talent, Entra hanya Operation.
+    // TAN-374: Admin memegang Dashboard/Employee/Entra lagi, Workload keluar
+    // dari katalog, assignments tanpa Talent.
     const expected: Record<string, Record<string, MenuAccessLevel>> = {
-      dashboard: { OPERATION: "READ", CHAPTER: "READ" },
+      dashboard: { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ" },
       activities: { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ", TALENT: "READ" },
-      workload: { TALENT: "READ" },
-      "workload/executive": { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ" },
-      "workload/talent": { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ" },
-      employees: { OPERATION: "MANAGE", CHAPTER: "READ", TALENT: "READ" },
-      contracts: { OPERATION: "MANAGE", CHAPTER: "READ" },
-      assignments: { CHAPTER: "MANAGE", OPERATION: "READ" },
-      entra: { OPERATION: "MANAGE" },
+      employees: { ADMIN: "MANAGE", OPERATION: "MANAGE", CHAPTER: "READ", TALENT: "READ" },
+      contracts: { ADMIN: "MANAGE", OPERATION: "MANAGE", CHAPTER: "READ" },
+      assignments: { ADMIN: "MANAGE", CHAPTER: "MANAGE", OPERATION: "READ" },
+      entra: { ADMIN: "MANAGE", OPERATION: "MANAGE" },
       idp: { ADMIN: "MANAGE", CHAPTER: "MANAGE", TALENT: "MANAGE", OPERATION: "READ" },
-      cv: { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ", TALENT: "MANAGE" },
       evaluations: { ADMIN: "MANAGE", CHAPTER: "MANAGE", OPERATION: "READ" },
       "evaluations/periods": { ADMIN: "MANAGE" },
       "evaluations/templates": { ADMIN: "MANAGE" },
       "evaluations/my": { TALENT: "MANAGE" },
       accounts: { ADMIN: "MANAGE" },
+      "admin/roles": { ADMIN: "MANAGE" },
       "master-data/units": { ADMIN: "MANAGE", CHAPTER: "READ", OPERATION: "READ" },
       "master-data/chapters": { ADMIN: "MANAGE", CHAPTER: "READ", OPERATION: "READ" },
       "master-data/job-roles": { ADMIN: "MANAGE", CHAPTER: "READ", OPERATION: "READ" },
