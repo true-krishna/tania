@@ -34,12 +34,8 @@ describe("echarts 6 × Next 16 (O-R3)", () => {
   it("registers the report chart set without touching the DOM", async () => {
     const core = await import("echarts/core");
     const { BarChart, LineChart } = await import("echarts/charts");
-    const {
-      GridComponent,
-      TitleComponent,
-      TooltipComponent,
-      LegendComponent,
-    } = await import("echarts/components");
+    const { GridComponent, TitleComponent, TooltipComponent, LegendComponent } =
+      await import("echarts/components");
     const { CanvasRenderer } = await import("echarts/renderers");
 
     expect(() =>

@@ -16,9 +16,7 @@ export type ChatMessageNode = {
 export type ChatConversationNode =
   ChatConversationsQuery["chatConversations"]["edges"][number]["node"];
 
-export function unansweredUserMessages(
-  messages: readonly ChatMessageNode[]
-): ChatMessageNode[] {
+export function unansweredUserMessages(messages: readonly ChatMessageNode[]): ChatMessageNode[] {
   let lastAssistantIndex = -1;
   messages.forEach((message, index) => {
     if (message.role === "ASSISTANT") lastAssistantIndex = index;
@@ -26,9 +24,7 @@ export function unansweredUserMessages(
 
   return messages.filter(
     (message, index) =>
-      message.role === "USER" &&
-      index > lastAssistantIndex &&
-      Boolean(message.clientRequestId)
+      message.role === "USER" && index > lastAssistantIndex && Boolean(message.clientRequestId),
   );
 }
 

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActivitiesStore } from "./ActivitiesProvider";
 import type { ActivityInput, PersonalWorkActivity } from "./types";
+import { errorText } from "@/lib/errors";
 
 export interface CreateActivityState {
   create: (input: ActivityInput) => Promise<PersonalWorkActivity | null>;
@@ -23,7 +24,7 @@ export function useCreateActivity(): CreateActivityState {
       try {
         return await create(input);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Gagal menyimpan aktivitas.");
+        setError(errorText(cause, "Gagal menyimpan aktivitas."));
         return null;
       } finally {
         setLoading(false);

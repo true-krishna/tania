@@ -7,7 +7,7 @@ import {
   type SortKey,
   type SortState,
 } from "./distributionColumns";
-import { SortHeader } from "./SortHeader";
+import { SortHeader, sortHeaderProps } from "./SortHeader";
 import { TalentDrillDownList } from "./TalentDrillDownList";
 import type {
   DistributionDimension,
@@ -64,19 +64,16 @@ export function DistributionTable(props: DistributionTableProps) {
   };
 
   if (props.normalized) {
-    const columns: TableColumn<DistributionNormalizedRow>[] =
-      NORMALIZED_COLUMNS.map((column) => ({
-        align: column.alignRight ? ("right" as const) : undefined,
-        key: column.key,
-        render: (_value, row) => column.render(row),
-        title: column.header,
-      }));
+    const columns: TableColumn<DistributionNormalizedRow>[] = NORMALIZED_COLUMNS.map((column) => ({
+      align: column.alignRight ? ("right" as const) : undefined,
+      key: column.key,
+      render: (_value, row) => column.render(row),
+      title: column.header,
+    }));
 
     return (
       <Table
-        caption={`Tabel distribusi beban ternormalisasi dimensi ${
-          DIMENSION_LABELS[dimension]
-        }`}
+        caption={`Tabel distribusi beban ternormalisasi dimensi ${DIMENSION_LABELS[dimension]}`}
         columns={columns}
         dataSource={props.rows}
         emptyText="Tidak ada baris yang cocok dengan filter atau dimensi ini."
@@ -87,34 +84,29 @@ export function DistributionTable(props: DistributionTableProps) {
     );
   }
 
-  const columns: TableColumn<DistributionRow>[] = standardColumns(
-    dimension,
-    canSeeCost
-  ).map((column) => ({
-    align: column.alignRight ? ("right" as const) : undefined,
-    headerProps: {
-      "aria-sort":
-        sort && column.sortKey === sort.key
-          ? sort.dir === "asc"
-            ? "ascending"
-            : "descending"
-          : undefined,
-    },
-    key: column.key,
-    render: (_value, row) => column.render(row),
-    title: (
-      <SortHeader column={column} onToggle={onSortToggle} sort={sort} />
-    ),
-  }));
+  const columns: TableColumn<DistributionRow>[] = standardColumns(dimension, canSeeCost).map(
+    (column) => ({
+      align: column.alignRight ? ("right" as const) : undefined,
+      headerProps: sortHeaderProps(sort, column.sortKey),
+      key: column.key,
+      render: (_value, row) => column.render(row),
+      title: (
+        <SortHeader
+          label={column.header}
+          onToggle={(key) => onSortToggle(key as SortKey)}
+          sort={sort}
+          sortKey={column.sortKey}
+        />
+      ),
+    }),
+  );
 
   const expandable: TableExpandable<DistributionRow> = {
     columnAriaLabel: "Ekspand baris",
     columnClassName: "w-10",
     expandedRowId: (row) => `drilldown-${row.id}`,
     expandedRowKeys: expandedId ? [expandedId] : [],
-    expandedRowRender: (row) => (
-      <TalentDrillDownList row={row} tables={tables} />
-    ),
+    expandedRowRender: (row) => <TalentDrillDownList row={row} tables={tables} />,
     onExpand: onToggleExpand,
     toggleLabel: (row) => `Lihat talent ${row.nama}`,
   };

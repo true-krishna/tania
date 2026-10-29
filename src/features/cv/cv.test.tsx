@@ -52,9 +52,7 @@ const cv = {
       credentialUrl: null,
     },
   ],
-  skills: [
-    { __typename: "CvSkill", id: "skill-1", name: "Go", level: "Mahir" },
-  ],
+  skills: [{ __typename: "CvSkill", id: "skill-1", name: "Go", level: "Mahir" }],
   workExperience: [
     {
       __typename: "Assignment",
@@ -101,7 +99,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
         <MockedProvider mocks={[{ request: { query: MyCvProfileDocument }, result: myCvResult }]}>
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     expect(await screen.findByText("Ringkasan Profil")).toBeInTheDocument();
@@ -146,12 +144,15 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
               },
               result: { data: { addCvEducation: added } },
             },
-            { request: { query: MyCvProfileDocument }, result: { data: { myCvProfile: { ...cv, educations: [...cv.educations, added] } } } },
+            {
+              request: { query: MyCvProfileDocument },
+              result: { data: { myCvProfile: { ...cv, educations: [...cv.educations, added] } } },
+            },
           ]}
         >
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     await screen.findByText(/Universitas Indonesia/);
@@ -182,7 +183,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
         <MockedProvider mocks={[{ request: { query: MyCvProfileDocument }, result: myCvResult }]}>
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     await screen.findByText(/Universitas Indonesia/);
@@ -246,7 +247,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
         >
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     await screen.findByText(/Universitas Indonesia/);
@@ -316,7 +317,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
         >
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     await screen.findByText("AWS Certified Developer");
@@ -363,7 +364,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
         >
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     expect(await screen.findByText("Legacy Platform")).toBeInTheDocument();
@@ -392,7 +393,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
         >
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     expect(await screen.findByText("Belum ada riwayat assignment.")).toBeInTheDocument();
@@ -409,7 +410,10 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
         <MockedProvider
           mocks={[
             {
-              request: { query: EmployeesDocument, variables: { filter: { assignableOnly: true }, first: 25, after: null } },
+              request: {
+                query: EmployeesDocument,
+                variables: { filter: { assignableOnly: true }, first: 25, after: null },
+              },
               result: employeesResult,
             },
             {
@@ -420,7 +424,7 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
         >
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama (EMP-001)")).toBeInTheDocument();
@@ -440,7 +444,10 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
         <MockedProvider
           mocks={[
             {
-              request: { query: EmployeesDocument, variables: { filter: { assignableOnly: true }, first: 25, after: null } },
+              request: {
+                query: EmployeesDocument,
+                variables: { filter: { assignableOnly: true }, first: 25, after: null },
+              },
               result: employeesResult,
             },
             {
@@ -451,7 +458,7 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
         >
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     expect(await screen.findByText(/seluruh talent/)).toBeInTheDocument();
@@ -470,7 +477,10 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
         <MockedProvider
           mocks={[
             {
-              request: { query: EmployeesDocument, variables: { filter: { assignableOnly: true }, first: 25, after: null } },
+              request: {
+                query: EmployeesDocument,
+                variables: { filter: { assignableOnly: true }, first: 25, after: null },
+              },
               result: employeesResult,
             },
             {
@@ -481,7 +491,7 @@ describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
         >
           <CvPage />
         </MockedProvider>
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     expect(await screen.findByText(/seluruh talent/)).toBeInTheDocument();

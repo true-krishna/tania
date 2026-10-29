@@ -40,23 +40,15 @@ export function EmployeePicker({
   const listboxId = `${inputId}-listbox`;
 
   const debouncedQuery = useDebouncedValue(query, DEBOUNCE_MS);
-  const lookupState = useEmployeeLookup(
-    { search: debouncedQuery || undefined },
-    PAGE_SIZE
-  );
-  const items = React.useMemo(
-    () => lookupState.items ?? [],
-    [lookupState.items]
-  );
-  const boundedActiveIndex =
-    items.length === 0 ? 0 : Math.min(activeIndex, items.length - 1);
-  const selectedEmployee =
-    items.find((employee) => employee.id === value) ?? null;
+  const lookupState = useEmployeeLookup({ search: debouncedQuery || undefined }, PAGE_SIZE);
+  const items = React.useMemo(() => lookupState.items ?? [], [lookupState.items]);
+  const boundedActiveIndex = items.length === 0 ? 0 : Math.min(activeIndex, items.length - 1);
+  const selectedEmployee = items.find((employee) => employee.id === value) ?? null;
 
   React.useEffect(() => {
     if (!open || !listRef.current) return;
     const optionElement = listRef.current.querySelector<HTMLLIElement>(
-      `[data-option-index="${boundedActiveIndex}"]`
+      `[data-option-index="${boundedActiveIndex}"]`,
     );
     if (typeof optionElement?.scrollIntoView === "function") {
       optionElement.scrollIntoView({ block: "nearest" });
@@ -70,8 +62,7 @@ export function EmployeePicker({
       }
     }
     document.addEventListener("mousedown", handleDocumentClick);
-    return () =>
-      document.removeEventListener("mousedown", handleDocumentClick);
+    return () => document.removeEventListener("mousedown", handleDocumentClick);
   }, []);
 
   function handleSelect(employeeId: string) {
@@ -120,10 +111,7 @@ export function EmployeePicker({
   }
 
   return (
-    <div
-      className="flex flex-col gap-1 text-sm font-medium text-zinc-700"
-      ref={wrapperRef}
-    >
+    <div className="flex flex-col gap-1 text-sm font-medium text-zinc-700" ref={wrapperRef}>
       <label className="text-sm font-medium text-zinc-700" htmlFor={inputId}>
         <span>
           {label}
@@ -136,13 +124,10 @@ export function EmployeePicker({
           className={cn(
             "tp-input relative flex items-center gap-2 px-3!",
             error &&
-              "border-tp-ink-peach focus-within:border-tp-ink-peach focus-within:ring-2 focus-within:ring-tp-tint-peach"
+              "border-tp-ink-peach focus-within:border-tp-ink-peach focus-within:ring-2 focus-within:ring-tp-tint-peach",
           )}
         >
-          <IconSearch
-            aria-hidden
-            className="h-4 w-4 shrink-0 text-tp-muted"
-          />
+          <IconSearch aria-hidden className="h-4 w-4 shrink-0 text-tp-muted" />
           <input
             aria-activedescendant={
               open && items[boundedActiveIndex]
@@ -155,7 +140,7 @@ export function EmployeePicker({
             autoComplete="off"
             className={cn(
               "w-full flex-1 bg-transparent py-1.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400",
-              "focus-visible:outline-none"
+              "focus-visible:outline-none",
             )}
             id={inputId}
             onChange={handleInputChange}
@@ -178,9 +163,7 @@ export function EmployeePicker({
           ) : null}
         </div>
 
-        {selectedEmployee && !query ? (
-          <SelectedEmployeeChip employee={selectedEmployee} />
-        ) : null}
+        {selectedEmployee && !query ? <SelectedEmployeeChip employee={selectedEmployee} /> : null}
 
         {open ? (
           <EmployeeOptionList

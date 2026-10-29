@@ -5,9 +5,7 @@ const PUBLIC_ROUTES = [LOGIN];
 
 /** Routes the gate must never block: the sign-in page and its subpaths. */
 export function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
+  return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
 /** Decode the session cookie value; null when absent or malformed. */

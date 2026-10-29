@@ -57,7 +57,7 @@ describe("LoginForm", () => {
         ]}
       >
         <LoginForm />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     // The email form is the main door from the first paint (TAN-331); without
@@ -95,7 +95,7 @@ describe("LoginForm", () => {
         ]}
       >
         <LoginForm />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     // The email form is the main door from the first paint (TAN-331); without
@@ -118,7 +118,7 @@ describe("LoginForm", () => {
     render(
       <MockedProvider mocks={[]}>
         <LoginForm />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(screen.getByRole("heading", { name: "Masuk" })).toBeInTheDocument();

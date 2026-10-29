@@ -22,7 +22,7 @@ const auth = vi.hoisted(() => ({ role: "OPERATION" as string | null }));
 
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 beforeEach(() => {
@@ -36,7 +36,7 @@ function node(
   status: "ACTIVE" | "INACTIVE",
   nikMasked: string,
   nomorInduk: string | null,
-  unitName: string | null
+  unitName: string | null,
 ) {
   return {
     __typename: "Employee",
@@ -47,9 +47,7 @@ function node(
     status,
     assignable: status === "ACTIVE",
     nomorInduk,
-    unit: unitName
-      ? { __typename: "Unit", id: "u-1", name: unitName }
-      : null,
+    unit: unitName ? { __typename: "Unit", id: "u-1", name: unitName } : null,
     jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
   };
 }
@@ -83,8 +81,24 @@ const pageOne = {
       __typename: "EmployeeConnection",
       totalCount: 3,
       edges: edges([
-        node("emp-1", "Andi Pratama", "andi@tania.id", "ACTIVE", "************1234", "EMP-1", "Digital"),
-        node("emp-2", "Citra Lestari", "citra@tania.id", "ACTIVE", "************5678", "EMP-2", "Digital"),
+        node(
+          "emp-1",
+          "Andi Pratama",
+          "andi@tania.id",
+          "ACTIVE",
+          "************1234",
+          "EMP-1",
+          "Digital",
+        ),
+        node(
+          "emp-2",
+          "Citra Lestari",
+          "citra@tania.id",
+          "ACTIVE",
+          "************5678",
+          "EMP-2",
+          "Digital",
+        ),
       ]),
       pageInfo: { __typename: "PageInfo", hasNextPage: true, endCursor: "c-2" },
     },
@@ -119,7 +133,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -133,7 +147,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -146,7 +160,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -172,7 +186,15 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
               __typename: "EmployeeConnection",
               totalCount: 1,
               edges: edges([
-                node("emp-2", "Citra Lestari", "citra@tania.id", "ACTIVE", "************5678", "EMP-2", "Digital"),
+                node(
+                  "emp-2",
+                  "Citra Lestari",
+                  "citra@tania.id",
+                  "ACTIVE",
+                  "************5678",
+                  "EMP-2",
+                  "Digital",
+                ),
               ]),
               pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
             },
@@ -183,7 +205,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     await screen.findByText("Andi Pratama");
 
@@ -213,7 +235,15 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
               __typename: "EmployeeConnection",
               totalCount: 1,
               edges: edges([
-                node("emp-3", "Eko Prasetyo", "eko@tania.id", "INACTIVE", "************9012", null, null),
+                node(
+                  "emp-3",
+                  "Eko Prasetyo",
+                  "eko@tania.id",
+                  "INACTIVE",
+                  "************9012",
+                  null,
+                  null,
+                ),
               ]),
               pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
             },
@@ -224,7 +254,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     await screen.findByText("Andi Pratama");
 
@@ -234,9 +264,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     fireEvent.change(selects[0], { target: { value: "u-1" } });
     fireEvent.change(selects[2], { target: { value: "INACTIVE" } });
 
-    expect(
-      screen.getByRole("button", { name: "Filter, 2 filter aktif" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filter, 2 filter aktif" })).toBeInTheDocument();
     expect(await screen.findByText("Eko Prasetyo")).toBeInTheDocument();
     expect(screen.queryByText("Andi Pratama")).not.toBeInTheDocument();
   });
@@ -258,7 +286,15 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
               __typename: "EmployeeConnection",
               totalCount: 1,
               edges: edges([
-                node("emp-2", "Citra Lestari", "citra@tania.id", "ACTIVE", "************5678", "EMP-2", "Digital"),
+                node(
+                  "emp-2",
+                  "Citra Lestari",
+                  "citra@tania.id",
+                  "ACTIVE",
+                  "************5678",
+                  "EMP-2",
+                  "Digital",
+                ),
               ]),
               pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
             },
@@ -269,7 +305,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     await screen.findByText("Andi Pratama");
 
@@ -284,16 +320,11 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
   });
 
   it("auto-fetches the next cursor page to fill the shown page", async () => {
-    const mocks = [
-      chaptersMock,
-      unitsMock,
-      firstPageMock,
-      nextPageMock,
-    ];
+    const mocks = [chaptersMock, unitsMock, firstPageMock, nextPageMock];
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     await screen.findByText("Andi Pratama");
 
@@ -308,7 +339,10 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
           chaptersMock,
           unitsMock,
           {
-            request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
+            request: {
+              query: EmployeesDocument,
+              variables: { filter: {}, first: 25, after: null },
+            },
             result: {
               data: {
                 employees: {
@@ -323,7 +357,7 @@ describe("EmployeesPage (daftar + filter, T021)", () => {
         ]}
       >
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText(/tidak ada karyawan yang cocok/i)).toBeInTheDocument();
@@ -335,7 +369,7 @@ describe("EmployeesPage per role (T034)", () => {
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
@@ -346,7 +380,7 @@ describe("EmployeesPage per role (T034)", () => {
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
     // TAN-343: Admin tidak memegang sel Data Karyawan — tanpa aksi kelola.
@@ -367,7 +401,12 @@ describe("EmployeesPage per role (T034)", () => {
                   edges: [
                     {
                       __typename: "EmployeeEdge",
-                      node: { __typename: "Employee", id: "emp-9", fullName: "Sari Dewi", nomorInduk: "EMP-9" },
+                      node: {
+                        __typename: "Employee",
+                        id: "emp-9",
+                        fullName: "Sari Dewi",
+                        nomorInduk: "EMP-9",
+                      },
                     },
                   ],
                 },
@@ -377,9 +416,12 @@ describe("EmployeesPage per role (T034)", () => {
         ]}
       >
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
-    expect(await screen.findByRole("link", { name: "Sari Dewi" })).toHaveAttribute("href", "/employees/emp-9");
+    expect(await screen.findByRole("link", { name: "Sari Dewi" })).toHaveAttribute(
+      "href",
+      "/employees/emp-9",
+    );
     expect(screen.queryByRole("button", { name: /tambah karyawan/i })).toBeNull();
     expect(screen.queryByText("NIK")).toBeNull();
   });
@@ -391,12 +433,20 @@ describe("EmployeesPage per role (T034)", () => {
         mocks={[
           {
             request: { query: MyEmployeeDocument },
-            result: { data: { me: { __typename: "User", id: "u-9", employee: { __typename: "Employee", id: "emp-9" } } } },
+            result: {
+              data: {
+                me: {
+                  __typename: "User",
+                  id: "u-9",
+                  employee: { __typename: "Employee", id: "emp-9" },
+                },
+              },
+            },
           },
         ]}
       >
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/employees/emp-9"));
   });
@@ -413,7 +463,7 @@ describe("EmployeesPage per role (T034)", () => {
         ]}
       >
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText(/belum tertaut/i)).toBeInTheDocument();
   });
@@ -455,9 +505,7 @@ const employeeDetailMock = {
 
 function submitForm() {
   const submitBtns = screen.getAllByRole("button", { name: "Simpan" });
-  const submitBtn = submitBtns.find(
-    (b) => (b as HTMLButtonElement).type === "submit"
-  );
+  const submitBtn = submitBtns.find((b) => (b as HTMLButtonElement).type === "submit");
   if (!submitBtn) throw new Error("submit button not found");
   fireEvent.click(submitBtn);
 }
@@ -467,7 +515,7 @@ describe("EmployeesPage — create modal (TAN-315)", () => {
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
 
@@ -481,7 +529,7 @@ describe("EmployeesPage — create modal (TAN-315)", () => {
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
 
@@ -496,7 +544,7 @@ describe("EmployeesPage — create modal (TAN-315)", () => {
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
 
@@ -521,7 +569,7 @@ describe("EmployeesPage — edit modal (TAN-315)", () => {
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
 
@@ -539,7 +587,7 @@ describe("EmployeesPage — edit modal (TAN-315)", () => {
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
 
@@ -558,7 +606,7 @@ describe("EmployeesPage — edit modal (TAN-315)", () => {
     render(
       <MockedProvider mocks={mocks}>
         <EmployeesPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
 

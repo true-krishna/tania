@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+build
+coverage
+pnpm-lock.yaml
+*.md
+src/generated
+public
+graph
+design
+docs
+specs
+.omp
+.opencode
+.kilo

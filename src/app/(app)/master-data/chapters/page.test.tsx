@@ -13,7 +13,7 @@ import { ToastProvider } from "@/components/Toast";
 const auth = vi.hoisted(() => ({ role: "ADMIN" as string | null }));
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 beforeEach(() => {
@@ -53,7 +53,7 @@ describe("ChaptersPage (Apollo)", () => {
         <ToastProvider>
           <ChaptersPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -70,7 +70,7 @@ describe("ChaptersPage (Apollo)", () => {
         <ToastProvider>
           <ChaptersPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe("ChaptersPage (Apollo)", () => {
         <ToastProvider>
           <ChaptersPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(serverMessage);

@@ -60,11 +60,15 @@ function normalizeHeaders(headers: HeadersInit | undefined): Record<string, stri
     return out;
   }
   return Object.fromEntries(
-    Object.entries((headers as Record<string, string>) ?? {}).map(([k, v]) => [k.toLowerCase(), v])
+    Object.entries((headers as Record<string, string>) ?? {}).map(([k, v]) => [k.toLowerCase(), v]),
   );
 }
 
-function stubFetch(handlers: Array<() => { ok: boolean; status: number; text: () => Promise<string>; json: () => Promise<unknown> }>) {
+function stubFetch(
+  handlers: Array<
+    () => { ok: boolean; status: number; text: () => Promise<string>; json: () => Promise<unknown> }
+  >,
+) {
   const calls: Array<{ headers: Record<string, string>; body: string }> = [];
   const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
     const headers = normalizeHeaders(init?.headers);
@@ -101,7 +105,7 @@ describe("Apollo client session expiry", () => {
 
     const client = createApolloClient();
     await expect(client.query({ query: PING, fetchPolicy: "network-only" })).rejects.toThrow(
-      /Session expired/
+      /Session expired/,
     );
 
     expect(getSession()).toBeNull();
@@ -118,7 +122,7 @@ describe("Apollo client session expiry", () => {
     // The unrecoverable branch leaves the original error as the operation's
     // result; the behaviors under test are the cleared session + notification.
     await expect(client.query({ query: PING, fetchPolicy: "network-only" })).rejects.toThrow(
-      /token kedaluwarsa/
+      /token kedaluwarsa/,
     );
 
     expect(getSession()).toBeNull();
@@ -137,7 +141,7 @@ describe("Apollo client session expiry", () => {
 
     const client = createApolloClient();
     await expect(client.query({ query: PING, fetchPolicy: "network-only" })).resolves.toEqual(
-      expect.objectContaining({ data: { ping: "pong" } })
+      expect.objectContaining({ data: { ping: "pong" } }),
     );
 
     expect(expired).not.toHaveBeenCalled();
@@ -165,7 +169,11 @@ describe("Apollo client session expiry", () => {
           data: {
             refreshSession: {
               ...refreshAccepted.data.refreshSession,
-              user: { ...refreshAccepted.data.refreshSession.user, accessRole: "CHAPTER", roleName: "CHAPTER" },
+              user: {
+                ...refreshAccepted.data.refreshSession.user,
+                accessRole: "CHAPTER",
+                roleName: "CHAPTER",
+              },
             },
           },
         }),

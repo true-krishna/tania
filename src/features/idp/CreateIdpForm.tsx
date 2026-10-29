@@ -11,6 +11,7 @@ import { useToast } from "@/components/Toast";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { CreateIdpDocument } from "@/generated/graphql";
 import type { DevelopmentMethod } from "@/generated/graphql/types";
+import { errorText } from "@/lib/errors";
 
 type ActionRow = {
   description: string;
@@ -76,12 +77,15 @@ export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpForm
   function validate(valuesToCheck: FormValues): Partial<Record<keyof FormValues, string>> {
     const next: Partial<Record<keyof FormValues, string>> = {};
     if (!valuesToCheck.employeeId) next.employeeId = "Talent wajib dipilih.";
-    if (!valuesToCheck.developmentObjective) next.developmentObjective = "Development objective wajib diisi.";
-    if (!valuesToCheck.currentAssessment) next.currentAssessment = "Penilaian kondisi saat ini wajib diisi.";
+    if (!valuesToCheck.developmentObjective)
+      next.developmentObjective = "Development objective wajib diisi.";
+    if (!valuesToCheck.currentAssessment)
+      next.currentAssessment = "Penilaian kondisi saat ini wajib diisi.";
     if (!valuesToCheck.gapAnalysis) next.gapAnalysis = "Identifikasi gap wajib diisi.";
     if (!valuesToCheck.timelineStart) next.timelineStart = "Tanggal mulai wajib diisi.";
     if (!valuesToCheck.timelineEnd) next.timelineEnd = "Tanggal selesai wajib diisi.";
-    if (!valuesToCheck.successIndicators) next.successIndicators = "Success indicators wajib diisi.";
+    if (!valuesToCheck.successIndicators)
+      next.successIndicators = "Success indicators wajib diisi.";
     return next;
   }
 
@@ -119,7 +123,7 @@ export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpForm
       pushToast("success", "IDP berhasil dibuat.");
       onSuccess?.();
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal membuat IDP.");
+      pushToast("error", errorText(err, "Gagal membuat IDP."));
     } finally {
       onBusyChange(false);
     }
@@ -154,7 +158,9 @@ export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpForm
       </InputControl>
 
       <Card className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Komponen Plan</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          Komponen Plan
+        </h2>
         <InputControl error={errors.developmentObjective} label="Development Objective">
           <textarea
             className={BLOCK}
@@ -193,10 +199,18 @@ export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpForm
         </InputControl>
         <div className="grid grid-cols-2 gap-4">
           <InputControl error={errors.timelineStart} label="Timeline Mulai">
-            <Input onChange={(e) => set("timelineStart", e.target.value)} type="date" value={values.timelineStart} />
+            <Input
+              onChange={(e) => set("timelineStart", e.target.value)}
+              type="date"
+              value={values.timelineStart}
+            />
           </InputControl>
           <InputControl error={errors.timelineEnd} label="Timeline Selesai">
-            <Input onChange={(e) => set("timelineEnd", e.target.value)} type="date" value={values.timelineEnd} />
+            <Input
+              onChange={(e) => set("timelineEnd", e.target.value)}
+              type="date"
+              value={values.timelineEnd}
+            />
           </InputControl>
         </div>
       </Card>
@@ -206,7 +220,9 @@ export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpForm
           Aksi Pengembangan (opsional)
         </h2>
         {actions.length === 0 ? (
-          <p className="text-sm text-zinc-500">Belum ada aksi. Tambahkan di bawah, atau lewati dan tambahkan nanti.</p>
+          <p className="text-sm text-zinc-500">
+            Belum ada aksi. Tambahkan di bawah, atau lewati dan tambahkan nanti.
+          </p>
         ) : null}
         {actions.map((action, index) => (
           <div className="flex flex-col gap-3 rounded-md border border-zinc-100 p-3" key={index}>
@@ -220,7 +236,9 @@ export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpForm
             <div className="grid grid-cols-2 gap-3">
               <InputControl label="Metode">
                 <Select
-                  onChange={(e) => updateAction(index, { method: e.target.value as DevelopmentMethod })}
+                  onChange={(e) =>
+                    updateAction(index, { method: e.target.value as DevelopmentMethod })
+                  }
                   options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
                     value: m,
                     label: METHOD_LABEL[m],
@@ -251,10 +269,7 @@ export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpForm
         <div>
           <Button
             onClick={() =>
-              setActions((rows) => [
-                ...rows,
-                { description: "", method: "TRAINING", dueDate: "" },
-              ])
+              setActions((rows) => [...rows, { description: "", method: "TRAINING", dueDate: "" }])
             }
             type="button"
             variant="secondary"

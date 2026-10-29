@@ -150,7 +150,9 @@ test.describe("RBAC matrix (T041)", () => {
     await page.goto("/assignments");
     await expect(page.getByRole("heading", { name: "Assignments" })).toBeVisible();
     await expect(page.getByRole("link", { name: /Buat Assignment/ })).toBeVisible();
-    await expect(page.getByRole("alert").filter({ hasText: /operation not permitted/ })).toHaveCount(0);
+    await expect(
+      page.getByRole("alert").filter({ hasText: /operation not permitted/ }),
+    ).toHaveCount(0);
 
     await page.goto("/entra");
     await expect(page.getByRole("heading", { name: /Provisi Entra/ })).toBeVisible();
@@ -160,7 +162,9 @@ test.describe("RBAC matrix (T041)", () => {
     await expect(page.getByRole("link", { name: /Buat IDP/ })).toBeVisible();
   });
 
-  test("T041 — OPERATION: Assignment hanya baca (tanpa aksi), Employees kelola", async ({ page }) => {
+  test("T041 — OPERATION: Assignment hanya baca (tanpa aksi), Employees kelola", async ({
+    page,
+  }) => {
     await loginAs(page, SEED_USERS.OPERATION);
 
     await page.goto("/assignments");

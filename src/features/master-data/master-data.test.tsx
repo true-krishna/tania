@@ -44,7 +44,7 @@ const UNITS_QUERY = {
 const auth = vi.hoisted(() => ({ role: "ADMIN" as string | null }));
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 beforeEach(() => {
@@ -59,7 +59,14 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         request: { query: CreateUnitDocument, variables: { code: "ENG", name: "Engineering" } },
         result: {
           data: {
-            createUnit: { id: "u-2", code: "ENG", name: "Engineering", isActive: true, projects: [], __typename: "Unit" },
+            createUnit: {
+              id: "u-2",
+              code: "ENG",
+              name: "Engineering",
+              isActive: true,
+              projects: [],
+              __typename: "Unit",
+            },
           },
         },
       },
@@ -70,7 +77,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         <ToastProvider>
           <UnitsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -80,7 +87,9 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     fireEvent.change(screen.getByLabelText("Nama Unit"), { target: { value: "Engineering" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent('Unit "Engineering" berhasil dibuat.');
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      'Unit "Engineering" berhasil dibuat.',
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -88,10 +97,20 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
     const mocks = [
       UNITS_QUERY,
       {
-        request: { query: UpdateUnitDocument, variables: { id: "u-1", code: "DBT", name: "Digital" } },
+        request: {
+          query: UpdateUnitDocument,
+          variables: { id: "u-1", code: "DBT", name: "Digital" },
+        },
         result: {
           data: {
-            updateUnit: { id: "u-1", code: "DBT", name: "Digital", isActive: true, projects: [], __typename: "Unit" },
+            updateUnit: {
+              id: "u-1",
+              code: "DBT",
+              name: "Digital",
+              isActive: true,
+              projects: [],
+              __typename: "Unit",
+            },
           },
         },
       },
@@ -102,7 +121,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         <ToastProvider>
           <UnitsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -123,7 +142,14 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         request: { query: SetUnitActiveDocument, variables: { id: "u-1", isActive: false } },
         result: {
           data: {
-            setUnitActive: { id: "u-1", code: "DBT", name: "Digital Business & Technology", isActive: false, projects: [], __typename: "Unit" },
+            setUnitActive: {
+              id: "u-1",
+              code: "DBT",
+              name: "Digital Business & Technology",
+              isActive: false,
+              projects: [],
+              __typename: "Unit",
+            },
           },
         },
       },
@@ -134,7 +160,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         <ToastProvider>
           <UnitsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -158,7 +184,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         <ToastProvider>
           <UnitsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -174,7 +200,7 @@ describe("master-data CRUD (Admin) — T052/T054", () => {
         <ToastProvider>
           <UnitsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -223,7 +249,7 @@ function renderUnitsPage(units: unknown[]) {
       <ToastProvider>
         <UnitsPage />
       </ToastProvider>
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -267,7 +293,9 @@ describe("master-data search (FR-001–FR-008)", () => {
     renderUnitsPage([]);
 
     expect(await screen.findByText("Belum ada unit. Tambahkan unit pertama.")).toBeInTheDocument();
-    expect(screen.queryByText("Tidak ada hasil yang cocok dengan pencarian.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Tidak ada hasil yang cocok dengan pencarian."),
+    ).not.toBeInTheDocument();
     expect(screen.queryAllByRole("searchbox")).toHaveLength(0);
   });
 
@@ -312,7 +340,9 @@ describe("master-data search (FR-001–FR-008)", () => {
     fireEvent.change(unitSearchbox(), { target: { value: "zeta" } });
 
     expect(screen.getByText("Zeta Target")).toBeInTheDocument();
-    expect(screen.queryByText("Tidak ada hasil yang cocok dengan pencarian.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Tidak ada hasil yang cocok dengan pencarian."),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByText((_, el) => el?.textContent === "Menampilkan 1–1 dari 1"),
     ).toBeInTheDocument();
@@ -342,7 +372,13 @@ describe("master-data search (FR-001–FR-008)", () => {
             result: {
               data: {
                 chapters: [
-                  { id: "c-1", name: "Engineering", isActive: true, jobRoles: [], __typename: "Chapter" },
+                  {
+                    id: "c-1",
+                    name: "Engineering",
+                    isActive: true,
+                    jobRoles: [],
+                    __typename: "Chapter",
+                  },
                 ],
               },
             },
@@ -352,7 +388,7 @@ describe("master-data search (FR-001–FR-008)", () => {
         <ToastProvider>
           <ChaptersPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Engineering")).toBeInTheDocument();
@@ -408,7 +444,13 @@ describe("master-data search per page (US1, US2)", () => {
             result: {
               data: {
                 chapters: [
-                  { id: "c-1", name: "Engineering", isActive: true, jobRoles: [], __typename: "Chapter" },
+                  {
+                    id: "c-1",
+                    name: "Engineering",
+                    isActive: true,
+                    jobRoles: [],
+                    __typename: "Chapter",
+                  },
                 ],
               },
             },
@@ -418,7 +460,7 @@ describe("master-data search per page (US1, US2)", () => {
         <ToastProvider>
           <JobRolesPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     await screen.findByText("Backend Engineer");
 
@@ -466,7 +508,7 @@ describe("master-data search per page (US1, US2)", () => {
         <ToastProvider>
           <ProjectsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     await screen.findByText("Alpha Transformation");
 
@@ -488,7 +530,7 @@ describe("master-data read-only per role (matrix: lihat untuk semua peran)", () 
         <ToastProvider>
           <UnitsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -508,7 +550,13 @@ describe("master-data read-only per role (matrix: lihat untuk semua peran)", () 
             result: {
               data: {
                 chapters: [
-                  { id: "ch-1", name: "Product", isActive: true, jobRoles: [], __typename: "Chapter" },
+                  {
+                    id: "ch-1",
+                    name: "Product",
+                    isActive: true,
+                    jobRoles: [],
+                    __typename: "Chapter",
+                  },
                 ],
               },
             },
@@ -518,7 +566,7 @@ describe("master-data read-only per role (matrix: lihat untuk semua peran)", () 
         <ToastProvider>
           <ChaptersPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Product")).toBeInTheDocument();
@@ -533,7 +581,7 @@ describe("master-data bulk import entry (TAN-350)", () => {
         <ToastProvider>
           <UnitsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -552,7 +600,7 @@ describe("master-data bulk import entry (TAN-350)", () => {
         <ToastProvider>
           <UnitsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
@@ -576,7 +624,9 @@ const UNITS_PICKER_QUERY = {
   request: { query: UnitsDocument, variables: { includeInactive: true } },
   result: {
     data: {
-      units: [{ id: "u-1", name: "Digital Business", isActive: true, projects: [], __typename: "Unit" }],
+      units: [
+        { id: "u-1", name: "Digital Business", isActive: true, projects: [], __typename: "Unit" },
+      ],
     },
   },
 };
@@ -587,7 +637,7 @@ function renderJobRolesPage(mocks: React.ComponentProps<typeof MockedProvider>["
       <ToastProvider>
         <JobRolesPage />
       </ToastProvider>
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -597,7 +647,7 @@ function renderProjectsPage(mocks: React.ComponentProps<typeof MockedProvider>["
       <ToastProvider>
         <ProjectsPage />
       </ToastProvider>
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -610,7 +660,10 @@ describe("master-data create Job Role (US2, FR-002/FR-003/FR-022)", () => {
       },
       CHAPTERS_QUERY,
       {
-        request: { query: CreateJobRoleDocument, variables: { name: "Data Analyst", chapterId: null } },
+        request: {
+          query: CreateJobRoleDocument,
+          variables: { name: "Data Analyst", chapterId: null },
+        },
         result: {
           data: {
             createJobRole: {
@@ -646,7 +699,9 @@ describe("master-data create Job Role (US2, FR-002/FR-003/FR-022)", () => {
     fireEvent.change(screen.getByLabelText("Nama Job Role"), { target: { value: "Data Analyst" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent('Job role "Data Analyst" berhasil dibuat.');
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      'Job role "Data Analyst" berhasil dibuat.',
+    );
     expect(await screen.findByText("Data Analyst")).toBeInTheDocument();
     expect(screen.getByText("Tanpa chapter")).toBeInTheDocument();
   });
@@ -659,7 +714,10 @@ describe("master-data create Job Role (US2, FR-002/FR-003/FR-022)", () => {
       },
       CHAPTERS_QUERY,
       {
-        request: { query: CreateJobRoleDocument, variables: { name: "Backend Engineer", chapterId: "c-1" } },
+        request: {
+          query: CreateJobRoleDocument,
+          variables: { name: "Backend Engineer", chapterId: "c-1" },
+        },
         result: {
           data: {
             createJobRole: {
@@ -692,11 +750,15 @@ describe("master-data create Job Role (US2, FR-002/FR-003/FR-022)", () => {
     renderJobRolesPage(mocks);
 
     fireEvent.click(await screen.findByRole("button", { name: "Tambah Job Role" }));
-    fireEvent.change(screen.getByLabelText("Nama Job Role"), { target: { value: "Backend Engineer" } });
+    fireEvent.change(screen.getByLabelText("Nama Job Role"), {
+      target: { value: "Backend Engineer" },
+    });
     fireEvent.change(screen.getByLabelText("Chapter"), { target: { value: "c-1" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent('Job role "Backend Engineer" berhasil dibuat.');
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      'Job role "Backend Engineer" berhasil dibuat.',
+    );
     await waitFor(() =>
       expect(screen.queryByRole("dialog", { hidden: true })).not.toBeInTheDocument(),
     );
@@ -730,7 +792,10 @@ describe("master-data create Initiative/Project (US3, FR-006)", () => {
       },
       UNITS_PICKER_QUERY,
       {
-        request: { query: CreateProjectDocument, variables: { name: "Alpha Transformation", unitId: "u-1" } },
+        request: {
+          query: CreateProjectDocument,
+          variables: { name: "Alpha Transformation", unitId: "u-1" },
+        },
         result: {
           data: {
             createProject: {
@@ -763,11 +828,15 @@ describe("master-data create Initiative/Project (US3, FR-006)", () => {
     renderProjectsPage(mocks);
 
     fireEvent.click(await screen.findByRole("button", { name: "Tambah Initiative" }));
-    fireEvent.change(screen.getByLabelText("Nama Initiative"), { target: { value: "Alpha Transformation" } });
+    fireEvent.change(screen.getByLabelText("Nama Initiative"), {
+      target: { value: "Alpha Transformation" },
+    });
     fireEvent.change(screen.getByLabelText("Unit"), { target: { value: "u-1" } });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent('Initiative "Alpha Transformation" berhasil dibuat.');
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      'Initiative "Alpha Transformation" berhasil dibuat.',
+    );
     await waitFor(() =>
       expect(screen.queryByRole("dialog", { hidden: true })).not.toBeInTheDocument(),
     );
@@ -785,7 +854,9 @@ describe("master-data create Initiative/Project (US3, FR-006)", () => {
     ]);
 
     fireEvent.click(await screen.findByRole("button", { name: "Tambah Initiative" }));
-    fireEvent.change(screen.getByLabelText("Nama Initiative"), { target: { value: "No Unit Project" } });
+    fireEvent.change(screen.getByLabelText("Nama Initiative"), {
+      target: { value: "No Unit Project" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     await waitFor(() => expect(screen.getByText("Unit wajib dipilih.")).toBeInTheDocument());

@@ -22,7 +22,3 @@ export function WorkloadCard({
     </section>
   );
 }
-
-export function CardCaption({ children }: { children: React.ReactNode }) {
-  return <span className="text-[13px] text-tp-muted">{children}</span>;
-}

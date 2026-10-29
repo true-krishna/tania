@@ -12,7 +12,13 @@ import { fileURLToPath } from "node:url";
 import ExcelJS from "exceljs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const outPath = path.join(scriptDir, "..", "public", "templates", "template-buat-assignment-massal.xlsx");
+const outPath = path.join(
+  scriptDir,
+  "..",
+  "public",
+  "templates",
+  "template-buat-assignment-massal.xlsx",
+);
 
 const workbook = new ExcelJS.Workbook();
 const sheet = workbook.addWorksheet("Assignment");
@@ -26,9 +32,19 @@ sheet.columns = [
 sheet.getRow(1).font = { bold: true };
 
 sheet.addRows([
-  { employeeId: "TAL-0001", projectId: "Project Alpha", periodStart: "2026-02-01", periodEnd: "2026-08-31" },
+  {
+    employeeId: "TAL-0001",
+    projectId: "Project Alpha",
+    periodStart: "2026-02-01",
+    periodEnd: "2026-08-31",
+  },
   { employeeId: "TAL-0002", projectId: "Project Alpha", periodStart: "2026-03-01", periodEnd: "" },
-  { employeeId: "TAL-0003", projectId: "Project Beta", periodStart: "2026-02-15", periodEnd: "2026-12-31" },
+  {
+    employeeId: "TAL-0003",
+    projectId: "Project Beta",
+    periodStart: "2026-02-15",
+    periodEnd: "2026-12-31",
+  },
 ]);
 
 await workbook.xlsx.writeFile(outPath);

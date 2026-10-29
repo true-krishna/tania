@@ -42,16 +42,11 @@ export function EditEmployeeForm({
     refetchQueries: ["Employees"],
   });
 
-  const [values, setValues] = React.useState<EditFormValues>(() =>
-    createEditFormValues(employee)
-  );
+  const [values, setValues] = React.useState<EditFormValues>(() => createEditFormValues(employee));
   const [errors, setErrors] = React.useState<FormErrors<EditFormValues>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
 
-  function setField<Key extends keyof EditFormValues>(
-    key: Key,
-    value: EditFormValues[Key]
-  ) {
+  function setField<Key extends keyof EditFormValues>(key: Key, value: EditFormValues[Key]) {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
     setFormError(null);
@@ -75,10 +70,7 @@ export function EditEmployeeForm({
           input: buildUpdateEmployeeInput({ ...values, gender }),
         },
       });
-      pushToast(
-        "success",
-        `Perubahan data ${values.fullName} berhasil disimpan.`
-      );
+      pushToast("success", `Perubahan data ${values.fullName} berhasil disimpan.`);
       onClose();
     } catch (error) {
       applyEmployeeSubmitError({
@@ -98,9 +90,7 @@ export function EditEmployeeForm({
       {formError ? <ErrorState message={formError} /> : null}
       <div className="flex flex-col gap-1 text-sm font-medium text-zinc-800">
         <span>NIK saat ini</span>
-        <span className="font-mono text-sm font-normal text-zinc-700">
-          {employee.nikMasked}
-        </span>
+        <span className="font-mono text-sm font-normal text-zinc-700">{employee.nikMasked}</span>
       </div>
       <InputControl
         error={errors.nikBaru}
@@ -122,13 +112,9 @@ export function EditEmployeeForm({
       />
       <InputControl label="Status kepegawaian">
         <Select
-          onChange={(event) =>
-            setField("status", event.target.value as EmployeeStatus)
-          }
+          onChange={(event) => setField("status", event.target.value as EmployeeStatus)}
           options={(
-            Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
-              keyof typeof EMPLOYEE_STATUS_LABEL
-            >
+            Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>
           ).map((value) => ({ label: EMPLOYEE_STATUS_LABEL[value], value }))}
           value={values.status}
         />

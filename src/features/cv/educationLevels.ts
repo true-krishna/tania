@@ -13,7 +13,5 @@ export const EDUCATION_LEVELS: readonly {
 
 export function formatDegree(degree: string | null | undefined): string {
   if (!degree) return "";
-  return (
-    EDUCATION_LEVELS.find((level) => level.value === degree)?.label ?? degree
-  );
+  return EDUCATION_LEVELS.find((level) => level.value === degree)?.label ?? degree;
 }

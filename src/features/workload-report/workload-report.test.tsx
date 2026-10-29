@@ -87,9 +87,7 @@ describe("ExecutiveReportView — KPI, chart & distribusi dari data (TAN-229/230
 
     const backlogCard = screen.getByText("Total backlog").parentElement!;
     expect(
-      within(backlogCard).getByText(
-        String(getExecutiveFixture("202609")!.summary!.totalBacklog),
-      ),
+      within(backlogCard).getByText(String(getExecutiveFixture("202609")!.summary!.totalBacklog)),
     ).toBeInTheDocument();
   });
 
@@ -109,7 +107,9 @@ describe("ExecutiveReportView — KPI, chart & distribusi dari data (TAN-229/230
     fireEvent.change(screen.getByLabelText("Dimensi distribusi"), { target: { value: "talent" } });
     expect(await screen.findByText("Sinta Mahesa")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Filter status beban"), { target: { value: "Overload" } });
+    fireEvent.change(screen.getByLabelText("Filter status beban"), {
+      target: { value: "Overload" },
+    });
 
     expect(screen.getByText("Rani Puspita")).toBeInTheDocument();
     expect(screen.getByText("Citra Lestari")).toBeInTheDocument();
@@ -189,7 +189,9 @@ describe("DistributionSection — sort, pagination & integritas drill-down (TAN-
 
   it("keeps unitcode rows scoped to one squad so drill-down lists exactly its aggregate", async () => {
     await renderExecutive();
-    fireEvent.change(screen.getByLabelText("Dimensi distribusi"), { target: { value: "unitcode" } });
+    fireEvent.change(screen.getByLabelText("Dimensi distribusi"), {
+      target: { value: "unitcode" },
+    });
 
     const fesButtons = await screen.findAllByRole("button", { name: "Lihat talent Chapter FES" });
     expect(fesButtons).toHaveLength(2);
@@ -267,7 +269,9 @@ describe("ExecutiveReportView — period selector & state matrix (TAN-228/235)",
     h.params = new URLSearchParams("period=202607");
     render(<ExecutiveReportView />);
 
-    expect(await screen.findByText(/Belum ada data workload untuk periode Juli 2026/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Belum ada data workload untuk periode Juli 2026/),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByText("Total backlog")).toBeNull();
   });
@@ -276,9 +280,7 @@ describe("ExecutiveReportView — period selector & state matrix (TAN-228/235)",
     h.params = new URLSearchParams("period=202606");
     render(<ExecutiveReportView />);
 
-    expect(
-      await screen.findByText(/Tidak dapat menghubungi sumber data WAD/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/Tidak dapat menghubungi sumber data WAD/)).toBeInTheDocument();
     const fixture = getExecutiveFixture("202606");
     expect(await screen.findByText(fixture!.summary!.totalTimespent)).toBeInTheDocument();
   });
@@ -376,7 +378,9 @@ describe("AnalyticsTables — logged vs estimated & TTD compliance (TAN-232)", (
     expectCellsFromData(tables[0], analytics.loggedVsEstimated as unknown as AnalyticsRow[]);
     expectCellsFromData(tables[1], analytics.ttdCompliance as unknown as AnalyticsRow[]);
 
-    const overloadRow = within(tables[0]).getAllByText("Overload", { selector: "th[scope=row]" })[0];
+    const overloadRow = within(tables[0]).getAllByText("Overload", {
+      selector: "th[scope=row]",
+    })[0];
     const overloadCells = within(overloadRow.closest("tr")!).getAllByRole("cell");
     expect(overloadCells.map((td) => td.textContent)).toEqual(["0", "0", "0", "0", "0", "0", "0"]);
   });
@@ -525,7 +529,9 @@ describe("TalentOwnWorkloadView — workload milik talent (TAN-227 umpan balik)"
     h.params = new URLSearchParams("period=202607");
     render(<TalentOwnWorkloadView />);
 
-    expect(await screen.findByText(/Belum ada data workload untuk periode Juli 2026/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Belum ada data workload untuk periode Juli 2026/),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 

@@ -39,33 +39,25 @@ function buildSkillInput(values: SkillValues): CvSkillInput {
 }
 
 export function CvSkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
-  const {
-    isEditing,
-    removeItem,
-    reset,
-    saving,
-    setValues,
-    startEditing,
-    submit,
-    values,
-  } = useCvCollection<SkillItem, SkillValues, CvSkillInput>({
-    addDocument: AddCvSkillDocument,
-    buildInput: buildSkillInput,
-    createValues: createSkillValues,
-    getItemId: (skill) => skill.id,
-    messages: {
-      added: "Keahlian ditambahkan.",
-      addFailed: "Gagal menambah keahlian.",
-      deleted: "Keahlian dihapus.",
-      deleteFailed: "Gagal menghapus keahlian.",
-      updateFailed: "Gagal memperbarui keahlian.",
-      updated: "Keahlian diperbarui.",
-    },
-    refetchDocument: MyCvProfileDocument,
-    removeDocument: DeleteCvSkillDocument,
-    toValues: toSkillValues,
-    updateDocument: UpdateCvSkillDocument,
-  });
+  const { isEditing, removeItem, reset, saving, setValues, startEditing, submit, values } =
+    useCvCollection<SkillItem, SkillValues, CvSkillInput>({
+      addDocument: AddCvSkillDocument,
+      buildInput: buildSkillInput,
+      createValues: createSkillValues,
+      getItemId: (skill) => skill.id,
+      messages: {
+        added: "Keahlian ditambahkan.",
+        addFailed: "Gagal menambah keahlian.",
+        deleted: "Keahlian dihapus.",
+        deleteFailed: "Gagal menghapus keahlian.",
+        updateFailed: "Gagal memperbarui keahlian.",
+        updated: "Keahlian diperbarui.",
+      },
+      refetchDocument: MyCvProfileDocument,
+      removeDocument: DeleteCvSkillDocument,
+      toValues: toSkillValues,
+      updateDocument: UpdateCvSkillDocument,
+    });
 
   return (
     <CvSectionCard title="Keahlian">
@@ -104,10 +96,7 @@ export function CvSkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
         <p className="text-sm text-zinc-500">Belum ada keahlian.</p>
       )}
 
-      <form
-        className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-        onSubmit={submit}
-      >
+      <form className="grid grid-cols-1 gap-2 sm:grid-cols-2" onSubmit={submit}>
         <Input
           onChange={(event) =>
             setValues((current) => ({
@@ -134,12 +123,7 @@ export function CvSkillsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
             {isEditing ? "Simpan Perubahan" : "+ Tambah Keahlian"}
           </Button>
           {isEditing ? (
-            <Button
-              disabled={saving}
-              onClick={reset}
-              type="button"
-              variant="secondary"
-            >
+            <Button disabled={saving} onClick={reset} type="button" variant="secondary">
               Batal
             </Button>
           ) : null}

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useMutation } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import { useToast } from "@/components/Toast";
+import { errorText } from "@/lib/errors";
 
 type CvCollectionMessages = {
   added: string;
@@ -74,14 +75,8 @@ export function useCvCollection<TItem, TValues, TInput>({
       }
       reset();
     } catch (error) {
-      pushToast(
-        "error",
-        error instanceof Error
-          ? error.message
-          : isEditing
-            ? messages.updateFailed
-            : messages.addFailed
-      );
+      const fallback = isEditing ? messages.updateFailed : messages.addFailed;
+      pushToast("error", errorText(error, fallback));
     }
   }
 
@@ -90,10 +85,7 @@ export function useCvCollection<TItem, TValues, TInput>({
       await remove({ variables: { id } });
       pushToast("success", messages.deleted);
     } catch (error) {
-      pushToast(
-        "error",
-        error instanceof Error ? error.message : messages.deleteFailed
-      );
+      pushToast("error", errorText(error, messages.deleteFailed));
     }
   }
 

@@ -7,6 +7,7 @@ import { useUsers } from "@/features/accounts/useAccounts";
 import { useAccountMutations } from "@/features/accounts/useAccountMutations";
 import { useRoles } from "@/features/roles/useRoles";
 import { ROLES_ADMIN } from "@/lib/constants/routes";
+import { errorText } from "@/lib/errors";
 
 export default function AccountsPage() {
   const { status, data, error } = useUsers();
@@ -19,7 +20,7 @@ export default function AccountsPage() {
       await fn();
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan data akun.");
+      pushToast("error", errorText(err, "Gagal menyimpan data akun."));
     }
   }
 

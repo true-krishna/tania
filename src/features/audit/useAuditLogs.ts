@@ -8,6 +8,7 @@ import {
   type AuditLogsQueryVariables,
 } from "@/generated/graphql";
 import type { AuditLogFilter } from "@/generated/graphql/types";
+import { queryStatus } from "@/lib/apollo/toQueryState";
 
 type AuditLogNode = AuditLogsQuery["auditLogs"]["edges"][number]["node"];
 
@@ -33,18 +34,18 @@ export function useAuditLogs(filter: AuditLogFilter = {}): AuditLogsState {
   const clean = useMemo(
     () =>
       Object.fromEntries(
-        Object.entries(filter ?? {}).filter(([, v]) => v !== undefined)
+        Object.entries(filter ?? {}).filter(([, v]) => v !== undefined),
       ) as AuditLogFilter,
-    [filter]
+    [filter],
   );
 
-  const { loading, error, data, fetchMore } = useQuery<
-    AuditLogsQuery,
-    AuditLogsQueryVariables
-  >(AuditLogsDocument, {
-    variables: { filter: clean, first: 25, after: null },
-    notifyOnNetworkStatusChange: true,
-  });
+  const { loading, error, data, fetchMore } = useQuery<AuditLogsQuery, AuditLogsQueryVariables>(
+    AuditLogsDocument,
+    {
+      variables: { filter: clean, first: 25, after: null },
+      notifyOnNetworkStatusChange: true,
+    },
+  );
 
   const connection = data?.auditLogs;
   const logs = connection?.edges.map((edge) => edge.node);
@@ -59,9 +60,7 @@ export function useAuditLogs(filter: AuditLogFilter = {}): AuditLogsState {
       updateQuery: (prev, { fetchMoreResult }) => {
         if (!fetchMoreResult?.auditLogs) return prev;
         const seen = new Set(prev.auditLogs.edges.map((e) => e.node.id));
-        const appended = fetchMoreResult.auditLogs.edges.filter(
-          (edge) => !seen.has(edge.node.id)
-        );
+        const appended = fetchMoreResult.auditLogs.edges.filter((edge) => !seen.has(edge.node.id));
         return {
           auditLogs: {
             ...fetchMoreResult.auditLogs,
@@ -78,7 +77,7 @@ export function useAuditLogs(filter: AuditLogFilter = {}): AuditLogsState {
   const loadingMore = loading && !!data;
 
   return {
-    status: error ? "error" : loading && !data ? "loading" : "ready",
+    status: queryStatus(loading, error, data),
     logs,
     totalCount,
     hasNextPage,

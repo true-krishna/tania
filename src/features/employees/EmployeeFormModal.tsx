@@ -16,12 +16,7 @@ type EmployeeFormModalProps = {
   open: boolean;
 };
 
-export function EmployeeFormModal({
-  employeeId,
-  mode,
-  onClose,
-  open,
-}: EmployeeFormModalProps) {
+export function EmployeeFormModal({ employeeId, mode, onClose, open }: EmployeeFormModalProps) {
   const formId = React.useId();
   const [submitting, setSubmitting] = React.useState(false);
   const isEdit = mode === "edit";
@@ -31,28 +26,18 @@ export function EmployeeFormModal({
     error: employeeError,
   } = useEmployee(isEdit && employeeId ? employeeId : "");
 
-  const title = isEdit
-    ? `Ubah Data — ${employee?.fullName ?? ""}`
-    : "Tambah Karyawan";
+  const title = isEdit ? `Ubah Data — ${employee?.fullName ?? ""}` : "Tambah Karyawan";
   const subtitle = isEdit
     ? "NIK selalu tampil tersamar; isi NIK baru hanya bila ingin menggantinya."
     : "Lengkapi data diri karyawan baru. Identitas kepegawaian (nomor induk) diisi pada kontrak.";
 
   let content: React.ReactNode;
   if (!isEdit) {
-    content = (
-      <CreateEmployeeForm
-        formId={formId}
-        onBusyChange={setSubmitting}
-        onClose={onClose}
-      />
-    );
+    content = <CreateEmployeeForm formId={formId} onBusyChange={setSubmitting} onClose={onClose} />;
   } else if (employeeStatus === "loading") {
     content = <LoadingState />;
   } else if (employeeStatus === "error") {
-    content = (
-      <ErrorState message={employeeError ?? "Gagal memuat data karyawan."} />
-    );
+    content = <ErrorState message={employeeError ?? "Gagal memuat data karyawan."} />;
   } else if (!employee) {
     content = <ErrorState message="Karyawan tidak ditemukan." />;
   } else {

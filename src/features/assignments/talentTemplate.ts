@@ -8,14 +8,18 @@
  */
 
 /** Kolom pada baris pertama berkas templat (period_end opsional diisi). */
-export const TEMPLATE_COLUMNS = ["employee_id", "project_id", "period_start", "period_end"] as const;
+export const TEMPLATE_COLUMNS = [
+  "employee_id",
+  "project_id",
+  "period_start",
+  "period_end",
+] as const;
 
 /** Lokasi berkas templat yang dapat diunduh dari aplikasi. */
 export const TEMPLATE_URL = "/templates/template-buat-assignment-massal.xlsx";
 
 /** Pesan penolakan pembacaan berkas (siap tampil, FR-12). */
-export const TEMPLATE_FILE_ERROR =
-  "Gagal membaca berkas. Pastikan berkas Excel (.xlsx) valid.";
+export const TEMPLATE_FILE_ERROR = "Gagal membaca berkas. Pastikan berkas Excel (.xlsx) valid.";
 
 export type ImportTemplateRow = {
   /** Nomor baris pada berkas (1-based termasuk header). */
@@ -89,7 +93,8 @@ function readImportRows(sheet: TemplateSheet): ImportTemplateParse {
   const rows: ImportTemplateRow[] = [];
   const invalid: ImportTemplateInvalidRow[] = [];
   for (let r = 2; r <= sheet.rowCount; r += 1) {
-    const get = (column: string) => cellText(sheet.getRow(r).getCell(columns.get(column) ?? 0)?.text);
+    const get = (column: string) =>
+      cellText(sheet.getRow(r).getCell(columns.get(column) ?? 0)?.text);
     const employeeId = get("employee_id");
     const projectId = get("project_id");
     const periodStart = get("period_start");
@@ -107,7 +112,10 @@ function readImportRows(sheet: TemplateSheet): ImportTemplateParse {
       });
       continue;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(periodStart) || (periodEnd && !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd))) {
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(periodStart) ||
+      (periodEnd && !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd))
+    ) {
       invalid.push({
         rowNumber: r,
         reason: "tanggal harus berformat YYYY-MM-DD",

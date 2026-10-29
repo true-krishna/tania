@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  CURRENT_TALENT_ID,
-  SEED_ACTIVITIES,
-  findPriority,
-  findProject,
-  findStatus,
-} from "./mocks";
+import { CURRENT_TALENT_ID, SEED_ACTIVITIES, findPriority, findProject, findStatus } from "./mocks";
 import type { ActivityInput, PersonalWorkActivity } from "./types";
 
 export type ActivitiesStatus = "loading" | "ready" | "error";
@@ -84,7 +78,10 @@ export function ActivitiesProvider({
         startDate: input.startDate,
         endDate: input.endDate,
         project: input.activityType === "training" ? null : findProject(input.projectId),
-        priority: findPriority(input.priorityId) ?? { id: input.priorityId, name: input.priorityId },
+        priority: findPriority(input.priorityId) ?? {
+          id: input.priorityId,
+          name: input.priorityId,
+        },
         status: findStatus(input.statusId) ?? { id: input.statusId, name: input.statusId },
         talentId: currentTalentId,
         createdAt: now,

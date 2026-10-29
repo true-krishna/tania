@@ -4,6 +4,7 @@ import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
+import type * as AuthGuard from "@/lib/auth/guard";
 import EvaluationsPage from "@/app/(app)/evaluations/page";
 import EvaluationFormPage from "@/app/(app)/evaluations/[periodId]/[employeeId]/page";
 import {
@@ -22,7 +23,7 @@ const nav = vi.hoisted(() => ({ push: vi.fn() }));
 // (klarifikasi 9).
 const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
 vi.mock("@/lib/auth/guard", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/auth/guard")>();
+  const actual = await importOriginal<typeof AuthGuard>();
   return { ...actual, useSessionRole: () => auth.role };
 });
 
@@ -51,7 +52,11 @@ const closedPeriod = {
   state: "CLOSED",
 };
 
-const rosterEntry = (employeeId: string, fullName: string, fillState: "NOT_EVALUATED" | "EVALUATED") => ({
+const rosterEntry = (
+  employeeId: string,
+  fullName: string,
+  fillState: "NOT_EVALUATED" | "EVALUATED",
+) => ({
   __typename: "EvaluationPeriodRosterEntry",
   talent: {
     __typename: "Employee",
@@ -63,7 +68,12 @@ const rosterEntry = (employeeId: string, fullName: string, fillState: "NOT_EVALU
   fillState,
   evaluation:
     fillState === "EVALUATED"
-      ? { __typename: "PerformanceEvaluation", id: "eval-1", status: "SUBMITTED", updatedAt: "2025-08-01T00:00:00Z" }
+      ? {
+          __typename: "PerformanceEvaluation",
+          id: "eval-1",
+          status: "SUBMITTED",
+          updatedAt: "2025-08-01T00:00:00Z",
+        }
       : null,
 });
 
@@ -72,15 +82,25 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
+          {
+            request: { query: CurrentEvaluationPeriodDocument },
+            result: { data: { currentEvaluationPeriod: runningPeriod } },
+          },
           {
             request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
-            result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED"), rosterEntry("emp-2", "Budi Santoso", "EVALUATED")] } },
+            result: {
+              data: {
+                evaluationRoster: [
+                  rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED"),
+                  rosterEntry("emp-2", "Budi Santoso", "EVALUATED"),
+                ],
+              },
+            },
           },
         ]}
       >
         <EvaluationsPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Q3 2025")).toBeInTheDocument();
@@ -99,15 +119,20 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
+          {
+            request: { query: CurrentEvaluationPeriodDocument },
+            result: { data: { currentEvaluationPeriod: runningPeriod } },
+          },
           {
             request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
-            result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+            result: {
+              data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] },
+            },
           },
         ]}
       >
         <EvaluationsPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -120,15 +145,20 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: closedPeriod } } },
+          {
+            request: { query: CurrentEvaluationPeriodDocument },
+            result: { data: { currentEvaluationPeriod: closedPeriod } },
+          },
           {
             request: { query: EvaluationRosterDocument, variables: { periodId: "period-2" } },
-            result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "EVALUATED")] } },
+            result: {
+              data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "EVALUATED")] },
+            },
           },
         ]}
       >
         <EvaluationsPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Q2 2025")).toBeInTheDocument();
@@ -141,11 +171,14 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: null } } },
+          {
+            request: { query: CurrentEvaluationPeriodDocument },
+            result: { data: { currentEvaluationPeriod: null } },
+          },
         ]}
       >
         <EvaluationsPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText(/belum ada periode evaluasi berjalan/i)).toBeInTheDocument();
@@ -157,15 +190,20 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
       render(
         <MockedProvider
           mocks={[
-            { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
+            {
+              request: { query: CurrentEvaluationPeriodDocument },
+              result: { data: { currentEvaluationPeriod: runningPeriod } },
+            },
             {
               request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
-              result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+              result: {
+                data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] },
+              },
             },
           ]}
         >
           <EvaluationsPage />
-        </MockedProvider>
+        </MockedProvider>,
       );
 
       expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -180,9 +218,27 @@ describe("EvaluationsPage roster (Apollo, US7)", () => {
 
 describe("EvaluationFormPage (Apollo, US7)", () => {
   const criteria = [
-    { __typename: "EvaluationCriterion", id: "crit-1", label: "Prestasi kerja", answerType: "SCALE_1_5", position: 1 },
-    { __typename: "EvaluationCriterion", id: "crit-2", label: "Kolaborasi", answerType: "YES_NO", position: 2 },
-    { __typename: "EvaluationCriterion", id: "crit-3", label: "Catatan bebas", answerType: "FREE_TEXT", position: 3 },
+    {
+      __typename: "EvaluationCriterion",
+      id: "crit-1",
+      label: "Prestasi kerja",
+      answerType: "SCALE_1_5",
+      position: 1,
+    },
+    {
+      __typename: "EvaluationCriterion",
+      id: "crit-2",
+      label: "Kolaborasi",
+      answerType: "YES_NO",
+      position: 2,
+    },
+    {
+      __typename: "EvaluationCriterion",
+      id: "crit-3",
+      label: "Catatan bebas",
+      answerType: "FREE_TEXT",
+      position: 3,
+    },
   ];
 
   const detailPeriod = {
@@ -192,7 +248,12 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
     startDate: "2025-07-01",
     endDate: "2025-09-30",
     state: "RUNNING",
-    template: { __typename: "EvaluationTemplate", id: "tpl-1", name: "Framework Performa", criteria },
+    template: {
+      __typename: "EvaluationTemplate",
+      id: "tpl-1",
+      name: "Framework Performa",
+      criteria,
+    },
   };
 
   const detailResult = {
@@ -208,19 +269,36 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
               status: "DRAFT",
               summaryAchievement: null,
               developmentNotes: null,
-              talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
+              talent: {
+                __typename: "Employee",
+                id: "emp-1",
+                fullName: "Andi Pratama",
+                nomorInduk: "EMP-001",
+              },
               period: detailPeriod,
               answers: [
                 {
                   __typename: "EvaluationAnswer",
-                  criterion: { __typename: "EvaluationCriterion", id: "crit-1", label: "Prestasi kerja", answerType: "SCALE_1_5", position: 1 },
+                  criterion: {
+                    __typename: "EvaluationCriterion",
+                    id: "crit-1",
+                    label: "Prestasi kerja",
+                    answerType: "SCALE_1_5",
+                    position: 1,
+                  },
                   valueNumeric: 4,
                   valueBool: null,
                   valueText: null,
                 },
                 {
                   __typename: "EvaluationAnswer",
-                  criterion: { __typename: "EvaluationCriterion", id: "crit-2", label: "Kolaborasi", answerType: "YES_NO", position: 2 },
+                  criterion: {
+                    __typename: "EvaluationCriterion",
+                    id: "crit-2",
+                    label: "Kolaborasi",
+                    answerType: "YES_NO",
+                    position: 2,
+                  },
                   valueNumeric: null,
                   valueBool: true,
                   valueText: null,
@@ -240,13 +318,21 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
           {
-            request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
-            result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+            request: { query: CurrentEvaluationPeriodDocument },
+            result: { data: { currentEvaluationPeriod: runningPeriod } },
           },
           {
-            request: { query: PerformanceEvaluationForTalentDocument, variables: { periodId: "period-1", employeeId: "emp-1", first: 1 } },
+            request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
+            result: {
+              data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] },
+            },
+          },
+          {
+            request: {
+              query: PerformanceEvaluationForTalentDocument,
+              variables: { periodId: "period-1", employeeId: "emp-1", first: 1 },
+            },
             result: detailResult,
           },
         ]}
@@ -254,7 +340,7 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
         <ToastProvider>
           <EvaluationFormPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -271,13 +357,21 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
           {
-            request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
-            result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+            request: { query: CurrentEvaluationPeriodDocument },
+            result: { data: { currentEvaluationPeriod: runningPeriod } },
           },
           {
-            request: { query: PerformanceEvaluationForTalentDocument, variables: { periodId: "period-1", employeeId: "emp-1", first: 1 } },
+            request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
+            result: {
+              data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] },
+            },
+          },
+          {
+            request: {
+              query: PerformanceEvaluationForTalentDocument,
+              variables: { periodId: "period-1", employeeId: "emp-1", first: 1 },
+            },
             result: detailResult,
           },
           {
@@ -290,25 +384,59 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
                   summaryAchievement: undefined,
                   developmentNotes: undefined,
                   answers: [
-                    { criterionId: "crit-1", valueNumeric: 4, valueBool: undefined, valueText: undefined },
-                    { criterionId: "crit-2", valueNumeric: undefined, valueBool: true, valueText: undefined },
-                    { criterionId: "crit-3", valueNumeric: undefined, valueBool: undefined, valueText: undefined },
+                    {
+                      criterionId: "crit-1",
+                      valueNumeric: 4,
+                      valueBool: undefined,
+                      valueText: undefined,
+                    },
+                    {
+                      criterionId: "crit-2",
+                      valueNumeric: undefined,
+                      valueBool: true,
+                      valueText: undefined,
+                    },
+                    {
+                      criterionId: "crit-3",
+                      valueNumeric: undefined,
+                      valueBool: undefined,
+                      valueText: undefined,
+                    },
                   ],
                 },
               },
             },
-            result: { data: { upsertPerformanceEvaluation: { __typename: "PerformanceEvaluation", id: "eval-1", status: "SUBMITTED", summaryAchievement: null, developmentNotes: null, answers: [] } } },
+            result: {
+              data: {
+                upsertPerformanceEvaluation: {
+                  __typename: "PerformanceEvaluation",
+                  id: "eval-1",
+                  status: "SUBMITTED",
+                  summaryAchievement: null,
+                  developmentNotes: null,
+                  answers: [],
+                },
+              },
+            },
           },
           {
             request: { query: SubmitPerformanceEvaluationDocument, variables: { id: "eval-1" } },
-            result: { data: { submitPerformanceEvaluation: { __typename: "PerformanceEvaluation", id: "eval-1", status: "SUBMITTED" } } },
+            result: {
+              data: {
+                submitPerformanceEvaluation: {
+                  __typename: "PerformanceEvaluation",
+                  id: "eval-1",
+                  status: "SUBMITTED",
+                },
+              },
+            },
           },
         ]}
       >
         <ToastProvider>
           <EvaluationFormPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     await screen.findByText("Andi Pratama");
@@ -344,9 +472,15 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: null } } },
           {
-            request: { query: PerformanceEvaluationForTalentDocument, variables: { periodId: "period-1", employeeId: "emp-1", first: 1 } },
+            request: { query: CurrentEvaluationPeriodDocument },
+            result: { data: { currentEvaluationPeriod: null } },
+          },
+          {
+            request: {
+              query: PerformanceEvaluationForTalentDocument,
+              variables: { periodId: "period-1", employeeId: "emp-1", first: 1 },
+            },
             result: closedDetail,
           },
         ]}
@@ -354,11 +488,13 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
         <ToastProvider>
           <EvaluationFormPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(screen.queryByRole("button", { name: /serahkan/i })).not.toBeInTheDocument();
-    expect(await screen.findByText(/periode telah berakhir — evaluasi hanya-baca/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/periode telah berakhir — evaluasi hanya-baca/i),
+    ).toBeInTheDocument();
     const yesNoSelect = screen.getByRole("combobox", { name: /2\. kolaborasi/i });
     expect(yesNoSelect).toBeDisabled();
   });
@@ -369,13 +505,21 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
       render(
         <MockedProvider
           mocks={[
-            { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: runningPeriod } } },
             {
-              request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
-              result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+              request: { query: CurrentEvaluationPeriodDocument },
+              result: { data: { currentEvaluationPeriod: runningPeriod } },
             },
             {
-              request: { query: PerformanceEvaluationForTalentDocument, variables: { periodId: "period-1", employeeId: "emp-1", first: 1 } },
+              request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
+              result: {
+                data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] },
+              },
+            },
+            {
+              request: {
+                query: PerformanceEvaluationForTalentDocument,
+                variables: { periodId: "period-1", employeeId: "emp-1", first: 1 },
+              },
               result: detailResult,
             },
           ]}
@@ -383,7 +527,7 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
           <ToastProvider>
             <EvaluationFormPage />
           </ToastProvider>
-        </MockedProvider>
+        </MockedProvider>,
       );
 
       expect(await screen.findByText(/peran anda hanya-baca/i)).toBeInTheDocument();
@@ -404,22 +548,38 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
       endDate: "2025-09-30",
       state: "RUNNING",
       isActive: true,
-      template: { __typename: "EvaluationTemplate", id: "tpl-1", name: "Framework Performa", criteria },
+      template: {
+        __typename: "EvaluationTemplate",
+        id: "tpl-1",
+        name: "Framework Performa",
+        criteria,
+      },
     };
 
     render(
       <MockedProvider
         mocks={[
-          { request: { query: CurrentEvaluationPeriodDocument }, result: { data: { currentEvaluationPeriod: currentPeriodWithCriteria } } },
           {
-            request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
-            result: { data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] } },
+            request: { query: CurrentEvaluationPeriodDocument },
+            result: { data: { currentEvaluationPeriod: currentPeriodWithCriteria } },
           },
           {
-            request: { query: PerformanceEvaluationForTalentDocument, variables: { periodId: "period-1", employeeId: "emp-1", first: 1 } },
+            request: { query: EvaluationRosterDocument, variables: { periodId: "period-1" } },
+            result: {
+              data: { evaluationRoster: [rosterEntry("emp-1", "Andi Pratama", "NOT_EVALUATED")] },
+            },
+          },
+          {
+            request: {
+              query: PerformanceEvaluationForTalentDocument,
+              variables: { periodId: "period-1", employeeId: "emp-1", first: 1 },
+            },
             result: {
               data: {
-                performanceEvaluations: { __typename: "PerformanceEvaluationConnection", edges: [] },
+                performanceEvaluations: {
+                  __typename: "PerformanceEvaluationConnection",
+                  edges: [],
+                },
               },
             },
           },
@@ -428,7 +588,7 @@ describe("EvaluationFormPage (Apollo, US7)", () => {
         <ToastProvider>
           <EvaluationFormPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();

@@ -23,15 +23,42 @@ import { MENU_ROWS, gridInput, type RoleGrid } from "./menuGrid";
 import { RolesAdminSection } from "./RolesAdminSection";
 
 const ROLES = [
-  { id: "role-admin", name: "ADMIN", label: "Admin", templateRole: "ADMIN", builtIn: true, status: "ACTIVE", __typename: "Role" },
-  { id: "role-chapter", name: "CHAPTER", label: "Chapter", templateRole: "CHAPTER", builtIn: true, status: "ACTIVE", __typename: "Role" },
-  { id: "role-talent", name: "TALENT", label: "Talent", templateRole: "TALENT", builtIn: true, status: "ACTIVE", __typename: "Role" },
+  {
+    id: "role-admin",
+    name: "ADMIN",
+    label: "Admin",
+    templateRole: "ADMIN",
+    builtIn: true,
+    status: "ACTIVE",
+    __typename: "Role",
+  },
+  {
+    id: "role-chapter",
+    name: "CHAPTER",
+    label: "Chapter",
+    templateRole: "CHAPTER",
+    builtIn: true,
+    status: "ACTIVE",
+    __typename: "Role",
+  },
+  {
+    id: "role-talent",
+    name: "TALENT",
+    label: "Talent",
+    templateRole: "TALENT",
+    builtIn: true,
+    status: "ACTIVE",
+    __typename: "Role",
+  },
 ] as const;
 
 /** The server's grid: the default matrix, 22 entries per role (termasuk baris tanpa rute "Asisten data"). */
 const CONFIG_CELLS = ROLES.flatMap((role) =>
   MENU_ROWS.map((row) => {
-    const cell = DEFAULT_MENU_ACCESS[role.name][row.id] ?? { visible: false, accessLevel: "NONE" as const };
+    const cell = DEFAULT_MENU_ACCESS[role.name][row.id] ?? {
+      visible: false,
+      accessLevel: "NONE" as const,
+    };
     return {
       roleId: role.id,
       roleName: role.name,
@@ -64,7 +91,9 @@ function renderSection(mocks: unknown[]) {
 }
 
 function roleHeader(name: string) {
-  const header = screen.getAllByRole("columnheader").find((cell) => cell.textContent?.includes(name));
+  const header = screen
+    .getAllByRole("columnheader")
+    .find((cell) => cell.textContent?.includes(name));
   if (!header) throw new Error(`header for ${name} not found`);
   return within(header as HTMLElement);
 }
@@ -221,7 +250,9 @@ describe("halaman Menu & Akses per Role — role kustom", () => {
       {
         request: {
           query: CreateRoleDocument,
-          variables: { input: { name: "PM_CHAPTER", label: "PM Chapter", templateRole: "CHAPTER" } },
+          variables: {
+            input: { name: "PM_CHAPTER", label: "PM Chapter", templateRole: "CHAPTER" },
+          },
         },
         result: {
           data: {

@@ -67,7 +67,8 @@ export const MASTER_DATA_IMPORT_TEMPLATES: Record<
       { name: "Project Alpha", unit: "DBT" },
       { name: "Project Beta", unit: "DBT" },
     ],
-    helperText: "Unduh template, isi nama initiative dan unit pemiliknya (kode Unit unik atau ID unit).",
+    helperText:
+      "Unduh template, isi nama initiative dan unit pemiliknya (kode Unit unik atau ID unit).",
     describeRow: (values) => values.name,
   },
   jobRole: {
@@ -160,7 +161,8 @@ function readImportRows(
   const rows: MasterDataImportRow[] = [];
   const invalid: MasterDataImportInvalidRow[] = [];
   for (let r = 2; r <= sheet.rowCount; r += 1) {
-    const get = (column: string) => cellText(sheet.getRow(r).getCell(columns.get(column) ?? 0)?.text);
+    const get = (column: string) =>
+      cellText(sheet.getRow(r).getCell(columns.get(column) ?? 0)?.text);
     const values: Record<string, string> = {};
     let hasValue = false;
     for (const column of config.columns) {

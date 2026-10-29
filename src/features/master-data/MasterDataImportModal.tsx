@@ -157,7 +157,9 @@ export function MasterDataImportModal({
                 <ul className="flex flex-col gap-1">
                   {result.failed.map((row) => (
                     <li className="text-red-700" key={row.rowNumber}>
-                      <span className="font-medium">Baris {row.rowNumber} ({row.label})</span>
+                      <span className="font-medium">
+                        Baris {row.rowNumber} ({row.label})
+                      </span>
                       {" — "}
                       {row.reason}
                     </li>
@@ -195,7 +197,9 @@ export function MasterDataImportModal({
               </a>
             </div>
             <InputDropzone
-              accept={{ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] }}
+              accept={{
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+              }}
               ariaLabel={`Unggah berkas Excel ${noun}`}
               disabled={parsing || running}
               hint={
@@ -232,22 +236,19 @@ export function MasterDataImportModal({
         </form>
       </ModalContent>
       <ModalActions>
-        <Button
-          disabled={parsing || running}
-          onClick={onClose}
-          type="button"
-          variant="secondary"
-        >
+        <Button disabled={parsing || running} onClick={onClose} type="button" variant="secondary">
           {result ? "Tutup" : "Batal"}
         </Button>
         <Button disabled={parsing || running} form={formId} type="submit">
-          {running
-            ? "Menyimpan…"
-            : isRetry
-              ? `Ulangi ${rowsToSend.length} baris belum berhasil`
-              : "Simpan Massal"}
+          {submitLabel(running, isRetry, rowsToSend.length)}
         </Button>
       </ModalActions>
     </Modal>
   );
+}
+
+function submitLabel(running: boolean, isRetry: boolean, count: number): string {
+  if (running) return "Menyimpan…";
+  if (isRetry) return `Ulangi ${count} baris belum berhasil`;
+  return "Simpan Massal";
 }

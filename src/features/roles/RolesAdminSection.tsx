@@ -22,6 +22,7 @@ import {
   type GridCell,
   type RoleGrid,
 } from "./menuGrid";
+import { errorText } from "@/lib/errors";
 
 function baselineGrid(role: Role): RoleGrid {
   return {
@@ -97,7 +98,7 @@ export function RolesAdminSection() {
       await Promise.all([config.refetch(), roles.refetch()]);
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan konfigurasi.");
+      pushToast("error", errorText(err, "Gagal menyimpan konfigurasi."));
       throw err;
     } finally {
       setSaving(false);
@@ -110,10 +111,7 @@ export function RolesAdminSection() {
     try {
       await report(
         () =>
-          mutations.saveMenuAccess(
-            role.id,
-            gridInput(draft[role.id] ?? {}, baselineGrid(role)),
-          ),
+          mutations.saveMenuAccess(role.id, gridInput(draft[role.id] ?? {}, baselineGrid(role))),
         `Konfigurasi menu ${role.label} tersimpan.`,
       );
       clearRoleDraft(role.id);
@@ -173,7 +171,10 @@ export function RolesAdminSection() {
         {allRoles.length ? (
           <p className="text-xs text-tp-muted">
             {allRoles
-              .map((role) => `${role.label}: ${visibleRowCount(draft[role.id] ?? {})}/${MENU_ROWS.length}`)
+              .map(
+                (role) =>
+                  `${role.label}: ${visibleRowCount(draft[role.id] ?? {})}/${MENU_ROWS.length}`,
+              )
               .join(" · ")}
           </p>
         ) : null}

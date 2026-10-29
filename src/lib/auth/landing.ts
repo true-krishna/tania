@@ -1,10 +1,5 @@
 import type { AccessRole } from "@/generated/graphql";
-import {
-  ACCOUNTS,
-  DASHBOARD,
-  EMPLOYEES,
-  LOGIN,
-} from "@/lib/constants/routes";
+import { ACCOUNTS, DASHBOARD, EMPLOYEES, LOGIN } from "@/lib/constants/routes";
 
 /**
  * Halaman muka setelah login per peran (TAN-343, umpan balik pemilik produk

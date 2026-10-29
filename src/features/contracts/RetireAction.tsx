@@ -9,10 +9,8 @@ import {
   EmploymentContractDocument,
   RetireEmployeeDocument,
 } from "@/generated/graphql";
-import {
-  ContractCycleSection,
-  ContractCycleSuccess,
-} from "./ContractCycleSection";
+import { ContractCycleSection } from "./ContractCycleSection";
+import { ContractCycleSuccess } from "./ContractCycleSuccess";
 import { DEPENDENCY_WARNING, type Contract } from "./contractCycle";
 import { useAcknowledgeAction } from "./useAcknowledgeAction";
 
@@ -43,8 +41,7 @@ export function RetireAction({ contract }: { contract: Contract }) {
       <ContractCycleSection
         success={
           <ContractCycleSuccess>
-            Pensiun tercatat. Kontrak aktif diakhiri dan status karyawan menjadi
-            pensiun.
+            Pensiun tercatat. Kontrak aktif diakhiri dan status karyawan menjadi pensiun.
           </ContractCycleSuccess>
         }
         title="Pensiun"
@@ -67,25 +64,16 @@ export function RetireAction({ contract }: { contract: Contract }) {
             >
               Ya, lanjutkan pensiun
             </Button>
-            <Button
-              onClick={() => action.setNeedsAck(false)}
-              type="button"
-              variant="secondary"
-            >
+            <Button onClick={() => action.setNeedsAck(false)} type="button" variant="secondary">
               Batal
             </Button>
           </div>
         </div>
       ) : (
         <>
-          <InputControl
-            error={action.dateError ?? undefined}
-            label="Tanggal efektif"
-          >
+          <InputControl error={action.dateError ?? undefined} label="Tanggal efektif">
             <Input
-              onChange={(event) =>
-                action.updateEffectiveDate(event.target.value)
-              }
+              onChange={(event) => action.updateEffectiveDate(event.target.value)}
               type="date"
               value={action.effectiveDate}
             />

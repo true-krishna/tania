@@ -1,7 +1,4 @@
-import {
-  SORT_ACCESSORS,
-  type SortState,
-} from "./distributionColumns";
+import { SORT_ACCESSORS, type SortState } from "./distributionColumns";
 import type {
   DistributionDimension,
   DistributionFilter,
@@ -10,19 +7,11 @@ import type {
   DistributionTables,
 } from "./types";
 
-export type FilterKey =
-  | "tribeId"
-  | "productId"
-  | "squadId"
-  | "unitcode"
-  | "statusLoad";
+export type FilterKey = "tribeId" | "productId" | "squadId" | "unitcode" | "statusLoad";
 
 export type FilterOption = { label: string; value: string };
 
-export const FILTER_SCOPE: Record<
-  DistributionDimension,
-  readonly FilterKey[]
-> = {
+export const FILTER_SCOPE: Record<DistributionDimension, readonly FilterKey[]> = {
   product: ["tribeId", "statusLoad"],
   squad: ["tribeId", "productId", "statusLoad"],
   talent: ["tribeId", "productId", "squadId", "unitcode", "statusLoad"],
@@ -41,7 +30,7 @@ export const EMPTY_FILTER: DistributionFilter = {
 export function scopeMatches(
   row: DistributionRow,
   filter: DistributionFilter,
-  keys: readonly FilterKey[]
+  keys: readonly FilterKey[],
 ): boolean {
   return keys.every((key) => {
     if (key === "statusLoad") {
@@ -54,23 +43,18 @@ export function scopeMatches(
 export function normalizedScopeMatches(
   row: DistributionNormalizedRow,
   filter: DistributionFilter,
-  keys: readonly FilterKey[]
+  keys: readonly FilterKey[],
 ): boolean {
   return keys
     .filter((key): key is Exclude<FilterKey, "statusLoad"> => key !== "statusLoad")
     .every((key) => !filter[key] || row.scope[key] === filter[key]);
 }
 
-export function uniqueOptions(
-  rows: { id: string; nama: string }[]
-): FilterOption[] {
+export function uniqueOptions(rows: { id: string; nama: string }[]): FilterOption[] {
   return rows.map((row) => ({ label: row.nama, value: row.id }));
 }
 
-export function sortRows(
-  rows: DistributionRow[],
-  sort: SortState
-): DistributionRow[] {
+export function sortRows(rows: DistributionRow[], sort: SortState): DistributionRow[] {
   if (!sort) return rows;
   const accessor = SORT_ACCESSORS[sort.key];
 
@@ -87,31 +71,29 @@ export function sortRows(
 
 export function productFilterOptions(
   tables: DistributionTables,
-  filter: DistributionFilter
+  filter: DistributionFilter,
 ): FilterOption[] {
   return uniqueOptions(
-    tables.rows.product.filter(
-      (row) => !filter.tribeId || row.scope.tribeId === filter.tribeId
-    )
+    tables.rows.product.filter((row) => !filter.tribeId || row.scope.tribeId === filter.tribeId),
   );
 }
 
 export function squadFilterOptions(
   tables: DistributionTables,
-  filter: DistributionFilter
+  filter: DistributionFilter,
 ): FilterOption[] {
   return uniqueOptions(
     tables.rows.squad.filter(
       (row) =>
         (!filter.tribeId || row.scope.tribeId === filter.tribeId) &&
-        (!filter.productId || row.scope.productId === filter.productId)
-    )
+        (!filter.productId || row.scope.productId === filter.productId),
+    ),
   );
 }
 
 export function unitcodeFilterOptions(
   rows: DistributionRow[],
-  filter: DistributionFilter
+  filter: DistributionFilter,
 ): FilterOption[] {
   const options = new Map<string, FilterOption>();
 

@@ -4,8 +4,8 @@ const WIDTH = 300;
 const HEIGHT = 130;
 const LEFT = 20;
 const RIGHT = 288;
-const TOP = 25; 
-const BOTTOM = 110; 
+const TOP = 25;
+const BOTTOM = 110;
 const REFERENCE = 100;
 
 function yFor(value: number): number {
@@ -28,7 +28,11 @@ export function WorkloadTrendChart({
     return <p className="text-sm text-tp-muted">Data tren belum tersedia untuk periode ini.</p>;
   }
 
-  const points = trend.map((p, i) => ({ ...p, x: xFor(i, trend.length), y: yFor(p.loadPercentage) }));
+  const points = trend.map((p, i) => ({
+    ...p,
+    x: xFor(i, trend.length),
+    y: yFor(p.loadPercentage),
+  }));
   const line = points.map((p) => `${p.x},${p.y}`).join(" ");
   const area = `${points[0].x},${BOTTOM} ${line} ${points[points.length - 1].x},${BOTTOM}`;
   const values = trend.map((p) => `${p.label} ${p.loadPercentage}`).join(", ");

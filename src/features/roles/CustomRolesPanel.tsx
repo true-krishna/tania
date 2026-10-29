@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/Button";
+import { RoleActionsCell } from "./RoleActionsCell";
 import { Chip } from "@/components/Chip";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
@@ -10,7 +11,7 @@ import { Table, type TableColumn } from "@/components/Table";
 import { roleLabel } from "@/features/accounts/roles";
 import type { AccessRole } from "@/generated/graphql/types";
 import type { Role } from "./useRoles";
-
+import { errorText } from "@/lib/errors";
 
 const TEMPLATES: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
 
@@ -49,7 +50,7 @@ export function CustomRolesPanel({
       setLabel("");
       setCreating(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membuat role.");
+      setError(errorText(err, "Gagal membuat role."));
     }
   }
 
@@ -106,57 +107,30 @@ export function CustomRolesPanel({
       key: "actions",
       title: "Aksi",
       className: "col-action",
-      render: (_value, role) =>
-        role.builtIn ? (
-          <span className="text-xs text-tp-muted">Role bawaan — tidak dapat diubah.</span>
-        ) : confirmDeleteId === role.id ? (
-          <span className="flex items-center gap-2">
-            <span className="text-xs text-zinc-600">Hapus role {role.label}?</span>
-            <Button
-              disabled={busy}
-              onClick={() => {
-                void onDelete(role.id).then(
-                  () => setConfirmDeleteId(null),
-                  () => undefined,
-                );
-              }}
-              type="button"
-            >
-              Ya, hapus
-            </Button>
-            <Button onClick={() => setConfirmDeleteId(null)} type="button" variant="ghost">
-              Batal
-            </Button>
-          </span>
-        ) : (
-          <span className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={() => {
-                setEditingId(role.id);
-                setEditLabel(role.label);
-              }}
-              type="button"
-              variant="ghost"
-            >
-              Ubah label
-            </Button>
-            <Button
-              disabled={busy}
-              onClick={() =>
-                void onSetStatus(role.id, role.status === "ACTIVE" ? "INACTIVE" : "ACTIVE").catch(
-                  () => undefined,
-                )
-              }
-              type="button"
-              variant="ghost"
-            >
-              {role.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}
-            </Button>
-            <Button onClick={() => setConfirmDeleteId(role.id)} type="button" variant="ghost">
-              Hapus
-            </Button>
-          </span>
-        ),
+      render: (_value, role) => (
+        <RoleActionsCell
+          busy={busy}
+          confirming={confirmDeleteId === role.id}
+          onCancelDelete={() => setConfirmDeleteId(null)}
+          onDelete={() => {
+            void onDelete(role.id).then(
+              () => setConfirmDeleteId(null),
+              () => undefined,
+            );
+          }}
+          onEdit={() => {
+            setEditingId(role.id);
+            setEditLabel(role.label);
+          }}
+          onRequestDelete={() => setConfirmDeleteId(role.id)}
+          onToggleStatus={() => {
+            void onSetStatus(role.id, role.status === "ACTIVE" ? "INACTIVE" : "ACTIVE").catch(
+              () => undefined,
+            );
+          }}
+          role={role}
+        />
+      ),
     },
   ];
 

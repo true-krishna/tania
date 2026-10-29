@@ -10,11 +10,7 @@
 
 /** Classification returned by WAD for a talent in a period. */
 export type LoadClassification =
-  | "OPTIMAL"
-  | "OVERLOAD"
-  | "UNDERLOAD"
-  | "UNDEFINED_ACTIVITY"
-  | "UNDEFINED_TIME_SPENT";
+  "OPTIMAL" | "OVERLOAD" | "UNDERLOAD" | "UNDEFINED_ACTIVITY" | "UNDEFINED_TIME_SPENT";
 
 export interface ActivitySplit {
   workingPercentage: number;

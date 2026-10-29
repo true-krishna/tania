@@ -53,7 +53,7 @@ export function RenewContractForm({
   });
   const { pushToast } = useToast();
   const [values, setValues] = React.useState<RenewContractFormValues>(() =>
-    createRenewContractValues(contract)
+    createRenewContractValues(contract),
   );
   const [errors, setErrors] = React.useState<RenewContractFormErrors>({});
   const [formError, setFormError] = React.useState<string | null>(null);
@@ -73,9 +73,7 @@ export function RenewContractForm({
     setFormError(null);
   }
 
-  function changeContractType(
-    contractType: RenewContractFormValues["contractType"]
-  ) {
+  function changeContractType(contractType: RenewContractFormValues["contractType"]) {
     setValues((current) => ({ ...current, contractType, endDate: "" }));
     setErrors((current) => ({ ...current, endDate: undefined }));
   }
@@ -128,22 +126,19 @@ export function RenewContractForm({
       const created = result.data?.renewEmploymentContract;
       pushToast(
         "success",
-        `Kontrak perpanjangan ${
-          created?.contractNo ?? values.contractNo
-        } berhasil dibuat.`
+        `Kontrak perpanjangan ${created?.contractNo ?? values.contractNo} berhasil dibuat.`,
       );
       onSuccess();
     } catch (error) {
       const submitError = mapSubmitError(
         error instanceof ApolloError ? error : null,
         CONFLICT_MESSAGE,
-        "Gagal membuat perpanjangan kontrak."
+        "Gagal membuat perpanjangan kontrak.",
       );
       if (submitError.field && submitError.field in values) {
         setErrors((previous) => ({
           ...previous,
-          [submitError.field as keyof RenewContractFormValues]:
-            submitError.message,
+          [submitError.field as keyof RenewContractFormValues]: submitError.message,
         }));
       } else {
         setFormError(submitError.message);
@@ -161,8 +156,7 @@ export function RenewContractForm({
     >
       {formError ? <ErrorState message={formError} /> : null}
       <p className="text-xs font-medium text-zinc-500">
-        Langkah {step} dari 2 —{" "}
-        {step === 1 ? "Periode kontrak baru" : "Atribut & penempatan"}
+        Langkah {step} dari 2 — {step === 1 ? "Periode kontrak baru" : "Atribut & penempatan"}
       </p>
 
       {step === 1 ? (

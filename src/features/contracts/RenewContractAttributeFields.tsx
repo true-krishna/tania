@@ -4,10 +4,7 @@ import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { Select } from "@/components/Select";
 import type { useJobRoles, useUnits } from "@/features/master-data/useMasterData";
-import type {
-  RenewContractFormErrors,
-  RenewContractFormValues,
-} from "./renewContractValues";
+import type { RenewContractFormErrors, RenewContractFormValues } from "./renewContractValues";
 
 type RenewContractAttributeFieldsProps = {
   errors: RenewContractFormErrors;
@@ -25,9 +22,7 @@ export function RenewContractAttributeFields({
   values,
 }: RenewContractAttributeFieldsProps) {
   const selectedJobRole = values.jobRoleId
-    ? (jobRoles.data ?? []).find(
-        (jobRole) => jobRole.id === values.jobRoleId
-      ) ?? null
+    ? ((jobRoles.data ?? []).find((jobRole) => jobRole.id === values.jobRoleId) ?? null)
     : null;
 
   return (
@@ -42,11 +37,7 @@ export function RenewContractAttributeFields({
           value={values.nomorInduk}
         />
       </InputControl>
-      <InputControl
-        error={errors.officeEmail}
-        helper="(opsional)"
-        label="Email kantor"
-      >
+      <InputControl error={errors.officeEmail} helper="(opsional)" label="Email kantor">
         <Input
           onChange={(event) => onChange("officeEmail", event.target.value)}
           type="email"
@@ -56,11 +47,7 @@ export function RenewContractAttributeFields({
       <h3 className="mt-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
         Posisi & unit
       </h3>
-      <InputControl
-        error={errors.unitId}
-        helper="(pindah unit bila diubah)"
-        label="Unit"
-      >
+      <InputControl error={errors.unitId} helper="(pindah unit bila diubah)" label="Unit">
         <Select
           onChange={(event) => onChange("unitId", event.target.value)}
           options={[

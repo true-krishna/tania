@@ -1,11 +1,4 @@
-export {
-  Modal,
-  ModalActions,
-  ModalContent,
-  ModalTitle,
-  type ModalActionsProps,
-  type ModalContentProps,
-  type ModalProps,
-  type ModalSize,
-  type ModalTitleProps,
-} from "./Modal";
+export { Modal, type ModalProps, type ModalSize } from "./Modal";
+export { ModalActions, type ModalActionsProps } from "./ModalActions";
+export { ModalContent, type ModalContentProps } from "./ModalContent";
+export { ModalTitle, type ModalTitleProps } from "./ModalTitle";

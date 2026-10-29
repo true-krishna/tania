@@ -20,6 +20,20 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "react/jsx-sort-props": ["error", { ignoreCase: true }],
+      "@typescript-eslint/consistent-type-imports": "error",
+      "react/jsx-no-useless-fragment": "error",
+      "no-else-return": "error",
+      "no-lonely-if": "error",
+      "no-nested-ternary": "error",
+      "react/no-multi-comp": "error",
+      "max-lines": ["error", { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
+  {
+    files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    rules: {
+      "react/no-multi-comp": "off",
+      "max-lines": "off",
     },
   },
   {

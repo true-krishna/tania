@@ -85,7 +85,7 @@ function renderPage(mocks: React.ComponentProps<typeof MockedProvider>["mocks"])
   return render(
     <MockedProvider mocks={mocks}>
       <EntraProvisioningPage />
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -113,9 +113,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
   it("shows an empty state when every talent already has an Entra account", async () => {
     renderPage([emptyListMock]);
 
-    expect(
-      await screen.findByText(/semua talent sudah memiliki akun entra/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/semua talent sudah memiliki akun entra/i)).toBeInTheDocument();
   });
 
   it("provisions a talent and refetches the list", async () => {
@@ -151,10 +149,9 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     fireEvent.click(await screen.findByRole("button", { name: /provisioning/i }));
 
     expect(await screen.findByText(/provisi akun budi santoso berhasil/i)).toBeInTheDocument();
-    await waitFor(
-      () => expect(screen.queryByText("Budi Santoso")).not.toBeInTheDocument(),
-      { timeout: 3000 }
-    );
+    await waitFor(() => expect(screen.queryByText("Budi Santoso")).not.toBeInTheDocument(), {
+      timeout: 3000,
+    });
     expect(screen.getByText("Rina Kusuma")).toBeInTheDocument();
   });
 
@@ -280,7 +277,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     // so the table chains loadMore and the appended rows become visible.
     for (let page = 1; page < 11; page += 1) {
       await waitFor(() =>
-        expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeEnabled()
+        expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeEnabled(),
       );
       fireEvent.click(screen.getByRole("button", { name: "Halaman berikutnya" }));
     }
@@ -302,7 +299,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
       nodes: ReturnType<typeof talent>[],
       totalCount: number,
       hasNextPage: boolean,
-      endCursor: string | null
+      endCursor: string | null,
     ) => ({
       data: {
         employeesWithoutEntra: {
@@ -319,14 +316,24 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     renderPage([
       {
         request: { query: EmployeesWithoutEntraDocument, variables: listVariables },
-        result: page(Array.from({ length: 100 }, (_, i) => talent(i + 1)), 105, true, "c-100"),
+        result: page(
+          Array.from({ length: 100 }, (_, i) => talent(i + 1)),
+          105,
+          true,
+          "c-100",
+        ),
       },
       {
         request: {
           query: EmployeesWithoutEntraDocument,
           variables: { ...ENTRA_LIST_VARIABLES, after: "c-100" },
         },
-        result: page(Array.from({ length: 5 }, (_, i) => talent(101 + i)), 105, false, null),
+        result: page(
+          Array.from({ length: 5 }, (_, i) => talent(101 + i)),
+          105,
+          false,
+          null,
+        ),
       },
       {
         request: { query: ProvisionEntraAccountDocument, variables: { employeeId: "emp-1" } },
@@ -374,7 +381,7 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Halaman berikutnya" }));
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeEnabled()
+      expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeEnabled(),
     );
     fireEvent.click(screen.getByRole("button", { name: "Halaman berikutnya" }));
 
@@ -402,10 +409,9 @@ describe("EntraProvisioningPage (pencarian dan pengurutan, FR-44)", () => {
       target: { value: "rina" },
     });
 
-    await waitFor(
-      () => expect(screen.queryByText("Budi Santoso")).not.toBeInTheDocument(),
-      { timeout: 3000 }
-    );
+    await waitFor(() => expect(screen.queryByText("Budi Santoso")).not.toBeInTheDocument(), {
+      timeout: 3000,
+    });
     expect(screen.getByText("Rina Kusuma")).toBeInTheDocument();
   });
 
@@ -429,8 +435,8 @@ describe("EntraProvisioningPage (pencarian dan pengurutan, FR-44)", () => {
     await waitFor(() =>
       expect(screen.getByRole("columnheader", { name: /email/i })).toHaveAttribute(
         "aria-sort",
-        "ascending"
-      )
+        "ascending",
+      ),
     );
     expect(screen.getByRole("button", { name: "Nama" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Hasil provisi" })).toBeInTheDocument();
@@ -531,7 +537,7 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
               needsReprovision: false,
             },
           }
-        : row
+        : row,
     );
     renderPage([
       linkedListMock,
@@ -573,17 +579,14 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Provisi ulang" }));
     // The confirmation modal explains the swap before it runs.
     expect(
-      await screen.findByText(/akun entra lama iwan mutasi akan dinonaktifkan/i)
+      await screen.findByText(/akun entra lama iwan mutasi akan dinonaktifkan/i),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Provisi ulang" }));
 
-    expect(
-      await screen.findByText(/provisi ulang iwan mutasi berhasil/i)
-    ).toBeInTheDocument();
-    await waitFor(
-      () => expect(screen.queryByText("Perlu provisi ulang")).not.toBeInTheDocument(),
-      { timeout: 3000 }
-    );
+    expect(await screen.findByText(/provisi ulang iwan mutasi berhasil/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText("Perlu provisi ulang")).not.toBeInTheDocument(), {
+      timeout: 3000,
+    });
   }, 15000);
 
   it("disables a linked account only through the confirmation modal and shows the result", async () => {
@@ -593,7 +596,7 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
             ...row,
             entraProvision: { ...row.entraProvision, status: "DISABLED" },
           }
-        : row
+        : row,
     );
     renderPage([
       linkedListMock,
@@ -632,13 +635,11 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Aksi Dewi Anggraini" }));
     fireEvent.click(await screen.findByRole("button", { name: "Nonaktifkan" }));
-    expect(
-      await screen.findByText(/tidak akan dapat dipakai login/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/tidak akan dapat dipakai login/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
 
     expect(
-      await screen.findByText(/akun entra dewi anggraini berhasil dinonaktifkan/i)
+      await screen.findByText(/akun entra dewi anggraini berhasil dinonaktifkan/i),
     ).toBeInTheDocument();
     expect((await screen.findAllByText("Dinonaktifkan")).length).toBeGreaterThan(0);
   }, 15000);
@@ -650,7 +651,7 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
             ...row,
             entraProvision: { ...row.entraProvision, status: "CREATED" },
           }
-        : row
+        : row,
     );
     renderPage([
       linkedListMock,
@@ -691,12 +692,11 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Aktifkan" }));
 
     expect(
-      await screen.findByText(/akun entra eka nonaktif berhasil diaktifkan/i)
+      await screen.findByText(/akun entra eka nonaktif berhasil diaktifkan/i),
     ).toBeInTheDocument();
-    await waitFor(
-      () => expect(screen.queryByText("Dinonaktifkan")).not.toBeInTheDocument(),
-      { timeout: 3000 }
-    );
+    await waitFor(() => expect(screen.queryByText("Dinonaktifkan")).not.toBeInTheDocument(), {
+      timeout: 3000,
+    });
   }, 15000);
 
   it("resends the activation email for a created account whose email failed and updates the status", async () => {
@@ -706,7 +706,7 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
             ...row,
             entraProvision: { ...row.entraProvision, notifyStatus: "SENT", notifyError: null },
           }
-        : row
+        : row,
     );
     renderPage([
       linkedListMock,
@@ -745,16 +745,12 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
     expect(screen.getByText("Email aktivasi gagal")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Aksi Rian Email" }));
-    fireEvent.click(
-      await screen.findByRole("button", { name: /kirim ulang email aktivasi/i })
-    );
+    fireEvent.click(await screen.findByRole("button", { name: /kirim ulang email aktivasi/i }));
 
     expect(
-      await screen.findByText(/berhasil dikirim ulang ke email pribadinya/i)
+      await screen.findByText(/berhasil dikirim ulang ke email pribadinya/i),
     ).toBeInTheDocument();
-    expect(
-      await screen.findAllByText("Email aktivasi terkirim")
-    ).not.toHaveLength(0);
+    expect(await screen.findAllByText("Email aktivasi terkirim")).not.toHaveLength(0);
   }, 15000);
 
   it("surfaces a failed resend with its reason", async () => {
@@ -792,9 +788,7 @@ describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
     expect(await screen.findByText("Rian Email")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Aksi Rian Email" }));
-    fireEvent.click(
-      await screen.findByRole("button", { name: /kirim ulang email aktivasi/i })
-    );
+    fireEvent.click(await screen.findByRole("button", { name: /kirim ulang email aktivasi/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/relay masih down/i);
     expect(screen.getByText("Email aktivasi gagal")).toBeInTheDocument();

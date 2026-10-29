@@ -1,4 +1,5 @@
 import { Card } from "@/components/Card";
+import { DescriptionItem } from "@/components/DescriptionItem";
 import { EmptyState } from "@/components/DataState";
 import { EMPLOYEE_STATUS_LABEL, GENDER_LABEL } from "@/features/employees/labels";
 import type { ProfileEmployee } from "./useProfile";
@@ -12,37 +13,28 @@ export function PersonalInfoSection({ employee }: { employee: ProfileEmployee | 
     <Card className="max-w-3xl">
       <h2 className="mb-3 text-sm font-semibold text-zinc-900">Data diri</h2>
       <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-        <Field label="NIK" mono value={employee.nikMasked} />
-        <Field label="Email" value={employee.email} />
-        <Field label="Tanggal Lahir" value={employee.birthDate ?? "—"} />
-        <Field
+        <DescriptionItem label="NIK" mono value={employee.nikMasked} />
+        <DescriptionItem label="Email" value={employee.email} />
+        <DescriptionItem label="Tanggal Lahir" value={employee.birthDate ?? "—"} />
+        <DescriptionItem
           label="Jenis Kelamin"
           value={employee.gender ? GENDER_LABEL[employee.gender] : "—"}
         />
-        <Field label="Telepon" value={employee.phone ?? "—"} />
-        <Field label="Alamat" value={employee.address ?? "—"} />
-        <Field label="Pendidikan Terakhir" value={employee.latestEducation ?? "—"} />
-        <Field label="Institusi" value={employee.institutionName ?? "—"} />
-        <Field label="Jurusan" value={employee.major ?? "—"} />
-        <Field label="Tanggal Bergabung" value={employee.joinedAt} />
-        <Field label="Unit / Divisi" value={employee.unit?.name ?? "—"} />
-        <Field label="Job Role" value={employee.jobRole?.name ?? "—"} />
-        <Field label="Chapter" value={employee.chapter?.name ?? "Tanpa chapter"} />
-        <Field label="Status" value={EMPLOYEE_STATUS_LABEL[employee.status]} />
-        <Field
+        <DescriptionItem label="Telepon" value={employee.phone ?? "—"} />
+        <DescriptionItem label="Alamat" value={employee.address ?? "—"} />
+        <DescriptionItem label="Pendidikan Terakhir" value={employee.latestEducation ?? "—"} />
+        <DescriptionItem label="Institusi" value={employee.institutionName ?? "—"} />
+        <DescriptionItem label="Jurusan" value={employee.major ?? "—"} />
+        <DescriptionItem label="Tanggal Bergabung" value={employee.joinedAt} />
+        <DescriptionItem label="Unit / Divisi" value={employee.unit?.name ?? "—"} />
+        <DescriptionItem label="Job Role" value={employee.jobRole?.name ?? "—"} />
+        <DescriptionItem label="Chapter" value={employee.chapter?.name ?? "Tanpa chapter"} />
+        <DescriptionItem label="Status" value={EMPLOYEE_STATUS_LABEL[employee.status]} />
+        <DescriptionItem
           label="Assignable"
           value={employee.assignable && employee.status !== "INACTIVE" ? "Ya" : "Tidak"}
         />
       </dl>
     </Card>
-  );
-}
-
-function Field({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
-      <dd className={mono ? "font-mono text-zinc-900" : "text-zinc-900"}>{value}</dd>
-    </div>
   );
 }

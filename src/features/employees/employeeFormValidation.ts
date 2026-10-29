@@ -1,23 +1,16 @@
 import { ApolloError } from "@apollo/client";
 import type { Dispatch, SetStateAction } from "react";
 import { mapSubmitError } from "@/lib/errors";
-import type {
-  CreateFormValues,
-  EditFormValues,
-  PersonalFormValues,
-} from "./employeeFormValues";
+import type { CreateFormValues, EditFormValues, PersonalFormValues } from "./employeeFormValues";
 
 export type FormErrors<TValues> = Partial<Record<keyof TValues, string>>;
 
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const NIK_PATTERN = /^\d{16}$/;
 
-export const CONFLICT_MESSAGE =
-  "Email atau NIK sudah terdaftar. Periksa kembali isian tersebut.";
+export const CONFLICT_MESSAGE = "Email atau NIK sudah terdaftar. Periksa kembali isian tersebut.";
 
-export function validatePersonalFields(
-  values: PersonalFormValues
-): FormErrors<PersonalFormValues> {
+export function validatePersonalFields(values: PersonalFormValues): FormErrors<PersonalFormValues> {
   const errors: FormErrors<PersonalFormValues> = {};
 
   if (!values.fullName.trim()) errors.fullName = "Nama lengkap wajib diisi.";
@@ -34,9 +27,7 @@ export function validatePersonalFields(
   return errors;
 }
 
-export function validateCreateForm(
-  values: CreateFormValues
-): FormErrors<CreateFormValues> {
+export function validateCreateForm(values: CreateFormValues): FormErrors<CreateFormValues> {
   const errors: FormErrors<CreateFormValues> = validatePersonalFields(values);
 
   if (!values.nik.trim()) errors.nik = "NIK wajib diisi.";
@@ -47,9 +38,7 @@ export function validateCreateForm(
   return errors;
 }
 
-export function validateEditForm(
-  values: EditFormValues
-): FormErrors<EditFormValues> {
+export function validateEditForm(values: EditFormValues): FormErrors<EditFormValues> {
   const errors: FormErrors<EditFormValues> = validatePersonalFields(values);
 
   if (values.nikBaru.trim() && !NIK_PATTERN.test(values.nikBaru.trim())) {
@@ -77,7 +66,7 @@ export function applyEmployeeSubmitError<TValues extends object>({
   const submitError = mapSubmitError(
     error instanceof ApolloError ? error : null,
     CONFLICT_MESSAGE,
-    fallbackMessage
+    fallbackMessage,
   );
   const field = submitError.field;
 

@@ -4,12 +4,12 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import type { EChartsCoreOption } from "echarts/core";
 import { resolveChartTheme, type ChartTheme } from "./chart-theme";
+import type { EChartHandle } from "./EChart";
 import type { ReportCategoryCount } from "@/generated/graphql/types";
 
-const EChart = dynamic(
-  () => import("./EChart").then((m) => ({ default: m.EChart })),
-  { ssr: false },
-);
+const EChart = dynamic(() => import("./EChart").then((m) => ({ default: m.EChart })), {
+  ssr: false,
+});
 
 export const GENERATION_ORDER = ["Baby Boomer", "Gen X", "Milenial", "Gen Z"] as const;
 export const EDUCATION_ORDER = ["SMA/SMK Sederajat", "D3", "S1", "S2", "S3"] as const;
@@ -103,7 +103,7 @@ interface DistributionChartProps {
   className?: string;
   title?: string;
   periodLabel?: string;
-  chartRef?: React.Ref<import("./EChart").EChartHandle>;
+  chartRef?: React.Ref<EChartHandle>;
 }
 
 export function DistributionChart({

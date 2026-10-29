@@ -3,9 +3,7 @@
 import * as React from "react";
 
 type AnswerBlock =
-  | { kind: "p"; text: string }
-  | { kind: "ul"; items: string[] }
-  | { kind: "ol"; items: string[] };
+  { kind: "p"; text: string } | { kind: "ul"; items: string[] } | { kind: "ol"; items: string[] };
 
 export function parseAnswer(text: string): AnswerBlock[] {
   const blocks: AnswerBlock[] = [];
@@ -43,13 +41,11 @@ export function parseAnswer(text: string): AnswerBlock[] {
 }
 
 function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
-  return text.split("**").map((part, index) =>
-    index % 2 === 1 ? (
-      <strong key={`${keyPrefix}-b${index}`}>{part}</strong>
-    ) : (
-      part
-    )
-  );
+  return text
+    .split("**")
+    .map((part, index) =>
+      index % 2 === 1 ? <strong key={`${keyPrefix}-b${index}`}>{part}</strong> : part,
+    );
 }
 
 export function AnswerText({ text }: { text: string }) {
@@ -63,9 +59,7 @@ export function AnswerText({ text }: { text: string }) {
           return (
             <ul className="list-disc pl-5" key={key}>
               {block.items.map((item, itemIndex) => (
-                <li key={`${key}-${itemIndex}`}>
-                  {renderInline(item, `${key}-${itemIndex}`)}
-                </li>
+                <li key={`${key}-${itemIndex}`}>{renderInline(item, `${key}-${itemIndex}`)}</li>
               ))}
             </ul>
           );
@@ -74,9 +68,7 @@ export function AnswerText({ text }: { text: string }) {
           return (
             <ol className="list-decimal pl-5" key={key}>
               {block.items.map((item, itemIndex) => (
-                <li key={`${key}-${itemIndex}`}>
-                  {renderInline(item, `${key}-${itemIndex}`)}
-                </li>
+                <li key={`${key}-${itemIndex}`}>{renderInline(item, `${key}-${itemIndex}`)}</li>
               ))}
             </ol>
           );

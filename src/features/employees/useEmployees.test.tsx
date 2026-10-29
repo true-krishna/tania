@@ -48,22 +48,23 @@ function conn(page: Page) {
 }
 
 function makeClient(routes: Record<string, Page>, counter: { count: number }, delay = 10) {
-  const link = new ApolloLink((operation) =>
-    new Observable((observer) => {
-      counter.count++;
-      const after = (operation.variables.after as string | null) ?? "";
-      const search = (operation.variables.filter as { search?: string } | null)?.search ?? "";
-      const page = routes[`${search}|${after}`];
-      const timer = setTimeout(() => {
-        if (!page) {
-          observer.error(new Error(`no mock route for search="${search}" after="${after}"`));
-          return;
-        }
-        observer.next({ data: { employees: conn(page) } });
-        observer.complete();
-      }, delay);
-      return () => clearTimeout(timer);
-    })
+  const link = new ApolloLink(
+    (operation) =>
+      new Observable((observer) => {
+        counter.count++;
+        const after = (operation.variables.after as string | null) ?? "";
+        const search = (operation.variables.filter as { search?: string } | null)?.search ?? "";
+        const page = routes[`${search}|${after}`];
+        const timer = setTimeout(() => {
+          if (!page) {
+            observer.error(new Error(`no mock route for search="${search}" after="${after}"`));
+            return;
+          }
+          observer.next({ data: { employees: conn(page) } });
+          observer.complete();
+        }, delay);
+        return () => clearTimeout(timer);
+      }),
   );
   return new ApolloClient({
     link,
@@ -89,7 +90,7 @@ describe("useEmployees cursor accumulation", () => {
         "|": { totalCount: 147, ids: ids(1, 100), hasNextPage: true, endCursor: "C100" },
         "|C100": { totalCount: 147, ids: ids(101, 147), hasNextPage: false, endCursor: "C147" },
       },
-      counter
+      counter,
     );
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -115,7 +116,7 @@ describe("useEmployees cursor accumulation", () => {
         // Server claims more but returns only rows already accumulated.
         "|C100": { totalCount: 147, ids: ids(1, 47), hasNextPage: true, endCursor: "C100" },
       },
-      counter
+      counter,
     );
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -143,7 +144,7 @@ describe("useEmployees cursor accumulation", () => {
         "|": { totalCount: 147, ids: ids(1, 100), hasNextPage: true, endCursor: "C100" },
         "|C100": { totalCount: 147, ids: ids(1, 47), hasNextPage: true, endCursor: "C100" },
       },
-      counter
+      counter,
     );
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -167,16 +168,16 @@ describe("useEmployees cursor accumulation", () => {
         "|": { totalCount: 147, ids: ids(1, 100), hasNextPage: false, endCursor: null },
         "a|": { totalCount: 2, ids: [3, 7], hasNextPage: false, endCursor: null },
       },
-      counter
+      counter,
     );
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ApolloProvider client={client}>{children}</ApolloProvider>
     );
 
-    const { result, rerender } = renderHook(
-      ({ search }) => useEmployees({ search }, 100),
-      { wrapper, initialProps: { search: undefined as string | undefined } }
-    );
+    const { result, rerender } = renderHook(({ search }) => useEmployees({ search }, 100), {
+      wrapper,
+      initialProps: { search: undefined as string | undefined },
+    });
     await waitFor(() => expect(result.current.employees).toHaveLength(100));
     expect(counter.count).toBe(1);
 
@@ -197,16 +198,16 @@ describe("useEmployees cursor accumulation", () => {
         "|C100": { totalCount: 147, ids: ids(1, 47), hasNextPage: true, endCursor: "C100" },
         "x|": { totalCount: 1, ids: [9], hasNextPage: false, endCursor: null },
       },
-      counter
+      counter,
     );
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ApolloProvider client={client}>{children}</ApolloProvider>
     );
 
-    const { result, rerender } = renderHook(
-      ({ search }) => useEmployees({ search }, 100),
-      { wrapper, initialProps: { search: undefined as string | undefined } }
-    );
+    const { result, rerender } = renderHook(({ search }) => useEmployees({ search }, 100), {
+      wrapper,
+      initialProps: { search: undefined as string | undefined },
+    });
     await waitFor(() => expect(result.current.employees).toHaveLength(100));
     act(() => result.current.loadMore());
     await waitFor(() => expect(result.current.stalled).toBe(true));

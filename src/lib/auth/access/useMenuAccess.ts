@@ -8,11 +8,10 @@ import {
   moduleManageable,
   moduleReadable,
   visibleByConfig,
-  type MenuAccessConfig,
 } from "@/lib/auth/menuAccess";
 import { canAccess, canManage, type Module } from "@/lib/auth/matrix";
 import { useSessionRole } from "@/lib/auth/guard";
-import { AccessDenied } from "@/components/AccessDenied";
+import { MenuAccessContext } from "./context";
 
 export interface ModuleAccess {
   canRead: boolean;
@@ -22,29 +21,6 @@ export interface ModuleAccess {
 
 export interface EntryAccess extends ModuleAccess {
   visible: boolean;
-}
-
-interface MenuAccessValue {
-  config: MenuAccessConfig;
-  roleName: string;
-}
-
-const MenuAccessContext = React.createContext<MenuAccessValue | null>(null);
-
-export function MenuAccessProvider({
-  config,
-  roleName,
-  children,
-}: {
-  config: MenuAccessConfig | null;
-  roleName: string | null;
-  children: React.ReactNode;
-}) {
-  const value = React.useMemo<MenuAccessValue | null>(
-    () => (config && roleName ? { config, roleName } : null),
-    [config, roleName],
-  );
-  return <MenuAccessContext.Provider value={value}>{children}</MenuAccessContext.Provider>;
 }
 
 export function useModuleAccess(module: Module): ModuleAccess {
@@ -90,24 +66,4 @@ export function useMenuEntryAccess(entryId: string): EntryAccess {
       pending: false,
     };
   }, [menu, role, entryId]);
-}
-
-export function MenuAccessGuard({
-  module,
-  manage = false,
-  fallback,
-  children,
-}: {
-  module: Module;
-  manage?: boolean;
-  fallback?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  const access = useModuleAccess(module);
-  const allowed = manage ? access.canManage : access.canRead;
-
-  if (access.pending) return null;
-  if (allowed) return <>{children}</>;
-  if (fallback !== undefined) return <>{fallback}</>;
-  return <AccessDenied canRead={access.canRead} manage={manage} />;
 }

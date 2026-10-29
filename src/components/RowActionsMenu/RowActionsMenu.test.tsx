@@ -69,10 +69,7 @@ describe("RowActionsMenu", () => {
 
   it("renders custom panel content above the actions", () => {
     render(
-      <RowActionsMenu
-        actions={[{ label: "Nonaktifkan", onSelect: vi.fn() }]}
-        label="Aksi Unit A"
-      >
+      <RowActionsMenu actions={[{ label: "Nonaktifkan", onSelect: vi.fn() }]} label="Aksi Unit A">
         <select aria-label="Ubah peran Unit A" defaultValue="ADMIN">
           <option value="ADMIN">Admin</option>
         </select>

@@ -1,86 +1,38 @@
 "use client";
 
-import Link from "next/link";
 import * as React from "react";
 import { ApolloError, useMutation } from "@apollo/client";
-import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
-import { Table } from "@/components/Table";
-import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
-import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { TableFilterBar } from "@/components/TableFilterBar";
+import type { RowAction } from "@/components/RowActionsMenu";
 import {
   EmployeesWithoutEntraDocument,
-  type EmployeesWithoutEntraQuery,
   ProvisionEntraAccountDocument,
   ReprovisionEntraAccountDocument,
   ResendEntraActivationEmailDocument,
   SetEntraAccountEnabledDocument,
 } from "@/generated/graphql";
 import type { EntraEmployeeSortField, SortDirection } from "@/generated/graphql/types";
-import type { RowAction } from "@/components/RowActionsMenu";
-import {
-  ENTRA_NOTIFY_STATUS_LABEL,
-  ENTRA_NOTIFY_STATUS_TONE,
-  ENTRA_PROVISION_STATUS_LABEL,
-  ENTRA_PROVISION_STATUS_TONE,
-} from "@/features/entra/labels";
-import { EntraAccountActionModal } from "@/features/entra/EntraAccountActionModal";
+import { ENTRA_PROVISION_STATUS_LABEL } from "@/features/entra/labels";
 import {
   ENTRA_LIST_VARIABLES,
   useEmployeesWithoutEntra,
 } from "@/features/entra/useEmployeesWithoutEntra";
 import { mapSubmitError } from "@/lib/errors";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
-import { orDash } from "@/lib/cell";
-import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
+import { EntraConfirmModals } from "./EntraConfirmModals";
+import type { SortState } from "./EntraSortHeader";
+import { EntraProvisioningTable } from "./EntraProvisioningTable";
+import type { ConfirmAction, EntraListEmployee } from "./types";
 
-type SortState = { key: EntraEmployeeSortField; dir: SortDirection } | null;
+type Message = { tone: "ok" | "error"; text: string };
 
-function sortAria(
-  sort: SortState,
-  key: EntraEmployeeSortField
-): "ascending" | "descending" | undefined {
-  if (!sort || sort.key !== key) return undefined;
-  return sort.dir === "ASC" ? "ascending" : "descending";
+function provisionLabel(busy: boolean, hasOutcome: boolean): string {
+  if (busy) return "Memproses…";
+  if (hasOutcome) return "Coba lagi";
+  return "Provisioning";
 }
-
-function SortHeader({
-  label,
-  sortKey,
-  sort,
-  onToggle,
-}: {
-  label: string;
-  sortKey: EntraEmployeeSortField;
-  sort: SortState;
-  onToggle: (key: EntraEmployeeSortField) => void;
-}) {
-  return (
-    <button
-      className="inline-flex items-center gap-1 hover:text-tp-text"
-      onClick={() => onToggle(sortKey)}
-      type="button"
-    >
-      {label}
-      {sort?.key === sortKey ? (
-        sort.dir === "ASC" ? (
-          <IconChevronUp aria-hidden size={14} stroke={2} />
-        ) : (
-          <IconChevronDown aria-hidden size={14} stroke={2} />
-        )
-      ) : null}
-    </button>
-  );
-}
-
-type EntraListEmployee =
-  EmployeesWithoutEntraQuery["employeesWithoutEntra"]["edges"][number]["node"];
-
-type ConfirmAction =
-  | { kind: "disable"; employee: EntraListEmployee }
-  | { kind: "reprovision"; employee: EntraListEmployee };
 
 export default function EntraProvisioningPage() {
   const [searchInput, setSearchInput] = React.useState("");
@@ -103,11 +55,9 @@ export default function EntraProvisioningPage() {
       sortBy,
       sortDirection,
     }),
-    [search, sortBy, sortDirection]
+    [search, sortBy, sortDirection],
   );
-  const refetch = [
-    { query: EmployeesWithoutEntraDocument, variables: listVariables },
-  ];
+  const refetch = [{ query: EmployeesWithoutEntraDocument, variables: listVariables }];
   const [provisionEntra] = useMutation(ProvisionEntraAccountDocument, {
     refetchQueries: refetch,
     awaitRefetchQueries: true,
@@ -126,10 +76,7 @@ export default function EntraProvisioningPage() {
   });
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [confirm, setConfirm] = React.useState<ConfirmAction | null>(null);
-  const [message, setMessage] = React.useState<{
-    tone: "ok" | "error";
-    text: string;
-  } | null>(null);
+  const [message, setMessage] = React.useState<Message | null>(null);
 
   function toggleSort(key: EntraEmployeeSortField) {
     resetPage();
@@ -162,7 +109,7 @@ export default function EntraProvisioningPage() {
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         "Akun Entra talent ini sudah terdaftar.",
-        "Gagal memprovisi akun Entra."
+        "Gagal memprovisi akun Entra.",
       );
       setMessage({ tone: "error", text: submitError.message });
     } finally {
@@ -192,7 +139,7 @@ export default function EntraProvisioningPage() {
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         "Perubahan status akun Entra tidak dapat dilakukan.",
-        "Gagal mengubah status akun Entra."
+        "Gagal mengubah status akun Entra.",
       );
       setMessage({ tone: "error", text: submitError.message });
     } finally {
@@ -221,7 +168,7 @@ export default function EntraProvisioningPage() {
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         "Kirim ulang email aktivasi hanya untuk akun hasil create.",
-        "Gagal mengirim ulang email aktivasi."
+        "Gagal mengirim ulang email aktivasi.",
       );
       setMessage({ tone: "error", text: submitError.message });
     } finally {
@@ -251,7 +198,7 @@ export default function EntraProvisioningPage() {
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         "Provisi ulang hanya untuk akun yang jenisnya tidak cocok dengan kontrak aktif.",
-        "Gagal memprovisi ulang akun Entra."
+        "Gagal memprovisi ulang akun Entra.",
       );
       setMessage({ tone: "error", text: submitError.message });
     } finally {
@@ -266,7 +213,7 @@ export default function EntraProvisioningPage() {
     const actions: RowAction[] = [];
     if (!linked) {
       actions.push({
-        label: busyId === employee.id ? "Memproses…" : outcome ? "Coba lagi" : "Provisioning",
+        label: provisionLabel(busyId === employee.id, outcome !== null),
         onSelect: () => void provision(employee.id, employee.fullName),
         disabled: busyId !== null,
       });
@@ -298,12 +245,10 @@ export default function EntraProvisioningPage() {
             danger: true,
             onSelect: () => setConfirm({ kind: "disable", employee }),
             disabled: busyId !== null,
-          }
+          },
     );
     return actions;
   }
-
-  const searching = search.trim().length > 0;
 
   return (
     <section className="flex flex-col gap-4">
@@ -337,144 +282,31 @@ export default function EntraProvisioningPage() {
         </div>
       ) : null}
 
-      {status === "loading" ? <LoadingState /> : null}
-      {status === "error" ? <ErrorState message={error ?? "Terjadi kesalahan."} /> : null}
+      <EntraProvisioningTable
+        employees={employees}
+        error={error}
+        onToggleSort={toggleSort}
+        pageRows={pageRows}
+        pagination={pagination}
+        rowActions={rowActions}
+        searching={search.trim().length > 0}
+        sort={sort}
+        status={status}
+      />
 
-      {status === "ready" && employees?.length === 0 ? (
-        <EmptyState
-          message={
-            searching
-              ? "Tidak ada talent yang cocok dengan pencarian."
-              : "Semua talent sudah memiliki akun Entra."
-          }
-        />
-      ) : null}
-
-      {status === "ready" && employees && employees.length > 0 ? (
-        <Table
-          caption="Talent untuk provisi akun Entra"
-          columns={[
-            {
-              key: "name",
-              title: (
-                <SortHeader
-                  label="Nama"
-                  onToggle={toggleSort}
-                  sort={sort}
-                  sortKey="FULL_NAME"
-                />
-              ),
-              headerProps: { "aria-sort": sortAria(sort, "FULL_NAME") },
-              render: (_value, employee) => (
-                <Link
-                  className="font-medium text-zinc-900 hover:underline"
-                  href={EMPLOYEE_DETAIL(employee.id)}
-                >
-                  {employee.fullName}
-                </Link>
-              ),
-            },
-            {
-              key: "email",
-              title: (
-                <SortHeader
-                  label="Email"
-                  onToggle={toggleSort}
-                  sort={sort}
-                  sortKey="EMAIL"
-                />
-              ),
-              headerProps: { "aria-sort": sortAria(sort, "EMAIL") },
-              className: "text-zinc-600",
-              render: (_value, employee) => orDash(employee.email),
-            },
-            {
-              key: "provision",
-              title: (
-                <SortHeader
-                  label="Hasil provisi"
-                  onToggle={toggleSort}
-                  sort={sort}
-                  sortKey="PROVISION_STATUS"
-                />
-              ),
-              headerProps: { "aria-sort": sortAria(sort, "PROVISION_STATUS") },
-              render: (_value, employee) => {
-                const outcome = employee.entraProvision;
-                if (!outcome) return <span className="text-xs text-zinc-500">Belum dibuat</span>;
-                const failed = outcome.status === "FAILED";
-                return (
-                  <>
-                    {outcome.needsReprovision ? (
-                      <span className="mb-1 inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                        Perlu provisi ulang
-                      </span>
-                    ) : null}
-                    <span
-                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ENTRA_PROVISION_STATUS_TONE[outcome.status]}`}
-                    >
-                      {ENTRA_PROVISION_STATUS_LABEL[outcome.status]}
-                    </span>
-                    {outcome.notifyStatus ? (
-                      <span
-                        className={`mt-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ENTRA_NOTIFY_STATUS_TONE[outcome.notifyStatus]}`}
-                      >
-                        {ENTRA_NOTIFY_STATUS_LABEL[outcome.notifyStatus]}
-                      </span>
-                    ) : null}
-                    <span className="mt-1 block text-xs text-zinc-500">
-                      {orDash(
-                        failed
-                          ? outcome.lastError
-                          : outcome.notifyStatus === "FAILED" && outcome.notifyError
-                            ? outcome.notifyError
-                            : outcome.upn ?? outcome.action
-                      )}
-                    </span>
-                  </>
-                );
-              },
-            },
-            {
-              key: "action",
-              title: "Aksi",
-              className: "col-action",
-              render: (_value, employee) => (
-                <RowActionsMenu
-                  actions={rowActions(employee)}
-                  label={`Aksi ${employee.fullName}`}
-                />
-              ),
-            },
-          ]}
-          dataSource={pageRows}
-          pagination={pagination}
-          rowKey={(employee) => employee.id}
-        />
-      ) : null}
-
-      {confirm?.kind === "disable" ? (
-        <EntraAccountActionModal
-          busy={busyId === confirm.employee.id}
-          confirmLabel="Nonaktifkan"
-          description={`Akun Entra ${confirm.employee.fullName} tidak akan dapat dipakai login sampai diaktifkan kembali. Nonaktifkan sekarang?`}
-          onClose={() => setConfirm(null)}
-          onConfirm={() => void setEnabled(confirm.employee.id, confirm.employee.fullName, false)}
-          open
-          title="Nonaktifkan akun Entra"
-        />
-      ) : null}
-      {confirm?.kind === "reprovision" ? (
-        <EntraAccountActionModal
-          busy={busyId === confirm.employee.id}
-          confirmLabel="Provisi ulang"
-          description={`Akun Entra lama ${confirm.employee.fullName} akan dinonaktifkan, lalu dibuat atau diundang ulang mengikuti contract_type kontrak aktifnya. Lanjutkan?`}
-          onClose={() => setConfirm(null)}
-          onConfirm={() => void reprovision(confirm.employee.id, confirm.employee.fullName)}
-          open
-          title="Provisi ulang akun Entra"
-        />
-      ) : null}
+      <EntraConfirmModals
+        busy={busyId === confirm?.employee.id}
+        confirm={confirm}
+        onClose={() => setConfirm(null)}
+        onConfirmDisable={() => {
+          if (confirm?.kind !== "disable") return;
+          void setEnabled(confirm.employee.id, confirm.employee.fullName, false);
+        }}
+        onConfirmReprovision={() => {
+          if (confirm?.kind !== "reprovision") return;
+          void reprovision(confirm.employee.id, confirm.employee.fullName);
+        }}
+      />
     </section>
   );
 }

@@ -7,8 +7,7 @@ import {
 } from "@/generated/graphql";
 import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
 
-type CandidateNode =
-  PreRetirementCandidatesQuery["employees"]["edges"][number]["node"];
+type CandidateNode = PreRetirementCandidatesQuery["employees"]["edges"][number]["node"];
 
 /**
  * Active employees with `birthDate` so the dashboard can derive who is inside

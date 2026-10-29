@@ -120,7 +120,10 @@ export function ActivityForm({
         </p>
       ) : null}
       {serverError ? (
-        <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <p
+          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          role="alert"
+        >
           {serverError}
         </p>
       ) : null}
@@ -172,7 +175,11 @@ export function ActivityForm({
           />
         </InputControl>
 
-        <InputControl error={errors.endDate} htmlFor="activity-end" label="Tanggal selesai (opsional)">
+        <InputControl
+          error={errors.endDate}
+          htmlFor="activity-end"
+          label="Tanggal selesai (opsional)"
+        >
           <Input
             aria-invalid={Boolean(errors.endDate)}
             id="activity-end"

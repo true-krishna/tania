@@ -5,13 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import MyIdpPage from "@/app/(app)/idp/my/page";
-import {
-  MyIdpDocument,
-  UpdateDevelopmentActionStatusDocument,
-} from "@/generated/graphql";
+import { MyIdpDocument, UpdateDevelopmentActionStatusDocument } from "@/generated/graphql";
 
 vi.mock("@/lib/auth/guard", () => ({
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const myIdp = {
@@ -25,11 +22,32 @@ const myIdp = {
   timelineEnd: "2025-09-30",
   successIndicators: "Mampu menyelesaikan 1 modul penuh.",
   actions: [
-    { __typename: "DevelopmentAction", id: "act-1", description: "Ikut training GraphQL", method: "TRAINING", status: "IN_PROGRESS", dueDate: "2025-08-01" },
-    { __typename: "DevelopmentAction", id: "act-2", description: "Mentoring dengan lead", method: "MENTORING", status: "TODO", dueDate: "2025-08-15" },
+    {
+      __typename: "DevelopmentAction",
+      id: "act-1",
+      description: "Ikut training GraphQL",
+      method: "TRAINING",
+      status: "IN_PROGRESS",
+      dueDate: "2025-08-01",
+    },
+    {
+      __typename: "DevelopmentAction",
+      id: "act-2",
+      description: "Mentoring dengan lead",
+      method: "MENTORING",
+      status: "TODO",
+      dueDate: "2025-08-15",
+    },
   ],
   reviews: [
-    { __typename: "ReviewLog", id: "rev-1", reviewDate: "2025-08-01", summary: "Progres stabil", followUp: "Lanjutkan", createdBy: { __typename: "User", id: "u-1", fullName: "Budi Santoso" } },
+    {
+      __typename: "ReviewLog",
+      id: "rev-1",
+      reviewDate: "2025-08-01",
+      summary: "Progres stabil",
+      followUp: "Lanjutkan",
+      createdBy: { __typename: "User", id: "u-1", fullName: "Budi Santoso" },
+    },
   ],
   revisions: [],
 };
@@ -39,9 +57,11 @@ const myIdpResult = { data: { myIdp } };
 describe("MyIdpPage — Talent (FR-14 / US3)", () => {
   it("shows an empty state when the talent has no IDP yet", async () => {
     render(
-      <MockedProvider mocks={[{ request: { query: MyIdpDocument }, result: { data: { myIdp: null } } }]}>
+      <MockedProvider
+        mocks={[{ request: { query: MyIdpDocument }, result: { data: { myIdp: null } } }]}
+      >
         <MyIdpPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText(/Chapter belum membuat IDP untuk Anda/i)).toBeInTheDocument();
@@ -51,7 +71,7 @@ describe("MyIdpPage — Talent (FR-14 / US3)", () => {
     render(
       <MockedProvider mocks={[{ request: { query: MyIdpDocument }, result: myIdpResult }]}>
         <MyIdpPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("IDP Saya")).toBeInTheDocument();
@@ -76,7 +96,10 @@ describe("MyIdpPage — Talent (FR-14 / US3)", () => {
         mocks={[
           { request: { query: MyIdpDocument }, result: myIdpResult },
           {
-            request: { query: UpdateDevelopmentActionStatusDocument, variables: { id: "act-2", status: "IN_PROGRESS" } },
+            request: {
+              query: UpdateDevelopmentActionStatusDocument,
+              variables: { id: "act-2", status: "IN_PROGRESS" },
+            },
             result: { data: { updateDevelopmentActionStatus: updated } },
           },
           {
@@ -85,10 +108,7 @@ describe("MyIdpPage — Talent (FR-14 / US3)", () => {
               data: {
                 myIdp: {
                   ...myIdp,
-                  actions: [
-                    myIdp.actions[0],
-                    { ...myIdp.actions[1], status: "IN_PROGRESS" },
-                  ],
+                  actions: [myIdp.actions[0], { ...myIdp.actions[1], status: "IN_PROGRESS" }],
                 },
               },
             },
@@ -96,7 +116,7 @@ describe("MyIdpPage — Talent (FR-14 / US3)", () => {
         ]}
       >
         <MyIdpPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     await screen.findByText("Ikut training GraphQL");
@@ -114,13 +134,16 @@ describe("MyIdpPage — Talent (FR-14 / US3)", () => {
         mocks={[
           { request: { query: MyIdpDocument }, result: myIdpResult },
           {
-            request: { query: UpdateDevelopmentActionStatusDocument, variables: { id: "act-2", status: "IN_PROGRESS" } },
+            request: {
+              query: UpdateDevelopmentActionStatusDocument,
+              variables: { id: "act-2", status: "IN_PROGRESS" },
+            },
             error: new Error("FORBIDDEN"),
           },
         ]}
       >
         <MyIdpPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     await screen.findByText("Ikut training GraphQL");

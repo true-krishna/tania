@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Table, type TableColumn } from "@/components/Table";
+import type { TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
-import { Chip } from "@/components/Chip";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
@@ -14,10 +13,13 @@ import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { EmployeePicker } from "@/features/accounts/EmployeePicker";
-import { roleLabelFor, roleOptions, type RoleOption } from "@/features/accounts/roles";
+import { roleOptions } from "@/features/accounts/roles";
+import { AccountsTable } from "./AccountsTable";
+import { RoleBadge } from "./RoleBadge";
 import type { UsersQuery } from "@/generated/graphql";
 import type { AccountStatus, Role } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
+import { errorText } from "@/lib/errors";
 
 type Account = UsersQuery["users"][number];
 
@@ -40,14 +42,6 @@ type AccountsSectionProps = {
   onSetStatus: (userId: string, status: AccountStatus) => Promise<void>;
   onRevokeSessions: (userId: string) => Promise<void>;
 };
-
-function RoleBadge({ roleName, options }: { roleName: string; options: readonly RoleOption[] }) {
-  return (
-    <Chip size="small" variant="info">
-      {roleLabelFor(roleName, options)}
-    </Chip>
-  );
-}
 
 export function AccountsSection({
   accounts,
@@ -118,7 +112,7 @@ export function AccountsSection({
       });
       resetForm();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Gagal membuat akun.");
+      setFormError(errorText(err, "Gagal membuat akun."));
     } finally {
       setBusy(false);
     }
@@ -140,17 +134,13 @@ export function AccountsSection({
     {
       key: "role",
       title: "Peran",
-      render: (_value, account) => (
-        <RoleBadge options={options} roleName={account.roleName} />
-      ),
+      render: (_value, account) => <RoleBadge options={options} roleName={account.roleName} />,
     },
     {
       key: "chapter",
       title: "Chapter",
       render: (_value, account) =>
-        account.accessRole !== "CHAPTER"
-          ? "—"
-          : orDash(account.employee?.chapter?.name),
+        account.accessRole !== "CHAPTER" ? "—" : orDash(account.employee?.chapter?.name),
     },
     {
       key: "status",
@@ -184,10 +174,7 @@ export function AccountsSection({
               {
                 label: account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan",
                 onSelect: () =>
-                  void onSetStatus(
-                    account.id,
-                    account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                  ),
+                  void onSetStatus(account.id, account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE"),
               },
               { label: "Cabut Sesi", onSelect: () => setConfirmRevokeId(account.id) },
             ]}
@@ -280,19 +267,13 @@ export function AccountsSection({
         </ModalActions>
       </Modal>
 
-      {!accounts || accounts.length === 0 ? (
-        <EmptyState message="Belum ada akun pengguna." />
-      ) : filteredAccounts.length === 0 ? (
-        <p className="text-sm text-tp-muted">Tidak ada akun yang cocok dengan pencarian.</p>
-      ) : (
-        <Table
-          caption="Daftar akun pengguna"
-          columns={columns}
-          dataSource={pageRows}
-          pagination={pagination}
-          rowKey={(account) => account.id}
-        />
-      )}
+      <AccountsTable
+        accounts={accounts}
+        columns={columns}
+        filteredAccounts={filteredAccounts}
+        pageRows={pageRows}
+        pagination={pagination}
+      />
     </div>
   );
 }

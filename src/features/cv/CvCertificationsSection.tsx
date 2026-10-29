@@ -24,60 +24,40 @@ function createCertificationValues(): CertificationValues {
   return { issuer: "", name: "" };
 }
 
-function toCertificationValues(
-  certification: CertificationItem
-): CertificationValues {
+function toCertificationValues(certification: CertificationItem): CertificationValues {
   return {
     issuer: certification.issuer ?? "",
     name: certification.name,
   };
 }
 
-function buildCertificationInput(
-  values: CertificationValues
-): CvCertificationInput {
+function buildCertificationInput(values: CertificationValues): CvCertificationInput {
   return {
     issuer: values.issuer.trim() || null,
     name: values.name.trim(),
   };
 }
 
-export function CvCertificationsSection({
-  cv,
-}: {
-  cv: CvFieldsFragment | undefined;
-}) {
-  const {
-    isEditing,
-    removeItem,
-    reset,
-    saving,
-    setValues,
-    startEditing,
-    submit,
-    values,
-  } = useCvCollection<
-    CertificationItem,
-    CertificationValues,
-    CvCertificationInput
-  >({
-    addDocument: AddCvCertificationDocument,
-    buildInput: buildCertificationInput,
-    createValues: createCertificationValues,
-    getItemId: (certification) => certification.id,
-    messages: {
-      added: "Sertifikasi ditambahkan.",
-      addFailed: "Gagal menambah sertifikasi.",
-      deleted: "Sertifikasi dihapus.",
-      deleteFailed: "Gagal menghapus sertifikasi.",
-      updateFailed: "Gagal memperbarui sertifikasi.",
-      updated: "Sertifikasi diperbarui.",
-    },
-    refetchDocument: MyCvProfileDocument,
-    removeDocument: DeleteCvCertificationDocument,
-    toValues: toCertificationValues,
-    updateDocument: UpdateCvCertificationDocument,
-  });
+export function CvCertificationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
+  const { isEditing, removeItem, reset, saving, setValues, startEditing, submit, values } =
+    useCvCollection<CertificationItem, CertificationValues, CvCertificationInput>({
+      addDocument: AddCvCertificationDocument,
+      buildInput: buildCertificationInput,
+      createValues: createCertificationValues,
+      getItemId: (certification) => certification.id,
+      messages: {
+        added: "Sertifikasi ditambahkan.",
+        addFailed: "Gagal menambah sertifikasi.",
+        deleted: "Sertifikasi dihapus.",
+        deleteFailed: "Gagal menghapus sertifikasi.",
+        updateFailed: "Gagal memperbarui sertifikasi.",
+        updated: "Sertifikasi diperbarui.",
+      },
+      refetchDocument: MyCvProfileDocument,
+      removeDocument: DeleteCvCertificationDocument,
+      toValues: toCertificationValues,
+      updateDocument: UpdateCvCertificationDocument,
+    });
 
   return (
     <CvSectionCard title="Sertifikasi">
@@ -90,9 +70,7 @@ export function CvCertificationsSection({
             >
               <div>
                 <p className="font-medium text-zinc-900">{certification.name}</p>
-                <p className="text-xs text-zinc-500">
-                  {certification.issuer || "—"}
-                </p>
+                <p className="text-xs text-zinc-500">{certification.issuer || "—"}</p>
               </div>
               <div className="flex shrink-0 gap-1">
                 <button
@@ -118,10 +96,7 @@ export function CvCertificationsSection({
         <p className="text-sm text-zinc-500">Belum ada sertifikasi.</p>
       )}
 
-      <form
-        className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-        onSubmit={submit}
-      >
+      <form className="grid grid-cols-1 gap-2 sm:grid-cols-2" onSubmit={submit}>
         <Input
           onChange={(event) =>
             setValues((current) => ({
@@ -148,12 +123,7 @@ export function CvCertificationsSection({
             {isEditing ? "Simpan Perubahan" : "+ Tambah Sertifikasi"}
           </Button>
           {isEditing ? (
-            <Button
-              disabled={saving}
-              onClick={reset}
-              type="button"
-              variant="secondary"
-            >
+            <Button disabled={saving} onClick={reset} type="button" variant="secondary">
               Batal
             </Button>
           ) : null}

@@ -19,10 +19,7 @@ type UseAcknowledgeActionOptions = {
 };
 
 function isPrecondition(error: unknown): boolean {
-  return (
-    error instanceof ApolloError &&
-    graphQLErrorCode(error) === "PRECONDITION_FAILED"
-  );
+  return error instanceof ApolloError && graphQLErrorCode(error) === "PRECONDITION_FAILED";
 }
 
 export function useAcknowledgeAction({
@@ -47,7 +44,7 @@ export function useAcknowledgeAction({
 
   async function submit(
     acknowledgeActiveWork: boolean,
-    buildVariables: (effectiveDate: string) => Record<string, unknown>
+    buildVariables: (effectiveDate: string) => Record<string, unknown>,
   ) {
     setFormError(null);
     setDateError(null);
@@ -67,7 +64,7 @@ export function useAcknowledgeAction({
       const submitError = mapSubmitError(
         error instanceof ApolloError ? error : null,
         conflictMessage,
-        fallbackMessage
+        fallbackMessage,
       );
       if (submitError.field === "effectiveDate") {
         setDateError(submitError.message);

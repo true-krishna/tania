@@ -44,13 +44,16 @@ export type MergedImportReport = {
   stopReason: string | null;
 };
 
-export type WireChunkResult = {
-  succeeded?: ReadonlyArray<{ index: number } | null> | null;
-  failed?: ReadonlyArray<{
-    index: number;
-    error?: { code: BulkMasterDataErrorCode; message: string } | null | undefined;
-  }> | null;
-} | null | undefined;
+export type WireChunkResult =
+  | {
+      succeeded?: ReadonlyArray<{ index: number } | null> | null;
+      failed?: ReadonlyArray<{
+        index: number;
+        error?: { code: BulkMasterDataErrorCode; message: string } | null | undefined;
+      }> | null;
+    }
+  | null
+  | undefined;
 
 export function normalizeChunk(result: WireChunkResult): ChunkOutcome {
   return {
@@ -73,10 +76,7 @@ export function normalizeChunk(result: WireChunkResult): ChunkOutcome {
  * dihentikan dan sisa baris dilaporkan "belum dieksekusi" — baris potongan
  * sebelumnya tetap terlapor apa adanya.
  */
-export async function importRowsInChunks<
-  Row extends { rowNumber: number },
-  Vars,
->(options: {
+export async function importRowsInChunks<Row extends { rowNumber: number }, Vars>(options: {
   rows: readonly Row[];
   describeRow: (row: Row) => string;
   toVariables: (row: Row) => Vars;
@@ -112,7 +112,12 @@ export async function importRowsInChunks<
       }
       for (const failure of outcome.failed) {
         const row = chunk[failure.index];
-        if (row) failed.push({ rowNumber: row.rowNumber, label: describeRow(row), reason: failure.message });
+        if (row)
+          failed.push({
+            rowNumber: row.rowNumber,
+            label: describeRow(row),
+            reason: failure.message,
+          });
       }
     } catch (err) {
       stopReason = errorMessage(err instanceof ApolloError ? err : null, fallbackMessage);
@@ -146,7 +151,9 @@ export type MasterDataImportRunner = (
  * dengan pemakaian halaman) sehingga daftar terbarui tanpa langkah manual.
  */
 export function useMasterDataBulkImport(): { run: MasterDataImportRunner } {
-  const [importUnits] = useMutation(ImportUnitsDocument, { refetchQueries: refetch(UnitsDocument) });
+  const [importUnits] = useMutation(ImportUnitsDocument, {
+    refetchQueries: refetch(UnitsDocument),
+  });
   const [importProjects] = useMutation(ImportProjectsDocument, {
     refetchQueries: refetch(ProjectsDocument),
   });
@@ -163,14 +170,20 @@ export function useMasterDataBulkImport(): { run: MasterDataImportRunner } {
     onProgress?: (chunkIndex: number, chunkTotal: number) => void,
   ): Promise<MergedImportReport> {
     const config = MASTER_DATA_IMPORT_TEMPLATES[entity];
-    const shared = { rows, onProgress, describeRow: (row: MasterDataImportRow) => config.describeRow(row.values) };
+    const shared = {
+      rows,
+      onProgress,
+      describeRow: (row: MasterDataImportRow) => config.describeRow(row.values),
+    };
     switch (entity) {
       case "unit":
         return importRowsInChunks({
           ...shared,
           toVariables: (row) => ({ code: row.values.code ?? "", name: row.values.name ?? "" }),
           importChunk: async (variables) =>
-            normalizeChunk((await importUnits({ variables: { input: { rows: variables } } })).data?.importUnits),
+            normalizeChunk(
+              (await importUnits({ variables: { input: { rows: variables } } })).data?.importUnits,
+            ),
         });
       case "project":
         return importRowsInChunks({
@@ -178,16 +191,21 @@ export function useMasterDataBulkImport(): { run: MasterDataImportRunner } {
           toVariables: (row) => ({ name: row.values.name ?? "", unit: row.values.unit ?? "" }),
           importChunk: async (variables) =>
             normalizeChunk(
-              (await importProjects({ variables: { input: { rows: variables } } })).data?.importProjects,
+              (await importProjects({ variables: { input: { rows: variables } } })).data
+                ?.importProjects,
             ),
         });
       case "jobRole":
         return importRowsInChunks({
           ...shared,
-          toVariables: (row) => ({ name: row.values.name ?? "", chapter: row.values.chapter || undefined }),
+          toVariables: (row) => ({
+            name: row.values.name ?? "",
+            chapter: row.values.chapter || undefined,
+          }),
           importChunk: async (variables) =>
             normalizeChunk(
-              (await importJobRoles({ variables: { input: { rows: variables } } })).data?.importJobRoles,
+              (await importJobRoles({ variables: { input: { rows: variables } } })).data
+                ?.importJobRoles,
             ),
         });
       case "chapter":
@@ -196,7 +214,8 @@ export function useMasterDataBulkImport(): { run: MasterDataImportRunner } {
           toVariables: (row) => ({ name: row.values.name ?? "" }),
           importChunk: async (variables) =>
             normalizeChunk(
-              (await importChapters({ variables: { input: { rows: variables } } })).data?.importChapters,
+              (await importChapters({ variables: { input: { rows: variables } } })).data
+                ?.importChapters,
             ),
         });
     }

@@ -2,12 +2,10 @@
 
 import { useToast } from "@/components/Toast";
 import { useChapters } from "@/features/master-data/useMasterData";
-import {
-  MasterDataSection,
-  type MasterDataItem,
-} from "@/features/master-data/MasterDataSection";
+import { MasterDataSection, type MasterDataItem } from "@/features/master-data/MasterDataSection";
 import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useChapterMutations } from "@/features/master-data/useMasterDataMutations";
+import { errorText } from "@/lib/errors";
 
 type Chapter = MasterDataItem & { jobRoles: { length: number } };
 
@@ -21,7 +19,7 @@ export default function ChaptersPage() {
       await fn();
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan chapter.");
+      pushToast("error", errorText(err, "Gagal menyimpan chapter."));
     }
   }
 
@@ -34,18 +32,27 @@ export default function ChaptersPage() {
       error={error}
       extraColumn={{ label: "Job Role", render: (chapter) => chapter.jobRoles.length }}
       importSlot={({ close, onImported, open }) => (
-        <MasterDataImportModal entity="chapter" onClose={close} onImported={onImported} open={open} />
+        <MasterDataImportModal
+          entity="chapter"
+          onClose={close}
+          onImported={onImported}
+          open={open}
+        />
       )}
       items={data}
       nameLabel="Nama Chapter"
-      onCreate={({ name }) => detectError(() => chapterMutations.create({ name }), `Chapter "${name}" berhasil dibuat.`)}
+      onCreate={({ name }) =>
+        detectError(() => chapterMutations.create({ name }), `Chapter "${name}" berhasil dibuat.`)
+      }
       onToggleActive={(id, isActive) =>
         detectError(
           () => chapterMutations.toggleActive(id, isActive),
           isActive ? "Chapter berhasil diaktifkan." : "Chapter berhasil dinonaktifkan.",
         )
       }
-      onUpdate={(id, { name }) => detectError(() => chapterMutations.update(id, { name }), "Chapter berhasil diubah.")}
+      onUpdate={(id, { name }) =>
+        detectError(() => chapterMutations.update(id, { name }), "Chapter berhasil diubah.")
+      }
       status={status}
     />
   );

@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { BarList } from "@/components/BarList";
-import { Card } from "@/components/Card";
 import { Chip, type ChipVariant } from "@/components/Chip";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
@@ -23,6 +22,8 @@ import { landingRoute } from "@/lib/auth/landing";
 import { canAccess } from "@/lib/auth/matrix";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
+import { EmptyNote } from "./EmptyNote";
+import { Panel } from "./Panel";
 import { TalentReportContent } from "@/features/talent-report/TalentReportPageView";
 import type { AssignmentStatus } from "@/generated/graphql/types";
 
@@ -35,27 +36,6 @@ const ASSIGNMENT_STATUS_VARIANT: Record<AssignmentStatus, ChipVariant> = {
   ACTIVE: "success",
   COMPLETED: "neutral",
 };
-
-function Panel({
-  title,
-  children,
-  className,
-}: {
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <Card className={`flex flex-col gap-4 ${className ?? ""}`}>
-      <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
-      {children}
-    </Card>
-  );
-}
-
-function EmptyNote({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-zinc-500">{children}</p>;
-}
 
 export default function DashboardPage() {
   const role = useSessionRole();
@@ -82,7 +62,11 @@ export default function DashboardPage() {
       {dash.__typename === "AdminDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard icon={IconUserShield} label="Akun tidak aktif" value={dash.inactiveAccounts} />
+            <StatCard
+              icon={IconUserShield}
+              label="Akun tidak aktif"
+              value={dash.inactiveAccounts}
+            />
             <StatCard
               icon={IconTarget}
               label="Talent per chapter"
@@ -98,7 +82,12 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Panel title="Talent per Chapter">
               {dash.talentsPerChapter.length ? (
-                <BarList items={dash.talentsPerChapter.map((c) => ({ label: c.chapter.name, value: c.count }))} />
+                <BarList
+                  items={dash.talentsPerChapter.map((c) => ({
+                    label: c.chapter.name,
+                    value: c.count,
+                  }))}
+                />
               ) : (
                 <EmptyNote>Belum ada talent pada chapter mana pun.</EmptyNote>
               )}
@@ -106,7 +95,12 @@ export default function DashboardPage() {
 
             <Panel title="Akun per Peran">
               {dash.accountsPerRole.length ? (
-                <BarList items={dash.accountsPerRole.map((c) => ({ label: roleLabel[c.role], value: c.count }))} />
+                <BarList
+                  items={dash.accountsPerRole.map((c) => ({
+                    label: roleLabel[c.role],
+                    value: c.count,
+                  }))}
+                />
               ) : (
                 <EmptyNote>Belum ada akun.</EmptyNote>
               )}
@@ -204,7 +198,11 @@ export default function DashboardPage() {
       {dash.__typename === "TalentDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard icon={IconClipboardText} label="Penugasan aktif" value={dash.activeAssignments.length} />
+            <StatCard
+              icon={IconClipboardText}
+              label="Penugasan aktif"
+              value={dash.activeAssignments.length}
+            />
           </div>
 
           <Panel title="Penugasan Aktif">

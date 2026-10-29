@@ -12,10 +12,7 @@ import {
   serverAllows,
   visibleByConfig,
 } from "@/lib/auth/menuAccess";
-import {
-  ACCOUNTS,
-  IDP,
-} from "@/lib/constants/routes";
+import { ACCOUNTS, IDP } from "@/lib/constants/routes";
 import { NAV, sectionForPath, visibleNavEntries } from "./nav";
 
 const ROLES: readonly AccessRole[] = ACCESS_ROLES;
@@ -29,7 +26,7 @@ interface Leaf {
 const LEAVES: Leaf[] = NAV.flatMap((entry) =>
   entry.kind === "link"
     ? [{ href: entry.href, label: entry.label, roles: entry.roles }]
-    : entry.children.map((child) => ({ href: child.href, label: child.label, roles: child.roles }))
+    : entry.children.map((child) => ({ href: child.href, label: child.label, roles: child.roles })),
 );
 
 /** One configuration with a single cell overridden, for the non-default case. */
@@ -38,7 +35,7 @@ function withCell(
   role: string,
   entry: string,
   level: MenuAccessLevel,
-  visible = true
+  visible = true,
 ): MenuAccessConfig {
   return {
     ...config,
@@ -62,7 +59,7 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
         const visible = leaves.filter((leaf) => leaf.roles.includes(role));
         expect(
           visible.length,
-          `${role} boleh membuka ${mod} tetapi tidak melihat entri apa pun`
+          `${role} boleh membuka ${mod} tetapi tidak melihat entri apa pun`,
         ).toBeGreaterThan(0);
       }
     }
@@ -100,29 +97,25 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
 describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
   /** Sidebar hrefs, flattened — the grid must equal this set, id for id. */
   const NAV_ENTRY_IDS = NAV.flatMap((entry) =>
-    entry.kind === "link"
-      ? [entry.href]
-      : entry.children.map((child) => child.href)
+    entry.kind === "link" ? [entry.href] : entry.children.map((child) => child.href),
   );
 
   /** Flattened hrefs a sidebar render shows, in order. */
   function drawnHrefs(config: MenuAccessConfig | null, roleName: string | null) {
     return visibleNavEntries(config, roleName).flatMap((entry) =>
-      entry.kind === "link" ? [entry.href] : entry.children.map((child) => child.href)
+      entry.kind === "link" ? [entry.href] : entry.children.map((child) => child.href),
     );
   }
 
   /** The static role filter a caller falls back to with no configuration. */
   function staticHrefs(role: AccessRole) {
-    return NAV.flatMap((entry) =>
-      entry.kind === "link"
-        ? entry.roles.includes(role)
-          ? [entry.href]
-          : []
-        : entry.roles.includes(role)
-          ? entry.children.filter((child) => child.roles.includes(role)).map((child) => child.href)
-          : []
-    );
+    return NAV.flatMap((entry) => {
+      if (!entry.roles.includes(role)) return [];
+      if (entry.kind === "link") return [entry.href];
+      return entry.children
+        .filter((child) => child.roles.includes(role))
+        .map((child) => child.href);
+    });
   }
 
   it("tanpa konfigurasi sidebar tetap memakai filter role statis NAV", () => {
@@ -152,7 +145,12 @@ describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
 
   it("grup tanpa anak yang tampil ikut hilang", () => {
     let config: MenuAccessConfig = DEFAULT_MENU_ACCESS;
-    for (const entry of ["evaluations", "evaluations/periods", "evaluations/templates", "evaluations/my"]) {
+    for (const entry of [
+      "evaluations",
+      "evaluations/periods",
+      "evaluations/templates",
+      "evaluations/my",
+    ]) {
       config = withCell(config, "ADMIN", entry, "NONE");
     }
     const drawn = visibleNavEntries(config, "ADMIN");
@@ -190,7 +188,7 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
         if (!leaf.roles.includes(role)) continue;
         expect(
           serverAllows(DEFAULT_MENU_ACCESS, role, entry, "READ"),
-          `${leaf.label} × ${role}: menu tampil tetapi server menolak entry ${entry}`
+          `${leaf.label} × ${role}: menu tampil tetapi server menolak entry ${entry}`,
         ).toBe(true);
       }
     }
@@ -208,9 +206,7 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
     for (const leaf of LEAVES) {
       const entry = menuEntryIdForHref(leaf.href);
       for (const role of ROLES) {
-        expect(visibleByConfig(DEFAULT_MENU_ACCESS, role, entry)).toBe(
-          leaf.roles.includes(role)
-        );
+        expect(visibleByConfig(DEFAULT_MENU_ACCESS, role, entry)).toBe(leaf.roles.includes(role));
       }
     }
   });
@@ -279,7 +275,7 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
     for (const [entry, roles] of Object.entries(expected)) {
       for (const role of ROLES) {
         expect(accessLevel(DEFAULT_MENU_ACCESS, role, entry), `${entry} × ${role}`).toBe(
-          roles[role] ?? "NONE"
+          roles[role] ?? "NONE",
         );
       }
     }

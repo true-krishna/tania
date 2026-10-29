@@ -3,13 +3,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@apollo/client";
-import {
-  IconAlertCircle,
-  IconArrowRight,
-  IconBrandWindows,
-  IconLock,
-  IconMail,
-} from "@tabler/icons-react";
+import { IconAlertCircle, IconArrowRight, IconLock, IconMail } from "@tabler/icons-react";
 import { EntraSsoStartDocument, LoginDocument } from "@/generated/graphql";
 import { authConfig } from "@/lib/auth/config";
 import { beginEntraAuthAttempt, type EntraAuthAttempt } from "@/features/auth/entra-pkce";
@@ -21,14 +15,16 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Brand } from "@/components/Brand";
 import { BrandPanel } from "./BrandPanel";
+import { IconField } from "./IconField";
+import { LoginSsoSection } from "./LoginSsoSection";
+import { errorText } from "@/lib/errors";
 
 export default function LoginForm() {
   const router = useRouter();
   const sessionRole = useSessionRole();
   const searchParams = useSearchParams();
   const returnReason = searchParams.get("sso");
-  const entraCode =
-    (searchParams.get("entra") ?? "").replace(/[^\w.-]/g, "").slice(0, 40) || null;
+  const entraCode = (searchParams.get("entra") ?? "").replace(/[^\w.-]/g, "").slice(0, 40) || null;
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [remember, setRemember] = React.useState(false);
@@ -73,12 +69,7 @@ export default function LoginForm() {
   const authorizationUrl = data?.entraSsoStart?.enabled
     ? (data.entraSsoStart.authorizationUrl ?? null)
     : null;
-  const returnMessage =
-    returnReason === "cancelled"
-      ? `Masuk dengan Microsoft dibatalkan${entraCode ? ` (${entraCode})` : ""}. Bila akses ke aplikasi Tania sudah seharusnya ada, hubungi Admin — atau masuk dengan email & kata sandi.`
-      : returnReason === "error"
-        ? "Masuk dengan Microsoft gagal. Silakan coba lagi atau masuk dengan email & kata sandi."
-        : null;
+  const returnMessage = ssoReturnMessage(returnReason, entraCode);
   const ssoPending = !authConfig.localOnly && !startFailed && !data && !ssoError;
 
   function continueWithSso() {
@@ -117,7 +108,7 @@ export default function LoginForm() {
       await resetApolloStore();
       router.replace(landingRoute(user.accessRole));
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
+      const message = errorText(err, "Terjadi kesalahan.");
       setError(message);
     }
   }
@@ -135,9 +126,7 @@ export default function LoginForm() {
               <Brand className="text-[28px]" variant="large" />
             </div>
 
-            <h1 className="mt-6 text-[30px] font-bold leading-[1.2] text-tp-text lg:mt-0">
-              Masuk
-            </h1>
+            <h1 className="mt-6 text-[30px] font-bold leading-[1.2] text-tp-text lg:mt-0">Masuk</h1>
 
             <p className="mt-2 text-sm leading-[1.6] text-tp-muted">
               Gunakan email akun TANIA Anda.
@@ -217,10 +206,7 @@ export default function LoginForm() {
                   className="flex items-start gap-2.5 rounded-tp-md bg-tp-tint-peach px-4 py-3 text-sm font-semibold text-tp-ink-peach"
                   role="alert"
                 >
-                  <IconAlertCircle
-                    aria-hidden="true"
-                    className="mt-0.5 h-4.5 w-4.5 shrink-0"
-                  />
+                  <IconAlertCircle aria-hidden="true" className="mt-0.5 h-4.5 w-4.5 shrink-0" />
                   {error}
                 </p>
               ) : null}
@@ -232,25 +218,12 @@ export default function LoginForm() {
             </form>
 
             <div className="mt-6">
-              {authorizationUrl ? (
-                <Button
-                  className="h-12 w-full justify-center"
-                  onClick={continueWithSso}
-                  variant="secondary"
-                >
-                  <IconBrandWindows aria-hidden="true" className="h-5 w-5 shrink-0" />
-                  Masuk dengan SSO Telkom
-                </Button>
-              ) : ssoPending ? (
-                <p className="text-center text-sm text-tp-muted" role="status">
-                  Memeriksa opsi masuk SSO…
-                </p>
-              ) : ssoError ? (
-                <p className="text-center text-sm text-tp-muted" role="status">
-                  Masuk dengan SSO Telkom sedang tidak tersedia. Silakan masuk
-                  dengan email &amp; kata sandi.
-                </p>
-              ) : null}
+              <LoginSsoSection
+                authorizationUrl={authorizationUrl}
+                failed={Boolean(ssoError)}
+                onContinue={continueWithSso}
+                pending={ssoPending}
+              />
 
               <p className="mt-4 text-center text-[13px] text-tp-muted">
                 Belum punya akses atau lupa kata sandi? Hubungi Admin.
@@ -263,16 +236,13 @@ export default function LoginForm() {
   );
 }
 
-function IconField({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="relative">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-tp-muted [&>svg]:h-5 [&>svg]:w-5"
-      >
-        {icon}
-      </span>
-      {children}
-    </div>
-  );
+function ssoReturnMessage(reason: string | null, code: string | null): string | null {
+  if (reason === "cancelled") {
+    const suffix = code ? ` (${code})` : "";
+    return `Masuk dengan Microsoft dibatalkan${suffix}. Bila akses ke aplikasi Tania sudah seharusnya ada, hubungi Admin — atau masuk dengan email & kata sandi.`;
+  }
+  if (reason === "error") {
+    return "Masuk dengan Microsoft gagal. Silakan coba lagi atau masuk dengan email & kata sandi.";
+  }
+  return null;
 }

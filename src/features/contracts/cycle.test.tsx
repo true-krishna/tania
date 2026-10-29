@@ -83,11 +83,14 @@ const employeeRefetchMock = {
   result: { data: { employee: { __typename: "Employee", id: "emp-1" } } },
 };
 
-function renderWith(mocks: React.ComponentProps<typeof MockedProvider>["mocks"], ui: React.ReactNode) {
+function renderWith(
+  mocks: React.ComponentProps<typeof MockedProvider>["mocks"],
+  ui: React.ReactNode,
+) {
   render(
     <React.Suspense fallback={null}>
       <MockedProvider mocks={mocks}>{ui}</MockedProvider>
-    </React.Suspense>
+    </React.Suspense>,
   );
 }
 
@@ -130,16 +133,14 @@ describe("ContractCycleActions (T026)", () => {
     };
     renderWith(
       [unitsMock, jobRolesMock, unack, ack, contractRefetchMock, employeeRefetchMock],
-      <ContractCycleActions contract={contractNode} />
+      <ContractCycleActions contract={contractNode} />,
     );
 
     const dateInputs = await screen.findAllByLabelText(/tanggal efektif/i);
     fireEvent.change(dateInputs[0], { target: { value: "2026-03-01" } });
     fireEvent.click(screen.getByRole("button", { name: /catat resign/i }));
 
-    expect(
-      await screen.findByText(/assignment aktif atau idp berjalan/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/assignment aktif atau idp berjalan/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /lanjutkan resign/i }));
     expect(await screen.findByText(/resign tercatat/i)).toBeInTheDocument();
@@ -176,14 +177,18 @@ describe("ContractCycleActions (T026)", () => {
             startDate: "2026-03-01",
             endDate: null,
             employee: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama" },
-            predecessor: { __typename: "EmploymentContract", id: "ctr-1", contractNo: "PKWT/2025/002" },
+            predecessor: {
+              __typename: "EmploymentContract",
+              id: "ctr-1",
+              contractNo: "PKWT/2025/002",
+            },
           },
         },
       },
     };
     renderWith(
       [unitsMock, jobRolesMock, mutationMock, contractRefetchMock, employeeRefetchMock],
-      <ContractCycleActions contract={contractNode} />
+      <ContractCycleActions contract={contractNode} />,
     );
 
     const dateInputs = await screen.findAllByLabelText(/tanggal efektif/i);
@@ -199,7 +204,7 @@ describe("ContractCycleActions (T026)", () => {
     expect(await screen.findByText(/mutasi tercatat/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /buka kontrak baru/i })).toHaveAttribute(
       "href",
-      "/contracts/ctr-3"
+      "/contracts/ctr-3",
     );
   });
 
@@ -235,16 +240,14 @@ describe("ContractCycleActions (T026)", () => {
     };
     renderWith(
       [unitsMock, jobRolesMock, unack, ack, contractRefetchMock, employeeRefetchMock],
-      <ContractCycleActions contract={contractNode} />
+      <ContractCycleActions contract={contractNode} />,
     );
 
     const dateInputs = await screen.findAllByLabelText(/tanggal efektif/i);
     fireEvent.change(dateInputs[2], { target: { value: "2026-09-01" } });
     fireEvent.click(screen.getByRole("button", { name: /catat pensiun/i }));
 
-    expect(
-      await screen.findByText(/assignment aktif atau idp berjalan/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/assignment aktif atau idp berjalan/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /lanjutkan pensiun/i }));
     expect(await screen.findByText(/pensiun tercatat/i)).toBeInTheDocument();

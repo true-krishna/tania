@@ -1,8 +1,5 @@
 import type { ApolloError } from "@apollo/client";
-import type {
-  BulkAssignmentErrorCode,
-  BulkMasterDataErrorCode,
-} from "@/generated/graphql/types";
+import type { BulkAssignmentErrorCode, BulkMasterDataErrorCode } from "@/generated/graphql/types";
 
 /**
  * `extensions.code` values the served backend returns (contracts/api-conventions.md §3).
@@ -121,10 +118,7 @@ export function errorRetryAfterSeconds(error: ApolloError | null | undefined): n
   return null;
 }
 
-export function errorMessage(
-  error: ApolloError | null | undefined,
-  fallback: string
-): string {
+export function errorMessage(error: ApolloError | null | undefined, fallback: string): string {
   const code = graphQLErrorCode(error);
   const serverMessage = error?.graphQLErrors[0]?.message;
   if (code) {
@@ -172,6 +166,11 @@ export const BULK_MASTER_DATA_ERROR_LABEL: Record<BulkMasterDataErrorCode, strin
   REFERENCED: "Entri masih direferensikan data lain dan tidak dapat dinonaktifkan.",
 };
 
+export function errorText(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  return fallback;
+}
+
 export type SubmitError = { field: string | null; message: string };
 
 /**
@@ -182,7 +181,7 @@ export type SubmitError = { field: string | null; message: string };
 export function mapSubmitError(
   error: ApolloError | null | undefined,
   conflictMessage: string,
-  fallback: string
+  fallback: string,
 ): SubmitError {
   if (graphQLErrorCode(error) === "CONFLICT") {
     return { field: null, message: conflictMessage };
@@ -224,7 +223,7 @@ const ASSIGNMENT_CODE_MESSAGES: Partial<Record<ErrorCode, string>> = {
  */
 export function mapAssignmentSubmitError(
   error: ApolloError | null | undefined,
-  fallback: string
+  fallback: string,
 ): SubmitError {
   const code = graphQLErrorCode(error);
   if (code === "BAD_USER_INPUT") {
@@ -235,7 +234,7 @@ export function mapAssignmentSubmitError(
     return { field: null, message: ERROR_LABEL.BAD_USER_INPUT };
   }
   const message = code
-    ? ASSIGNMENT_CODE_MESSAGES[code] ?? ERROR_LABEL[code]
+    ? (ASSIGNMENT_CODE_MESSAGES[code] ?? ERROR_LABEL[code])
     : errorMessage(error, fallback);
   return { field: null, message };
 }

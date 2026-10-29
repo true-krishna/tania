@@ -13,7 +13,7 @@ import { ToastProvider } from "@/components/Toast";
 const auth = vi.hoisted(() => ({ role: "ADMIN" as string | null }));
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 beforeEach(() => {
@@ -43,7 +43,12 @@ const mocks = [
       data: {
         units: [
           { id: "u-1", name: "Digital Business & Technology", isActive: true, __typename: "Unit" },
-          { id: "u-2", name: "Enabler & Corporate Shared Services", isActive: true, __typename: "Unit" },
+          {
+            id: "u-2",
+            name: "Enabler & Corporate Shared Services",
+            isActive: true,
+            __typename: "Unit",
+          },
         ],
       },
     },
@@ -57,7 +62,7 @@ describe("ProjectsPage (Apollo)", () => {
         <ToastProvider>
           <ProjectsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Enterprise Network")).toBeInTheDocument();
@@ -70,7 +75,7 @@ describe("ProjectsPage (Apollo)", () => {
         <ToastProvider>
           <ProjectsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Enterprise Network")).toBeInTheDocument();
@@ -96,7 +101,7 @@ describe("ProjectsPage (Apollo)", () => {
         <ToastProvider>
           <ProjectsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Enterprise Network")).toBeInTheDocument();

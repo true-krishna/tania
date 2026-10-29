@@ -16,8 +16,15 @@ import {
 import { AnalyticsTables } from "./AnalyticsTables";
 import { DistributionSection } from "./DistributionSection";
 import { ExecutiveCharts } from "./ExecutiveCharts";
-import { ExecutiveAnalyticsKpis, ExecutiveCostKpis, ExecutiveWorkloadKpis } from "./ExecutiveSummaryCards";
-import { COST_REVENUE_SOURCE_NOTE, DEFAULT_REPORT_PERIOD, formatPeriodLabel, isReportPeriod } from "./mocks";
+import { ExecutiveAnalyticsKpis } from "./ExecutiveAnalyticsKpis";
+import { ExecutiveCostKpis } from "./ExecutiveCostKpis";
+import { ExecutiveWorkloadKpis } from "./ExecutiveWorkloadKpis";
+import {
+  COST_REVENUE_SOURCE_NOTE,
+  DEFAULT_REPORT_PERIOD,
+  formatPeriodLabel,
+  isReportPeriod,
+} from "./mocks";
 import { ReportPeriodSelector } from "./ReportPeriodSelector";
 import { ReportSkeleton } from "./ReportSkeleton";
 import { useExecutiveReport } from "./useExecutiveReport";
@@ -53,9 +60,7 @@ export function ExecutiveReportView() {
     { id: "analytics", label: "Analytics Insights" },
     ...(canSeeCost ? [{ id: "cost", label: "Cost & Revenue" }] : []),
   ];
-  const selectedTab: ExecutiveTab = tabs.some((t) => t.id === activeTab)
-    ? activeTab
-    : "details";
+  const selectedTab: ExecutiveTab = tabs.some((t) => t.id === activeTab) ? activeTab : "details";
 
   const fixture = fixtureState.status === "ready" ? fixtureState.fixture : null;
 
@@ -64,7 +69,13 @@ export function ExecutiveReportView() {
     content = <ReportSkeleton variant="executive" />;
   } else if (fixtureState.status === "error" || !fixture) {
     content = <WorkloadErrorState onRetry={retry} />;
-  } else if (fixture.state === "empty" || !fixture.summary || !fixture.charts || !fixture.distribution || !fixture.analytics) {
+  } else if (
+    fixture.state === "empty" ||
+    !fixture.summary ||
+    !fixture.charts ||
+    !fixture.distribution ||
+    !fixture.analytics
+  ) {
     content = (
       <EmptyState
         message={`Belum ada data workload untuk periode ${formatPeriodLabel(fixture.period)}. Angka akan muncul begitu periode ini terisi di sumber data.`}

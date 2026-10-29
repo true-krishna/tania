@@ -10,10 +10,8 @@ import {
   EmploymentContractDocument,
   ResignEmployeeDocument,
 } from "@/generated/graphql";
-import {
-  ContractCycleSection,
-  ContractCycleSuccess,
-} from "./ContractCycleSection";
+import { ContractCycleSection } from "./ContractCycleSection";
+import { ContractCycleSuccess } from "./ContractCycleSuccess";
 import { DEPENDENCY_WARNING, type Contract } from "./contractCycle";
 import { useAcknowledgeAction } from "./useAcknowledgeAction";
 
@@ -47,8 +45,7 @@ export function ResignAction({ contract }: { contract: Contract }) {
       <ContractCycleSection
         success={
           <ContractCycleSuccess>
-            Resign tercatat. Kontrak aktif diakhiri dan akun karyawan
-            dinonaktifkan.
+            Resign tercatat. Kontrak aktif diakhiri dan akun karyawan dinonaktifkan.
           </ContractCycleSuccess>
         }
         title="Resign"
@@ -71,35 +68,22 @@ export function ResignAction({ contract }: { contract: Contract }) {
             >
               Ya, lanjutkan resign
             </Button>
-            <Button
-              onClick={() => action.setNeedsAck(false)}
-              type="button"
-              variant="secondary"
-            >
+            <Button onClick={() => action.setNeedsAck(false)} type="button" variant="secondary">
               Batal
             </Button>
           </div>
         </div>
       ) : (
         <>
-          <InputControl
-            error={action.dateError ?? undefined}
-            label="Tanggal efektif"
-          >
+          <InputControl error={action.dateError ?? undefined} label="Tanggal efektif">
             <Input
-              onChange={(event) =>
-                action.updateEffectiveDate(event.target.value)
-              }
+              onChange={(event) => action.updateEffectiveDate(event.target.value)}
               type="date"
               value={action.effectiveDate}
             />
           </InputControl>
           <InputControl helper="(opsional)" label="Alasan">
-            <Input
-              onChange={(event) => setReason(event.target.value)}
-              type="text"
-              value={reason}
-            />
+            <Input onChange={(event) => setReason(event.target.value)} type="text" value={reason} />
           </InputControl>
           <div>
             <Button

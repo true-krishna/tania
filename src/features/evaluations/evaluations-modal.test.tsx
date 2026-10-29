@@ -71,9 +71,7 @@ describe("EvaluationPeriodsPage — create modal", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /buat periode/i }));
 
-    expect(
-      screen.getByRole("dialog", { name: "Buat Periode Evaluasi" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Buat Periode Evaluasi" })).toBeInTheDocument();
     expect(await screen.findByLabelText("Nama Periode")).toHaveValue("");
     expect(screen.getByLabelText("Template Evaluasi")).toHaveValue("");
     expect(screen.getByLabelText("Tanggal Mulai")).toHaveValue("");
@@ -267,9 +265,7 @@ describe("EvaluationTemplatesPage — create modal", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /buat template/i }));
 
-    expect(
-      screen.getByRole("dialog", { name: "Buat Template Evaluasi" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Buat Template Evaluasi" })).toBeInTheDocument();
     expect(screen.getByLabelText("Nama Template")).toHaveValue("");
     expect(screen.getByPlaceholderText("Label kriteria")).toHaveValue("");
   });

@@ -1,10 +1,7 @@
 "use client";
 
 import { useQuery } from "@apollo/client";
-import {
-  CvProfileDocument,
-  type CvFieldsFragment,
-} from "@/generated/graphql";
+import { CvProfileDocument, type CvFieldsFragment } from "@/generated/graphql";
 import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
 
 /**
@@ -21,6 +18,6 @@ export function useCvProfile(
   });
   return toQueryState({
     ...result,
-     data: result.data?.cvProfile as CvFieldsFragment | undefined,
+    data: result.data?.cvProfile as CvFieldsFragment | undefined,
   });
 }

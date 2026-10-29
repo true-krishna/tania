@@ -164,7 +164,11 @@ describe("ActivityList — states and ownership", () => {
   });
 
   it("offers edit and delete on owned rows only", () => {
-    const foreign: PersonalWorkActivity = { ...SEED_ACTIVITIES[0], id: "act-x", talentId: "emp-999" };
+    const foreign: PersonalWorkActivity = {
+      ...SEED_ACTIVITIES[0],
+      id: "act-x",
+      talentId: "emp-999",
+    };
     render(
       <ActivityList
         activities={[SEED_ACTIVITIES[0], foreign]}
@@ -247,7 +251,9 @@ describe("ActivitiesPageView — create, edit, delete against the store", () => 
     fireEvent.click(screen.getByRole("button", { name: "Hapus" }));
 
     await waitFor(() => expect(screen.queryByText("Implementasi form aktivitas")).toBeNull());
-    expect(screen.getByText('Aktivitas "Implementasi form aktivitas" dihapus.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Aktivitas "Implementasi form aktivitas" dihapus.'),
+    ).toBeInTheDocument();
   });
 
   it("filters the list by type and status", async () => {

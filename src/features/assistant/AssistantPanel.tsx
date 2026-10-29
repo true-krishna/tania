@@ -24,7 +24,7 @@ export function AssistantPanel({
 }) {
   const role = useSessionRole();
   const { canRead: allowed } = useMenuEntryAccess("assistant");
-  const roleLabel = role === "CHAPTER" ? "Chapter" : role === "OPERATION" ? "Operation" : null;
+  const roleLabel = roleLabelFor(role);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const chat = useAssistantChat({ open, enabled: allowed });
 
@@ -64,9 +64,7 @@ export function AssistantPanel({
       >
         <header className="flex items-center justify-between gap-3 border-b border-tp-line px-5 py-4">
           <div>
-            <h2 className="text-base font-semibold text-tp-text">
-              Asisten Data
-            </h2>
+            <h2 className="text-base font-semibold text-tp-text">Asisten Data</h2>
             <p className="text-xs text-tp-muted">
               Jawaban berdasar data dalam hak akses Anda
               {roleLabel ? ` (${roleLabel})` : ""}.
@@ -101,9 +99,7 @@ export function AssistantPanel({
           />
 
           <div>
-            <p className="mb-2 text-xs font-semibold text-tp-muted">
-              Pertanyaan contoh
-            </p>
+            <p className="mb-2 text-xs font-semibold text-tp-muted">Pertanyaan contoh</p>
             <div className="flex flex-wrap gap-2">
               {sampleQuestionsFor(role).map((question) => (
                 <button
@@ -130,4 +126,10 @@ export function AssistantPanel({
       </section>
     </div>
   );
+}
+
+function roleLabelFor(role: ReturnType<typeof useSessionRole>): string | null {
+  if (role === "CHAPTER") return "Chapter";
+  if (role === "OPERATION") return "Operation";
+  return null;
 }

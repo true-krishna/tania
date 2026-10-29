@@ -3,8 +3,8 @@
 import { IconSearch, IconX } from "@tabler/icons-react";
 import * as React from "react";
 import { FilterButton } from "@/components/FilterButton";
-import { Input } from "@/components/Input";
-import { Select, type SelectOption } from "@/components/Select";
+import { FilterFieldControl } from "./FilterFieldControl";
+import type { SelectOption } from "@/components/Select";
 import { cn } from "@/lib/cn";
 
 export type TableFilterValues = Record<string, string>;
@@ -46,47 +46,8 @@ interface TableFilterBarProps {
   className?: string;
 }
 
-function countActiveFields(
-  fields: readonly TableFilterField[],
-  values: TableFilterValues,
-): number {
+function countActiveFields(fields: readonly TableFilterField[], values: TableFilterValues): number {
   return fields.filter((field) => (values[field.key] ?? "").length > 0).length;
-}
-
-function FilterFieldControl({
-  field,
-  labelId,
-  value,
-  onChange,
-}: {
-  field: TableFilterField;
-  labelId: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  if (field.type === "select") {
-    return (
-      <Select
-        aria-labelledby={labelId}
-        className={cn("w-48", field.className)}
-        onChange={(event) => onChange(event.target.value)}
-        options={field.options}
-        value={value}
-      />
-    );
-  }
-  if (field.type === "date") {
-    return (
-      <Input
-        aria-labelledby={labelId}
-        className="w-40"
-        onChange={(event) => onChange(event.target.value)}
-        type="date"
-        value={value}
-      />
-    );
-  }
-  return field.render({ labelledBy: labelId, onChange, value });
 }
 
 export function TableFilterBar({
@@ -161,10 +122,7 @@ export function TableFilterBar({
               const labelId = `${panelId}-${field.key}-label`;
               return (
                 <div className="flex min-w-0 flex-col gap-1.5" key={field.key}>
-                  <span
-                    className="text-xs font-semibold text-tp-muted"
-                    id={labelId}
-                  >
+                  <span className="text-xs font-semibold text-tp-muted" id={labelId}>
                     {field.label}
                   </span>
                   <FilterFieldControl

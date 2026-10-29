@@ -52,7 +52,11 @@ function unitActiveMock(
           failed: failed.map((failure) => ({
             __typename: "BulkUnitItemResult",
             index: failure.index,
-            error: { __typename: "BulkMasterDataError", code: "REFERENCED", message: failure.message },
+            error: {
+              __typename: "BulkMasterDataError",
+              code: "REFERENCED",
+              message: failure.message,
+            },
           })),
         },
       },
@@ -128,9 +132,7 @@ describe("useMasterDataBulkActions (TAN-351 — enam mutasi massal TAN-349)", ()
     );
 
     expect(report.succeeded.map((entry) => entry.label)).toEqual(["Entri 1"]);
-    expect(report.failed).toEqual([
-      { rowNumber: 2, label: "Entri 2", reason: dependencyMessage },
-    ]);
+    expect(report.failed).toEqual([{ rowNumber: 2, label: "Entri 2", reason: dependencyMessage }]);
     expect(report.notExecuted).toHaveLength(0);
   });
 
@@ -138,7 +140,10 @@ describe("useMasterDataBulkActions (TAN-351 — enam mutasi massal TAN-349)", ()
     const { report } = await runBulk(
       [
         {
-          request: { query: BulkSetUnitActiveDocument, variables: { ids: idsOf(0, 100), isActive: true } },
+          request: {
+            query: BulkSetUnitActiveDocument,
+            variables: { ids: idsOf(0, 100), isActive: true },
+          },
           error: new Error("koneksi terputus"),
         },
         ...REFRESH_MOCKS,
@@ -158,7 +163,10 @@ describe("useMasterDataBulkActions (TAN-351 — enam mutasi massal TAN-349)", ()
     const { report } = await runBulk(
       [
         {
-          request: { query: BulkSetJobRoleChapterDocument, variables: { ids: ["r-1"], chapterId: null } },
+          request: {
+            query: BulkSetJobRoleChapterDocument,
+            variables: { ids: ["r-1"], chapterId: null },
+          },
           result: {
             data: {
               bulkSetJobRoleChapter: {

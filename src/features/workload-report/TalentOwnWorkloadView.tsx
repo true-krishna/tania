@@ -62,7 +62,11 @@ export function TalentOwnWorkloadView() {
       />
 
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <ReportPeriodSelector ariaLabel="Pilih periode workload" onChange={setPeriod} value={period} />
+        <ReportPeriodSelector
+          ariaLabel="Pilih periode workload"
+          onChange={setPeriod}
+          value={period}
+        />
       </div>
 
       {fixture ? (

@@ -1,5 +1,4 @@
 import { Chip, type ChipVariant } from "@/components/Chip";
-import type { EvaluationFillState } from "@/generated/graphql/types";
 
 const PERIOD_STATE: Record<
   "SCHEDULED" | "RUNNING" | "CLOSED",
@@ -15,15 +14,6 @@ export function PeriodStateBadge({ state }: { state: "SCHEDULED" | "RUNNING" | "
   return (
     <Chip size="small" variant={variant}>
       {label}
-    </Chip>
-  );
-}
-
-export function FillStateBadge({ fillState }: { fillState: EvaluationFillState }) {
-  const evaluated = fillState === "EVALUATED";
-  return (
-    <Chip size="small" variant={evaluated ? "success" : "warning"}>
-      {evaluated ? "Dinilai" : "Belum dinilai"}
     </Chip>
   );
 }

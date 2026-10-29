@@ -1,10 +1,7 @@
 import type { ReactNode } from "react";
-import { LoadStatusBadge, TtdLevelBadge } from "./LoadStatusBadge";
-import type {
-  DistributionDimension,
-  DistributionNormalizedRow,
-  DistributionRow,
-} from "./types";
+import { LoadStatusBadge } from "./LoadStatusBadge";
+import { TtdLevelBadge } from "./TtdLevelBadge";
+import type { DistributionDimension, DistributionNormalizedRow, DistributionRow } from "./types";
 import { DIMENSION_LABELS } from "./types";
 
 export type SortDir = "asc" | "desc";
@@ -30,8 +27,7 @@ export const SORT_ACCESSORS: Record<SortKey, SortAccessor> = {
   loadEstimate: (row) => row.loadEstimate,
   totalBacklog: (row) => row.totalBacklog,
   totalTaskSubtask: (row) => row.totalTaskSubtask,
-  totalTimespent: (row) =>
-    row.totalTimespent === null ? null : Number(row.totalTimespent),
+  totalTimespent: (row) => (row.totalTimespent === null ? null : Number(row.totalTimespent)),
   ttdComp: (row) => row.ttdComp,
 };
 
@@ -61,7 +57,7 @@ function normalizedMarker(row: DistributionRow): ReactNode {
 
 export function standardColumns(
   dimension: DistributionDimension,
-  canSeeCost: boolean
+  canSeeCost: boolean,
 ): Array<DistributionColumnDef<DistributionRow>> {
   const columns: Array<DistributionColumnDef<DistributionRow>> = [
     {
@@ -180,11 +176,7 @@ export function standardColumns(
       header: "Est. status",
       key: "statusLoadEstimate",
       render: (row) =>
-        row.statusLoadEstimate ? (
-          <LoadStatusBadge status={row.statusLoadEstimate} />
-        ) : (
-          "—"
-        ),
+        row.statusLoadEstimate ? <LoadStatusBadge status={row.statusLoadEstimate} /> : "—",
     },
     {
       alignRight: true,
@@ -196,8 +188,7 @@ export function standardColumns(
     {
       header: "Level TTD",
       key: "compLvl",
-      render: (row) =>
-        row.compLvl ? <TtdLevelBadge level={row.compLvl} /> : "—",
+      render: (row) => (row.compLvl ? <TtdLevelBadge level={row.compLvl} /> : "—"),
     },
   ];
 
@@ -213,15 +204,11 @@ export function standardColumns(
   return columns;
 }
 
-export const NORMALIZED_COLUMNS: Array<
-  DistributionColumnDef<DistributionNormalizedRow>
-> = [
+export const NORMALIZED_COLUMNS: Array<DistributionColumnDef<DistributionNormalizedRow>> = [
   {
     header: "Entitas",
     key: "nama",
-    render: (row) => (
-      <span className="font-semibold text-tp-text">{row.nama}</span>
-    ),
+    render: (row) => <span className="font-semibold text-tp-text">{row.nama}</span>,
   },
   {
     alignRight: true,

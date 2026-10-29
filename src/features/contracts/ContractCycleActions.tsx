@@ -9,9 +9,7 @@ import { RetireAction } from "./RetireAction";
 export function ContractCycleActions({ contract }: { contract: Contract }) {
   return (
     <Card className="max-w-3xl">
-      <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-        Aksi siklus karyawan
-      </h2>
+      <h2 className="mb-3 text-sm font-semibold text-zinc-900">Aksi siklus karyawan</h2>
       <div className="flex flex-col gap-6">
         <ResignAction contract={contract} />
         <MutationAction contract={contract} />

@@ -37,7 +37,10 @@ function withCell(
   entry: string,
   level: "NONE" | "READ" | "MANAGE",
 ): MenuAccessConfig {
-  return { ...config, [role]: { ...config[role], [entry]: { visible: level !== "NONE", accessLevel: level } } };
+  return {
+    ...config,
+    [role]: { ...config[role], [entry]: { visible: level !== "NONE", accessLevel: level } },
+  };
 }
 
 describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
@@ -48,7 +51,12 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
       plain.unmount();
 
       const configured = render(
-        <Sidebar menuConfig={DEFAULT_MENU_ACCESS} pathname="/dashboard" role={null} roleName={role} />,
+        <Sidebar
+          menuConfig={DEFAULT_MENU_ACCESS}
+          pathname="/dashboard"
+          role={null}
+          roleName={role}
+        />,
       );
       expect(drawnMenu(), `role ${role}`).toEqual(before);
       configured.unmount();
@@ -74,15 +82,18 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
     chapter.unmount();
 
     const custom: MenuAccessConfig = { PM_CHAPTER: DEFAULT_MENU_ACCESS["CHAPTER"] };
-    render(
-      <Sidebar menuConfig={custom} pathname="/dashboard" role={null} roleName="PM_CHAPTER" />,
-    );
+    render(<Sidebar menuConfig={custom} pathname="/dashboard" role={null} roleName="PM_CHAPTER" />);
     expect(drawnMenu()).toEqual(chapterMenu);
   });
 
   it("konfigurasi untuk role yang tidak dikenal tidak menampilkan menu apa pun", () => {
     render(
-      <Sidebar menuConfig={DEFAULT_MENU_ACCESS} pathname="/dashboard" role={null} roleName="GHOST" />,
+      <Sidebar
+        menuConfig={DEFAULT_MENU_ACCESS}
+        pathname="/dashboard"
+        role={null}
+        roleName="GHOST"
+      />,
     );
     // Absence of a configuration is not a reason to show a menu the server may deny.
     expect(drawnMenu()).toEqual([]);

@@ -16,7 +16,6 @@ import {
   type MenuGridRow,
 } from "./menuGrid";
 
-
 export type GridDraft = Record<string, RoleGrid>;
 
 export interface MenuGridProps {
@@ -47,9 +46,7 @@ export function MenuGrid({
       render: (_value: unknown, row) => (
         <span className={row.parent ? "pl-4 text-zinc-600" : "font-medium"}>
           {row.parent ? `${row.label}` : row.label}
-          {row.parent ? (
-            <span className="ml-2 text-xs text-tp-muted">{row.parent}</span>
-          ) : null}
+          {row.parent ? <span className="ml-2 text-xs text-tp-muted">{row.parent}</span> : null}
         </span>
       ),
     },
@@ -65,9 +62,7 @@ export function MenuGrid({
             aria-label={`${row.label} untuk ${role.label}`}
             className="w-full"
             disabled={rule.disabled || busyRoleId === role.id}
-            onChange={(e) =>
-              onChangeCell(role.id, row.id, e.target.value as MenuAccessLevel)
-            }
+            onChange={(e) => onChangeCell(role.id, row.id, e.target.value as MenuAccessLevel)}
             options={rule.allowed.map((level) => ({
               value: level,
               label: LEVEL_LABEL[level],
@@ -125,11 +120,7 @@ function roleHeader(
         >
           Reset
         </Button>
-        <Button
-          onClick={() => onPreviewRole(role)}
-          type="button"
-          variant="ghost"
-        >
+        <Button onClick={() => onPreviewRole(role)} type="button" variant="ghost">
           Pratinjau
         </Button>
       </span>

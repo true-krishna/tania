@@ -8,10 +8,7 @@ import {
   TalentReportRangeDocument,
   type TalentReportPeriodInput,
 } from "@/generated/graphql";
-import type {
-  TalentReport,
-  TalentReportRange,
-} from "@/generated/graphql/types";
+import type { TalentReport, TalentReportRange } from "@/generated/graphql/types";
 import { errorMessage, graphQLErrorCode } from "@/lib/errors";
 
 /**
@@ -50,9 +47,7 @@ export function isEmptyReport(report: TalentReport): boolean {
     countTotal(report.generationDistribution) === 0 &&
     countTotal(report.educationDistribution) === 0 &&
     countTotal(report.workLocationDistribution) === 0;
-  const noMovement = report.movementTrend.every(
-    (m) => m.newTalent === 0 && m.churn === 0,
-  );
+  const noMovement = report.movementTrend.every((m) => m.newTalent === 0 && m.churn === 0);
   return distributionsEmpty && noMovement;
 }
 
@@ -60,7 +55,10 @@ function countTotal(categories: { count: number }[]): number {
   return categories.reduce((sum, category) => sum + category.count, 0);
 }
 
-function toStatus(error: ApolloError | undefined, report: TalentReport | undefined): TalentReportStatus {
+function toStatus(
+  error: ApolloError | undefined,
+  report: TalentReport | undefined,
+): TalentReportStatus {
   if (error) {
     return graphQLErrorCode(error) === "FORBIDDEN" ? "forbidden" : "error";
   }
@@ -90,9 +88,10 @@ export function useTalentReport(): UseTalentReportResult {
 
   const error = rangeResult.error ?? reportResult.error;
   const status = toStatus(error, report ?? undefined);
-  const message = status === "forbidden" || status === "error"
-    ? errorMessage(error, "Gagal memuat laporan.")
-    : null;
+  const message =
+    status === "forbidden" || status === "error"
+      ? errorMessage(error, "Gagal memuat laporan.")
+      : null;
 
   return {
     range,

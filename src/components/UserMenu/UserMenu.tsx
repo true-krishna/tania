@@ -63,9 +63,7 @@ export function UserMenu({ name, email, roleLabel, items = [], onLogout }: UserM
       >
         <Avatar name={name} />
         <span className="hidden flex-col leading-tight sm:flex">
-          <span className="max-w-[14rem] truncate text-sm font-medium text-tp-text">
-            {name}
-          </span>
+          <span className="max-w-[14rem] truncate text-sm font-medium text-tp-text">{name}</span>
           <span className="text-[11px] text-tp-muted">{secondary ?? "—"}</span>
         </span>
         <IconChevronDown

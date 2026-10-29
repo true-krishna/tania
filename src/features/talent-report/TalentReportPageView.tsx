@@ -3,11 +3,7 @@
 import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { ChartCard } from "./ChartCard";
-import {
-  DistributionChart,
-  EDUCATION_ORDER,
-  GENERATION_ORDER,
-} from "./DistributionChart";
+import { DistributionChart, EDUCATION_ORDER, GENERATION_ORDER } from "./DistributionChart";
 import { MovementTrendChart } from "./MovementTrendChart";
 import { chartFileName, downloadChart } from "./downloadChart";
 import type { EChartHandle } from "./EChart";
@@ -36,19 +32,21 @@ export function TalentReportContent() {
     downloadChart(chartRef.current, chartFileName(chartName, period.startMonth, period.endMonth));
   };
 
-  const periodLabel = period ? `${formatMonthLabel(period.startMonth)} – ${formatMonthLabel(period.endMonth)}` : undefined;
+  const periodLabel = period
+    ? `${formatMonthLabel(period.startMonth)} – ${formatMonthLabel(period.endMonth)}`
+    : undefined;
 
   return (
     <div className="flex flex-col gap-4">
       {status === "loading" ? <LoadingState label="Memuat laporan…" /> : null}
 
       {status === "forbidden" ? (
-        <EmptyState message={message ?? "Akses ditolak. Laporan ini hanya untuk Operation dan Chapter."} />
+        <EmptyState
+          message={message ?? "Akses ditolak. Laporan ini hanya untuk Operation dan Chapter."}
+        />
       ) : null}
 
-      {status === "error" ? (
-        <ErrorState message={message ?? "Gagal memuat laporan."} />
-      ) : null}
+      {status === "error" ? <ErrorState message={message ?? "Gagal memuat laporan."} /> : null}
 
       {(status === "ready" || status === "empty") && report && period ? (
         <>

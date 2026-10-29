@@ -6,16 +6,18 @@ import { PageHeader } from "@/components/PageHeader";
 import type { AccessRole } from "@/generated/graphql";
 import { useSessionRole } from "@/lib/auth/guard";
 import { WORKLOAD } from "@/lib/constants/routes";
-import { DataLamaChip } from "./LoadClassificationBadge";
+import { DataLamaChip } from "./DataLamaChip";
 import { DEFAULT_PERIOD_ID, isWorkloadPeriod } from "./mocks";
 import { DistributionBlock } from "./DistributionBlock";
 import { TalentList } from "./TalentList";
 import { useWorkloadFixture } from "./useWorkloadFixture";
-import { WorkloadCard, CardCaption } from "./WorkloadCard";
+import { WorkloadCard } from "./WorkloadCard";
+import { CardCaption } from "./CardCaption";
 import { WorkloadEmptyState } from "./WorkloadEmptyState";
 import { WorkloadErrorState } from "./WorkloadErrorState";
-import { WorkloadFreshnessNotice, WorkloadReflectionNotice } from "./WorkloadFreshnessNotice";
-import { WorkloadKpiHero, type HeroKpi } from "./WorkloadHero";
+import { WorkloadFreshnessNotice } from "./WorkloadFreshnessNotice";
+import { WorkloadReflectionNotice } from "./WorkloadReflectionNotice";
+import { WorkloadKpiHero, type HeroKpi } from "./WorkloadKpiHero";
 import { WorkloadOwnView } from "./WorkloadOwnView";
 import { WorkloadPeriodSelector } from "./WorkloadPeriodSelector";
 import { WorkloadSkeleton } from "./WorkloadSkeleton";
@@ -63,7 +65,9 @@ export function WorkloadPageView() {
 
   const tabs = tabsForRole(role);
   const [activeTab, setActiveTab] = React.useState<TabId>(tabs[0].id as TabId);
-  const selectedTab: TabId = tabs.some((t) => t.id === activeTab) ? activeTab : (tabs[0].id as TabId);
+  const selectedTab: TabId = tabs.some((t) => t.id === activeTab)
+    ? activeTab
+    : (tabs[0].id as TabId);
 
   function setPeriod(nextPeriodId: string) {
     router.replace(`${WORKLOAD}?period=${nextPeriodId}`);
@@ -135,7 +139,11 @@ export function WorkloadPageView() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         {tabs.length > 1 ? (
-          <WorkloadTabs onChange={(id) => setActiveTab(id as TabId)} tabs={tabs} value={selectedTab} />
+          <WorkloadTabs
+            onChange={(id) => setActiveTab(id as TabId)}
+            tabs={tabs}
+            value={selectedTab}
+          />
         ) : (
           <span />
         )}

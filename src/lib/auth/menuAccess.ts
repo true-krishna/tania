@@ -44,7 +44,8 @@ export function menuEntryIdForHref(href: string): string {
  * Sidebar href → matrix module. Promoted from `nav.test.ts` so the sidebar and
  * the invariant tests read the same registry.
  */
-export const MODULE_OF_HREF: Record<string, Module> = {  "/dashboard": "dashboard",
+export const MODULE_OF_HREF: Record<string, Module> = {
+  "/dashboard": "dashboard",
   "/activities": "activities",
   "/workload": "workload",
   "/workload/executive": "workload",
@@ -159,7 +160,11 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
 export const DEFAULT_MENU_ACCESS: MenuAccessConfig = buildDefaultMenuAccess();
 
 /** Configured level of one cell; an absent row is NONE (deny by default). */
-export function accessLevel(config: MenuAccessConfig, role: string, entry: string): MenuAccessLevel {
+export function accessLevel(
+  config: MenuAccessConfig,
+  role: string,
+  entry: string,
+): MenuAccessLevel {
   return config[role]?.[entry]?.accessLevel ?? "NONE";
 }
 
@@ -168,7 +173,7 @@ export function serverAllows(
   config: MenuAccessConfig,
   role: string,
   entry: string,
-  required: "READ" | "MANAGE"
+  required: "READ" | "MANAGE",
 ): boolean {
   const level = accessLevel(config, role, entry);
   return required === "READ" ? level === "READ" || level === "MANAGE" : level === "MANAGE";
@@ -185,20 +190,12 @@ export function visibleByConfig(config: MenuAccessConfig, role: string, entry: s
 }
 
 /** Effective read right for a module under the caller's grid. */
-export function moduleReadable(
-  config: MenuAccessConfig,
-  role: string,
-  module: Module,
-): boolean {
+export function moduleReadable(config: MenuAccessConfig, role: string, module: Module): boolean {
   return MODULE_ENTRIES[module].some((entry) => serverAllows(config, role, entry, "READ"));
 }
 
 /** Effective manage right for a module under the caller's grid. */
-export function moduleManageable(
-  config: MenuAccessConfig,
-  role: string,
-  module: Module,
-): boolean {
+export function moduleManageable(config: MenuAccessConfig, role: string, module: Module): boolean {
   return MODULE_ENTRIES[module].some((entry) => serverAllows(config, role, entry, "MANAGE"));
 }
 

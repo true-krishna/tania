@@ -20,7 +20,7 @@ import { MenuAccessProvider } from "@/lib/auth/access";
 const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 /** `clientRequestId` deterministik supaya mock bisa mencocokkan variable persis. */

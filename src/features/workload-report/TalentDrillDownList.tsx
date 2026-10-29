@@ -10,26 +10,19 @@ export function TalentDrillDownList({
   row: DistributionRow;
   tables: DistributionTables;
 }) {
-  const scopeKeys = (
-    Object.keys(row.scope) as Array<keyof typeof row.scope>
-  ).filter((key) => row.scope[key] !== null);
+  const scopeKeys = (Object.keys(row.scope) as Array<keyof typeof row.scope>).filter(
+    (key) => row.scope[key] !== null,
+  );
   const talents = tables.rows.talent.filter((talent) =>
-    scopeKeys.every((key) => talent.scope[key] === row.scope[key])
+    scopeKeys.every((key) => talent.scope[key] === row.scope[key]),
   );
 
   if (talents.length === 0) {
-    return (
-      <p className="text-sm text-tp-muted">
-        Tidak ada talent dalam entitas ini.
-      </p>
-    );
+    return <p className="text-sm text-tp-muted">Tidak ada talent dalam entitas ini.</p>;
   }
 
   return (
-    <ul
-      aria-label={`Talent dalam ${row.nama}`}
-      className="flex flex-col divide-y divide-tp-line"
-    >
+    <ul aria-label={`Talent dalam ${row.nama}`} className="flex flex-col divide-y divide-tp-line">
       {talents.map((talent) => (
         <li
           className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm first:pt-0 last:pb-0"

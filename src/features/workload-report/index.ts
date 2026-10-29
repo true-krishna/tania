@@ -1,10 +1,6 @@
 export { AnalyticsTables } from "./AnalyticsTables";
 export { BacklogTable } from "./BacklogTable";
-export {
-  kitChartColor,
-  neutralChartColor,
-  workloadChartColor,
-} from "./chart-colors";
+export { kitChartColor, neutralChartColor, workloadChartColor } from "./chart-colors";
 export {
   buildBacklogPieOption,
   buildOvertimeLineOption,
@@ -14,19 +10,16 @@ export {
 } from "./chart-options";
 export { DistributionSection } from "./DistributionSection";
 export { ExecutiveCharts } from "./ExecutiveCharts";
-export {
-  ExecutiveAnalyticsKpis,
-  ExecutiveCostKpis,
-  ExecutiveWorkloadKpis,
-} from "./ExecutiveSummaryCards";
+export { ExecutiveAnalyticsKpis } from "./ExecutiveAnalyticsKpis";
+export { ExecutiveCostKpis } from "./ExecutiveCostKpis";
+export { ExecutiveWorkloadKpis } from "./ExecutiveWorkloadKpis";
 export { formatTimestamp } from "./formatTimestamp";
 export { IndividualCharts } from "./IndividualCharts";
-export {
-  IndividualLeavesCard,
-  IndividualSummaryCards,
-} from "./IndividualSummaryCards";
+export { IndividualLeavesCard } from "./IndividualLeavesCard";
+export { IndividualSummaryCards } from "./IndividualSummaryCards";
 export { ExecutiveReportView } from "./ExecutiveReportView";
-export { LoadStatusBadge, TtdLevelBadge } from "./LoadStatusBadge";
+export { LoadStatusBadge } from "./LoadStatusBadge";
+export { TtdLevelBadge } from "./TtdLevelBadge";
 export {
   DEFAULT_REPORT_PERIOD,
   DEFAULT_TALENT_ID,
