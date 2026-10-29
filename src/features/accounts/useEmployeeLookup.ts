@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  EmployeeLookupDocument,
-  type EmployeeLookupQuery,
-} from "@/generated/graphql";
+import { EmployeeLookupDocument, type EmployeeLookupQuery } from "@/generated/graphql";
 import type { EmployeeFilter } from "@/generated/graphql/types";
 import {
   usePaginatedConnection,
@@ -20,10 +17,7 @@ export type EmployeeLookupState = PaginatedConnectionState<LookupNode>;
  * TAN-343 took away from Admin, so the picker inside the Admin-only form works
  * without reopening the employees module to Admin.
  */
-export function useEmployeeLookup(
-  filter: EmployeeFilter = {},
-  first = 25
-): EmployeeLookupState {
+export function useEmployeeLookup(filter: EmployeeFilter = {}, first = 25): EmployeeLookupState {
   return usePaginatedConnection({
     document: EmployeeLookupDocument,
     filter,

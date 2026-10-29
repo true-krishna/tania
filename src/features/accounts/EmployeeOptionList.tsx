@@ -5,9 +5,7 @@ import { orDash } from "@/lib/cell";
 import { cn } from "@/lib/cn";
 import type { EmployeeLookupState } from "./useEmployeeLookup";
 
-export type EmployeeOption = NonNullable<
-  EmployeeLookupState["items"]
->[number];
+export type EmployeeOption = NonNullable<EmployeeLookupState["items"]>[number];
 
 type EmployeeOptionListProps = {
   activeIndex: number;

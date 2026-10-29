@@ -42,12 +42,12 @@ type PaginatedConnectionConfig<TData, TNode> = {
   first: number;
   /** Reads the connection to accumulate out of a query result. */
   getConnection: (
-    data: MaybeMasked<TData> | null | undefined
+    data: MaybeMasked<TData> | null | undefined,
   ) => PaginatedConnection<TNode> | null | undefined;
   /** Rebuilds a query result around an accumulated connection (fetchMore). */
   withConnection: (
     previousData: Unmasked<TData>,
-    connection: PaginatedConnection<TNode>
+    connection: PaginatedConnection<TNode>,
   ) => Unmasked<TData>;
 };
 
@@ -66,24 +66,24 @@ export function usePaginatedConnection<TData, TNode extends { id: string }>({
   const clean = React.useMemo(
     () =>
       Object.fromEntries(
-        Object.entries(filter ?? {}).filter(([, v]) => v !== undefined)
+        Object.entries(filter ?? {}).filter(([, v]) => v !== undefined),
       ) as EmployeeFilter,
-    [filter]
+    [filter],
   );
 
-  const { loading, error, data, fetchMore, refetch } = useQuery<
-    TData,
-    ConnectionVariables
-  >(document, {
-    variables: { filter: clean, first, after: null },
-    notifyOnNetworkStatusChange: true,
-    // Refetch from the network whenever variables change (search/filter edits),
-    // so returning to a previous filter serves fresh data, not the stale
-    // accumulated cache entry. The function form is required: a string
-    // nextFetchPolicy reverts to the initial policy on variables change.
-    nextFetchPolicy: (current, { reason }) =>
-      reason === "variables-changed" ? "network-only" : current,
-  });
+  const { loading, error, data, fetchMore, refetch } = useQuery<TData, ConnectionVariables>(
+    document,
+    {
+      variables: { filter: clean, first, after: null },
+      notifyOnNetworkStatusChange: true,
+      // Refetch from the network whenever variables change (search/filter edits),
+      // so returning to a previous filter serves fresh data, not the stale
+      // accumulated cache entry. The function form is required: a string
+      // nextFetchPolicy reverts to the initial policy on variables change.
+      nextFetchPolicy: (current, { reason }) =>
+        reason === "variables-changed" ? "network-only" : current,
+    },
+  );
 
   const connection = getConnection(data);
   const items = connection?.edges.map((edge) => edge.node);
@@ -110,12 +110,7 @@ export function usePaginatedConnection<TData, TNode extends { id: string }>({
     }
     const before = beforeFetchRef.current;
     beforeFetchRef.current = null;
-    if (
-      before !== null &&
-      (items?.length ?? 0) === before.count &&
-      hasNextPage &&
-      !stalled
-    ) {
+    if (before !== null && (items?.length ?? 0) === before.count && hasNextPage && !stalled) {
       setStall({ key: before.key, stalled: true });
     }
   }, [loadingMore, items, hasNextPage, stallKey, stalled]);
@@ -129,14 +124,10 @@ export function usePaginatedConnection<TData, TNode extends { id: string }>({
       updateQuery: (previous, { fetchMoreResult }) => {
         if (!fetchMoreResult) return previous;
         const previousConnection = getConnection(previous as MaybeMasked<TData>);
-        const nextConnection = getConnection(
-          fetchMoreResult as MaybeMasked<TData>
-        );
+        const nextConnection = getConnection(fetchMoreResult as MaybeMasked<TData>);
         if (!previousConnection || !nextConnection) return previous;
         const seen = new Set(previousConnection.edges.map((edge) => edge.node.id));
-        const appended = nextConnection.edges.filter(
-          (edge) => !seen.has(edge.node.id)
-        );
+        const appended = nextConnection.edges.filter((edge) => !seen.has(edge.node.id));
         return withConnection(previous, {
           ...nextConnection,
           edges: [...previousConnection.edges, ...appended],
