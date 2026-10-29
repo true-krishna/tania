@@ -4,6 +4,7 @@ import * as React from "react";
 import { useQuery, type MaybeMasked, type Unmasked } from "@apollo/client";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { EmployeeFilter } from "@/generated/graphql/types";
+import { queryStatus } from "./toQueryState";
 
 /**
  * The cursor-paginated connection shape the shared accumulate-pages machinery
@@ -143,7 +144,7 @@ export function usePaginatedConnection<TData, TNode extends { id: string }>({
   }
 
   return {
-    status: error ? "error" : loading && !data ? "loading" : "ready",
+    status: queryStatus(loading, error, data),
     items,
     totalCount,
     hasNextPage,

@@ -24,7 +24,7 @@ export function AssistantPanel({
 }) {
   const role = useSessionRole();
   const { canRead: allowed } = useMenuEntryAccess("assistant");
-  const roleLabel = role === "CHAPTER" ? "Chapter" : role === "OPERATION" ? "Operation" : null;
+  const roleLabel = roleLabelFor(role);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const chat = useAssistantChat({ open, enabled: allowed });
 
@@ -126,4 +126,10 @@ export function AssistantPanel({
       </section>
     </div>
   );
+}
+
+function roleLabelFor(role: ReturnType<typeof useSessionRole>): string | null {
+  if (role === "CHAPTER") return "Chapter";
+  if (role === "OPERATION") return "Operation";
+  return null;
 }
