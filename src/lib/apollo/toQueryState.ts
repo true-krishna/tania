@@ -27,10 +27,16 @@ export function queryStatus(loading: boolean, error: unknown, data: unknown): Qu
 export function toQueryState<T>(
   result: Pick<QueryResult<T>, "loading" | "error" | "data">,
 ): QueryState<T> {
-  const status = result.loading ? "loading" : result.error ? "error" : "ready";
+  const status = toStatus(result.loading, result.error);
   return {
     status,
     data: result.data,
     error: result.error?.message ?? null,
   };
+}
+
+function toStatus(loading: boolean, error: unknown): QueryStatus {
+  if (loading) return "loading";
+  if (error) return "error";
+  return "ready";
 }
