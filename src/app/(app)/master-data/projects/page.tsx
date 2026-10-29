@@ -29,6 +29,7 @@ export default function ProjectsPage() {
   return (
     <MasterDataSection<Project>
       addLabel="Tambah Initiative"
+      bulkEntity="project"
       caption="Daftar initiative"
       emptyMessage="Belum ada initiative. Tambahkan initiative pertama."
       error={error}
