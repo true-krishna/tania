@@ -30,11 +30,9 @@ const ADMIN_EMAIL = "admin@tania.test";
 const CHAPTER_NAV = [
   "Dashboard",
   "Aktivitas saya",
-  "Data Karyawan",
-  "Kontrak",
-  "Assignments",
+  "Karyawan",
   "IDP",
-  "Evaluations",
+  "Roster",
   "Master Data",
 ] as const;
 // TAN-372: CV bukan lagi menu — kontennya pindah ke profil talent.
@@ -42,7 +40,7 @@ const CHAPTER_NAV_HIDDEN = [
   "CV",
   "Workload",
   "Provisi Entra",
-  "Administration",
+  "Administrasi",
   "Menu & Akses",
   "Accounts",
   "Audit",

@@ -39,8 +39,11 @@ type MenuCells = readonly GridCell[];
 /** Query state plus the refetch the configuration page calls after a write. */
 export type RefetchableQueryState<T> = QueryState<T> & { refetch: () => Promise<unknown> };
 
-export function useRoles(includeInactive = true): RefetchableQueryState<Role[] | undefined> {
-  const result = useQuery(RolesDocument, { variables: { includeInactive } });
+export function useRoles(
+  includeInactive = true,
+  skip = false,
+): RefetchableQueryState<Role[] | undefined> {
+  const result = useQuery(RolesDocument, { variables: { includeInactive }, skip });
   return {
     ...toQueryState({ ...result, data: result.data?.roles }),
     refetch: () => result.refetch(),

@@ -101,7 +101,7 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * mengelola seluruh modul operasional lagi.
  *
  * 2026-10-29 (TAN-376): Accounts, Menu & Akses (`/admin/roles`), dan Audit
- * dikelompokkan sebagai "Administration" supaya konfigurasi menu ditemukan
+ * dikelompokkan sebagai "Administrasi" supaya konfigurasi menu ditemukan
  * lewat navigasi, bukan hanya tautan di halaman Accounts.
  */
 export const NAV: readonly NavEntry[] = [
@@ -116,7 +116,7 @@ export const NAV: readonly NavEntry[] = [
   {
     kind: "group",
     id: "employee",
-    label: "Employee",
+    label: "Karyawan",
     icon: IconUsers,
     roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
     children: [
@@ -140,7 +140,7 @@ export const NAV: readonly NavEntry[] = [
   {
     kind: "group",
     id: "evaluations",
-    label: "Evaluations",
+    label: "Evaluasi",
     icon: IconClipboardCheck,
     roles: ALL,
     children: [
@@ -153,7 +153,7 @@ export const NAV: readonly NavEntry[] = [
   {
     kind: "group",
     id: "administration",
-    label: "Administration",
+    label: "Administrasi",
     icon: IconUserShield,
     roles: ["ADMIN"],
     children: [
@@ -178,6 +178,26 @@ export const NAV: readonly NavEntry[] = [
     ],
   },
 ];
+
+/**
+ * A group with one visible child renders as that child, using the group's icon:
+ * "Karyawan → Data Karyawan" for Talent is a group that repeats its child, not
+ * a section worth an expand affordance. The same rule keeps "Evaluasi → Roster"
+ * from being a one-item submenu for Operation and Chapter.
+ */
+function collapseSingleChildGroups(entries: readonly NavEntry[]): NavEntry[] {
+  return entries.map((entry) => {
+    if (entry.kind === "link" || entry.children.length !== 1) return entry;
+    const child = entry.children[0];
+    return {
+      kind: "link",
+      href: child.href,
+      label: child.label,
+      icon: entry.icon,
+      roles: child.roles,
+    };
+  });
+}
 
 /**
  * Entries a role sees under the active configuration, in sidebar order.
@@ -207,7 +227,21 @@ export function visibleNavEntries(
     );
     if (children.length > 0) entries.push({ ...entry, children });
   }
-  return entries;
+  return collapseSingleChildGroups(entries);
+}
+
+/** The static role filter of `NAV`, with one-child groups collapsed to their child. */
+export function navEntriesForRole(role: AccessRole | null): readonly NavEntry[] {
+  const entries: NavEntry[] = [];
+  for (const entry of NAV) {
+    if (entry.kind === "link") {
+      if (!role || entry.roles.includes(role)) entries.push(entry);
+      continue;
+    }
+    const children = entry.children.filter((child) => !role || child.roles.includes(role));
+    if (children.length > 0) entries.push({ ...entry, children });
+  }
+  return collapseSingleChildGroups(entries);
 }
 
 /** Sidebar section label for the current route, shown in the top bar. */

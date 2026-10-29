@@ -8,8 +8,8 @@ import { IconClockHour3, IconUser } from "@tabler/icons-react";
 import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { AssistantBubble } from "@/features/assistant/AssistantBubble";
-import { roleLabel } from "@/features/accounts/roles";
-import { useMyMenuConfig } from "@/features/roles/useRoles";
+import { currentRoleLabel } from "@/features/accounts/roles";
+import { useMyMenuConfig, useRoles } from "@/features/roles/useRoles";
 import { resetApolloStore } from "@/lib/apollo";
 import { MenuAccessProvider } from "@/lib/auth/access";
 import { authConfig } from "@/lib/auth/config";
@@ -29,6 +29,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     status: menuStatus,
     refetch: refetchMenu,
   } = useMyMenuConfig();
+  const accessRoleName = roleName ?? session?.roleName ?? session?.accessRole ?? null;
+  const roles = useRoles(true, role !== "ADMIN");
   const pathname = usePathname();
   const [logout] = useMutation(LogoutDocument);
 
@@ -37,11 +39,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return onSessionExpired(() => router.replace(LOGIN));
   }, [router]);
 
+  const callerRoleLabel = currentRoleLabel(accessRoleName, role, roles.data);
   const displayName =
-    session?.fullName?.trim() ||
-    session?.email?.split("@")[0] ||
-    (role ? roleLabel[role] : "Tania");
-  const accessRoleName = roleName ?? session?.roleName ?? session?.accessRole ?? null;
+    session?.fullName?.trim() || session?.email?.split("@")[0] || callerRoleLabel || "Tania";
   const accessConfig = React.useMemo(
     () => menuConfig ?? (menuStatus === "empty" ? {} : null),
     [menuConfig, menuStatus],
@@ -90,7 +90,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   ]}
                   name={displayName}
                   onLogout={handleLogout}
-                  roleLabel={role ? roleLabel[role] : null}
+                  roleLabel={callerRoleLabel}
                 />
               </div>
             </header>

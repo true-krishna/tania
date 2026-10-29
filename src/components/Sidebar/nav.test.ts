@@ -163,7 +163,7 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
     );
     expect(administration?.kind).toBe("group");
     if (administration?.kind !== "group") return;
-    expect(administration.label).toBe("Administration");
+    expect(administration.label).toBe("Administrasi");
     expect(administration.roles).toEqual(["ADMIN"]);
     expect(administration.children.map((child) => child.href)).toEqual([
       ACCOUNTS,
@@ -181,10 +181,10 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
   });
 
   it("menandai seksi aktif dari submenu terdalam", () => {
-    expect(sectionForPath("/employees/emp-1")).toBe("Employee");
-    expect(sectionForPath("/assignments")).toBe("Employee");
+    expect(sectionForPath("/employees/emp-1")).toBe("Karyawan");
+    expect(sectionForPath("/assignments")).toBe("Karyawan");
     expect(sectionForPath("/master-data/units")).toBe("Master Data");
-    expect(sectionForPath("/accounts")).toBe("Administration");
+    expect(sectionForPath("/accounts")).toBe("Administrasi");
     expect(sectionForPath("/admin/roles")).toBe("Menu & Akses");
   });
 });

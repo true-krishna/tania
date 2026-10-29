@@ -63,37 +63,24 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
   ADMIN: [
     "Dashboard",
     "Aktivitas saya",
-    "Data Karyawan",
-    "Kontrak",
-    "Assignments",
+    "Karyawan",
     "Provisi Entra",
     "IDP",
-    "Evaluations",
+    "Evaluasi",
+    "Administrasi",
     "Master Data",
-    "Administration",
   ],
   OPERATION: [
     "Dashboard",
     "Aktivitas saya",
-    "Data Karyawan",
-    "Kontrak",
-    "Assignments",
+    "Karyawan",
     "Provisi Entra",
     "IDP",
-    "Evaluations",
+    "Roster",
     "Master Data",
   ],
-  CHAPTER: [
-    "Dashboard",
-    "Aktivitas saya",
-    "Data Karyawan",
-    "Kontrak",
-    "Assignments",
-    "IDP",
-    "Evaluations",
-    "Master Data",
-  ],
-  TALENT: ["Aktivitas saya", "Data Karyawan", "IDP", "Evaluations"],
+  CHAPTER: ["Dashboard", "Aktivitas saya", "Karyawan", "IDP", "Roster", "Master Data"],
+  TALENT: ["Aktivitas saya", "Data Karyawan", "IDP", "Evaluasi Saya"],
 };
 
 /**
@@ -104,16 +91,8 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
  */
 const NAV_HIDDEN: Record<Role, readonly string[]> = {
   ADMIN: ["CV", "Workload"],
-  OPERATION: ["CV", "Workload", "Administration", "Menu & Akses", "Accounts", "Audit"],
-  CHAPTER: [
-    "CV",
-    "Workload",
-    "Provisi Entra",
-    "Administration",
-    "Menu & Akses",
-    "Accounts",
-    "Audit",
-  ],
+  OPERATION: ["CV", "Workload", "Administrasi", "Menu & Akses", "Accounts", "Audit"],
+  CHAPTER: ["CV", "Workload", "Provisi Entra", "Administrasi", "Menu & Akses", "Accounts", "Audit"],
   TALENT: [
     "CV",
     "Workload",
@@ -122,7 +101,7 @@ const NAV_HIDDEN: Record<Role, readonly string[]> = {
     "Assignments",
     "Provisi Entra",
     "Master Data",
-    "Administration",
+    "Administrasi",
     "Menu & Akses",
     "Accounts",
     "Audit",
@@ -168,7 +147,7 @@ test.describe("RBAC matrix (T041)", () => {
         // TAN-376: Menu & Akses ditemukan dari grup Administration, bukan hanya
         // tautan di halaman Accounts; top bar menamai seksinya.
         await page.goto("/activities");
-        await nav.getByRole("button", { name: "Administration", exact: true }).click();
+        await nav.getByRole("button", { name: "Administrasi", exact: true }).click();
         await nav.getByRole("link", { name: "Menu & Akses", exact: true }).click();
         await page.waitForURL(/\/admin\/roles$/);
         await expect(page.getByRole("heading", { name: /Menu & Akses/ }).first()).toBeVisible();

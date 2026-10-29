@@ -10,7 +10,7 @@ import {
   type MenuAccessConfig,
   type MenuConfigStatus,
 } from "@/lib/auth/menuAccess";
-import { NAV, visibleNavEntries, type NavEntry, type NavSubmenu } from "./nav";
+import { navEntriesForRole, visibleNavEntries, type NavEntry, type NavSubmenu } from "./nav";
 import { SidebarCompactNav } from "./SidebarCompactNav";
 import { SidebarDesktopNav } from "./SidebarDesktopNav";
 
@@ -52,10 +52,11 @@ function resolveEntries(
   configured: boolean,
   menuConfig: MenuAccessConfig | null,
   roleName: string | null,
+  role: AccessRole | null,
   menuStatus: MenuConfigStatus,
 ): readonly NavEntry[] {
   if (configured && menuConfig && roleName) return visibleNavEntries(menuConfig, roleName);
-  if (menuStatus === "ready") return NAV;
+  if (menuStatus === "ready") return navEntriesForRole(role);
   return [];
 }
 
@@ -79,8 +80,8 @@ export function Sidebar({
   const effectiveConfig = menuConfig ?? fallbackConfig;
   const configured = !!effectiveConfig && !!effectiveRoleName;
   const entries = React.useMemo(
-    () => resolveEntries(configured, effectiveConfig, effectiveRoleName, menuStatus),
-    [configured, effectiveConfig, menuStatus, effectiveRoleName],
+    () => resolveEntries(configured, effectiveConfig, effectiveRoleName, role, menuStatus),
+    [configured, effectiveConfig, menuStatus, effectiveRoleName, role],
   );
   const activeHref = useActiveHref(pathname, role, entries, !configured);
   const [openOverride, setOpenOverride] = React.useState<Record<string, boolean>>({});

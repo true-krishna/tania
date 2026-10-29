@@ -56,7 +56,9 @@ export function SidebarCompactNav({
 
     return (
       <React.Fragment key={entry.id}>
-        <span className="flex-none whitespace-nowrap px-2 text-tp-muted">{entry.label}</span>
+        <span className="flex-none self-center whitespace-nowrap border-l border-tp-line pl-3 text-[11px] font-semibold uppercase tracking-wide text-tp-muted">
+          {entry.label}
+        </span>
         {children.map((child) => {
           const active = activeHref === child.href;
           return (

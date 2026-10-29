@@ -24,7 +24,7 @@ export interface MenuGridRow {
   /** Menu entry id: the route path without its leading slash. */
   id: string;
   label: string;
-  /** Label of the owning group ("Employee", "Master Data", …), when nested. */
+  /** Label of the owning group ("Karyawan", "Master Data", …), when nested. */
   parent?: string;
 }
 
@@ -61,6 +61,17 @@ const ALL_LEVELS: readonly MenuAccessLevel[] = ["NONE", "READ", "MANAGE"];
 const ADMIN_ONLY_ENTRIES: readonly string[] = ["accounts", "admin/roles", "audit"];
 
 /**
+ * Levels an Admin may hold on each locked entry. Audit is the exception: the
+ * server only requires it to stay granted, and its default is READ, so the cell
+ * must render "Lihat" instead of an empty select.
+ */
+const ADMIN_LOCKED_LEVELS: Record<string, readonly MenuAccessLevel[]> = {
+  accounts: ["MANAGE"],
+  "admin/roles": ["MANAGE"],
+  audit: ["READ", "MANAGE"],
+};
+
+/**
  * What one cell may be configured to. `disabled` cells are shown but not
  * editable, because the server refuses the change (see
  * `validateMenuUpdates`) — mirroring the refusal in the UI is a courtesy, the
@@ -75,21 +86,46 @@ export interface CellRule {
 
 const ADMIN_LOCKED = "Hanya peran Admin yang dapat memegang menu ini.";
 
-export function cellRule(templateRole: AccessRole, entryId: string): CellRule {
+/**
+ * Levels a locked cell offers: the rule above plus the level it actually holds,
+ * so a server value the rule did not anticipate can never render as a blank
+ * select or be "fixed" into a different level by accident.
+ */
+function withHeldLevel(
+  allowed: readonly MenuAccessLevel[],
+  held: MenuAccessLevel | undefined,
+): readonly MenuAccessLevel[] {
+  if (!held || allowed.includes(held)) return allowed;
+  if (held === "NONE" && allowed.length > 0) return allowed;
+  return ALL_LEVELS.filter((level) => allowed.includes(level) || level === held);
+}
+
+export function cellRule(
+  templateRole: AccessRole,
+  entryId: string,
+  held?: MenuAccessLevel,
+): CellRule {
   const admin = templateRole === "ADMIN";
   if (ADMIN_ONLY_ENTRIES.includes(entryId)) {
-    return { allowed: [admin ? "MANAGE" : "NONE"], disabled: true, reason: ADMIN_LOCKED };
+    const levels = admin
+      ? (ADMIN_LOCKED_LEVELS[entryId] ?? (["MANAGE"] as const))
+      : (["NONE"] as const);
+    return {
+      allowed: withHeldLevel(levels, held),
+      disabled: true,
+      reason: ADMIN_LOCKED,
+    };
   }
   if (entryId.startsWith("master-data/")) {
     // Master-data management is a Locked permission with no configurable entry:
     // other roles may read (or hide) the pages, never manage them.
     return admin
       ? {
-          allowed: ["MANAGE"],
+          allowed: withHeldLevel(["MANAGE"], held),
           disabled: true,
           reason: "Pengelolaan master data tetap milik Admin.",
         }
-      : { allowed: ["NONE", "READ"] };
+      : { allowed: withHeldLevel(["NONE", "READ"], held) };
   }
   return { allowed: ALL_LEVELS, disabled: false };
 }

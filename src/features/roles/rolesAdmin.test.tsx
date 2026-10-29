@@ -122,6 +122,17 @@ describe("halaman Menu & Akses per Role — bagian grid", () => {
     expect(screen.getByLabelText("Accounts untuk Talent")).toHaveValue("NONE");
   });
 
+  it("menampilkan Audit Admin sebagai Lihat dan tidak mengubahnya tanpa aksi eksplisit", async () => {
+    renderSection([ROLES_QUERY, CONFIG_QUERY]);
+    await screen.findByText("Grid Menu × Role");
+
+    // TAN-364 F8: Audit's default is READ, so the locked Admin cell renders
+    // "Lihat" instead of a blank select — and an untouched grid stays unsaved.
+    expect(screen.getByLabelText("Audit untuk Admin")).toHaveValue("READ");
+    expect(screen.getByLabelText("Audit untuk Admin")).toBeDisabled();
+    expect(roleHeader("ADMIN").getByRole("button", { name: "Simpan" })).toBeDisabled();
+  });
+
   it("menyimpan satu kolom dengan seluruh katalog, hanya sel yang berubah yang berbeda", async () => {
     const expectedGrid = expectedTalentGrid("idp", "READ");
     renderSection([
