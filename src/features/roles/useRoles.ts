@@ -103,14 +103,12 @@ export function useMyMenuConfig(): MyMenuConfig {
     const cells = result.data?.myMenuConfig;
     const roleName = cells?.[0]?.roleName ?? null;
     const config = cells?.length && roleName ? { [roleName]: gridOf(cells, roleName) } : null;
-    const status: MenuConfigStatus =
-      result.loading && !cells
-        ? "loading"
-        : result.error && !cells
-          ? "error"
-          : config
-            ? "ready"
-            : "empty";
+    const status: MenuConfigStatus = menuConfigStatus(
+      result.loading,
+      !!result.error,
+      !!cells,
+      !!config,
+    );
     return {
       config,
       roleName,
@@ -153,3 +151,15 @@ export function useRoleMutations() {
 }
 
 export type { RoleGrid };
+
+function menuConfigStatus(
+  loading: boolean,
+  hasError: boolean,
+  hasCells: boolean,
+  hasConfig: boolean,
+): MenuConfigStatus {
+  if (loading && !hasCells) return "loading";
+  if (hasError && !hasCells) return "error";
+  if (hasConfig) return "ready";
+  return "empty";
+}
