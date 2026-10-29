@@ -1,4 +1,4 @@
-import { HanyaBacaChip } from "./LoadClassificationBadge";
+import { HanyaBacaChip } from "./HanyaBacaChip";
 import { getEmployeeWorkload } from "./mocks";
 import { WorkloadFreshnessNotice } from "./WorkloadFreshnessNotice";
 import { WorkloadOwnView } from "./WorkloadOwnView";

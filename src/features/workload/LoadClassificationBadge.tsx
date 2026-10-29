@@ -17,11 +17,3 @@ export function LoadClassificationBadge({
   const { label, variant } = MAP[classification];
   return <Chip variant={variant}>{label}</Chip>;
 }
-
-export function DataLamaChip() {
-  return <Chip variant="danger">Data lama</Chip>;
-}
-
-export function HanyaBacaChip() {
-  return <Chip variant="neutral">Hanya baca</Chip>;
-}

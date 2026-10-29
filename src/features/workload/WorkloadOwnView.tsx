@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ACTIVITIES } from "@/lib/constants/routes";
 import { ActivitySplitChart } from "./ActivitySplitChart";
-import { DataLamaChip } from "./LoadClassificationBadge";
+import { DataLamaChip } from "./DataLamaChip";
 import { ProjectContextCard } from "./ProjectContextCard";
-import { WorkloadCard, CardCaption } from "./WorkloadCard";
+import { WorkloadCard } from "./WorkloadCard";
+import { CardCaption } from "./CardCaption";
 import { WorkloadEmptyState } from "./WorkloadEmptyState";
 import { WorkloadErrorState } from "./WorkloadErrorState";
 import { WorkloadHero } from "./WorkloadHero";
