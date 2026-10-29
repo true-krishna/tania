@@ -8,6 +8,7 @@ import {
   type EmploymentContractsQueryVariables,
 } from "@/generated/graphql";
 import type { EmploymentContractFilter } from "@/generated/graphql/types";
+import { queryStatus } from "@/lib/apollo/toQueryState";
 
 type ContractNode = EmploymentContractsQuery["employmentContracts"]["edges"][number]["node"];
 
@@ -75,7 +76,7 @@ export function useEmploymentContracts(
   const loadingMore = loading && !!data;
 
   return {
-    status: error ? "error" : loading && !data ? "loading" : "ready",
+    status: queryStatus(loading, error, data),
     contracts,
     totalCount,
     hasNextPage,

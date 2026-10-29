@@ -8,6 +8,7 @@ import {
   type EmployeesWithoutEntraQueryVariables,
 } from "@/generated/graphql";
 import type { EntraEmployeeSortField, SortDirection } from "@/generated/graphql/types";
+import { queryStatus } from "@/lib/apollo/toQueryState";
 
 type EmployeeNode = EmployeesWithoutEntraQuery["employeesWithoutEntra"]["edges"][number]["node"];
 
@@ -94,7 +95,7 @@ export function useEmployeesWithoutEntra(
   }
 
   return {
-    status: error ? "error" : loading && !data ? "loading" : "ready",
+    status: queryStatus(loading, error, data),
     employees,
     totalCount: connection?.totalCount ?? 0,
     hasNextPage,

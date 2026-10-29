@@ -22,6 +22,7 @@ import {
   type GridCell,
   type RoleGrid,
 } from "./menuGrid";
+import { errorText } from "@/lib/errors";
 
 function baselineGrid(role: Role): RoleGrid {
   return {
@@ -97,7 +98,7 @@ export function RolesAdminSection() {
       await Promise.all([config.refetch(), roles.refetch()]);
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan konfigurasi.");
+      pushToast("error", errorText(err, "Gagal menyimpan konfigurasi."));
       throw err;
     } finally {
       setSaving(false);

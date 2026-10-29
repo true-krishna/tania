@@ -5,6 +5,7 @@ import { useProjects, useUnits } from "@/features/master-data/useMasterData";
 import { MasterDataSection, type MasterDataItem } from "@/features/master-data/MasterDataSection";
 import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useProjectMutations } from "@/features/master-data/useMasterDataMutations";
+import { errorText } from "@/lib/errors";
 
 type Project = MasterDataItem & { unit: { id: string; name: string } };
 
@@ -19,7 +20,7 @@ export default function ProjectsPage() {
       await fn();
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan initiative.");
+      pushToast("error", errorText(err, "Gagal menyimpan initiative."));
     }
   }
 

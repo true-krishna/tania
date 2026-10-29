@@ -21,6 +21,7 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Brand } from "@/components/Brand";
 import { BrandPanel } from "./BrandPanel";
+import { errorText } from "@/lib/errors";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -116,7 +117,7 @@ export default function LoginForm() {
       await resetApolloStore();
       router.replace(landingRoute(user.accessRole));
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
+      const message = errorText(err, "Terjadi kesalahan.");
       setError(message);
     }
   }

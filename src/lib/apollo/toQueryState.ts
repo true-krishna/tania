@@ -16,6 +16,14 @@ export type QueryState<T> = {
   error: string | null;
 };
 
+export type QueryStatus = QueryState<unknown>["status"];
+
+export function queryStatus(loading: boolean, error: unknown, data: unknown): QueryStatus {
+  if (error) return "error";
+  if (loading && !data) return "loading";
+  return "ready";
+}
+
 export function toQueryState<T>(
   result: Pick<QueryResult<T>, "loading" | "error" | "data">,
 ): QueryState<T> {

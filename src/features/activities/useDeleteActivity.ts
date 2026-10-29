@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useActivitiesStore } from "./ActivitiesProvider";
+import { errorText } from "@/lib/errors";
 
 export interface DeleteActivityState {
   remove: (id: string) => Promise<boolean>;
@@ -23,7 +24,7 @@ export function useDeleteActivity(): DeleteActivityState {
         await remove(id);
         return true;
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Gagal menghapus aktivitas.");
+        setError(errorText(cause, "Gagal menghapus aktivitas."));
         return false;
       } finally {
         setLoading(false);

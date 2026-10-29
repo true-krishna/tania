@@ -5,6 +5,7 @@ import { useChapters, useJobRoles } from "@/features/master-data/useMasterData";
 import { MasterDataSection, type MasterDataItem } from "@/features/master-data/MasterDataSection";
 import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useJobRoleMutations } from "@/features/master-data/useMasterDataMutations";
+import { errorText } from "@/lib/errors";
 
 type JobRole = MasterDataItem & { chapter?: { id: string; name: string } | null };
 
@@ -19,7 +20,7 @@ export default function JobRolesPage() {
       await fn();
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan job role.");
+      pushToast("error", errorText(err, "Gagal menyimpan job role."));
     }
   }
 

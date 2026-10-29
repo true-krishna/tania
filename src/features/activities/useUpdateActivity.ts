@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActivitiesStore } from "./ActivitiesProvider";
 import type { ActivityInput, PersonalWorkActivity } from "./types";
+import { errorText } from "@/lib/errors";
 
 export interface UpdateActivityState {
   update: (id: string, input: ActivityInput) => Promise<PersonalWorkActivity | null>;
@@ -23,7 +24,7 @@ export function useUpdateActivity(): UpdateActivityState {
       try {
         return await update(id, input);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Gagal memperbarui aktivitas.");
+        setError(errorText(cause, "Gagal memperbarui aktivitas."));
         return null;
       } finally {
         setLoading(false);

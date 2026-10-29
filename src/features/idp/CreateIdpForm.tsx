@@ -11,6 +11,7 @@ import { useToast } from "@/components/Toast";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { CreateIdpDocument } from "@/generated/graphql";
 import type { DevelopmentMethod } from "@/generated/graphql/types";
+import { errorText } from "@/lib/errors";
 
 type ActionRow = {
   description: string;
@@ -122,7 +123,7 @@ export function CreateIdpForm({ formId, onBusyChange, onSuccess }: CreateIdpForm
       pushToast("success", "IDP berhasil dibuat.");
       onSuccess?.();
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal membuat IDP.");
+      pushToast("error", errorText(err, "Gagal membuat IDP."));
     } finally {
       onBusyChange(false);
     }

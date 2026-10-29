@@ -1,2 +1,1 @@
-// silence is golden 😆
-export {};
+export { DescriptionItem } from "./DescriptionItem";

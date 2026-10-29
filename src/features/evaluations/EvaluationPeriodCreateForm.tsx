@@ -9,6 +9,7 @@ import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
 import { CreateEvaluationPeriodDocument, EvaluationPeriodsDocument } from "@/generated/graphql";
+import { errorText } from "@/lib/errors";
 
 type FormValues = { name: string; templateId: string; startDate: string; endDate: string };
 const EMPTY: FormValues = { name: "", templateId: "", startDate: "", endDate: "" };
@@ -78,7 +79,7 @@ export function EvaluationPeriodCreateForm({
       setValues(EMPTY);
       onClose();
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal membuat periode.");
+      pushToast("error", errorText(err, "Gagal membuat periode."));
     } finally {
       onBusyChange(false);
     }

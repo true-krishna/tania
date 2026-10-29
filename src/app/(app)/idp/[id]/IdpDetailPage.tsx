@@ -26,6 +26,8 @@ import {
 } from "@/generated/graphql";
 import { IDP } from "@/lib/constants/routes";
 import type { DevelopmentActionStatus, DevelopmentMethod } from "@/generated/graphql/types";
+import { DescriptionItem } from "@/components/DescriptionItem";
+import { errorText } from "@/lib/errors";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -43,15 +45,6 @@ const METHOD_LABEL: Record<DevelopmentMethod, string> = {
 
 const BLOCK =
   "w-full rounded-md border border-surface-border bg-white px-3 py-1.5 text-sm text-zinc-900 shadow-sm";
-
-function Definition({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
-      <dd className="mt-0.5 whitespace-pre-wrap text-sm text-zinc-900">{value}</dd>
-    </div>
-  );
-}
 
 type ToastItem = { id: number; variant: "error" | "success"; message: string };
 
@@ -129,7 +122,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
       setActionDue("");
       addToast("success", "Aksi pengembangan ditambahkan.");
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "Gagal menambah aksi.");
+      addToast("error", errorText(err, "Gagal menambah aksi."));
     }
   }
 
@@ -156,7 +149,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
       setReviewFollowUp("");
       addToast("success", "Hasil review dicatat.");
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "Gagal mencatat review.");
+      addToast("error", errorText(err, "Gagal mencatat review."));
     }
   }
 
@@ -165,7 +158,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
       await closeIdp({ variables: { id } });
       addToast("success", "IDP ditutup.");
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "Gagal menutup IDP.");
+      addToast("error", errorText(err, "Gagal menutup IDP."));
     }
   }
 
@@ -191,13 +184,26 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
           Komponen IDP
         </h2>
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Definition label="Development Objective" value={idp.developmentObjective} />
-          <Definition label="Penilaian Kondisi Saat Ini" value={idp.currentAssessment} />
-          <Definition label="Identifikasi Gap" value={idp.gapAnalysis} />
-          <Definition label="Success Indicators" value={idp.successIndicators} />
-          <Definition
+          <DescriptionItem
+            label="Development Objective"
+            value={idp.developmentObjective}
+            variant="preline"
+          />
+          <DescriptionItem
+            label="Penilaian Kondisi Saat Ini"
+            value={idp.currentAssessment}
+            variant="preline"
+          />
+          <DescriptionItem label="Identifikasi Gap" value={idp.gapAnalysis} variant="preline" />
+          <DescriptionItem
+            label="Success Indicators"
+            value={idp.successIndicators}
+            variant="preline"
+          />
+          <DescriptionItem
             label="Timeline & Milestone"
             value={`${idp.timelineStart} — ${idp.timelineEnd}`}
+            variant="preline"
           />
         </dl>
       </Card>
@@ -230,10 +236,7 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                       const status = e.target.value as DevelopmentActionStatus;
                       updateActionStatus({ variables: { id: action.id, status } }).catch(
                         (err: unknown) => {
-                          addToast(
-                            "error",
-                            err instanceof Error ? err.message : "Gagal memperbarui status aksi.",
-                          );
+                          addToast("error", errorText(err, "Gagal memperbarui status aksi."));
                         },
                       );
                     }}

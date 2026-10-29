@@ -18,6 +18,7 @@ import { roleLabelFor, roleOptions, type RoleOption } from "@/features/accounts/
 import type { UsersQuery } from "@/generated/graphql";
 import type { AccountStatus, Role } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
+import { errorText } from "@/lib/errors";
 
 type Account = UsersQuery["users"][number];
 
@@ -118,7 +119,7 @@ export function AccountsSection({
       });
       resetForm();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Gagal membuat akun.");
+      setFormError(errorText(err, "Gagal membuat akun."));
     } finally {
       setBusy(false);
     }

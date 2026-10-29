@@ -166,6 +166,11 @@ export const BULK_MASTER_DATA_ERROR_LABEL: Record<BulkMasterDataErrorCode, strin
   REFERENCED: "Entri masih direferensikan data lain dan tidak dapat dinonaktifkan.",
 };
 
+export function errorText(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  return fallback;
+}
+
 export type SubmitError = { field: string | null; message: string };
 
 /**

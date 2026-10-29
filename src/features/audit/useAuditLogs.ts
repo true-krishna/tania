@@ -8,6 +8,7 @@ import {
   type AuditLogsQueryVariables,
 } from "@/generated/graphql";
 import type { AuditLogFilter } from "@/generated/graphql/types";
+import { queryStatus } from "@/lib/apollo/toQueryState";
 
 type AuditLogNode = AuditLogsQuery["auditLogs"]["edges"][number]["node"];
 
@@ -76,7 +77,7 @@ export function useAuditLogs(filter: AuditLogFilter = {}): AuditLogsState {
   const loadingMore = loading && !!data;
 
   return {
-    status: error ? "error" : loading && !data ? "loading" : "ready",
+    status: queryStatus(loading, error, data),
     logs,
     totalCount,
     hasNextPage,

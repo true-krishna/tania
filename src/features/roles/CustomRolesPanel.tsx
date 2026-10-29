@@ -10,6 +10,7 @@ import { Table, type TableColumn } from "@/components/Table";
 import { roleLabel } from "@/features/accounts/roles";
 import type { AccessRole } from "@/generated/graphql/types";
 import type { Role } from "./useRoles";
+import { errorText } from "@/lib/errors";
 
 const TEMPLATES: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
 
@@ -48,7 +49,7 @@ export function CustomRolesPanel({
       setLabel("");
       setCreating(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membuat role.");
+      setError(errorText(err, "Gagal membuat role."));
     }
   }
 

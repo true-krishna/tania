@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Card } from "@/components/Card";
+import { DescriptionItem } from "@/components/DescriptionItem";
 import { Chip, type ChipVariant } from "@/components/Chip";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
@@ -59,11 +60,11 @@ export function IdpSection() {
           </div>
         </div>
         <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-          <Field label="Tujuan pengembangan" value={data.developmentObjective} />
-          <Field label="Asesmen saat ini" value={data.currentAssessment} />
-          <Field label="Analisis gap" value={data.gapAnalysis} />
-          <Field label="Indikator keberhasilan" value={data.successIndicators} />
-          <Field label="Periode" value={`${data.timelineStart} — ${data.timelineEnd}`} />
+          <DescriptionItem label="Tujuan pengembangan" value={data.developmentObjective} />
+          <DescriptionItem label="Asesmen saat ini" value={data.currentAssessment} />
+          <DescriptionItem label="Analisis gap" value={data.gapAnalysis} />
+          <DescriptionItem label="Indikator keberhasilan" value={data.successIndicators} />
+          <DescriptionItem label="Periode" value={`${data.timelineStart} — ${data.timelineEnd}`} />
         </dl>
       </Card>
 
@@ -104,14 +105,5 @@ function IdpStatusChip({ status }: { status: IdpStatus }) {
     <Chip size="small" variant={IDP_STATUS_VARIANT[status]}>
       {IDP_STATUS_LABEL[status]}
     </Chip>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
-      <dd className="text-zinc-900">{value}</dd>
-    </div>
   );
 }

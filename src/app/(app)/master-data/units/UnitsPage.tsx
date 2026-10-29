@@ -5,6 +5,7 @@ import { useUnits } from "@/features/master-data/useMasterData";
 import { MasterDataSection, type MasterDataItem } from "@/features/master-data/MasterDataSection";
 import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useUnitMutations } from "@/features/master-data/useMasterDataMutations";
+import { errorText } from "@/lib/errors";
 
 type Unit = MasterDataItem & { code: string; projects: { length: number } };
 
@@ -18,7 +19,7 @@ export default function UnitsPage() {
       await fn();
       pushToast("success", ok);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan unit.");
+      pushToast("error", errorText(err, "Gagal menyimpan unit."));
     }
   }
 

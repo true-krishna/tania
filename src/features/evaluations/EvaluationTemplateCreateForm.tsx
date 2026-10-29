@@ -9,6 +9,7 @@ import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { CreateEvaluationTemplateDocument, EvaluationTemplatesDocument } from "@/generated/graphql";
 import type { EvaluationAnswerType } from "@/generated/graphql/types";
+import { errorText } from "@/lib/errors";
 
 type CriterionRow = { label: string; answerType: EvaluationAnswerType };
 
@@ -79,7 +80,7 @@ export function EvaluationTemplateCreateForm({
       setCriteria([{ label: "", answerType: "SCALE_1_5" }]);
       onClose();
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal membuat template.");
+      pushToast("error", errorText(err, "Gagal membuat template."));
     } finally {
       onBusyChange(false);
     }

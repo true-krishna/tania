@@ -20,6 +20,7 @@ import {
 import { useModuleAccess } from "@/lib/auth/access";
 import type { EvaluationAnswerType, EvaluationPeriodState } from "@/generated/graphql/types";
 import { EVALUATIONS } from "@/lib/constants/routes";
+import { errorText } from "@/lib/errors";
 
 type CriterionLike = {
   id: string;
@@ -165,7 +166,7 @@ function EvaluationForm({
       pushToast("success", "Evaluasi disimpan sebagai draf.");
       setTouched(false);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyimpan evaluasi.");
+      pushToast("error", errorText(err, "Gagal menyimpan evaluasi."));
     }
   }
 
@@ -178,7 +179,7 @@ function EvaluationForm({
       pushToast("success", "Evaluasi diserahkan.");
       setTouched(false);
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Gagal menyerahkan evaluasi.");
+      pushToast("error", errorText(err, "Gagal menyerahkan evaluasi."));
     }
   }
 

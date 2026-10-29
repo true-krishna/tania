@@ -11,6 +11,8 @@ import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useMyIdp } from "@/features/idp/talent/useMyIdp";
 import { MyIdpDocument, UpdateDevelopmentActionStatusDocument } from "@/generated/graphql";
 import type { DevelopmentActionStatus, DevelopmentMethod } from "@/generated/graphql/types";
+import { DescriptionItem } from "@/components/DescriptionItem";
+import { errorText } from "@/lib/errors";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -70,7 +72,7 @@ export function MyIdpView() {
       await updateActionStatus({ variables: { id: actionId, status: next } });
       addToast("success", "Status aksi diperbarui.");
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "Gagal memperbarui status aksi.");
+      addToast("error", errorText(err, "Gagal memperbarui status aksi."));
     }
   }
 
@@ -92,11 +94,27 @@ export function MyIdpView() {
         <Card className="flex flex-col gap-4">
           <h2 className="text-base font-semibold text-zinc-900">Tujuan & Asesmen</h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Definition label="Tujuan pengembangan" value={idp.developmentObjective} />
-            <Definition label="Asesmen saat ini" value={idp.currentAssessment} />
-            <Definition label="Analisis gap" value={idp.gapAnalysis} />
-            <Definition label="Indikator keberhasilan" value={idp.successIndicators} />
-            <Definition label="Periode" value={`${idp.timelineStart} — ${idp.timelineEnd}`} />
+            <DescriptionItem
+              label="Tujuan pengembangan"
+              value={idp.developmentObjective}
+              variant="compact"
+            />
+            <DescriptionItem
+              label="Asesmen saat ini"
+              value={idp.currentAssessment}
+              variant="compact"
+            />
+            <DescriptionItem label="Analisis gap" value={idp.gapAnalysis} variant="compact" />
+            <DescriptionItem
+              label="Indikator keberhasilan"
+              value={idp.successIndicators}
+              variant="compact"
+            />
+            <DescriptionItem
+              label="Periode"
+              value={`${idp.timelineStart} — ${idp.timelineEnd}`}
+              variant="compact"
+            />
           </dl>
         </Card>
 
@@ -193,14 +211,5 @@ export function MyIdpView() {
         <ToastStack onDismiss={dismissToast} toasts={toasts} />
       </section>
     </AuthGuard>
-  );
-}
-
-function Definition({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs font-medium text-zinc-500">{label}</dt>
-      <dd className="mt-0.5 text-sm text-zinc-800">{value || "—"}</dd>
-    </div>
   );
 }

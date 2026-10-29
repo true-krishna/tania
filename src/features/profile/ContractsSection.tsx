@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card } from "@/components/Card";
+import { DescriptionItem } from "@/components/DescriptionItem";
 import { Chip } from "@/components/Chip";
 import { EmptyState } from "@/components/DataState";
 import {
@@ -59,31 +60,22 @@ function ContractRow({ contract, linked }: { contract: ProfileContract; linked: 
         ) : null}
       </div>
       <dl className="mt-2 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-        <Field label="Jenis" value={CONTRACT_TYPE_LABEL[contract.contractType]} />
-        <Field label="Nomor Induk" value={contract.nomorInduk} />
-        <Field label="Unit" value={contract.unit.name} />
-        <Field label="Posisi / Job Role" value={contract.jobRole.name} />
-        <Field label="Job Title" value={contract.jobTitle ?? "—"} />
-        <Field label="Job Level" value={contract.jobLevel ?? "—"} />
-        <Field label="Band Position" value={BAND_POSITION_LABEL[contract.bandPosition]} />
-        <Field label="Work Location" value={WORK_LOCATION_LABEL[contract.workLocation]} />
-        <Field label="Email Kantor" value={contract.officeEmail ?? "—"} />
-        <Field
+        <DescriptionItem label="Jenis" value={CONTRACT_TYPE_LABEL[contract.contractType]} />
+        <DescriptionItem label="Nomor Induk" value={contract.nomorInduk} />
+        <DescriptionItem label="Unit" value={contract.unit.name} />
+        <DescriptionItem label="Posisi / Job Role" value={contract.jobRole.name} />
+        <DescriptionItem label="Job Title" value={contract.jobTitle ?? "—"} />
+        <DescriptionItem label="Job Level" value={contract.jobLevel ?? "—"} />
+        <DescriptionItem label="Band Position" value={BAND_POSITION_LABEL[contract.bandPosition]} />
+        <DescriptionItem label="Work Location" value={WORK_LOCATION_LABEL[contract.workLocation]} />
+        <DescriptionItem label="Email Kantor" value={contract.officeEmail ?? "—"} />
+        <DescriptionItem
           label="Periode"
           value={`${contract.startDate} — ${contract.endDate ?? "tidak berbatas"}`}
         />
-        <Field label="Berakhir" value={contract.terminatedAt ?? "—"} />
-        <Field label="Catatan" value={contract.notes ?? "—"} />
+        <DescriptionItem label="Berakhir" value={contract.terminatedAt ?? "—"} />
+        <DescriptionItem label="Catatan" value={contract.notes ?? "—"} />
       </dl>
-    </div>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
-      <dd className="text-zinc-900">{value}</dd>
     </div>
   );
 }

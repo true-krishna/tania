@@ -4,6 +4,7 @@ import * as React from "react";
 import { useMutation } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import { useToast } from "@/components/Toast";
+import { errorText } from "@/lib/errors";
 
 type CvCollectionMessages = {
   added: string;
@@ -90,7 +91,7 @@ export function useCvCollection<TItem, TValues, TInput>({
       await remove({ variables: { id } });
       pushToast("success", messages.deleted);
     } catch (error) {
-      pushToast("error", error instanceof Error ? error.message : messages.deleteFailed);
+      pushToast("error", errorText(error, messages.deleteFailed));
     }
   }
 
