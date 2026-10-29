@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { BarList } from "@/components/BarList";
-import { Card } from "@/components/Card";
 import { Chip, type ChipVariant } from "@/components/Chip";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
@@ -23,6 +22,8 @@ import { landingRoute } from "@/lib/auth/landing";
 import { canAccess } from "@/lib/auth/matrix";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
+import { EmptyNote } from "./EmptyNote";
+import { Panel } from "./Panel";
 import { TalentReportContent } from "@/features/talent-report/TalentReportPageView";
 import type { AssignmentStatus } from "@/generated/graphql/types";
 
@@ -35,27 +36,6 @@ const ASSIGNMENT_STATUS_VARIANT: Record<AssignmentStatus, ChipVariant> = {
   ACTIVE: "success",
   COMPLETED: "neutral",
 };
-
-function Panel({
-  title,
-  children,
-  className,
-}: {
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <Card className={`flex flex-col gap-4 ${className ?? ""}`}>
-      <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
-      {children}
-    </Card>
-  );
-}
-
-function EmptyNote({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-zinc-500">{children}</p>;
-}
 
 export default function DashboardPage() {
   const role = useSessionRole();
