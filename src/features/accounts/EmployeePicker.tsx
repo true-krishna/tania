@@ -2,11 +2,11 @@
 
 import { IconSearch, IconX } from "@tabler/icons-react";
 import * as React from "react";
-import { useEmployees } from "@/features/employees/useEmployees";
 import { cn } from "@/lib/cn";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { EmployeeOptionList } from "./EmployeeOptionList";
 import { SelectedEmployeeChip } from "./SelectedEmployeeChip";
+import { useEmployeeLookup } from "./useEmployeeLookup";
 
 type EmployeePickerProps = {
   error?: string | null;
@@ -40,13 +40,13 @@ export function EmployeePicker({
   const listboxId = `${inputId}-listbox`;
 
   const debouncedQuery = useDebouncedValue(query, DEBOUNCE_MS);
-  const employeesState = useEmployees(
+  const lookupState = useEmployeeLookup(
     { search: debouncedQuery || undefined },
     PAGE_SIZE
   );
   const items = React.useMemo(
-    () => employeesState.employees ?? [],
-    [employeesState.employees]
+    () => lookupState.items ?? [],
+    [lookupState.items]
   );
   const boundedActiveIndex =
     items.length === 0 ? 0 : Math.min(activeIndex, items.length - 1);
@@ -185,13 +185,13 @@ export function EmployeePicker({
         {open ? (
           <EmployeeOptionList
             activeIndex={boundedActiveIndex}
-            error={employeesState.error}
+            error={lookupState.error}
             items={items}
             listboxId={listboxId}
             listRef={listRef}
             onActiveIndexChange={setActiveIndex}
             onSelect={handleSelect}
-            status={employeesState.status}
+            status={lookupState.status}
           />
         ) : null}
       </div>

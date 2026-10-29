@@ -7,7 +7,7 @@ import { ToastProvider } from "@/components/Toast";
 import AccountsPage from "@/app/(app)/accounts/page";
 import {
   CreateUserAccountDocument,
-  EmployeesDocument,
+  EmployeeLookupDocument,
   RevokeUserSessionsDocument,
   RolesDocument,
   SetUserAccountStatusDocument,
@@ -109,18 +109,13 @@ const EMPLOYEE_1 = {
   fullName: "Ahmad Fauzi",
   nomorInduk: "EMP-0100",
   email: "ahmad@telkom.co.id",
-  status: "ACTIVE",
-  assignable: true,
-  unit: { id: "u-1", name: "Digital", __typename: "Unit" },
-  jobRole: { id: "jr-1", name: "Engineer", __typename: "JobRole" },
-  nikMasked: "************0001",
   __typename: "Employee",
 };
 
-function employeesMock(search: string | undefined, nodes: unknown[]) {
+function employeeLookupMock(search: string | undefined, nodes: unknown[]) {
   return {
     request: {
-      query: EmployeesDocument,
+      query: EmployeeLookupDocument,
       variables: {
         filter: search ? { search } : {},
         first: 10,
@@ -129,7 +124,7 @@ function employeesMock(search: string | undefined, nodes: unknown[]) {
     },
     result: {
       data: {
-        employees: {
+        employeeLookup: {
           totalCount: nodes.length,
           edges: nodes.map((n) => ({
             node: n,
@@ -201,7 +196,7 @@ describe("accounts management (Admin) — T053", () => {
   it("blocks creating an account without employee, email, and role (client-side)", async () => {
     renderPage([
       USERS_QUERY,
-      employeesMock(undefined, []),
+      employeeLookupMock(undefined, []),
     ]);
 
     await screen.findByText("Sari Dewi");
@@ -216,8 +211,8 @@ describe("accounts management (Admin) — T053", () => {
   it("creates an account for an employee and shows the success toast", async () => {
     renderPage([
       USERS_QUERY,
-      employeesMock(undefined, [EMPLOYEE_1]),
-      employeesMock("Ahmad", [EMPLOYEE_1]),
+      employeeLookupMock(undefined, [EMPLOYEE_1]),
+      employeeLookupMock("Ahmad", [EMPLOYEE_1]),
       {
         request: {
           query: CreateUserAccountDocument,
@@ -264,8 +259,8 @@ describe("accounts management (Admin) — T053", () => {
     const serverMessage = "Karyawan sudah memiliki akun.";
     renderPage([
       USERS_QUERY,
-      employeesMock(undefined, [EMPLOYEE_1]),
-      employeesMock("Ahmad", [EMPLOYEE_1]),
+      employeeLookupMock(undefined, [EMPLOYEE_1]),
+      employeeLookupMock("Ahmad", [EMPLOYEE_1]),
       {
         request: {
           query: CreateUserAccountDocument,

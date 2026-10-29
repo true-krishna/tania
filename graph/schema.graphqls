@@ -1221,6 +1221,11 @@ type Query {
   employees(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
   employee(id: ID!): Employee
 
+  """Lookup karyawan minimal khusus form Tambah Akun (TAN-371): mengikuti sel
+  modul Akun (Admin-only), terpisah dari sel Data Karyawan yang Admin tidak
+  pegang sejak TAN-343."""
+  employeeLookup(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
+
   """Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35)."""
   assignableTalents(search: String, first: Int = 25, after: String): EmployeeConnection!
 

@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
-import type { EmployeesState } from "@/features/employees/useEmployees";
 import { orDash } from "@/lib/cell";
 import { cn } from "@/lib/cn";
+import type { EmployeeLookupState } from "./useEmployeeLookup";
 
-export type EmployeeOption = NonNullable<EmployeesState["employees"]>[number];
+export type EmployeeOption = NonNullable<
+  EmployeeLookupState["items"]
+>[number];
 
 type EmployeeOptionListProps = {
   activeIndex: number;
@@ -15,7 +17,7 @@ type EmployeeOptionListProps = {
   listRef: React.RefObject<HTMLUListElement | null>;
   onActiveIndexChange: (index: number) => void;
   onSelect: (employeeId: string) => void;
-  status: EmployeesState["status"];
+  status: EmployeeLookupState["status"];
 };
 
 export function EmployeeOptionList({
