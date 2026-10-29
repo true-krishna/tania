@@ -6,12 +6,6 @@ import { IndividualLeavesCard, IndividualSummaryCards } from "./IndividualSummar
 import { BacklogTable } from "./BacklogTable";
 import type { TalentWorkloadFixture } from "./types";
 
-/**
- * Isi detail workload per talent (TAN-233/234): summary, assignments, cuti,
- * chart, dan detail backlog — dipakai bersama oleh halaman Talent (mode
- * detail) dan workload milik talent sendiri (TAN-227, umpan balik pemilik
- * produk: tampilannya harus sama).
- */
 export function TalentWorkloadDetail({ fixture }: { fixture: TalentWorkloadFixture }) {
   if (!fixture.summary) return null;
 
@@ -30,13 +24,13 @@ export function TalentWorkloadDetail({ fixture }: { fixture: TalentWorkloadFixtu
                 <caption className="sr-only">Tabel assignment project talent</caption>
                 <thead>
                   <tr>
-                    <th scope="col" className="text-left">Project</th>
-                    <th scope="col" className="text-left">Tribe</th>
-                    <th scope="col" className="text-left">Product</th>
-                    <th scope="col" className="text-left">Squad</th>
-                    <th scope="col" className="text-right">Availability</th>
-                    <th scope="col" className="text-right">Time Spent</th>
-                    <th scope="col" className="text-left">Keterangan</th>
+                    <th className="text-left" scope="col">Project</th>
+                    <th className="text-left" scope="col">Tribe</th>
+                    <th className="text-left" scope="col">Product</th>
+                    <th className="text-left" scope="col">Squad</th>
+                    <th className="text-right" scope="col">Availability</th>
+                    <th className="text-right" scope="col">Time Spent</th>
+                    <th className="text-left" scope="col">Keterangan</th>
                   </tr>
                 </thead>
                 <tbody>

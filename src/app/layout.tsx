@@ -22,7 +22,10 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Tania — Talent Profiles",
+  title: {
+    default: "Tania — Talent Profiles",
+    template: "%s | Tania",
+  },
   description:
     "Complete talent profiles: identity, role, grade, squad, location, status, and manager — auto-generated when a user is created.",
 };

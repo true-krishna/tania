@@ -17,16 +17,6 @@ import { ReportSkeleton } from "./ReportSkeleton";
 import { TalentWorkloadDetail } from "./TalentWorkloadDetail";
 import { useTalentWorkload } from "./useTalentWorkload";
 
-/**
- * Workload milik talent sendiri (TAN-227, umpan balik pemilik produk): menu
- * Workload untuk level user menampilkan tampilan yang SAMA dengan detail
- * talent workload di menu Talent executive — summary, assignments, chart,
- * dan detail backlog. Tanpa pemilih talent: talent hanya melihat datanya
- * sendiri (preseden WAD L3 = self only).
- *
- * `SELF_TALENT_ID` adalah stand-in mock untuk talent milik sesi; wiring
- * GraphQL nanti yang memetakan user ke talent-nya.
- */
 export function TalentOwnWorkloadView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -67,12 +57,12 @@ export function TalentOwnWorkloadView() {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title="Workload"
         subtitle={`Beban kerja kamu dari data WAD — periode ${formatPeriodLabel(period)}.`}
+        title="Workload"
       />
 
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <ReportPeriodSelector value={period} onChange={setPeriod} ariaLabel="Pilih periode workload" />
+        <ReportPeriodSelector ariaLabel="Pilih periode workload" onChange={setPeriod} value={period} />
       </div>
 
       {fixture ? (

@@ -1,11 +1,10 @@
-"use client";
+import type { Metadata } from "next";
+import ActivitiesPage from "./ActivitiesPage";
 
-import { ActivitiesPageView, ActivitiesProvider } from "@/features/activities";
+export const metadata: Metadata = {
+  title: "Aktivitas saya",
+};
 
-export default function ActivitiesPage() {
-  return (
-    <ActivitiesProvider>
-      <ActivitiesPageView />
-    </ActivitiesProvider>
-  );
+export default function Page() {
+  return <ActivitiesPage />;
 }
