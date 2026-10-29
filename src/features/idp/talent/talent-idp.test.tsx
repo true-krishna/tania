@@ -3,13 +3,30 @@
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { ApolloLink, Observable } from "@apollo/client";
 import { MockedProvider } from "@apollo/client/testing";
 import MyIdpPage from "@/app/(app)/idp/my/page";
+import { MenuAccessProvider } from "@/lib/auth/access";
+import type { MenuAccessConfig, MenuAccessLevel } from "@/lib/auth/menuAccess";
 import { MyIdpDocument, UpdateDevelopmentActionStatusDocument } from "@/generated/graphql";
 
 vi.mock("@/lib/auth/guard", () => ({
-  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
+  useSessionRole: () => "TALENT",
 }));
+
+function idpConfig(level: MenuAccessLevel, roleName: string): MenuAccessConfig {
+  return { [roleName]: { idp: { visible: level !== "NONE", accessLevel: level } } };
+}
+
+function recordingLink(operations: string[]): ApolloLink {
+  return new ApolloLink((operation) => {
+    operations.push(operation.operationName);
+    return new Observable((observer) => {
+      observer.next({ data: { myIdp: null } });
+      observer.complete();
+    });
+  });
+}
 
 const myIdp = {
   __typename: "Idp",
@@ -153,5 +170,32 @@ describe("MyIdpPage — Talent (FR-14 / US3)", () => {
     });
 
     expect(await screen.findByText(/FORBIDDEN/)).toBeInTheDocument();
+  });
+
+  it("menolak IDP saat sel efektif tersembunyi tanpa memanggil kueri (TAN-373)", () => {
+    const operations: string[] = [];
+    render(
+      <MenuAccessProvider config={idpConfig("NONE", "TALENT")} roleName="TALENT">
+        <MockedProvider link={recordingLink(operations)}>
+          <MyIdpPage />
+        </MockedProvider>
+      </MenuAccessProvider>,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Akses ditolak");
+    expect(operations).toEqual([]);
+  });
+
+  it("membuka IDP untuk peran kustom yang selnya dibuka konfigurasi (TAN-373)", async () => {
+    render(
+      <MenuAccessProvider config={idpConfig("READ", "PM_CHAPTER")} roleName="PM_CHAPTER">
+        <MockedProvider mocks={[{ request: { query: MyIdpDocument }, result: myIdpResult }]}>
+          <MyIdpPage />
+        </MockedProvider>
+      </MenuAccessProvider>,
+    );
+
+    expect(await screen.findByText("IDP Saya")).toBeInTheDocument();
+    expect(screen.getByText("Menjadi Go backend engineer yang andal")).toBeInTheDocument();
   });
 });
