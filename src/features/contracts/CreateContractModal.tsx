@@ -4,9 +4,7 @@ import * as React from "react";
 import { useMutation, ApolloError } from "@apollo/client";
 import { CreateContractModalFrame } from "./CreateContractModalFrame";
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
-import { Select } from "@/components/Select";
-import { InputControl } from "@/components/InputControl";
+import { CreateContractFields } from "./CreateContractFields";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { useToast } from "@/components/Toast";
 import { useEmployees } from "@/features/employees/useEmployees";
@@ -19,14 +17,10 @@ import {
   type CreateEmploymentContractInput,
   type WorkLocation,
 } from "@/generated/graphql";
-import {
-  CONTRACT_TYPE_LABEL,
-  CONTRACT_TYPE_ORDER,
-  isOpenEndedContractType,
-} from "@/features/contracts/labels";
+import { CONTRACT_TYPE_ORDER, isOpenEndedContractType } from "@/features/contracts/labels";
 import { mapSubmitError } from "@/lib/errors";
 
-type FormValues = {
+export type FormValues = {
   employeeId: string;
   contractNo: string;
   contractType: ContractType;
@@ -137,10 +131,6 @@ export function CreateContractModal({ open, onClose }: { open: boolean; onClose:
     return next;
   }
 
-  const selectedJobRole = values.jobRoleId
-    ? ((jobRoles.data ?? []).find((jr) => jr.id === values.jobRoleId) ?? null)
-    : null;
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const nextErrors = validate(values);
@@ -208,155 +198,21 @@ export function CreateContractModal({ open, onClose }: { open: boolean; onClose:
       onClose={onClose}
       open={open}
     >
-      <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
-        {formError ? <ErrorState message={formError} /> : null}
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Identitas kontrak
-        </h3>
-        <InputControl error={errors.employeeId} label="Karyawan">
-          <Select
-            onChange={(e) => set("employeeId", e.target.value)}
-            options={[
-              { value: "", label: "— pilih karyawan —" },
-              ...(employees.employees ?? []).map((emp) => ({
-                value: emp.id,
-                label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
-              })),
-            ]}
-            value={values.employeeId}
-          />
-        </InputControl>
-        <InputControl error={errors.contractNo} label="No. Kontrak">
-          <Input
-            onChange={(e) => set("contractNo", e.target.value)}
-            placeholder="cth. PKWT/2026/001"
-            type="text"
-            value={values.contractNo}
-          />
-        </InputControl>
-        <InputControl error={errors.contractType} label="Jenis kontrak">
-          <Select
-            onChange={(e) => {
-              const next = e.target.value as ContractType;
-              setValues((v) => ({ ...v, contractType: next, endDate: "" }));
-              setErrors((er) => ({ ...er, endDate: undefined }));
-            }}
-            options={CONTRACT_TYPE_ORDER.map((type) => ({
-              value: type,
-              label: CONTRACT_TYPE_LABEL[type],
-            }))}
-            value={values.contractType}
-          />
-        </InputControl>
-        <InputControl error={errors.nomorInduk} label="Nomor induk karyawan">
-          <Input
-            onChange={(e) => set("nomorInduk", e.target.value)}
-            placeholder="cth. EMP-0100"
-            type="text"
-            value={values.nomorInduk}
-          />
-        </InputControl>
-        <InputControl error={errors.officeEmail} helper="(opsional)" label="Email kantor">
-          <Input
-            onChange={(e) => set("officeEmail", e.target.value)}
-            type="email"
-            value={values.officeEmail}
-          />
-        </InputControl>
-        <h3 className="mt-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Posisi &amp; unit
-        </h3>
-        <InputControl error={errors.unitId} label="Unit">
-          <Select
-            onChange={(e) => set("unitId", e.target.value)}
-            options={[
-              { value: "", label: "— pilih unit —" },
-              ...(units.data ?? []).map((unit) => ({ value: unit.id, label: unit.name })),
-            ]}
-            value={values.unitId}
-          />
-        </InputControl>
-        <InputControl
-          error={errors.jobRoleId}
-          helper={
-            selectedJobRole
-              ? `Chapter: ${selectedJobRole.chapter?.name ?? "Tanpa chapter"}`
-              : undefined
-          }
-          label="Posisi / Job Role"
-        >
-          <Select
-            onChange={(e) => set("jobRoleId", e.target.value)}
-            options={[
-              { value: "", label: "— pilih job role —" },
-              ...(jobRoles.data ?? []).map((role) => ({ value: role.id, label: role.name })),
-            ]}
-            value={values.jobRoleId}
-          />
-        </InputControl>
-        <InputControl error={errors.jobTitle} helper="(opsional)" label="Job title">
-          <Input
-            onChange={(e) => set("jobTitle", e.target.value)}
-            type="text"
-            value={values.jobTitle}
-          />
-        </InputControl>
-        <InputControl error={errors.jobLevel} helper="(opsional)" label="Job level">
-          <Input
-            onChange={(e) => set("jobLevel", e.target.value)}
-            type="text"
-            value={values.jobLevel}
-          />
-        </InputControl>
-        <InputControl error={errors.bandPosition} label="Band position">
-          <Select
-            onChange={(e) => set("bandPosition", e.target.value)}
-            options={[
-              { value: "UNDEFINED", label: "Belum ditetapkan" },
-              { value: "I", label: "I" },
-              { value: "II", label: "II" },
-              { value: "III", label: "III" },
-              { value: "IV", label: "IV" },
-              { value: "V", label: "V" },
-              { value: "VI", label: "VI" },
-            ]}
-            value={values.bandPosition}
-          />
-        </InputControl>
-        <InputControl error={errors.workLocation} label="Work location">
-          <Select
-            onChange={(e) => set("workLocation", e.target.value)}
-            options={[
-              { value: "", label: "— pilih lokasi kerja —" },
-              { value: "JAKARTA", label: "Jakarta" },
-              { value: "BANDUNG", label: "Bandung" },
-            ]}
-            value={values.workLocation}
-          />
-        </InputControl>
-        <h3 className="mt-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Periode &amp; status
-        </h3>
-        <InputControl error={errors.startDate} label="Tanggal mulai">
-          <Input
-            onChange={(e) => set("startDate", e.target.value)}
-            type="date"
-            value={values.startDate}
-          />
-        </InputControl>
-        {!isOpenEndedContractType(values.contractType) ? (
-          <InputControl error={errors.endDate} label="Tanggal selesai">
-            <Input
-              onChange={(e) => set("endDate", e.target.value)}
-              type="date"
-              value={values.endDate}
-            />
-          </InputControl>
-        ) : null}
-        <InputControl error={errors.notes} helper="(opsional)" label="Catatan">
-          <Input onChange={(e) => set("notes", e.target.value)} type="text" value={values.notes} />
-        </InputControl>
-      </form>
+      <CreateContractFields
+        employees={employees.employees ?? []}
+        errors={errors}
+        formError={formError}
+        formId={formId}
+        jobRoles={jobRoles.data ?? []}
+        onChange={set}
+        onContractTypeChange={(next) => {
+          setValues((v) => ({ ...v, contractType: next, endDate: "" }));
+          setErrors((er) => ({ ...er, endDate: undefined }));
+        }}
+        onSubmit={onSubmit}
+        units={units.data ?? []}
+        values={values}
+      />
     </CreateContractModalFrame>
   );
 }
