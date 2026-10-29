@@ -240,13 +240,15 @@ export function MasterDataImportModal({
           {result ? "Tutup" : "Batal"}
         </Button>
         <Button disabled={parsing || running} form={formId} type="submit">
-          {running
-            ? "Menyimpan…"
-            : isRetry
-              ? `Ulangi ${rowsToSend.length} baris belum berhasil`
-              : "Simpan Massal"}
+          {submitLabel(running, isRetry, rowsToSend.length)}
         </Button>
       </ModalActions>
     </Modal>
   );
+}
+
+function submitLabel(running: boolean, isRetry: boolean, count: number): string {
+  if (running) return "Menyimpan…";
+  if (isRetry) return `Ulangi ${count} baris belum berhasil`;
+  return "Simpan Massal";
 }
