@@ -107,7 +107,7 @@ export function MenuAccessGuard({
   const allowed = manage ? access.canManage : access.canRead;
 
   if (access.pending) return null;
-  if (allowed) return <>{children}</>;
-  if (fallback !== undefined) return <>{fallback}</>;
+  if (allowed) return children;
+  if (fallback !== undefined) return fallback;
   return <AccessDenied canRead={access.canRead} manage={manage} />;
 }

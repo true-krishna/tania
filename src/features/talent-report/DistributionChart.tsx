@@ -4,6 +4,7 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import type { EChartsCoreOption } from "echarts/core";
 import { resolveChartTheme, type ChartTheme } from "./chart-theme";
+import type { EChartHandle } from "./EChart";
 import type { ReportCategoryCount } from "@/generated/graphql/types";
 
 const EChart = dynamic(() => import("./EChart").then((m) => ({ default: m.EChart })), {
@@ -102,7 +103,7 @@ interface DistributionChartProps {
   className?: string;
   title?: string;
   periodLabel?: string;
-  chartRef?: React.Ref<import("./EChart").EChartHandle>;
+  chartRef?: React.Ref<EChartHandle>;
 }
 
 export function DistributionChart({

@@ -13,7 +13,7 @@ const nav = vi.hoisted(() => ({ push: vi.fn() }));
 
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 vi.mock("next/navigation", () => ({

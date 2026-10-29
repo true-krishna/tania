@@ -42,5 +42,5 @@ export function AuthGuard({
     return null;
   }
 
-  return <>{children}</>;
+  return children;
 }

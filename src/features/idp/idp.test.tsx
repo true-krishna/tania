@@ -28,7 +28,7 @@ const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
 
 vi.mock("@/lib/auth/guard", () => ({
   useSessionRole: () => auth.role,
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 vi.mock("next/navigation", () => ({

@@ -20,6 +20,10 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "react/jsx-sort-props": ["error", { ignoreCase: true }],
+      "@typescript-eslint/consistent-type-imports": "error",
+      "react/jsx-no-useless-fragment": "error",
+      "no-else-return": "error",
+      "no-lonely-if": "error",
     },
   },
   {

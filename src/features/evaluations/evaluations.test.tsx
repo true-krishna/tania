@@ -4,6 +4,7 @@ import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
+import type * as AuthGuard from "@/lib/auth/guard";
 import EvaluationsPage from "@/app/(app)/evaluations/page";
 import EvaluationFormPage from "@/app/(app)/evaluations/[periodId]/[employeeId]/page";
 import {
@@ -22,7 +23,7 @@ const nav = vi.hoisted(() => ({ push: vi.fn() }));
 // (klarifikasi 9).
 const auth = vi.hoisted(() => ({ role: "CHAPTER" as string | null }));
 vi.mock("@/lib/auth/guard", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/auth/guard")>();
+  const actual = await importOriginal<typeof AuthGuard>();
   return { ...actual, useSessionRole: () => auth.role };
 });
 

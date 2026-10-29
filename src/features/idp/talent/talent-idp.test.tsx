@@ -8,7 +8,7 @@ import MyIdpPage from "@/app/(app)/idp/my/page";
 import { MyIdpDocument, UpdateDevelopmentActionStatusDocument } from "@/generated/graphql";
 
 vi.mock("@/lib/auth/guard", () => ({
-  AuthGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthGuard: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const myIdp = {

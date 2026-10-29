@@ -2,6 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import type * as ApolloClient from "@apollo/client";
 import * as tokenStore from "@/lib/auth/token-store";
 import { notifySessionExpired } from "@/lib/auth/session-expiry";
 import AppLayout from "./layout";
@@ -24,7 +25,7 @@ const queryState = vi.hoisted(() => ({
 }));
 
 vi.mock("@apollo/client", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@apollo/client")>();
+  const actual = await importOriginal<typeof ApolloClient>();
   // Shell's menu configuration query defaults to "not loaded yet": the
   // bubble then falls back to the default matrix, which is what the FR-01
   // tests cover. Behaviour under an active configuration is covered by the

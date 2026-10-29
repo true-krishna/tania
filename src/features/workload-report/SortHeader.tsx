@@ -11,7 +11,7 @@ type SortHeaderProps = {
 
 export function SortHeader({ column, onToggle, sort }: SortHeaderProps) {
   const sortKey = column.sortKey;
-  if (!sortKey) return <>{column.header}</>;
+  if (!sortKey) return column.header;
 
   const direction = sort?.key === sortKey ? sort.dir : null;
 

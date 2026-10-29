@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
+import type * as AuthGuard from "@/lib/auth/guard";
 import ContractsPage from "@/app/(app)/contracts/page";
 import ContractDetailPage from "@/app/(app)/contracts/[id]/page";
 import { CreateContractModal } from "@/features/contracts/CreateContractModal";
@@ -40,7 +41,7 @@ vi.mock("next/navigation", () => ({
 // Role comes from the session store in the app; here it is drove directly so the
 // Operation (manage) and Chapter (read-only) surfaces can both be exercised.
 vi.mock("@/lib/auth/guard", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/auth/guard")>();
+  const actual = await importOriginal<typeof AuthGuard>();
   return { ...actual, useSessionRole: () => auth.role };
 });
 
