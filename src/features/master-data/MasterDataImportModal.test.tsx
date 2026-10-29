@@ -6,7 +6,7 @@ import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import { describe, expect, it, vi } from "vitest";
 import ExcelJS from "exceljs";
 import { ToastProvider } from "@/components/Toast";
-import { ImportUnitsDocument, UnitsDocument } from "@/generated/graphql";
+import { ImportProjectsDocument, ImportUnitsDocument, ProjectsDocument, UnitsDocument } from "@/generated/graphql";
 import { MasterDataImportModal } from "./MasterDataImportModal";
 
 const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -66,14 +66,23 @@ const unitsRefreshMock: MockedResponse = {
   result: { data: { units: [] } },
 };
 
-function renderImportModal(mocks: MockedResponse[], onImported: () => void = () => {}) {
+const projectsRefreshMock: MockedResponse = {
+  request: { query: ProjectsDocument, variables: { includeInactive: true } },
+  result: { data: { projects: [] } },
+};
+
+function renderImportModal(
+  mocks: MockedResponse[],
+  onImported: () => void = () => {},
+  entity: "unit" | "project" = "unit",
+) {
   function Harness() {
     const [open, setOpen] = React.useState(true);
     return (
       <MockedProvider mocks={mocks}>
         <ToastProvider>
           <MasterDataImportModal
-            entity="unit"
+            entity={entity}
             onClose={() => setOpen(false)}
             onImported={onImported}
             open={open}
@@ -85,16 +94,16 @@ function renderImportModal(mocks: MockedResponse[], onImported: () => void = () 
   render(<Harness />);
 }
 
-async function uploadFile(file: File) {
+async function uploadFile(file: File, noun = "unit") {
   await act(async () => {
-    fireEvent.change(screen.getByLabelText("Unggah berkas Excel unit"), {
+    fireEvent.change(screen.getByLabelText(`Unggah berkas Excel ${noun}`), {
       target: { files: [file] },
     });
   });
 }
 
-function submitForm() {
-  fireEvent.submit(screen.getByRole("form", { name: "Unggah Massal Unit" }));
+function submitForm(formLabel = "Unggah Massal Unit") {
+  fireEvent.submit(screen.getByRole("form", { name: formLabel }));
 }
 
 describe("MasterDataImportModal — unggah massal Unit (TAN-350)", () => {
@@ -193,6 +202,72 @@ describe("MasterDataImportModal — unggah massal Unit (TAN-350)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("2 Unit berhasil dibuat massal.");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(onImported).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects rows referencing a missing or inactive unit with the single-create message (US1-3)", async () => {
+    const rows = [
+      { name: "Project Alpha", unit: "DBT" },
+      { name: "Project Beta", unit: "MISSING" },
+      { name: "Project Gamma", unit: "HC" },
+    ];
+    renderImportModal(
+      [
+        {
+          request: { query: ImportProjectsDocument, variables: { input: { rows } } },
+          result: {
+            data: {
+              importProjects: {
+                __typename: "BulkProjectResult",
+                succeeded: [{ __typename: "BulkProjectItemResult", index: 0 }],
+                failed: [
+                  {
+                    __typename: "BulkProjectItemResult",
+                    index: 1,
+                    error: {
+                      __typename: "BulkMasterDataError",
+                      code: "REF_NOT_FOUND",
+                      message: "Unit tujuan tidak ditemukan — pilih unit yang aktif.",
+                    },
+                  },
+                  {
+                    __typename: "BulkProjectItemResult",
+                    index: 2,
+                    error: {
+                      __typename: "BulkMasterDataError",
+                      code: "REF_INACTIVE",
+                      message: "Unit tujuan nonaktif — pilih unit yang aktif.",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        projectsRefreshMock,
+      ],
+      undefined,
+      "project",
+    );
+    await uploadFile(
+      await unitFile(
+        rows.map((row) => [row.name, row.unit]),
+        ["name", "unit"],
+      ),
+      "initiative",
+    );
+    await screen.findByText(/3 baris initiative terbaca/);
+    submitForm("Unggah Massal Initiative");
+
+    // Pesan persis seperti pembuatan tunggal; baris sah tetap dibuat (FR-02).
+    const summary = await screen.findByRole("status");
+    expect(summary).toHaveTextContent("1 baris berhasil, 2 gagal.");
+    expect(summary).toHaveTextContent(
+      "Baris 3 (Project Beta) — Unit tujuan tidak ditemukan — pilih unit yang aktif.",
+    );
+    expect(summary).toHaveTextContent(
+      "Baris 4 (Project Gamma) — Unit tujuan nonaktif — pilih unit yang aktif.",
+    );
+    expect(screen.getByRole("button", { name: "Ulangi 2 baris belum berhasil" })).toBeInTheDocument();
   });
 
   it("re-runs only the rows that did not succeed on retry (FR-02)", async () => {
