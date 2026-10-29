@@ -1,17 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { Card } from "@/components/Card";
 import { Table, type TableColumn } from "@/components/Table";
 import { Chip, type ChipVariant } from "@/components/Chip";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { formatTimestamp } from "./formatTimestamp";
+import { SortHeader, sortHeaderProps, type SortState } from "./SortHeader";
 import type { IndividualBacklogNormalizedRow, IndividualBacklogRow } from "./types";
 
 type BacklogVariant = "detail" | "normalized";
 type SortKey = "issueKey" | "timespent" | "updated";
-type SortState = { key: SortKey; dir: "asc" | "desc" } | null;
 
 const STATUS_VARIANT: Record<string, ChipVariant> = {
   Done: "success",
@@ -44,45 +43,6 @@ function sortBy<T>(
     return String(av).localeCompare(String(bv));
   });
   return dir === "desc" ? sorted.reverse() : sorted;
-}
-
-function sortHeaderProps(
-  sort: SortState,
-  sortKey: SortKey,
-): React.ThHTMLAttributes<HTMLTableCellElement> {
-  return {
-    "aria-sort":
-      sort?.key === sortKey ? (sort.dir === "asc" ? "ascending" : "descending") : undefined,
-  };
-}
-
-function SortHeader({
-  label,
-  sortKey,
-  sort,
-  onToggle,
-}: {
-  label: string;
-  sortKey: SortKey;
-  sort: SortState;
-  onToggle: (key: SortKey) => void;
-}) {
-  return (
-    <button
-      className="inline-flex items-center gap-1 hover:text-tp-text"
-      onClick={() => onToggle(sortKey)}
-      type="button"
-    >
-      {label}
-      {sort?.key === sortKey ? (
-        sort.dir === "asc" ? (
-          <IconChevronUp aria-hidden size={14} stroke={2} />
-        ) : (
-          <IconChevronDown aria-hidden size={14} stroke={2} />
-        )
-      ) : null}
-    </button>
-  );
 }
 
 const NORMALIZED_BADGE =
@@ -118,11 +78,16 @@ export function BacklogTable({
               (v ?? "").toLowerCase().includes(query),
             ),
         );
-  const sortedRows = sort
-    ? variant === "detail"
-      ? sortBy(rows as IndividualBacklogRow[], sort.key, sort.dir, detailSortValue)
-      : sortBy(rows as IndividualBacklogNormalizedRow[], sort.key, sort.dir, normalizedSortValue)
-    : rows;
+  const sortedRows = sortRows();
+
+  function sortRows() {
+    if (!sort) return rows;
+    const key = sort.key as SortKey;
+    if (variant === "detail") {
+      return sortBy(rows as IndividualBacklogRow[], key, sort.dir, detailSortValue);
+    }
+    return sortBy(rows as IndividualBacklogNormalizedRow[], key, sort.dir, normalizedSortValue);
+  }
   const pageRows = sortedRows.slice((page - 1) * pageSize, page * pageSize);
 
   const pagination = {

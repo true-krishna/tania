@@ -2,7 +2,8 @@
 
 import { Card } from "@/components/Card";
 import { IndividualCharts } from "./IndividualCharts";
-import { IndividualLeavesCard, IndividualSummaryCards } from "./IndividualSummaryCards";
+import { IndividualLeavesCard } from "./IndividualLeavesCard";
+import { IndividualSummaryCards } from "./IndividualSummaryCards";
 import { BacklogTable } from "./BacklogTable";
 import type { TalentWorkloadFixture } from "./types";
 

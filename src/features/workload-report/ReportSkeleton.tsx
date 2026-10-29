@@ -1,19 +1,5 @@
-import type { ReactNode } from "react";
-
-function Block({ className = "" }: { className?: string }) {
-  return <div className={`rounded-[10px] border border-tp-line bg-tp-bg ${className}`} />;
-}
-
-function CardSkeleton({ children }: { children: ReactNode }) {
-  return (
-    <div
-      aria-hidden
-      className="flex flex-col gap-4 rounded-[20px] border border-tp-line bg-tp-surface p-5"
-    >
-      {children}
-    </div>
-  );
-}
+import { CardSkeleton } from "./CardSkeleton";
+import { ReportSkeletonBlock as Block } from "./ReportSkeletonBlock";
 
 export function ReportSkeleton({
   variant = "executive",

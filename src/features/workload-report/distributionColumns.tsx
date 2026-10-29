@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { LoadStatusBadge, TtdLevelBadge } from "./LoadStatusBadge";
+import { LoadStatusBadge } from "./LoadStatusBadge";
+import { TtdLevelBadge } from "./TtdLevelBadge";
 import type { DistributionDimension, DistributionNormalizedRow, DistributionRow } from "./types";
 import { DIMENSION_LABELS } from "./types";
 

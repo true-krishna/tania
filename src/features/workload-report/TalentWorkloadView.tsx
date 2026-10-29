@@ -104,16 +104,7 @@ export function TalentWorkloadView() {
 
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader
-        subtitle={
-          mode === "table"
-            ? `Tabel talent dengan workload — periode ${formatPeriodLabel(period)}.`
-            : selectedTalent
-              ? `Laporan per talent — ${selectedTalent.name} · ${selectedTalent.tribe} · ${selectedTalent.squad} · periode ${formatPeriodLabel(period)}.`
-              : "Laporan workload per talent."
-        }
-        title="Workload Talent"
-      />
+      <PageHeader subtitle={subtitleFor(mode, selectedTalent, period)} title="Workload Talent" />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -164,4 +155,18 @@ export function TalentWorkloadView() {
       {content}
     </section>
   );
+}
+
+function subtitleFor(
+  mode: "table" | "detail",
+  selectedTalent: { name: string; tribe: string; squad: string } | null,
+  period: string,
+): string {
+  if (mode === "table") {
+    return `Tabel talent dengan workload — periode ${formatPeriodLabel(period)}.`;
+  }
+  if (selectedTalent) {
+    return `Laporan per talent — ${selectedTalent.name} · ${selectedTalent.tribe} · ${selectedTalent.squad} · periode ${formatPeriodLabel(period)}.`;
+  }
+  return "Laporan workload per talent.";
 }

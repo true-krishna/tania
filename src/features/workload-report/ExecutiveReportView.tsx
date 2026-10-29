@@ -16,11 +16,9 @@ import {
 import { AnalyticsTables } from "./AnalyticsTables";
 import { DistributionSection } from "./DistributionSection";
 import { ExecutiveCharts } from "./ExecutiveCharts";
-import {
-  ExecutiveAnalyticsKpis,
-  ExecutiveCostKpis,
-  ExecutiveWorkloadKpis,
-} from "./ExecutiveSummaryCards";
+import { ExecutiveAnalyticsKpis } from "./ExecutiveAnalyticsKpis";
+import { ExecutiveCostKpis } from "./ExecutiveCostKpis";
+import { ExecutiveWorkloadKpis } from "./ExecutiveWorkloadKpis";
 import {
   COST_REVENUE_SOURCE_NOTE,
   DEFAULT_REPORT_PERIOD,

@@ -7,7 +7,7 @@ import {
   type SortKey,
   type SortState,
 } from "./distributionColumns";
-import { SortHeader } from "./SortHeader";
+import { SortHeader, sortHeaderProps } from "./SortHeader";
 import { TalentDrillDownList } from "./TalentDrillDownList";
 import type {
   DistributionDimension,
@@ -87,17 +87,17 @@ export function DistributionTable(props: DistributionTableProps) {
   const columns: TableColumn<DistributionRow>[] = standardColumns(dimension, canSeeCost).map(
     (column) => ({
       align: column.alignRight ? ("right" as const) : undefined,
-      headerProps: {
-        "aria-sort":
-          sort && column.sortKey === sort.key
-            ? sort.dir === "asc"
-              ? "ascending"
-              : "descending"
-            : undefined,
-      },
+      headerProps: sortHeaderProps(sort, column.sortKey),
       key: column.key,
       render: (_value, row) => column.render(row),
-      title: <SortHeader column={column} onToggle={onSortToggle} sort={sort} />,
+      title: (
+        <SortHeader
+          label={column.header}
+          onToggle={(key) => onSortToggle(key as SortKey)}
+          sort={sort}
+          sortKey={column.sortKey}
+        />
+      ),
     }),
   );
 

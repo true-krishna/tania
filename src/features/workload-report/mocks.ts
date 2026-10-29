@@ -943,14 +943,7 @@ function buildBacklogNormalized(rows: IndividualBacklogRow[]): IndividualBacklog
 function buildIndividualSummary(seed: TalentMetrics, periodFactor: number): IndividualSummary {
   const complianceRatio =
     seed.activities > 0 ? seed.activitiesWithTimespent / seed.activities : null;
-  const jiraCompliance =
-    complianceRatio === null
-      ? null
-      : complianceRatio >= 0.8
-        ? "Super Active User"
-        : complianceRatio >= 0.5
-          ? "Medium User"
-          : "Passive User";
+  const jiraCompliance = complianceLabel(complianceRatio);
 
   return {
     talentName: seed.name,
@@ -1205,3 +1198,10 @@ export const SELF_TALENT_ID = DEFAULT_TALENT_ID;
 /** Baris sumber cost/revenue untuk headline tab Cost & Revenue. */
 export const COST_REVENUE_SOURCE_NOTE =
   "Revenue Source: PMA · Estimated Talent Cost Source: DPI, DPG, & PMA Report";
+
+function complianceLabel(ratio: number | null): string | null {
+  if (ratio === null) return null;
+  if (ratio >= 0.8) return "Super Active User";
+  if (ratio >= 0.5) return "Medium User";
+  return "Passive User";
+}
