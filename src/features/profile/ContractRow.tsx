@@ -14,23 +14,23 @@ import type { ProfileContract } from "./useProfile";
 
 export function ContractRow({ contract, linked }: { contract: ProfileContract; linked: boolean }) {
   return (
-    <div className="rounded-md border border-board-border bg-white px-4 py-3">
+    <div className="rounded-md border border-tp-line bg-tp-surface px-4 py-3">
       <div className="flex flex-wrap items-center gap-2">
         {linked ? (
           <Link
-            className="text-sm font-semibold text-zinc-900 hover:underline"
+            className="text-sm font-semibold text-tp-text hover:underline"
             href={CONTRACT_DETAIL(contract.id)}
           >
             {contract.contractNo}
           </Link>
         ) : (
-          <span className="text-sm font-semibold text-zinc-900">{contract.contractNo}</span>
+          <span className="text-sm font-semibold text-tp-text">{contract.contractNo}</span>
         )}
         <Chip size="small" variant={CONTRACT_STATUS_VARIANT[contract.status]}>
           {CONTRACT_STATUS_LABEL[contract.status]}
         </Chip>
         {contract.endReason ? (
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-tp-muted">
             {CONTRACT_END_REASON_LABEL[contract.endReason]}
           </span>
         ) : null}

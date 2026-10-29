@@ -1,53 +1,71 @@
 "use client";
 
-import { ErrorState, LoadingState } from "@/components/DataState";
-import {
-  AssignmentsSection,
-  ContractsSection,
-  IdpSection,
-  PersonalInfoSection,
-} from "@/features/profile";
-import type { ProfileEmployee, useProfileHistory } from "@/features/profile";
+import type { CvFieldsFragment } from "@/generated/graphql";
+import type { MyIdp } from "@/features/idp/talent/useMyIdp";
+import { AssignmentsSection } from "@/features/profile/AssignmentsSection";
+import { ContractsSection } from "@/features/profile/ContractsSection";
+import { IdpSection } from "@/features/profile/IdpSection";
+import { ProfileErrorState } from "@/features/profile/ProfileErrorState";
+import { ProfilePanelSkeleton } from "@/features/profile/ProfilePanelSkeleton";
+import { SkillsCvSection } from "@/features/profile/SkillsCvSection";
+import { SummarySection } from "@/features/profile/SummarySection";
+import type {
+  ProfileEmployee,
+  ProfileHistory,
+  ProfileSession,
+} from "@/features/profile/useProfile";
 import { WorkloadSection } from "@/features/profile/WorkloadSection";
+import type { RefetchableQueryState } from "@/lib/apollo/toQueryState";
 
-type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp";
+export type ProfileTab =
+  "ringkasan" | "keahlian" | "kontrak" | "assignment" | "workload" | "pengembangan";
 
-type HistoryState = ReturnType<typeof useProfileHistory>;
+interface ProfileTabContentProps {
+  cv: RefetchableQueryState<CvFieldsFragment | undefined>;
+  history: RefetchableQueryState<ProfileHistory>;
+  idp: RefetchableQueryState<MyIdp | undefined>;
+  profile: RefetchableQueryState<ProfileEmployee | undefined> & {
+    session: ProfileSession | undefined;
+  };
+  selectedTab: ProfileTab;
+}
 
 export function ProfileTabContent({
-  selectedTab,
-  status,
-  error,
-  employee,
+  cv,
   history,
-}: {
-  selectedTab: ProfileTab;
-  status: "loading" | "ready" | "error";
-  error: string | null;
-  employee: ProfileEmployee | undefined;
-  history: HistoryState;
-}) {
+  idp,
+  profile,
+  selectedTab,
+}: ProfileTabContentProps) {
   if (selectedTab === "workload") return <WorkloadSection />;
-  if (selectedTab === "idp") return <IdpSection />;
-  if (status === "loading") return <LoadingState />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat profil."} />;
-  if (!employee) return <PersonalInfoSection employee={undefined} />;
+  if (selectedTab === "pengembangan") return <IdpSection idp={idp} />;
+  if (selectedTab === "keahlian") return <SkillsCvSection cv={cv} />;
+  if (selectedTab === "ringkasan") {
+    return (
+      <SummarySection
+        employee={profile.data}
+        error={profile.error}
+        onRetry={profile.refetch}
+        session={profile.session}
+        status={profile.status}
+      />
+    );
+  }
 
-  if (selectedTab === "contracts") {
-    if (history.status === "loading") return <LoadingState />;
-    if (history.status === "error") {
-      return <ErrorState message={history.error ?? "Gagal memuat riwayat kontrak."} />;
-    }
+  if (history.status === "loading") {
+    return <ProfilePanelSkeleton label="Memuat riwayat kontrak dan assignment…" />;
+  }
+  if (history.status === "error") {
+    return (
+      <ProfileErrorState
+        message={history.error ?? "Gagal memuat riwayat kontrak dan assignment."}
+        onRetry={history.refetch}
+      />
+    );
+  }
+
+  if (selectedTab === "kontrak") {
     return <ContractsSection contracts={history.data?.contracts ?? []} />;
   }
-
-  if (selectedTab === "assignments") {
-    if (history.status === "loading") return <LoadingState />;
-    if (history.status === "error") {
-      return <ErrorState message={history.error ?? "Gagal memuat riwayat assignment."} />;
-    }
-    return <AssignmentsSection assignments={history.data?.assignments ?? []} />;
-  }
-
-  return <PersonalInfoSection employee={employee} />;
+  return <AssignmentsSection assignments={history.data?.assignments ?? []} />;
 }

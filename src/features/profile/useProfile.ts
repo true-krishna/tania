@@ -7,7 +7,7 @@ import {
   type ProfileHistoryQuery,
   type ProfileQuery,
 } from "@/generated/graphql";
-import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
+import { toQueryState, type RefetchableQueryState } from "@/lib/apollo/toQueryState";
 
 export type ProfileEmployee = NonNullable<ProfileQuery["me"]["employee"]>;
 export type ProfileHistoryEmployee = NonNullable<ProfileHistoryQuery["me"]["employee"]>;
@@ -35,7 +35,7 @@ export interface ProfileHistory {
  * tanpa selnya, dan propagasi non-null GraphQL akan menggugurkan seluruh
  * `me.employee` bila digabung dalam satu query.
  */
-export function useProfile(): QueryState<ProfileEmployee | undefined> & {
+export function useProfile(): RefetchableQueryState<ProfileEmployee | undefined> & {
   session: ProfileSession | undefined;
 } {
   const result = useQuery(ProfileDocument);
@@ -44,6 +44,9 @@ export function useProfile(): QueryState<ProfileEmployee | undefined> & {
       ...result,
       data: result.data ? (result.data.me.employee ?? undefined) : undefined,
     }),
+    refetch: () => {
+      void result.refetch();
+    },
     session: result.data
       ? {
           id: result.data.me.id,
@@ -59,16 +62,21 @@ export function useProfile(): QueryState<ProfileEmployee | undefined> & {
  * yang tidak memegang sel `contracts`/`assignments` (mis. Talent setelah
  * TAN-343) — query tidak dijalankan dan tidak akan memicu resolusi FORBIDDEN.
  */
-export function useProfileHistory(enabled: boolean): QueryState<ProfileHistory> {
+export function useProfileHistory(enabled: boolean): RefetchableQueryState<ProfileHistory> {
   const result = useQuery(ProfileHistoryDocument, { skip: !enabled });
   const employee = result.data?.me.employee;
-  return toQueryState({
-    ...result,
-    data: result.data
-      ? {
-          contracts: employee ? employee.contracts.edges.map((edge) => edge.node) : [],
-          assignments: employee ? employee.assignments.edges.map((edge) => edge.node) : [],
-        }
-      : undefined,
-  });
+  return {
+    ...toQueryState({
+      ...result,
+      data: result.data
+        ? {
+            contracts: employee ? employee.contracts.edges.map((edge) => edge.node) : [],
+            assignments: employee ? employee.assignments.edges.map((edge) => edge.node) : [],
+          }
+        : undefined,
+    }),
+    refetch: () => {
+      void result.refetch();
+    },
+  };
 }
