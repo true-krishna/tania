@@ -38,6 +38,9 @@ type ChatMessage {
 
 # `sources` (jsonb: tool/params/rowCount/fetchedAt — data-model) TIDAK diekspos ke GraphQL:
 # rujukan sumber ditampilkan dari teks jawaban (FR-05), jadi tidak ada permukaan baru bagi klien.
+# **Revisi 2026-10-29 (TAN-369)**: baris rujukan itu disusun **server** dari `sources` yang tersimpan
+# (`Sumber: <tool>, data per <fetchedAt> (<n> baris).`) dan ditambahkan pada `content` jawaban asisten,
+# bukan diketik model — sitasi tidak lagi bergantung pada kepatuhan model dan tidak ikut diperiksa guardrail.
 
 type ChatMessageEdge { node: ChatMessage!, cursor: String! }
 type ChatMessageConnection { edges: [ChatMessageEdge!]!, pageInfo: PageInfo!, totalCount: Int! }
@@ -93,7 +96,7 @@ Tanpa ini, satu kegagalan provider + satu retry menghasilkan **dua pesan USER id
 | `content` kosong / > 2.000 karakter (batas UI — `plan.md` D6) | Ditolak **sebelum** pemanggilan model (tidak memicu pemakaian token) | `maxLength` input + pesan "Maksimal 2.000 karakter."; tidak ada bubble baru |
 | `conversationId` bukan milik pemanggil / tidak ada | `NOT_FOUND` | Toast error; panel tetap pada daftar percakapan miliknya |
 | `AI_PROVIDER_*` belum dikonfigurasi | Kegagalan eksplisit "asisten belum dikonfigurasi" (`CHAT_NOT_CONFIGURED`) | Pesan gagal ramah di thread (FR-11) |
-| Provider model gagal/timeout/anggaran jawaban habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (`CHAT_FAILED`; anggaran satu jawaban — `plan.md` D6/R2). **TAN-325**: setiap kegagalan membawa `extensions.reason` (kode stabil kategori kegagalan) dan kalimat yang menjelaskan *mengapa*: `PROVIDER_ERROR` (layanan model gagal/tidak dapat dihubungi), `TIMEOUT` (anggaran waktu jawaban habis), `EMPTY_RESPONSE` (model tidak mengembalikan apapun), `UNGROUNDED_ANSWER` (jawaban berisi klaim di luar hasil tool putaran ini, FR-04), `TOOL_ROUNDS_EXHAUSTED` (loop tool menghabiskan batas putaran). Detail teknis yang aman (mis. kode status provider, jumlah klaim ditolak) disertakan dalam pesan; tidak ada nama/NIK/isi pesan yang bocor (Keamanan III). | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; toast menampilkan pesan server apa adanya (termasuk kode reason) |
+| Provider model gagal/timeout/anggaran jawaban habis | Pesan USER tetap tersimpan; idempoten lewat `clientRequestId`; tidak ada pesan ASSISTANT tersusun; error eksplisit "asisten gagal menjawab, coba lagi" (`CHAT_FAILED`; anggaran satu jawaban — `plan.md` D6/R2). **TAN-325**: setiap kegagalan membawa `extensions.reason` (kode stabil kategori kegagalan) dan kalimat yang menjelaskan *mengapa*: `PROVIDER_ERROR` (layanan model gagal/tidak dapat dihubungi), `TIMEOUT` (anggaran waktu jawaban habis), `EMPTY_RESPONSE` (model tidak mengembalikan apapun), `UNGROUNDED_ANSWER` (jawaban berisi klaim di luar hasil tool putaran ini, FR-04), `DATA_NOT_FETCHED` (model tidak memanggil tool sama sekali sehingga tidak ada data yang bisa dirujuk — pengguna diminta mengirim ulang, bukan disalahkan; TAN-369), `TOOL_ROUNDS_EXHAUSTED` (loop tool menghabiskan batas putaran). Detail teknis yang aman (mis. kode status provider, jumlah klaim ditolak) disertakan dalam pesan; tidak ada nama/NIK/isi pesan yang bocor (Keamanan III). | Bubble gagal + tombol coba ulang yang mengirim ulang `clientRequestId` **sama** → tidak ada pesan user ganda; toast menampilkan pesan server apa adanya (termasuk kode reason) |
 | `clientRequestId` hilang/bukan UUID | Ditolak sebelum menyentuh model | — |
 | Kuota per user terlampaui (**20 pesan/jam**, konstanta disetujui — `plan.md` D6) | Ditolak **sebelum** pemanggilan model — tidak ada token terpakai; kode `CHAT_RATE_LIMITED` + `extensions.retryAfterSeconds` (sisa jendela) | Pesan ramah "kuota asisten tercapai … Coba lagi dalam N menit." (pesan server ditampilkan apa adanya); tombol kirim nonaktif **dan** tombol "coba ulang" disembunyikan sampai jendela bergeser |
 | **Seluruh hasil tool pada jawaban itu berisi 0 baris** — pada himpunan hasil tool yang **tidak kosong** (≥1 pemanggilan tool; FR-15, `plan.md` D10) | Jawaban **disusun server**, bukan oleh model: "Tidak ada data yang cocok dalam cakupan Anda." — tidak ada nama/angka dari luar hasil tool; pesan USER tetap tersimpan. **Prasyarat**: jawaban **tanpa** panggilan tool (sapaan, penolakan FR-12) tidak tersentuh baris ini (tetap kalimat model); tool yang **gagal** (tanpa `rowCount`) bukan hasil kosong dan mengikuti baris kegagalan provider (FR-11) | Ditampilkan sebagai jawaban biasa (bukan state gagal, tanpa tombol coba ulang) |
@@ -116,7 +119,7 @@ Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (N
 
 **Guardrail biaya (FR-10 — nilai disetujui pemilik 2026-10-14)**: seluruh batas adalah **konstanta kode, bukan env**, dan **nilainya satu sumber**: `plan.md` D6 (mesin: konstanta `tania-backend/internal/domain/chat.go`). Kontrak ini tidak mengulang daftar angkanya; nilai yang tampil pada tabel §Kontrak error (batas panjang pesan, kuota per jam, anggaran satu jawaban) menunjuk rujukan yang sama dan **tidak boleh berbeda nilai**. Kenaikan nilai mana pun = perubahan kode + persetujuan pemilik. Pemakaian token per pesan asisten tersimpan untuk laporan bulanan.
 
-**Protokol loop** (diegakkan usecase, bukan harapan prompt): maksimum 5 putaran tool per jawaban; setiap hasil tool diberi label sumber + `fetchedAt` (dasar FR-05); jawaban final wajib memuat sumber & waktu data; tool error → dilaporkan ke model sebagai kegagalan (jawaban jujur, bukan konjektur).
+**Protokol loop** (diegakkan usecase, bukan harapan prompt): maksimum 5 putaran tool per jawaban; setiap hasil tool diberi label sumber + `fetchedAt`; jawaban final wajib berdasar hasil tool putaran ini, dan **baris sumber + waktu data disusun server** dari `sources` (FR-05, revisi 2026-10-29 TAN-369) sehingga tidak bergantung pada teks model; koreksi "ambil data dulu" dikirim **di dalam pertanyaan terakhir** (bukan sebagai pesan user kedua) agar tidak dibuang chat template; tool error → dilaporkan ke model sebagai kegagalan (jawaban jujur, bukan konjektur).
 
 ## System prompt (ringkasan kontrak perilaku)
 
@@ -124,11 +127,11 @@ Semua tool berjalan dengan identitas penanya; hasil diproyeksikan ke DTO aman (N
 - Wajib berdasar pada hasil tool; melarang angka/nama di luar hasil tool; bila data tidak cukup → nyatakan jujur (FR-04, US5 skenario 3).
 - Rekomendasi selalu: berdasar data yang dirujuk, berlabel eksplisit "rekomendasi/saran", mengarahkan ke modul terkait untuk aksi (FR-08/FR-09); bukan keputusan pejabat.
 - Menolak sopan pertanyaan di luar cakupan (FR-12) dan permintaan menampilkan data tanpa hak akses (FR-06) — "Anda tidak memiliki akses…" bukan datanya (US4 skenario 2).
-- Format keluaran: teks dengan bold `**…**` untuk angka penting, daftar sederhana, baris baru — subset yang didukung renderer frontend (R-8 research).
+- Format keluaran: teks dengan bold `**…**` untuk angka penting, daftar sederhana, baris baru — subset yang didukung renderer frontend (R-8 research). Aturan sitasi yang berlaku sejak revisi 2026-10-29 (TAN-369): angka dan tanggal **disalin persis** dari hasil tool, sedangkan nama tool/waktu pengambilan **tidak** ditulis model (server yang menambahkan).
 
 ## Kontrak UI (panel & bubble)
 
-- Panel asisten: akses dari dashboard + bubble melayang dari halaman lain; hanya dirender untuk `CHAPTER`/`OPERATION`.
+- Panel asisten: akses dari dashboard + bubble melayang dari halaman lain; dirender mengikuti sel RBAC `assistant` (`useMenuEntryAccess("assistant")`) — sumber kebenaran yang sama dengan bubble dan server (T059).
 - Daftar percakapan milik user + tombol "Percakapan baru"; memilih percakapan memuat riwayat (`chatMessages`).
 - Chip pertanyaan contoh **per peran** (statis di frontend, dipetakan ke toolset yang benar-benar tersedia) — contoh Chapter & Operation berbeda sesuai cakupan.
 - Input: `maxLength` 2.000 + penghitung; kirim dinonaktifkan saat menunggu balasan; state gagal ramah dengan coba ulang yang mengirim ulang `clientRequestId` yang sama (idempoten). `clientRequestId` dibuat di klien dengan `crypto.randomUUID()` — tanpa dependensi baru.
