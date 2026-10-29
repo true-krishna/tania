@@ -239,13 +239,15 @@ export function BulkCreateAssignmentModal({
           {result ? "Tutup" : "Batal"}
         </Button>
         <Button disabled={loading || parsing} form={formId} type="submit">
-          {loading
-            ? "Menyimpan…"
-            : isRetry
-              ? `Ulangi ${rowsToSend.length} baris gagal`
-              : "Simpan Massal"}
+          {submitLabel(loading, isRetry, rowsToSend.length)}
         </Button>
       </ModalActions>
     </Modal>
   );
+}
+
+function submitLabel(loading: boolean, isRetry: boolean, count: number): string {
+  if (loading) return "Menyimpan…";
+  if (isRetry) return `Ulangi ${count} baris gagal`;
+  return "Simpan Massal";
 }

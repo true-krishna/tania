@@ -3,15 +3,13 @@
 import * as React from "react";
 import { ApolloError, useMutation } from "@apollo/client";
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
-import { InputControl } from "@/components/InputControl";
 import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
-import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
 import { useProjects } from "@/features/master-data/useMasterData";
 import { CreateAssignmentDocument } from "@/generated/graphql";
 import { mapAssignmentSubmitError } from "@/lib/errors";
+import { AssignmentFormFields } from "./AssignmentFormFields";
 
 type FormValues = {
   employeeId: string;
@@ -120,12 +118,11 @@ export function CreateAssignmentModal({ open, onClose, onCreated }: CreateAssign
   }
 
   const loadingData = projects.status === "loading" || talents.status === "loading";
-  const dataError =
-    projects.status === "error"
-      ? (projects.error ?? "Gagal memuat project.")
-      : talents.status === "error"
-        ? (talents.error ?? "Gagal memuat talent.")
-        : null;
+  const projectDataError =
+    projects.status === "error" ? (projects.error ?? "Gagal memuat project.") : null;
+  const talentDataError =
+    talents.status === "error" ? (talents.error ?? "Gagal memuat talent.") : null;
+  const dataError = projectDataError ?? talentDataError;
 
   return (
     <Modal onClose={onClose} open={open} size="md">
@@ -137,64 +134,16 @@ export function CreateAssignmentModal({ open, onClose, onCreated }: CreateAssign
           id={formId}
           onSubmit={onSubmit}
         >
-          {loadingData ? (
-            <p className="text-sm text-tp-muted">Memuat data…</p>
-          ) : dataError ? (
-            <p className="text-sm text-red-700" role="alert">
-              {dataError}
-            </p>
-          ) : (
-            <>
-              {formError ? (
-                <p className="text-sm text-red-700" role="alert">
-                  {formError}
-                </p>
-              ) : null}
-              <InputControl error={errors.employeeId} label="Talent">
-                <Select
-                  onChange={(e) => set("employeeId", e.target.value)}
-                  options={[
-                    { value: "", label: "— pilih talent (assignable) —" },
-                    ...(talents.data ?? []).map((emp) => ({
-                      value: emp.id,
-                      label: `${emp.fullName} (${emp.nomorInduk ?? "—"})`,
-                    })),
-                  ]}
-                  value={values.employeeId}
-                />
-              </InputControl>
-              <InputControl error={errors.projectId} label="Project">
-                <Select
-                  onChange={(e) => set("projectId", e.target.value)}
-                  options={[
-                    { value: "", label: "— pilih project —" },
-                    ...(projects.data ?? [])
-                      .filter((p) => p.isActive)
-                      .map((p) => ({ value: p.id, label: p.name })),
-                  ]}
-                  value={values.projectId}
-                />
-              </InputControl>
-              <InputControl error={errors.periodStart} label="Tanggal Mulai">
-                <Input
-                  onChange={(e) => set("periodStart", e.target.value)}
-                  type="date"
-                  value={values.periodStart}
-                />
-              </InputControl>
-              <InputControl
-                error={errors.periodEnd}
-                helper="(opsional, kosong = aktif)"
-                label="Tanggal Selesai"
-              >
-                <Input
-                  onChange={(e) => set("periodEnd", e.target.value)}
-                  type="date"
-                  value={values.periodEnd}
-                />
-              </InputControl>
-            </>
-          )}
+          <AssignmentFormFields
+            dataError={dataError}
+            errors={errors}
+            formError={formError}
+            loading={loadingData}
+            onChange={set}
+            projects={projects.data ?? []}
+            talents={talents.data ?? []}
+            values={values}
+          />
         </form>
       </ModalContent>
       <ModalActions>
