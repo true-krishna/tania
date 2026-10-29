@@ -1,7 +1,10 @@
-"use client";
+import type { Metadata } from "next";
+import MyIdpPage from "./MyIdpPage";
 
-import { MyIdpView } from "@/features/idp/MyIdpView";
+export const metadata: Metadata = {
+  title: "IDP Saya",
+};
 
-export default function MyIdpPage() {
-  return <MyIdpView />;
+export default function Page() {
+  return <MyIdpPage />;
 }

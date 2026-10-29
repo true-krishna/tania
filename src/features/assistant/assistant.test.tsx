@@ -12,7 +12,8 @@ import {
   SendChatMessageDocument,
 } from "@/generated/graphql";
 import { AssistantBubble } from "./AssistantBubble";
-import { AnswerText, unansweredUserMessages } from "./AssistantPanel";
+import { AnswerText } from "./AnswerText";
+import { unansweredUserMessages } from "./chatMessages";
 import { MenuAccessProvider } from "@/lib/auth/access";
 
 // Peran datang dari guard sesi (dipakai bubble & panel).
