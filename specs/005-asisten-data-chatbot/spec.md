@@ -16,6 +16,8 @@
 
 **Revisi**: 2026-10-19 (remediasi `/speckit.analyze`, TAN-204) — Temuan staging "jawaban asisten memuat nama yang tidak ada di basis data" ditutup dengan butir **FR-15**: jawaban untuk **hasil kosong** disusun server dengan kalimat baku, bukan oleh model. Butir ini mengikat perilaku yang sebelumnya **tidak diatur** (tidak ada FR, kalimat, maupun test untuk `rowCount = 0`) dan **tidak mengubah** FR lain, nilai guardrail FR-10, atau matriks otorisasi.
 
+**Revisi**: 2026-10-29 (T059/TAN-369) — Ketersediaan panel dinyatakan **mengikuti sel katalog RBAC `assistant`** (default `READ` untuk Chapter & Operation, `NONE` untuk peran lain) alih-alih daftar peran statis di kode; FR-01, US1 AC4, Assumptions, Out of Scope, dan NC-03 diselaraskan. **Tidak ada perubahan perilaku bagi Chapter/Operation**; peran lain tetap tidak melihat panel/bubble kecuali pemilik membuka selnya, dan bila dibuka panel memakai chip netral (bukan chip per-peran).
+
 **Status**: Final — seluruh butir klarifikasi (NC-01..NC-05) ditutup; siap untuk `/speckit.plan`. Pembuatan issue implementasi menunggu persetujuan eksplisit pemilik produk.
 
 **Input**: `/speckit.specify` (TAN-203) — "Buat chatbot yang membantu chapter dan operation dalam aplikasi Tania yang tugasnya merangkum data, menunjukkan data, hingga memberikan rekomendasi untuk pengambilan keputusan."
@@ -46,7 +48,7 @@ Sebagai **Chapter**, saya dapat membuka panel chat asisten dari dalam aplikasi T
 1. **Given** user dengan peran Chapter atau Operation sudah login, **When** membuka panel asisten dari dashboard (dan bubble akses dari halaman lain), **Then** panel terbuka, siap menerima pertanyaan dalam Bahasa Indonesia, dan menampilkan chip pertanyaan contoh sesuai perannya.
 2. **Given** user mengirim pertanyaan, **When** asisten selesai memproses, **Then** balasan tampil di thread yang sama dan percakapan tersimpan atas nama user tersebut.
 3. **Given** user membuka ulang panel di sesi berikutnya, **When** panel dimuat, **Then** riwayat percakapan miliknya tampil kembali dan dapat dilanjutkan atau dimulai ulang (percakapan baru).
-4. **Given** user dengan peran di luar cakupan MVP (Admin, Talent), **When** membuka aplikasi, **Then** panel asisten tidak tersedia pada MVP (MVP terbatas Chapter & Operation — NC-03 terkonfirmasi; perluasan menyusul).
+4. **Given** user dengan peran di luar cakupan MVP (Admin, Talent), **When** membuka aplikasi, **Then** panel asisten dan bubble tidak tampil karena sel katalog `assistant` untuk peran itu `NONE` (default MVP — NC-03 terkonfirmasi; bila pemilik membuka selnya, panel tampil dengan chip netral tanpa klaim cakupan).
 
 ### User Story 2 - Merangkum data dalam cakupan peran (Priority: P1)
 
@@ -137,7 +139,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 
 ### Functional Requirements
 
-- **FR-01**: Sistem menyediakan panel asisten percakapan yang tertanam di aplikasi Tania, tersedia bagi peran **Chapter** dan **Operation** (MVP), dengan akses dari dashboard dan bubble akses dari halaman lain, serta chip pertanyaan contoh sesuai peran; seluruh teks antarmuka panel memakai Bahasa Indonesia. Panel tidak tersedia bagi peran lain pada MVP (NC-03).
+- **FR-01**: Sistem menyediakan panel asisten percakapan yang tertanam di aplikasi Tania, dengan akses dari dashboard dan bubble akses dari halaman lain, serta chip pertanyaan contoh sesuai peran; seluruh teks antarmuka panel memakai Bahasa Indonesia. Ketersediaan panel **mengikuti sel katalog RBAC `assistant`** — satu sumber yang sama untuk bubble, panel, dan server: default `READ` bagi peran **Chapter** dan **Operation**, `NONE` bagi peran lain (sehingga pada MVP peran lain tidak melihat panel maupun bubble; membuka sel itu untuk peran lain adalah keputusan konfigurasi pemilik lewat manajemen akses, bukan daftar peran statis di kode). Bagi peran yang selnya dibukakan di luar kedua peran MVP, chip pertanyaan contoh memakai kalimat netral tanpa klaim cakupan (NC-03; revisi 2026-10-29, TAN-369).
 - **FR-02**: Percakapan, riwayat, dan konteks asisten bersifat **privat mutlak per user**; tidak ada peran — termasuk Admin — yang dapat membaca isi percakapan user lain.
 - **FR-03**: Asisten menerima input bebas (maksimum 2.000 karakter per pesan) dan **menjawab dalam Bahasa Indonesia**.
 - **FR-04**: Asisten **merangkum data** (US2) dan **menunjukkan data** (US3) secara *grounded*: jawaban hanya disusun dari data live aplikasi melalui kueri read-only. Cakupan sumber data MVP: **data karyawan dan data kontrak** (NC-01), termasuk agregat dashboard yang diturunkan dari keduanya; domain lain (assignment, IDP, evaluasi performa, CV, master data, workload) menyusul pada fase lanjutan. Mengarang angka atau data di luar hasil kueri adalah cacat grounding yang wajib dicegah.
@@ -170,7 +172,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 ## Assumptions
 
 - Prinsip copilot pada PRD TANIA v3.0 §6.6 (grounded, read-only, hak akses identik user, Bahasa Indonesia, privat, limit biaya) diadopsi sebagai arah produk yang berlaku, diterjemahkan ke aplikasi terimplementasi dengan 4 peran (Admin, Operation, Chapter, Talent).
-- MVP menargetkan peran Chapter dan Operation sesuai permintaan; Talent/Admin menyusul pada fase lanjutan bila diminta (NC-03 terkonfirmasi).
+- MVP menargetkan peran Chapter dan Operation sesuai permintaan; Talent/Admin menyusul pada fase lanjutan bila diminta (NC-03 terkonfirmasi). Kedua peran MVP itu adalah **default `READ`** sel katalog `assistant`; peran lain default `NONE` (FR-01 revisi 2026-10-29).
 - *Briefing* proaktif harian (AV-05 pada PRD) **tidak** masuk MVP spesifikasi ini; ringkasan bersifat on-demand via percakapan. Briefing dapat menjadi spesifikasi lanjutan.
 - Provider model: organisasi memakai **provider milik sendiri** (integrasi via API key) — NC-04; penempatan komponen orkestrasi AI ditetapkan pada `/speckit.plan`. Spesifikasi ini membatasi diri pada perilaku produk, bukan pilihan infrastruktur.
 
@@ -178,7 +180,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 
 - Aksi/write melalui percakapan (arah "Flows" PRD: asisten membuat assignment, mengubah data, dsb.) — butuh approval eksplisit dan fase tersendiri.
 - Briefing proaktif harian otomatis (AV-05) — kandidat spesifikasi lanjutan.
-- Akses asisten bagi peran Talent/Admin pada MVP (NC-03 terkonfirmasi) — perluasan menyusul.
+- Pembukaan sel `assistant` bagi peran Talent/Admin pada MVP (default `NONE`; mengubahnya = keputusan pemilik lewat manajemen akses) — perluasan menyusul.
 - Domain data di luar karyawan & kontrak pada MVP (assignment, IDP, evaluasi performa, CV, master data, workload) — diperluas setelah MVP (NC-01).
 - Integrasi data di luar Tania (SAP, Jira/Azure DevOps, HR system, M365/Teams).
 - Suara/teleponi, unggah dokumen ke asisten, dan multi-bahasa selain Bahasa Indonesia.
@@ -204,7 +206,7 @@ Sebagai **pemilik sistem**, saya memastikan pemakaian asisten terkendali biayany
 
 - **NC-01 — Cakupan sumber data MVP** — **DITUTUP (2026-10-14)**: fokus ke **data kontrak dan data karyawan** terlebih dahulu; domain lain menyusul pada fase lanjutan. (FR-04, Ringkasan, Out of Scope.)
 - **NC-02 — Bentuk rekomendasi** — **DITUTUP (2026-10-14)**: pemilik produk memilih **opsi (a) — saran tekstual di dalam jawaban percakapan** untuk MVP. Opsi (b) rekomendasi terstruktur per topik dan (c) analisis berkala disimpan sebagai kandidat fase lanjutan. (FR-09, US5, Out of Scope.)
-- **NC-03 — Peran pengguna MVP** — **DITUTUP (2026-10-14)**: **Chapter dan Operation dahulu**; perluasan ke peran lain menyusul. (FR-01, US1.)
+- **NC-03 — Peran pengguna MVP** — **DITUTUP (2026-10-14)**: **Chapter dan Operation dahulu**; perluasan ke peran lain menyusul. (FR-01, US1.) **Catatan 2026-10-29 (TAN-369)**: batas itu ditegakkan sebagai **default sel katalog `assistant`** (`READ` Chapter/Operation, `NONE` peran lain), bukan gerbang peran statis — lihat FR-01 revisi.
 - **NC-04 — Provider model AI** — **DITUTUP (2026-10-14)**: organisasi memiliki **provider sendiri**; integrasi cukup dengan API key. Penempatan komponen orkestrasi ditetapkan pada `/speckit.plan`. (FR-10, Assumptions.)
 - **NC-05 — Posisi Epic Avatar/Copilot (TAN-44/45)** — **DITUTUP (2026-10-14)**: epic diabaikan dan dibatalkan di tracker (semula uji coba); spesifikasi ini berdiri sendiri.
 

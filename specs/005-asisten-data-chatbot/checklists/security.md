@@ -16,7 +16,7 @@ Rujukan prinsip: Konstitusi Security I–IV, Konstitusi API, plan D6 (guardrail)
 
 ## Otorisasi & akses
 
-- [x] Gerbang peran server-side di setiap operasi chat (`Chapter`, `Operation`; `Admin`/`Talent` ditolak) — `internal/usecase/chat.go` `authorize` + `RequireRole`
+- [x] Gerbang peran server-side di setiap operasi chat (sel katalog `assistant`; default `READ` Chapter/Operation, `NONE` peran lain) — `internal/usecase/chat.go` `authorize` + `RequirePermission(permAssistant)` (dulu `RequireRole`, diganti TAN-344; keputusan TAN-369)
 - [x] Isolasi antar pemilik: setiap baca/tulis difilter `user_id`; percakapan milik orang lain → `NOT_FOUND`, bukan `FORBIDDEN` (anti-enumerasi) — `internal/repository/postgres/chat.go`
 - [x] Baca ber-cakupan untuk Chapter hanya lewat usecase ber-scope (`scope.go`), **tidak** diekspos sebagai query GraphQL baru (R-11) — SDL chat tidak menambah permukaan baca ber-scope
 - [x] Tidak ada jalur `Admin` istimewa ke isi percakapan orang lain
