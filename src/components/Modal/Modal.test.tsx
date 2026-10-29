@@ -9,7 +9,7 @@ import {
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import * as React from "react";
-import { Modal, ModalActions, ModalContent, ModalTitle } from "./Modal";
+import { Modal, ModalActions, ModalContent, ModalTitle } from ".";
 
 function BasicModal({
   open = true,
