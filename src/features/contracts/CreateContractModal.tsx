@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMutation, ApolloError } from "@apollo/client";
-import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
+import { CreateContractModalFrame } from "./CreateContractModalFrame";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
@@ -358,25 +358,5 @@ export function CreateContractModal({ open, onClose }: { open: boolean; onClose:
         </InputControl>
       </form>
     </CreateContractModalFrame>
-  );
-}
-
-function CreateContractModalFrame({
-  open,
-  onClose,
-  actions,
-  children,
-}: {
-  open: boolean;
-  onClose: () => void;
-  actions?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <Modal onClose={onClose} open={open} size="lg">
-      <ModalTitle>Tambah Kontrak</ModalTitle>
-      <ModalContent>{children}</ModalContent>
-      {actions ? <ModalActions>{actions}</ModalActions> : null}
-    </Modal>
   );
 }

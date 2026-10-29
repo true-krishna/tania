@@ -10,7 +10,8 @@ import {
   EmploymentContractDocument,
   ResignEmployeeDocument,
 } from "@/generated/graphql";
-import { ContractCycleSection, ContractCycleSuccess } from "./ContractCycleSection";
+import { ContractCycleSection } from "./ContractCycleSection";
+import { ContractCycleSuccess } from "./ContractCycleSuccess";
 import { DEPENDENCY_WARNING, type Contract } from "./contractCycle";
 import { useAcknowledgeAction } from "./useAcknowledgeAction";
 

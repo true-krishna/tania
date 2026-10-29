@@ -18,7 +18,8 @@ import {
   type WorkLocation,
 } from "@/generated/graphql";
 import { workLocationFormValue } from "./labels";
-import { ContractCycleSection, ContractCycleSuccess } from "./ContractCycleSection";
+import { ContractCycleSection } from "./ContractCycleSection";
+import { ContractCycleSuccess } from "./ContractCycleSuccess";
 import { MUTATION_NOTICE, todayISO, type Contract } from "./contractCycle";
 import { mapSubmitError } from "@/lib/errors";
 import { CONTRACT_DETAIL } from "@/lib/constants/routes";
