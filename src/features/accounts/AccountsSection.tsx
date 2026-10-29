@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Table, type TableColumn } from "@/components/Table";
+import type { TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
-import { Chip } from "@/components/Chip";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
+import { ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
 import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
@@ -14,7 +13,9 @@ import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { Select } from "@/components/Select";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { EmployeePicker } from "@/features/accounts/EmployeePicker";
-import { roleLabelFor, roleOptions, type RoleOption } from "@/features/accounts/roles";
+import { roleOptions } from "@/features/accounts/roles";
+import { AccountsTable } from "./AccountsTable";
+import { RoleBadge } from "./RoleBadge";
 import type { UsersQuery } from "@/generated/graphql";
 import type { AccountStatus, Role } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
@@ -41,14 +42,6 @@ type AccountsSectionProps = {
   onSetStatus: (userId: string, status: AccountStatus) => Promise<void>;
   onRevokeSessions: (userId: string) => Promise<void>;
 };
-
-function RoleBadge({ roleName, options }: { roleName: string; options: readonly RoleOption[] }) {
-  return (
-    <Chip size="small" variant="info">
-      {roleLabelFor(roleName, options)}
-    </Chip>
-  );
-}
 
 export function AccountsSection({
   accounts,
@@ -274,19 +267,13 @@ export function AccountsSection({
         </ModalActions>
       </Modal>
 
-      {!accounts || accounts.length === 0 ? (
-        <EmptyState message="Belum ada akun pengguna." />
-      ) : filteredAccounts.length === 0 ? (
-        <p className="text-sm text-tp-muted">Tidak ada akun yang cocok dengan pencarian.</p>
-      ) : (
-        <Table
-          caption="Daftar akun pengguna"
-          columns={columns}
-          dataSource={pageRows}
-          pagination={pagination}
-          rowKey={(account) => account.id}
-        />
-      )}
+      <AccountsTable
+        accounts={accounts}
+        columns={columns}
+        filteredAccounts={filteredAccounts}
+        pageRows={pageRows}
+        pagination={pagination}
+      />
     </div>
   );
 }
