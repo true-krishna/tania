@@ -183,11 +183,7 @@ export function ActivitiesPageView() {
         </ModalContent>
         <ModalActions>
           <Button disabled={creating || updating} form={formId} type="submit">
-            {creating || updating
-              ? "Menyimpan…"
-              : editing
-                ? "Simpan perubahan"
-                : "Simpan aktivitas"}
+            {saveLabel(creating || updating, editing)}
           </Button>
           <Button
             disabled={creating || updating}
@@ -212,4 +208,10 @@ export function ActivitiesPageView() {
       />
     </section>
   );
+}
+
+function saveLabel(saving: boolean, editing: unknown): string {
+  if (saving) return "Menyimpan…";
+  if (editing) return "Simpan perubahan";
+  return "Simpan aktivitas";
 }
