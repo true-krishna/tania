@@ -1,0 +1,16 @@
+mutation ResendEntraActivationEmail($employeeId: ID!) {
+  resendEntraActivationEmail(employeeId: $employeeId) {
+    id
+    fullName
+    entraProvision {
+      status
+      action
+      upn
+      notifyStatus
+      notifyError
+      needsReprovision
+      lastError
+      updatedAt
+    }
+  }
+}

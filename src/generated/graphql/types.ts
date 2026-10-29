@@ -311,6 +311,7 @@ export type BulkMasterDataErrorCode =
   | 'BATCH_LIMIT'
   | 'CONFLICT'
   | 'INVALID'
+  | 'REFERENCED'
   | 'REF_AMBIGUOUS'
   | 'REF_INACTIVE'
   | 'REF_NOT_FOUND';
@@ -834,12 +835,25 @@ export type EntraLoginInput = {
   nonce: Scalars['String']['input'];
 };
 
+/** Status pengiriman email aktivasi jalur create (TAN-359). */
+export type EntraNotifyStatus =
+  /** Email aktivasi gagal terkirim — kirim ulang tersedia (TAN-359). */
+  | 'FAILED'
+  /** Email aktivasi terkirim ke email pribadi karyawan. */
+  | 'SENT';
+
 /** Hasil provisioning akun Entra seorang talent (FR-44, FR-45). */
 export type EntraProvision = {
   __typename?: 'EntraProvision';
   action: EntraProvisionAction;
   /** Pesan kegagalan terakhir; null bila berhasil (FR-44). */
   lastError?: Maybe<Scalars['String']['output']>;
+  /** Penanda "perlu provisi ulang": jenis akun tidak cocok dengan contract_type kontrak aktif (TAN-360). */
+  needsReprovision: Scalars['Boolean']['output'];
+  /** Alasan kegagalan pengiriman email aktivasi; kosong bila terkirim (TAN-359). */
+  notifyError?: Maybe<Scalars['String']['output']>;
+  /** Status email aktivasi (jalur create); null = tidak berlaku (jalur invite) (TAN-359). */
+  notifyStatus?: Maybe<EntraNotifyStatus>;
   /** Object ID akun yang terlink — penanda anti-duplikat (FR-43). */
   objectId?: Maybe<Scalars['String']['output']>;
   status: EntraProvisionStatus;
@@ -855,13 +869,13 @@ export type EntraProvisionAction =
 
 /** Status hasil provisi akun Entra (FR-44/FR-45); tanpa record = belum dibuat. */
 export type EntraProvisionStatus =
-  /** Akun dibuat dengan UPN digitaltelkom.id (domain lain, FR-45). */
+  /** Akun dibuat dengan UPN digitaltelkom.id (jenis kontrak jalur create, TAN-359). */
   | 'CREATED'
   /** Akun dinonaktifkan saat terminasi (FR-46). */
   | 'DISABLED'
   /** Provisi gagal — menunggu provisioning ulang (FR-44). */
   | 'FAILED'
-  /** Undangan Entra terkirim (email telkom.co.id, FR-45). */
+  /** Undangan Entra terkirim (jenis kontrak jalur invite, TAN-359). */
   | 'INVITED';
 
 /** Status permulaan alur SSO Microsoft Entra ID. */
@@ -1097,6 +1111,18 @@ export type Mutation = {
   bulkCreateAssignments: BulkAssignmentResult;
   /** Hapus banyak assignment aktif sekaligus (selesai tidak dapat dihapus). Chapter + Admin. */
   bulkDeleteAssignments: BulkAssignmentResult;
+  /** Ubah status aktif/non-aktif banyak Chapter sekaligus dengan satu aksi. Khusus Admin. */
+  bulkSetChapterActive: BulkChapterResult;
+  /** Ubah status aktif/non-aktif banyak Job Role sekaligus dengan satu aksi. Khusus Admin. */
+  bulkSetJobRoleActive: BulkJobRoleResult;
+  /** Pindahkan chapter pemilik pada banyak Job Role sekaligus; chapterId kosong berarti melepas kepemilikan. Khusus Admin. */
+  bulkSetJobRoleChapter: BulkJobRoleResult;
+  /** Ubah status aktif/non-aktif banyak Project (Initiative) sekaligus dengan satu aksi. Khusus Admin. */
+  bulkSetProjectActive: BulkProjectResult;
+  /** Pindahkan Unit in Charge pada banyak Project (Initiative) sekaligus. Khusus Admin. */
+  bulkSetProjectUnit: BulkProjectResult;
+  /** Ubah status aktif/non-aktif banyak Unit sekaligus dengan satu aksi. Khusus Admin. */
+  bulkSetUnitActive: BulkUnitResult;
   /** Terapkan satu perubahan (project dan/atau periode) ke banyak assignment aktif. Chapter + Admin. */
   bulkUpdateAssignments: BulkAssignmentResult;
   closeIdp: Idp;
@@ -1150,6 +1176,7 @@ export type Mutation = {
   /**
    * Provisioning manual/ulang akun Entra untuk talent yang belum punya (FR-44).
    * Hasil terlihat pada entraProvision talent; kegagalan tercatat di sana (status FAILED) tanpa menggagalkan mutasi.
+   * Keputusan create/invite mengikuti contract_type kontrak aktif (TAN-359).
    */
   provisionEntraAccount: Employee;
   /** Mutasi: akhiri kontrak lama + kontrak baru efektif tanggal mutasi (FR-38). */
@@ -1158,6 +1185,18 @@ export type Mutation = {
   refreshSession: AuthPayload;
   /** Perpanjangan kontrak berbatas waktu — kontrak baru terkait predecessor (FR-36). */
   renewEmploymentContract: EmploymentContract;
+  /**
+   * Provisi ulang satu langkah (TAN-360): akun lama dinonaktifkan lalu diganti
+   * create/invite sesuai contract_type kontrak aktif — untuk akun yang jenisnya tidak
+   * cocok lagi setelah mutasi. Hasil terlihat pada entraProvision.
+   */
+  reprovisionEntraAccount: Employee;
+  /**
+   * Kirim ulang email aktivasi akun hasil create (TAN-359): password sementara baru
+   * di-set di Entra (tetap wajib ganti pada login pertama) lalu email baru dikirim ke
+   * email pribadi karyawan. Status hasil terlihat pada entraProvision.
+   */
+  resendEntraActivationEmail: Employee;
   /** Kembalikan konfigurasi menu satu role ke matriks default FR-03. Khusus Admin. */
   resetRoleMenuConfig: Array<RoleMenuEntry>;
   /** Resign: akhiri kontrak aktif (end_reason=resign), status → RESIGNED, nonaktifkan akun (FR-37, FR-46). */
@@ -1172,6 +1211,12 @@ export type Mutation = {
    */
   sendChatMessage: ChatMessage;
   setChapterActive: Chapter;
+  /**
+   * Aktifkan/nonaktifkan akun Entra terlink secara manual (TAN-360), member maupun
+   * guest — enable tanpa menunggu perpanjangan kontrak. Permintaan yang tidak
+   * mengubah keadaan bersifat no-op; setiap perubahan tercatat di jejak audit.
+   */
+  setEntraAccountEnabled: Employee;
   setEvaluationPeriodActive: EvaluationPeriod;
   setEvaluationTemplateActive: EvaluationTemplate;
   setJobRoleActive: JobRole;
@@ -1257,6 +1302,42 @@ export type MutationBulkCreateAssignmentsArgs = {
 
 export type MutationBulkDeleteAssignmentsArgs = {
   ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationBulkSetChapterActiveArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  isActive: Scalars['Boolean']['input'];
+};
+
+
+export type MutationBulkSetJobRoleActiveArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  isActive: Scalars['Boolean']['input'];
+};
+
+
+export type MutationBulkSetJobRoleChapterArgs = {
+  chapterId?: InputMaybe<Scalars['ID']['input']>;
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationBulkSetProjectActiveArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  isActive: Scalars['Boolean']['input'];
+};
+
+
+export type MutationBulkSetProjectUnitArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  unitId: Scalars['ID']['input'];
+};
+
+
+export type MutationBulkSetUnitActiveArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  isActive: Scalars['Boolean']['input'];
 };
 
 
@@ -1444,6 +1525,16 @@ export type MutationRenewEmploymentContractArgs = {
 };
 
 
+export type MutationReprovisionEntraAccountArgs = {
+  employeeId: Scalars['ID']['input'];
+};
+
+
+export type MutationResendEntraActivationEmailArgs = {
+  employeeId: Scalars['ID']['input'];
+};
+
+
 export type MutationResetRoleMenuConfigArgs = {
   roleId: Scalars['ID']['input'];
 };
@@ -1479,6 +1570,12 @@ export type MutationSendChatMessageArgs = {
 export type MutationSetChapterActiveArgs = {
   id: Scalars['ID']['input'];
   isActive: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetEntraAccountEnabledArgs = {
+  employeeId: Scalars['ID']['input'];
+  enabled: Scalars['Boolean']['input'];
 };
 
 
@@ -1825,7 +1922,12 @@ export type Query = {
   employees: EmployeeConnection;
   /** Kontrak habis tanpa perpanjangan — perlu tindak lanjut Operation/Admin (US10 skenario 4). */
   employeesNeedingFollowUp: EmployeeConnection;
-  /** Talent yang belum memiliki akun Entra (FR-44), dengan pencarian nama dan pengurutan. */
+  /**
+   * Talent yang belum memiliki akun Entra (FR-44), ditambah talent terlink yang
+   * jenis akunnya tidak cocok dengan contract_type kontrak aktif (penanda
+   * "perlu provisi ulang" pada entraProvision, TAN-360) — dengan pencarian nama dan
+   * pengurutan.
+   */
   employeesWithoutEntra: EmployeeConnection;
   employmentContract?: Maybe<EmploymentContract>;
   employmentContracts: EmploymentContractConnection;
@@ -2218,7 +2320,7 @@ export type TalentReportPeriodInput = {
   startMonth: Scalars['String']['input'];
 };
 
-/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest (tidak lebih awal dari 2022) s.d. Desember tahun berjalan. */
+/** Batas rentang filter laporan (FR-11): Januari tahun data ter-earliest s.d. Desember tahun berjalan. */
 export type TalentReportRange = {
   __typename?: 'TalentReportRange';
   endMonth: Scalars['String']['output'];

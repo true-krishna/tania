@@ -1,10 +1,8 @@
-import type { EntraProvisionStatus } from "@/generated/graphql/types";
+import type { EntraNotifyStatus, EntraProvisionStatus } from "@/generated/graphql/types";
 
 export const ENTRA_PROVISION_STATUS_LABEL: Record<EntraProvisionStatus, string> = {
   INVITED: "Undangan terkirim",
-  // Keputusan TAN-273 (Opsi A): akun hasil create lahir tanpa kredensial
-  // yang dapat dipakai dan menunggu aktivasi di luar aplikasi.
-  CREATED: "Menunggu aktivasi",
+  CREATED: "Akun dibuat",
   FAILED: "Gagal",
   DISABLED: "Dinonaktifkan",
 };
@@ -15,4 +13,14 @@ export const ENTRA_PROVISION_STATUS_TONE: Record<EntraProvisionStatus, string> =
   CREATED: "bg-tp-tint-info text-tp-ink-info",
   FAILED: "bg-red-100 text-red-700",
   DISABLED: "bg-zinc-100 text-zinc-600",
+};
+
+export const ENTRA_NOTIFY_STATUS_LABEL: Record<EntraNotifyStatus, string> = {
+  SENT: "Email aktivasi terkirim",
+  FAILED: "Email aktivasi gagal",
+};
+
+export const ENTRA_NOTIFY_STATUS_TONE: Record<EntraNotifyStatus, string> = {
+  SENT: "bg-green-100 text-green-700",
+  FAILED: "bg-red-100 text-red-700",
 };

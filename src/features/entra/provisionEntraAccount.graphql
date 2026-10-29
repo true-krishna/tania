@@ -6,6 +6,9 @@ mutation ProvisionEntraAccount($employeeId: ID!) {
       status
       action
       upn
+      notifyStatus
+      notifyError
+      needsReprovision
       lastError
       updatedAt
     }

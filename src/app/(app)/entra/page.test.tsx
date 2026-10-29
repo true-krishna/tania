@@ -10,6 +10,9 @@ import { ENTRA_LIST_VARIABLES } from "@/features/entra/useEmployeesWithoutEntra"
 import {
   EmployeesWithoutEntraDocument,
   ProvisionEntraAccountDocument,
+  ReprovisionEntraAccountDocument,
+  ResendEntraActivationEmailDocument,
+  SetEntraAccountEnabledDocument,
 } from "@/generated/graphql";
 
 const listVariables = { ...ENTRA_LIST_VARIABLES };
@@ -94,8 +97,8 @@ describe("EntraProvisioningPage (daftar belum ada Entra, FR-44)", () => {
     expect(screen.getByText("Belum dibuat")).toBeInTheDocument();
     expect(screen.getByText("Gagal")).toBeInTheDocument();
     expect(screen.getByText("graph unavailable")).toBeInTheDocument();
-    // CREATED: akun hasil create menunggu aktivasi di luar aplikasi (TAN-273).
-    expect(screen.getByText("Menunggu aktivasi")).toBeInTheDocument();
+    // CREATED: akun hasil create dengan password sementara via email (TAN-359).
+    expect(screen.getByText("Akun dibuat")).toBeInTheDocument();
     expect(screen.getByText("dewi.anggraini@digitaltelkom.id")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Aksi Budi Santoso" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Aksi Rina Kusuma" })).toBeInTheDocument();
@@ -432,4 +435,368 @@ describe("EntraProvisioningPage (pencarian dan pengurutan, FR-44)", () => {
     expect(screen.getByRole("button", { name: "Nama" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Hasil provisi" })).toBeInTheDocument();
   });
+});
+
+describe("EntraProvisioningPage (siklus akun & notifikasi, TAN-360)", () => {
+  const linkedRows = [
+    {
+      __typename: "Employee",
+      id: "emp-linked",
+      fullName: "Dewi Anggraini",
+      email: "dewi@example.com",
+      status: "ACTIVE",
+      entraProvision: {
+        __typename: "EntraProvision",
+        status: "CREATED",
+        action: "CREATE",
+        upn: "dewi.anggraini@digitaltelkom.id",
+        notifyStatus: "SENT",
+        notifyError: null,
+        needsReprovision: false,
+        lastError: null,
+        updatedAt: "2026-10-12T10:00:00Z",
+      },
+    },
+    {
+      __typename: "Employee",
+      id: "emp-mismatch",
+      fullName: "Iwan Mutasi",
+      email: "iwan@example.com",
+      status: "ACTIVE",
+      entraProvision: {
+        __typename: "EntraProvision",
+        status: "INVITED",
+        action: "INVITE",
+        upn: "iwan@example.com",
+        notifyStatus: null,
+        notifyError: null,
+        needsReprovision: true,
+        lastError: null,
+        updatedAt: "2026-10-12T10:00:00Z",
+      },
+    },
+    {
+      __typename: "Employee",
+      id: "emp-email-failed",
+      fullName: "Rian Email",
+      email: "rian@example.com",
+      status: "ACTIVE",
+      entraProvision: {
+        __typename: "EntraProvision",
+        status: "CREATED",
+        action: "CREATE",
+        upn: "rian.email@digitaltelkom.id",
+        notifyStatus: "FAILED",
+        notifyError: "smtp relay down",
+        needsReprovision: false,
+        lastError: null,
+        updatedAt: "2026-10-12T10:00:00Z",
+      },
+    },
+    {
+      __typename: "Employee",
+      id: "emp-disabled",
+      fullName: "Eka Nonaktif",
+      email: "eka@example.com",
+      status: "ACTIVE",
+      entraProvision: {
+        __typename: "EntraProvision",
+        status: "DISABLED",
+        action: "CREATE",
+        upn: "eka.nonaktif@digitaltelkom.id",
+        notifyStatus: null,
+        notifyError: null,
+        needsReprovision: false,
+        lastError: null,
+        updatedAt: "2026-10-12T10:00:00Z",
+      },
+    },
+  ];
+
+  const linkedListMock = {
+    request: { query: EmployeesWithoutEntraDocument, variables: listVariables },
+    result: connection(linkedRows),
+  };
+
+  it("shows the re-provision badge for a mismatched account and reprovisions it after confirmation", async () => {
+    const afterSwap = linkedRows.map((row) =>
+      row.id === "emp-mismatch"
+        ? {
+            ...row,
+            entraProvision: {
+              ...row.entraProvision,
+              status: "CREATED",
+              action: "CREATE",
+              upn: "iwan.mutasi@digitaltelkom.id",
+              needsReprovision: false,
+            },
+          }
+        : row
+    );
+    renderPage([
+      linkedListMock,
+      {
+        request: {
+          query: ReprovisionEntraAccountDocument,
+          variables: { employeeId: "emp-mismatch" },
+        },
+        result: {
+          data: {
+            reprovisionEntraAccount: {
+              __typename: "Employee",
+              id: "emp-mismatch",
+              fullName: "Iwan Mutasi",
+              entraProvision: {
+                __typename: "EntraProvision",
+                status: "CREATED",
+                action: "CREATE",
+                upn: "iwan.mutasi@digitaltelkom.id",
+                notifyStatus: "SENT",
+                notifyError: null,
+                needsReprovision: false,
+                lastError: null,
+                updatedAt: "2026-10-12T11:00:00Z",
+              },
+            },
+          },
+        },
+      },
+      {
+        request: { query: EmployeesWithoutEntraDocument, variables: listVariables },
+        result: connection(afterSwap),
+      },
+    ]);
+    expect(await screen.findByText("Iwan Mutasi")).toBeInTheDocument();
+    expect(screen.getByText("Perlu provisi ulang")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Iwan Mutasi" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Provisi ulang" }));
+    // The confirmation modal explains the swap before it runs.
+    expect(
+      await screen.findByText(/akun entra lama iwan mutasi akan dinonaktifkan/i)
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Provisi ulang" }));
+
+    expect(
+      await screen.findByText(/provisi ulang iwan mutasi berhasil/i)
+    ).toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.queryByText("Perlu provisi ulang")).not.toBeInTheDocument(),
+      { timeout: 3000 }
+    );
+  }, 15000);
+
+  it("disables a linked account only through the confirmation modal and shows the result", async () => {
+    const afterToggle = linkedRows.map((row) =>
+      row.id === "emp-linked"
+        ? {
+            ...row,
+            entraProvision: { ...row.entraProvision, status: "DISABLED" },
+          }
+        : row
+    );
+    renderPage([
+      linkedListMock,
+      {
+        request: {
+          query: SetEntraAccountEnabledDocument,
+          variables: { employeeId: "emp-linked", enabled: false },
+        },
+        result: {
+          data: {
+            setEntraAccountEnabled: {
+              __typename: "Employee",
+              id: "emp-linked",
+              fullName: "Dewi Anggraini",
+              entraProvision: {
+                __typename: "EntraProvision",
+                status: "DISABLED",
+                action: "CREATE",
+                upn: "dewi.anggraini@digitaltelkom.id",
+                notifyStatus: "SENT",
+                notifyError: null,
+                needsReprovision: false,
+                lastError: null,
+                updatedAt: "2026-10-12T11:00:00Z",
+              },
+            },
+          },
+        },
+      },
+      {
+        request: { query: EmployeesWithoutEntraDocument, variables: listVariables },
+        result: connection(afterToggle),
+      },
+    ]);
+    expect(await screen.findByText("Dewi Anggraini")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Dewi Anggraini" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Nonaktifkan" }));
+    expect(
+      await screen.findByText(/tidak akan dapat dipakai login/i)
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
+
+    expect(
+      await screen.findByText(/akun entra dewi anggraini berhasil dinonaktifkan/i)
+    ).toBeInTheDocument();
+    expect((await screen.findAllByText("Dinonaktifkan")).length).toBeGreaterThan(0);
+  }, 15000);
+
+  it("re-enables a disabled account without a confirmation modal", async () => {
+    const afterToggle = linkedRows.map((row) =>
+      row.id === "emp-disabled"
+        ? {
+            ...row,
+            entraProvision: { ...row.entraProvision, status: "CREATED" },
+          }
+        : row
+    );
+    renderPage([
+      linkedListMock,
+      {
+        request: {
+          query: SetEntraAccountEnabledDocument,
+          variables: { employeeId: "emp-disabled", enabled: true },
+        },
+        result: {
+          data: {
+            setEntraAccountEnabled: {
+              __typename: "Employee",
+              id: "emp-disabled",
+              fullName: "Eka Nonaktif",
+              entraProvision: {
+                __typename: "EntraProvision",
+                status: "CREATED",
+                action: "CREATE",
+                upn: "eka.nonaktif@digitaltelkom.id",
+                notifyStatus: null,
+                notifyError: null,
+                needsReprovision: false,
+                lastError: null,
+                updatedAt: "2026-10-12T11:00:00Z",
+              },
+            },
+          },
+        },
+      },
+      {
+        request: { query: EmployeesWithoutEntraDocument, variables: listVariables },
+        result: connection(afterToggle),
+      },
+    ]);
+    expect(await screen.findByText("Eka Nonaktif")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Eka Nonaktif" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Aktifkan" }));
+
+    expect(
+      await screen.findByText(/akun entra eka nonaktif berhasil diaktifkan/i)
+    ).toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.queryByText("Dinonaktifkan")).not.toBeInTheDocument(),
+      { timeout: 3000 }
+    );
+  }, 15000);
+
+  it("resends the activation email for a created account whose email failed and updates the status", async () => {
+    const afterResend = linkedRows.map((row) =>
+      row.id === "emp-email-failed"
+        ? {
+            ...row,
+            entraProvision: { ...row.entraProvision, notifyStatus: "SENT", notifyError: null },
+          }
+        : row
+    );
+    renderPage([
+      linkedListMock,
+      {
+        request: {
+          query: ResendEntraActivationEmailDocument,
+          variables: { employeeId: "emp-email-failed" },
+        },
+        result: {
+          data: {
+            resendEntraActivationEmail: {
+              __typename: "Employee",
+              id: "emp-email-failed",
+              fullName: "Rian Email",
+              entraProvision: {
+                __typename: "EntraProvision",
+                status: "CREATED",
+                action: "CREATE",
+                upn: "rian.email@digitaltelkom.id",
+                notifyStatus: "SENT",
+                notifyError: null,
+                needsReprovision: false,
+                lastError: null,
+                updatedAt: "2026-10-12T11:00:00Z",
+              },
+            },
+          },
+        },
+      },
+      {
+        request: { query: EmployeesWithoutEntraDocument, variables: listVariables },
+        result: connection(afterResend),
+      },
+    ]);
+    expect(await screen.findByText("Rian Email")).toBeInTheDocument();
+    expect(screen.getByText("Email aktivasi gagal")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Rian Email" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /kirim ulang email aktivasi/i })
+    );
+
+    expect(
+      await screen.findByText(/berhasil dikirim ulang ke email pribadinya/i)
+    ).toBeInTheDocument();
+    expect(
+      await screen.findAllByText("Email aktivasi terkirim")
+    ).not.toHaveLength(0);
+  }, 15000);
+
+  it("surfaces a failed resend with its reason", async () => {
+    renderPage([
+      linkedListMock,
+      {
+        request: {
+          query: ResendEntraActivationEmailDocument,
+          variables: { employeeId: "emp-email-failed" },
+        },
+        result: {
+          data: {
+            resendEntraActivationEmail: {
+              __typename: "Employee",
+              id: "emp-email-failed",
+              fullName: "Rian Email",
+              entraProvision: {
+                __typename: "EntraProvision",
+                status: "CREATED",
+                action: "CREATE",
+                upn: "rian.email@digitaltelkom.id",
+                notifyStatus: "FAILED",
+                notifyError: "relay masih down",
+                needsReprovision: false,
+                lastError: null,
+                updatedAt: "2026-10-12T11:00:00Z",
+              },
+            },
+          },
+        },
+      },
+      // The mutation refetches the list; the failed send keeps the FAILED badge.
+      linkedListMock,
+    ]);
+    expect(await screen.findByText("Rian Email")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aksi Rian Email" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /kirim ulang email aktivasi/i })
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/relay masih down/i);
+    expect(screen.getByText("Email aktivasi gagal")).toBeInTheDocument();
+  }, 15000);
 });

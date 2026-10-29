@@ -12,13 +12,21 @@ import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import {
   EmployeesWithoutEntraDocument,
+  type EmployeesWithoutEntraQuery,
   ProvisionEntraAccountDocument,
+  ReprovisionEntraAccountDocument,
+  ResendEntraActivationEmailDocument,
+  SetEntraAccountEnabledDocument,
 } from "@/generated/graphql";
 import type { EntraEmployeeSortField, SortDirection } from "@/generated/graphql/types";
+import type { RowAction } from "@/components/RowActionsMenu";
 import {
+  ENTRA_NOTIFY_STATUS_LABEL,
+  ENTRA_NOTIFY_STATUS_TONE,
   ENTRA_PROVISION_STATUS_LABEL,
   ENTRA_PROVISION_STATUS_TONE,
 } from "@/features/entra/labels";
+import { EntraAccountActionModal } from "@/features/entra/EntraAccountActionModal";
 import {
   ENTRA_LIST_VARIABLES,
   useEmployeesWithoutEntra,
@@ -67,6 +75,13 @@ function SortHeader({
   );
 }
 
+type EntraListEmployee =
+  EmployeesWithoutEntraQuery["employeesWithoutEntra"]["edges"][number]["node"];
+
+type ConfirmAction =
+  | { kind: "disable"; employee: EntraListEmployee }
+  | { kind: "reprovision"; employee: EntraListEmployee };
+
 export default function EntraProvisioningPage() {
   const [searchInput, setSearchInput] = React.useState("");
   const search = useDebouncedValue(searchInput);
@@ -90,13 +105,27 @@ export default function EntraProvisioningPage() {
     }),
     [search, sortBy, sortDirection]
   );
+  const refetch = [
+    { query: EmployeesWithoutEntraDocument, variables: listVariables },
+  ];
   const [provisionEntra] = useMutation(ProvisionEntraAccountDocument, {
-    refetchQueries: [
-      { query: EmployeesWithoutEntraDocument, variables: listVariables },
-    ],
+    refetchQueries: refetch,
+    awaitRefetchQueries: true,
+  });
+  const [setEntraAccountEnabled] = useMutation(SetEntraAccountEnabledDocument, {
+    refetchQueries: refetch,
+    awaitRefetchQueries: true,
+  });
+  const [resendEntraActivationEmail] = useMutation(ResendEntraActivationEmailDocument, {
+    refetchQueries: refetch,
+    awaitRefetchQueries: true,
+  });
+  const [reprovisionEntraAccount] = useMutation(ReprovisionEntraAccountDocument, {
+    refetchQueries: refetch,
     awaitRefetchQueries: true,
   });
   const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [confirm, setConfirm] = React.useState<ConfirmAction | null>(null);
   const [message, setMessage] = React.useState<{
     tone: "ok" | "error";
     text: string;
@@ -141,12 +170,145 @@ export default function EntraProvisioningPage() {
     }
   }
 
+  async function setEnabled(employeeId: string, fullName: string, enabled: boolean) {
+    setBusyId(employeeId);
+    setMessage(null);
+    try {
+      const result = await setEntraAccountEnabled({ variables: { employeeId, enabled } });
+      const outcome = result.data?.setEntraAccountEnabled.entraProvision;
+      if (!outcome) return;
+      if (outcome.status === (enabled ? "CREATED" : "DISABLED") || outcome.status === "INVITED") {
+        setMessage({
+          tone: "ok",
+          text: `Akun Entra ${fullName} berhasil ${enabled ? "diaktifkan" : "dinonaktifkan"}.`,
+        });
+      } else {
+        setMessage({
+          tone: "error",
+          text: `Perubahan status akun ${fullName} gagal: ${outcome.lastError ?? "kesalahan tidak diketahui"}.`,
+        });
+      }
+    } catch (err) {
+      const submitError = mapSubmitError(
+        err instanceof ApolloError ? err : null,
+        "Perubahan status akun Entra tidak dapat dilakukan.",
+        "Gagal mengubah status akun Entra."
+      );
+      setMessage({ tone: "error", text: submitError.message });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function resendActivation(employeeId: string, fullName: string) {
+    setBusyId(employeeId);
+    setMessage(null);
+    try {
+      const result = await resendEntraActivationEmail({ variables: { employeeId } });
+      const outcome = result.data?.resendEntraActivationEmail.entraProvision;
+      if (outcome?.notifyStatus === "SENT") {
+        setMessage({
+          tone: "ok",
+          text: `Email aktivasi ${fullName} berhasil dikirim ulang ke email pribadinya.`,
+        });
+      } else {
+        setMessage({
+          tone: "error",
+          text: `Kirim ulang email aktivasi ${fullName} gagal: ${outcome?.notifyError ?? "kesalahan tidak diketahui"}.`,
+        });
+      }
+    } catch (err) {
+      const submitError = mapSubmitError(
+        err instanceof ApolloError ? err : null,
+        "Kirim ulang email aktivasi hanya untuk akun hasil create.",
+        "Gagal mengirim ulang email aktivasi."
+      );
+      setMessage({ tone: "error", text: submitError.message });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function reprovision(employeeId: string, fullName: string) {
+    setBusyId(employeeId);
+    setMessage(null);
+    try {
+      const result = await reprovisionEntraAccount({ variables: { employeeId } });
+      const outcome = result.data?.reprovisionEntraAccount.entraProvision;
+      if (!outcome) return;
+      if (outcome.status === "FAILED") {
+        setMessage({
+          tone: "error",
+          text: `Provisi ulang ${fullName} gagal: ${outcome.lastError ?? "kesalahan tidak diketahui"}. Coba lagi nanti.`,
+        });
+      } else {
+        setMessage({
+          tone: "ok",
+          text: `Provisi ulang ${fullName} berhasil (${ENTRA_PROVISION_STATUS_LABEL[outcome.status].toLowerCase()}).`,
+        });
+      }
+    } catch (err) {
+      const submitError = mapSubmitError(
+        err instanceof ApolloError ? err : null,
+        "Provisi ulang hanya untuk akun yang jenisnya tidak cocok dengan kontrak aktif.",
+        "Gagal memprovisi ulang akun Entra."
+      );
+      setMessage({ tone: "error", text: submitError.message });
+    } finally {
+      setBusyId(null);
+      setConfirm(null);
+    }
+  }
+
+  function rowActions(employee: EntraListEmployee): RowAction[] {
+    const outcome = employee.entraProvision;
+    const linked = outcome !== null && outcome.status !== "FAILED";
+    const actions: RowAction[] = [];
+    if (!linked) {
+      actions.push({
+        label: busyId === employee.id ? "Memproses…" : outcome ? "Coba lagi" : "Provisioning",
+        onSelect: () => void provision(employee.id, employee.fullName),
+        disabled: busyId !== null,
+      });
+      return actions;
+    }
+    if (outcome.needsReprovision) {
+      actions.push({
+        label: "Provisi ulang",
+        onSelect: () => setConfirm({ kind: "reprovision", employee }),
+        disabled: busyId !== null,
+      });
+    }
+    if (outcome.status === "CREATED" && outcome.notifyStatus === "FAILED") {
+      actions.push({
+        label: "Kirim ulang email aktivasi",
+        onSelect: () => void resendActivation(employee.id, employee.fullName),
+        disabled: busyId !== null,
+      });
+    }
+    actions.push(
+      outcome.status === "DISABLED"
+        ? {
+            label: "Aktifkan",
+            onSelect: () => void setEnabled(employee.id, employee.fullName, true),
+            disabled: busyId !== null,
+          }
+        : {
+            label: "Nonaktifkan",
+            danger: true,
+            onSelect: () => setConfirm({ kind: "disable", employee }),
+            disabled: busyId !== null,
+          }
+    );
+    return actions;
+  }
+
   const searching = search.trim().length > 0;
 
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        subtitle="Talent yang belum memiliki akun Microsoft Entra — provisioning manual atau ulang setelah gagal (Operation)."
+        subtitle="Talent yang belum memiliki akun Microsoft Entra, dan akun yang perlu diaktifkan kembali, dikirim ulang emailnya, atau diprovisi ulang (Operation)."
         title="Provisi Akun Entra"
       />
 
@@ -190,7 +352,7 @@ export default function EntraProvisioningPage() {
 
       {status === "ready" && employees && employees.length > 0 ? (
         <Table
-          caption="Talent tanpa akun Entra"
+          caption="Talent untuk provisi akun Entra"
           columns={[
             {
               key: "name",
@@ -243,13 +405,31 @@ export default function EntraProvisioningPage() {
                 const failed = outcome.status === "FAILED";
                 return (
                   <>
+                    {outcome.needsReprovision ? (
+                      <span className="mb-1 inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                        Perlu provisi ulang
+                      </span>
+                    ) : null}
                     <span
                       className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ENTRA_PROVISION_STATUS_TONE[outcome.status]}`}
                     >
                       {ENTRA_PROVISION_STATUS_LABEL[outcome.status]}
                     </span>
+                    {outcome.notifyStatus ? (
+                      <span
+                        className={`mt-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${ENTRA_NOTIFY_STATUS_TONE[outcome.notifyStatus]}`}
+                      >
+                        {ENTRA_NOTIFY_STATUS_LABEL[outcome.notifyStatus]}
+                      </span>
+                    ) : null}
                     <span className="mt-1 block text-xs text-zinc-500">
-                      {orDash(failed ? outcome.lastError : outcome.upn ?? outcome.action)}
+                      {orDash(
+                        failed
+                          ? outcome.lastError
+                          : outcome.notifyStatus === "FAILED" && outcome.notifyError
+                            ? outcome.notifyError
+                            : outcome.upn ?? outcome.action
+                      )}
                     </span>
                   </>
                 );
@@ -259,31 +439,40 @@ export default function EntraProvisioningPage() {
               key: "action",
               title: "Aksi",
               className: "col-action",
-              render: (_value, employee) => {
-                const failed = employee.entraProvision?.status === "FAILED";
-                return (
-                  <RowActionsMenu
-                    actions={[
-                      {
-                        label:
-                          busyId === employee.id
-                            ? "Memproses…"
-                            : failed
-                              ? "Coba lagi"
-                              : "Provisioning",
-                        onSelect: () => void provision(employee.id, employee.fullName),
-                        disabled: busyId !== null,
-                      },
-                    ]}
-                    label={`Aksi ${employee.fullName}`}
-                  />
-                );
-              },
+              render: (_value, employee) => (
+                <RowActionsMenu
+                  actions={rowActions(employee)}
+                  label={`Aksi ${employee.fullName}`}
+                />
+              ),
             },
           ]}
           dataSource={pageRows}
           pagination={pagination}
           rowKey={(employee) => employee.id}
+        />
+      ) : null}
+
+      {confirm?.kind === "disable" ? (
+        <EntraAccountActionModal
+          busy={busyId === confirm.employee.id}
+          confirmLabel="Nonaktifkan"
+          description={`Akun Entra ${confirm.employee.fullName} tidak akan dapat dipakai login sampai diaktifkan kembali. Nonaktifkan sekarang?`}
+          onClose={() => setConfirm(null)}
+          onConfirm={() => void setEnabled(confirm.employee.id, confirm.employee.fullName, false)}
+          open
+          title="Nonaktifkan akun Entra"
+        />
+      ) : null}
+      {confirm?.kind === "reprovision" ? (
+        <EntraAccountActionModal
+          busy={busyId === confirm.employee.id}
+          confirmLabel="Provisi ulang"
+          description={`Akun Entra lama ${confirm.employee.fullName} akan dinonaktifkan, lalu dibuat atau diundang ulang mengikuti contract_type kontrak aktifnya. Lanjutkan?`}
+          onClose={() => setConfirm(null)}
+          onConfirm={() => void reprovision(confirm.employee.id, confirm.employee.fullName)}
+          open
+          title="Provisi ulang akun Entra"
         />
       ) : null}
     </section>
