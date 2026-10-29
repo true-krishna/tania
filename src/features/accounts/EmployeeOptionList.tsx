@@ -45,9 +45,7 @@ export function EmployeeOptionList({
           {error ?? "Gagal memuat daftar karyawan."}
         </li>
       ) : items.length === 0 ? (
-        <li className="px-3 py-2 text-sm text-zinc-500">
-          Tidak ada karyawan yang cocok.
-        </li>
+        <li className="px-3 py-2 text-sm text-zinc-500">Tidak ada karyawan yang cocok.</li>
       ) : (
         items.map((employee, optionIndex) => {
           const isActive = optionIndex === activeIndex;
@@ -56,9 +54,7 @@ export function EmployeeOptionList({
               aria-selected={isActive}
               className={cn(
                 "cursor-pointer rounded-md px-3 py-1.5 text-sm",
-                isActive
-                  ? "bg-zinc-100 text-zinc-900"
-                  : "text-zinc-700 hover:bg-zinc-50"
+                isActive ? "bg-zinc-100 text-zinc-900" : "text-zinc-700 hover:bg-zinc-50",
               )}
               data-option-index={optionIndex}
               id={`${listboxId}-option-${optionIndex}`}

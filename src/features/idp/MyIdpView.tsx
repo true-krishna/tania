@@ -10,10 +10,7 @@ import { AuthGuard } from "@/lib/auth/guard";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useMyIdp } from "@/features/idp/talent/useMyIdp";
 import { MyIdpDocument, UpdateDevelopmentActionStatusDocument } from "@/generated/graphql";
-import type {
-  DevelopmentActionStatus,
-  DevelopmentMethod,
-} from "@/generated/graphql/types";
+import type { DevelopmentActionStatus, DevelopmentMethod } from "@/generated/graphql/types";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -99,10 +96,7 @@ export function MyIdpView() {
             <Definition label="Asesmen saat ini" value={idp.currentAssessment} />
             <Definition label="Analisis gap" value={idp.gapAnalysis} />
             <Definition label="Indikator keberhasilan" value={idp.successIndicators} />
-            <Definition
-              label="Periode"
-              value={`${idp.timelineStart} — ${idp.timelineEnd}`}
-            />
+            <Definition label="Periode" value={`${idp.timelineStart} — ${idp.timelineEnd}`} />
           </dl>
         </Card>
 
@@ -129,7 +123,9 @@ export function MyIdpView() {
                   <select
                     aria-label={`Status aksi: ${action.description}`}
                     className="rounded-md border border-surface-border bg-white px-2 py-1 text-xs font-medium text-zinc-700 shadow-sm focus:border-tp-brand-red"
-                    onChange={(e) => handleUpdateStatus(action.id, e.target.value as DevelopmentActionStatus)}
+                    onChange={(e) =>
+                      handleUpdateStatus(action.id, e.target.value as DevelopmentActionStatus)
+                    }
                     value={action.status}
                   >
                     {(Object.keys(ACTION_STATUS_LABEL) as DevelopmentActionStatus[]).map((s) => (
@@ -151,7 +147,10 @@ export function MyIdpView() {
           {idp.reviews.length ? (
             <ul className="flex flex-col gap-2">
               {idp.reviews.map((review) => (
-                <li className="rounded-md border border-board-border px-3 py-2 text-sm" key={review.id}>
+                <li
+                  className="rounded-md border border-board-border px-3 py-2 text-sm"
+                  key={review.id}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium text-zinc-900">
                       {review.reviewDate} · {review.createdBy?.fullName ?? "—"}
@@ -174,7 +173,10 @@ export function MyIdpView() {
           {idp.revisions.length ? (
             <ul className="flex flex-col gap-2">
               {idp.revisions.map((rev) => (
-                <li className="rounded-md border border-board-border px-3 py-2 text-sm" key={rev.id}>
+                <li
+                  className="rounded-md border border-board-border px-3 py-2 text-sm"
+                  key={rev.id}
+                >
                   <span className="font-medium text-zinc-900">Revisi {rev.revisionNo}</span>
                   <p className="mt-1 text-zinc-700">{rev.changeNote}</p>
                   <p className="mt-1 text-xs text-zinc-500">

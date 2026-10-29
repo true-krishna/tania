@@ -20,10 +20,10 @@ export function PageHeader({ title, subtitle, actions, search, filters }: PageHe
       </div>
       {search || filters ? (
         <div className="flex flex-wrap items-center gap-3">
-          {search ? (
-            <div className="flex min-w-0 flex-1 justify-start">{search}</div>
+          {search ? <div className="flex min-w-0 flex-1 justify-start">{search}</div> : null}
+          {filters ? (
+            <div className="ml-auto flex flex-wrap items-center gap-3">{filters}</div>
           ) : null}
-          {filters ? <div className="ml-auto flex flex-wrap items-center gap-3">{filters}</div> : null}
         </div>
       ) : null}
     </div>

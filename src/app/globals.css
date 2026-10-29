@@ -113,7 +113,8 @@
    * the shipped token stacks (design/tokens/tokens.css) remain canonical as
    * the fallback chain. */
   --tp-font-display: var(--font-nunito-sans), Nunito Sans, system-ui, sans-serif;
-  --tp-font-body: var(--font-nunito-sans), Nunito Sans, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tp-font-body:
+    var(--font-nunito-sans), Nunito Sans, system-ui, -apple-system, "Segoe UI", sans-serif;
   --tp-r-sm: 10px;
   --tp-r-md: 14px;
   --tp-r-lg: 20px;

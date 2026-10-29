@@ -23,9 +23,7 @@ export function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
                 <span className="ml-2 text-xs text-zinc-500">
                   {[
                     education.fieldOfStudy,
-                    [education.startYear, education.endYear]
-                      .filter(Boolean)
-                      .join("–"),
+                    [education.startYear, education.endYear].filter(Boolean).join("–"),
                   ]
                     .filter(Boolean)
                     .join(" · ")}
@@ -44,9 +42,7 @@ export function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
             {cv.certifications.map((certification) => (
               <li className="text-sm text-zinc-800" key={certification.id}>
                 {certification.name}
-                <span className="ml-2 text-xs text-zinc-500">
-                  {certification.issuer || ""}
-                </span>
+                <span className="ml-2 text-xs text-zinc-500">{certification.issuer || ""}</span>
               </li>
             ))}
           </ul>
@@ -61,9 +57,7 @@ export function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
             {cv.skills.map((skill) => (
               <li className="text-sm text-zinc-800" key={skill.id}>
                 {skill.name}
-                <span className="ml-2 text-xs text-zinc-500">
-                  {skill.level || ""}
-                </span>
+                <span className="ml-2 text-xs text-zinc-500">{skill.level || ""}</span>
               </li>
             ))}
           </ul>
@@ -73,23 +67,16 @@ export function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
       </ReadOnlySection>
 
       <ReadOnlySection title="Pengalaman Kerja">
-        <p className="text-xs text-zinc-500">
-          Terisi otomatis dari riwayat assignment (FR-12).
-        </p>
+        <p className="text-xs text-zinc-500">Terisi otomatis dari riwayat assignment (FR-12).</p>
         {cv.workExperience.length ? (
           <ul className="flex flex-col gap-1.5">
             {cv.workExperience.map((experience) => (
-              <li
-                className="flex items-start justify-between gap-3 text-sm"
-                key={experience.id}
-              >
+              <li className="flex items-start justify-between gap-3 text-sm" key={experience.id}>
                 <span className="text-zinc-800">
                   {experience.project.name}
                   <span className="ml-2 text-xs text-zinc-500">
                     {experience.periodStart}
-                    {experience.periodEnd
-                      ? ` — ${experience.periodEnd}`
-                      : " — sekarang"}
+                    {experience.periodEnd ? ` — ${experience.periodEnd}` : " — sekarang"}
                   </span>
                 </span>
                 <AssignmentStatusBadge status={experience.status} />
@@ -104,13 +91,7 @@ export function ReadOnlyCv({ cv }: { cv: CvFieldsFragment }) {
   );
 }
 
-function ReadOnlySection({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: string;
-}) {
+function ReadOnlySection({ children, title }: { children: ReactNode; title: string }) {
   return (
     <Card className="flex flex-col gap-2">
       <h2 className="text-base font-semibold text-zinc-900">{title}</h2>

@@ -13,14 +13,7 @@ const OPTIONS = [
 describe("Select", () => {
   it("renders the options and reports changes as select events", () => {
     const onChange = vi.fn();
-    render(
-      <Select
-        aria-label="Status"
-        onChange={onChange}
-        options={OPTIONS}
-        value=""
-      />,
-    );
+    render(<Select aria-label="Status" onChange={onChange} options={OPTIONS} value="" />);
 
     fireEvent.change(screen.getByRole("combobox", { name: "Status" }), {
       target: { value: "ACTIVE" },
@@ -39,9 +32,7 @@ describe("Select", () => {
     expect(combobox).toHaveAttribute("data-empty");
     expect(combobox.parentElement).toHaveClass("w-48");
 
-    rerender(
-      <Select aria-label="Status" className="w-48" options={OPTIONS} value="ACTIVE" />,
-    );
+    rerender(<Select aria-label="Status" className="w-48" options={OPTIONS} value="ACTIVE" />);
     expect(screen.getByRole("combobox", { name: "Status" })).not.toHaveAttribute("data-empty");
   });
 });

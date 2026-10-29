@@ -40,7 +40,7 @@ type SortState = { key: EntraEmployeeSortField; dir: SortDirection } | null;
 
 function sortAria(
   sort: SortState,
-  key: EntraEmployeeSortField
+  key: EntraEmployeeSortField,
 ): "ascending" | "descending" | undefined {
   if (!sort || sort.key !== key) return undefined;
   return sort.dir === "ASC" ? "ascending" : "descending";
@@ -103,11 +103,9 @@ export default function EntraProvisioningPage() {
       sortBy,
       sortDirection,
     }),
-    [search, sortBy, sortDirection]
+    [search, sortBy, sortDirection],
   );
-  const refetch = [
-    { query: EmployeesWithoutEntraDocument, variables: listVariables },
-  ];
+  const refetch = [{ query: EmployeesWithoutEntraDocument, variables: listVariables }];
   const [provisionEntra] = useMutation(ProvisionEntraAccountDocument, {
     refetchQueries: refetch,
     awaitRefetchQueries: true,
@@ -162,7 +160,7 @@ export default function EntraProvisioningPage() {
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         "Akun Entra talent ini sudah terdaftar.",
-        "Gagal memprovisi akun Entra."
+        "Gagal memprovisi akun Entra.",
       );
       setMessage({ tone: "error", text: submitError.message });
     } finally {
@@ -192,7 +190,7 @@ export default function EntraProvisioningPage() {
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         "Perubahan status akun Entra tidak dapat dilakukan.",
-        "Gagal mengubah status akun Entra."
+        "Gagal mengubah status akun Entra.",
       );
       setMessage({ tone: "error", text: submitError.message });
     } finally {
@@ -221,7 +219,7 @@ export default function EntraProvisioningPage() {
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         "Kirim ulang email aktivasi hanya untuk akun hasil create.",
-        "Gagal mengirim ulang email aktivasi."
+        "Gagal mengirim ulang email aktivasi.",
       );
       setMessage({ tone: "error", text: submitError.message });
     } finally {
@@ -251,7 +249,7 @@ export default function EntraProvisioningPage() {
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         "Provisi ulang hanya untuk akun yang jenisnya tidak cocok dengan kontrak aktif.",
-        "Gagal memprovisi ulang akun Entra."
+        "Gagal memprovisi ulang akun Entra.",
       );
       setMessage({ tone: "error", text: submitError.message });
     } finally {
@@ -298,7 +296,7 @@ export default function EntraProvisioningPage() {
             danger: true,
             onSelect: () => setConfirm({ kind: "disable", employee }),
             disabled: busyId !== null,
-          }
+          },
     );
     return actions;
   }
@@ -357,12 +355,7 @@ export default function EntraProvisioningPage() {
             {
               key: "name",
               title: (
-                <SortHeader
-                  label="Nama"
-                  onToggle={toggleSort}
-                  sort={sort}
-                  sortKey="FULL_NAME"
-                />
+                <SortHeader label="Nama" onToggle={toggleSort} sort={sort} sortKey="FULL_NAME" />
               ),
               headerProps: { "aria-sort": sortAria(sort, "FULL_NAME") },
               render: (_value, employee) => (
@@ -376,14 +369,7 @@ export default function EntraProvisioningPage() {
             },
             {
               key: "email",
-              title: (
-                <SortHeader
-                  label="Email"
-                  onToggle={toggleSort}
-                  sort={sort}
-                  sortKey="EMAIL"
-                />
-              ),
+              title: <SortHeader label="Email" onToggle={toggleSort} sort={sort} sortKey="EMAIL" />,
               headerProps: { "aria-sort": sortAria(sort, "EMAIL") },
               className: "text-zinc-600",
               render: (_value, employee) => orDash(employee.email),
@@ -428,7 +414,7 @@ export default function EntraProvisioningPage() {
                           ? outcome.lastError
                           : outcome.notifyStatus === "FAILED" && outcome.notifyError
                             ? outcome.notifyError
-                            : outcome.upn ?? outcome.action
+                            : (outcome.upn ?? outcome.action),
                       )}
                     </span>
                   </>

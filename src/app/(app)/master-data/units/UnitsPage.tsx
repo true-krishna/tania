@@ -2,10 +2,7 @@
 
 import { useToast } from "@/components/Toast";
 import { useUnits } from "@/features/master-data/useMasterData";
-import {
-  MasterDataSection,
-  type MasterDataItem,
-} from "@/features/master-data/MasterDataSection";
+import { MasterDataSection, type MasterDataItem } from "@/features/master-data/MasterDataSection";
 import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useUnitMutations } from "@/features/master-data/useMasterDataMutations";
 
@@ -42,10 +39,7 @@ export default function UnitsPage() {
       items={data}
       nameLabel="Nama Unit"
       onCreate={({ name, code }) =>
-        detectError(
-          () => unitMutations.create({ name, code }),
-          `Unit "${name}" berhasil dibuat.`,
-        )
+        detectError(() => unitMutations.create({ name, code }), `Unit "${name}" berhasil dibuat.`)
       }
       onToggleActive={(id, isActive) =>
         detectError(

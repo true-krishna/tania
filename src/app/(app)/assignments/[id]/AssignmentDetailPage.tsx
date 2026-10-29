@@ -110,8 +110,7 @@ function EditAssignmentForm({ assignment }: { assignment: AssignmentNode }) {
   const [formError, setFormError] = React.useState<string | null>(null);
   const [saved, setSaved] = React.useState(false);
 
-  if (projects.status === "loading")
-    return <LoadingState label="Memuat master data…" />;
+  if (projects.status === "loading") return <LoadingState label="Memuat master data…" />;
   if (projects.status === "error")
     return <ErrorState message={projects.error ?? "Gagal memuat project."} />;
 
@@ -249,8 +248,8 @@ function EndAssignmentCard({ assignment }: { assignment: AssignmentNode }) {
   return (
     <Card className="flex max-w-2xl flex-col gap-3 border-amber-200 bg-amber-50">
       <p className="text-sm text-amber-800">
-        Mengakhiri assignment ini akan menandainya <strong>selesai</strong> dan mengosongkan
-        talent untuk tugas berikutnya. Isi tanggal selesai terlebih dahulu.
+        Mengakhiri assignment ini akan menandainya <strong>selesai</strong> dan mengosongkan talent
+        untuk tugas berikutnya. Isi tanggal selesai terlebih dahulu.
       </p>
       <form className="flex flex-col gap-3" onSubmit={onSubmit}>
         <InputControl error={error} label="Tanggal Selesai">

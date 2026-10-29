@@ -136,7 +136,9 @@ export function TalentWorkloadView() {
           ) : null}
         </div>
         <ReportPeriodSelector
-          ariaLabel={mode === "table" ? "Pilih periode tabel talent" : "Pilih periode laporan talent"}
+          ariaLabel={
+            mode === "table" ? "Pilih periode tabel talent" : "Pilih periode laporan talent"
+          }
           onChange={setPeriod}
           value={period}
         />

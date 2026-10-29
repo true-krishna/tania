@@ -13,9 +13,7 @@ export default function MyEvaluationsPage() {
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat evaluasi."} />;
   if (!data || data.length === 0)
-    return (
-      <EmptyState message="Belum ada evaluasi performa untuk Anda pada periode ini." />
-    );
+    return <EmptyState message="Belum ada evaluasi performa untuk Anda pada periode ini." />;
 
   return (
     <section className="flex flex-col gap-4">
@@ -28,10 +26,7 @@ export default function MyEvaluationsPage() {
                 {evaluation.period.startDate} — {evaluation.period.endDate}
               </p>
             </div>
-            <Chip
-              size="small"
-              variant={evaluation.status === "SUBMITTED" ? "success" : "warning"}
-            >
+            <Chip size="small" variant={evaluation.status === "SUBMITTED" ? "success" : "warning"}>
               {evaluation.status === "SUBMITTED" ? "Diserahkan" : "Draf"}
             </Chip>
           </header>
@@ -49,7 +44,10 @@ export default function MyEvaluationsPage() {
 
           <ul className="flex flex-col gap-1.5">
             {evaluation.answers.map((answer) => (
-              <li className="flex items-start justify-between gap-3 text-sm" key={answer.criterion.id}>
+              <li
+                className="flex items-start justify-between gap-3 text-sm"
+                key={answer.criterion.id}
+              >
                 <span className="text-zinc-700">{answer.criterion.label}</span>
                 <span className="font-medium text-zinc-900">
                   {formatAnswer(answer.criterion.answerType, answer)}
@@ -67,7 +65,9 @@ function formatAnswer(
   answerType: EvaluationAnswerType,
   answer: { valueNumeric?: number | null; valueBool?: boolean | null; valueText?: string | null },
 ): string {
-  if (answer.valueBool !== null && answer.valueBool !== undefined) return answer.valueBool ? "Ya" : "Tidak";
-  if (answer.valueNumeric !== null && answer.valueNumeric !== undefined) return String(answer.valueNumeric);
+  if (answer.valueBool !== null && answer.valueBool !== undefined)
+    return answer.valueBool ? "Ya" : "Tidak";
+  if (answer.valueNumeric !== null && answer.valueNumeric !== undefined)
+    return String(answer.valueNumeric);
   return answer.valueText || "—";
 }

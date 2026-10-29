@@ -22,11 +22,51 @@ const ROLES_QUERY = {
   result: {
     data: {
       roles: [
-        { id: "role-admin", name: "ADMIN", label: "Admin", templateRole: "ADMIN", builtIn: true, status: "ACTIVE", __typename: "Role" },
-        { id: "role-operation", name: "OPERATION", label: "Operation", templateRole: "OPERATION", builtIn: true, status: "ACTIVE", __typename: "Role" },
-        { id: "role-chapter", name: "CHAPTER", label: "Chapter", templateRole: "CHAPTER", builtIn: true, status: "ACTIVE", __typename: "Role" },
-        { id: "role-talent", name: "TALENT", label: "Talent", templateRole: "TALENT", builtIn: true, status: "ACTIVE", __typename: "Role" },
-        { id: "role-pm", name: "PM_CHAPTER", label: "PM Chapter", templateRole: "CHAPTER", builtIn: false, status: "ACTIVE", __typename: "Role" },
+        {
+          id: "role-admin",
+          name: "ADMIN",
+          label: "Admin",
+          templateRole: "ADMIN",
+          builtIn: true,
+          status: "ACTIVE",
+          __typename: "Role",
+        },
+        {
+          id: "role-operation",
+          name: "OPERATION",
+          label: "Operation",
+          templateRole: "OPERATION",
+          builtIn: true,
+          status: "ACTIVE",
+          __typename: "Role",
+        },
+        {
+          id: "role-chapter",
+          name: "CHAPTER",
+          label: "Chapter",
+          templateRole: "CHAPTER",
+          builtIn: true,
+          status: "ACTIVE",
+          __typename: "Role",
+        },
+        {
+          id: "role-talent",
+          name: "TALENT",
+          label: "Talent",
+          templateRole: "TALENT",
+          builtIn: true,
+          status: "ACTIVE",
+          __typename: "Role",
+        },
+        {
+          id: "role-pm",
+          name: "PM_CHAPTER",
+          label: "PM Chapter",
+          templateRole: "CHAPTER",
+          builtIn: false,
+          status: "ACTIVE",
+          __typename: "Role",
+        },
       ],
     },
   },
@@ -194,10 +234,7 @@ describe("accounts management (Admin) — T053", () => {
   });
 
   it("blocks creating an account without employee, email, and role (client-side)", async () => {
-    renderPage([
-      USERS_QUERY,
-      employeeLookupMock(undefined, []),
-    ]);
+    renderPage([USERS_QUERY, employeeLookupMock(undefined, [])]);
 
     await screen.findByText("Sari Dewi");
     await openCreateForm();
@@ -314,7 +351,9 @@ describe("accounts management (Admin) — T053", () => {
     ]);
 
     await screen.findByText("Budi Santoso");
-    fireEvent.click(within(rowOf("Budi Santoso")).getByRole("button", { name: "Aksi Budi Santoso" }));
+    fireEvent.click(
+      within(rowOf("Budi Santoso")).getByRole("button", { name: "Aksi Budi Santoso" }),
+    );
     fireEvent.change(screen.getByLabelText("Ubah peran Budi Santoso"), {
       target: { value: "CHAPTER" },
     });

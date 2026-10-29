@@ -122,9 +122,9 @@ export function CreateAssignmentModal({ open, onClose, onCreated }: CreateAssign
   const loadingData = projects.status === "loading" || talents.status === "loading";
   const dataError =
     projects.status === "error"
-      ? projects.error ?? "Gagal memuat project."
+      ? (projects.error ?? "Gagal memuat project.")
       : talents.status === "error"
-        ? talents.error ?? "Gagal memuat talent."
+        ? (talents.error ?? "Gagal memuat talent.")
         : null;
 
   return (
@@ -194,8 +194,8 @@ export function CreateAssignmentModal({ open, onClose, onCreated }: CreateAssign
                 />
               </InputControl>
             </>
-        )}
-      </form>
+          )}
+        </form>
       </ModalContent>
       <ModalActions>
         <Button
@@ -206,11 +206,7 @@ export function CreateAssignmentModal({ open, onClose, onCreated }: CreateAssign
         >
           Batal
         </Button>
-        <Button
-          disabled={loading || loadingData || !!dataError}
-          form={formId}
-          type="submit"
-        >
+        <Button disabled={loading || loadingData || !!dataError} form={formId} type="submit">
           Simpan
         </Button>
       </ModalActions>

@@ -46,10 +46,7 @@ interface TableFilterBarProps {
   className?: string;
 }
 
-function countActiveFields(
-  fields: readonly TableFilterField[],
-  values: TableFilterValues,
-): number {
+function countActiveFields(fields: readonly TableFilterField[], values: TableFilterValues): number {
   return fields.filter((field) => (values[field.key] ?? "").length > 0).length;
 }
 
@@ -161,10 +158,7 @@ export function TableFilterBar({
               const labelId = `${panelId}-${field.key}-label`;
               return (
                 <div className="flex min-w-0 flex-col gap-1.5" key={field.key}>
-                  <span
-                    className="text-xs font-semibold text-tp-muted"
-                    id={labelId}
-                  >
+                  <span className="text-xs font-semibold text-tp-muted" id={labelId}>
                     {field.label}
                   </span>
                   <FilterFieldControl

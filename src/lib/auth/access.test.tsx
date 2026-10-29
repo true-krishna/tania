@@ -2,23 +2,22 @@
 
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import {
-  MenuAccessGuard,
-  MenuAccessProvider,
-  useMenuEntryAccess,
-  useModuleAccess,
-} from "./access";
+import { MenuAccessGuard, MenuAccessProvider, useMenuEntryAccess, useModuleAccess } from "./access";
 import { DEFAULT_MENU_ACCESS, type MenuAccessConfig } from "./menuAccess";
 import type { Module } from "./matrix";
 
 function Probe({ module }: { module: Module }) {
   const access = useModuleAccess(module);
-  return <span>{`${access.canRead ? "read" : "deny"}:${access.canManage ? "manage" : "view"}`}</span>;
+  return (
+    <span>{`${access.canRead ? "read" : "deny"}:${access.canManage ? "manage" : "view"}`}</span>
+  );
 }
 
 function EntryProbe({ entry }: { entry: string }) {
   const access = useMenuEntryAccess(entry);
-  return <span>{`${access.visible ? "visible" : "hidden"}:${access.canManage ? "manage" : "view"}`}</span>;
+  return (
+    <span>{`${access.visible ? "visible" : "hidden"}:${access.canManage ? "manage" : "view"}`}</span>
+  );
 }
 
 const CHAPTER_ON_MASTER_DATA: MenuAccessConfig = {

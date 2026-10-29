@@ -24,7 +24,12 @@ interface MenuPosition {
   right: number;
 }
 
-export function RowActionsMenu({ label, actions = [], disabled = false, children }: RowActionsMenuProps) {
+export function RowActionsMenu({
+  label,
+  actions = [],
+  disabled = false,
+  children,
+}: RowActionsMenuProps) {
   const [open, setOpen] = React.useState(false);
   const [position, setPosition] = React.useState<MenuPosition | null>(null);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -99,7 +104,16 @@ export function RowActionsMenu({ label, actions = [], disabled = false, children
             !position && "absolute right-0 top-full mt-1",
           )}
           id={menuId}
-          style={position ? { position: "fixed", top: position.top, bottom: position.bottom, right: position.right } : undefined}
+          style={
+            position
+              ? {
+                  position: "fixed",
+                  top: position.top,
+                  bottom: position.bottom,
+                  right: position.right,
+                }
+              : undefined
+          }
         >
           {children ? <div className="border-b border-tp-line p-3">{children}</div> : null}
           {actions.length > 0 ? (

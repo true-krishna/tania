@@ -58,7 +58,7 @@ function renderCallback(mocks: unknown[]) {
   return render(
     <MockedProvider mocks={mocks as never}>
       <CallbackView />
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -179,7 +179,9 @@ describe("penolakan & kegagalan", () => {
       },
     ]);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/layanan microsoft sedang tidak tersedia/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /layanan microsoft sedang tidak tersedia/i,
+    );
     expect(tokenStore.getSession()).toBeNull();
   });
 });

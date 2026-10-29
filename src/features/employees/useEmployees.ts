@@ -14,15 +14,11 @@ import {
 } from "@/lib/apollo/usePaginatedConnection";
 import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
 
-type AssignableTalentNode =
-  AssignableTalentsQuery["assignableTalents"]["edges"][number]["node"];
+type AssignableTalentNode = AssignableTalentsQuery["assignableTalents"]["edges"][number]["node"];
 
 type EmployeeNode = EmployeesQuery["employees"]["edges"][number]["node"];
 
-export type EmployeesState = Omit<
-  PaginatedConnectionState<EmployeeNode>,
-  "items"
-> & {
+export type EmployeesState = Omit<PaginatedConnectionState<EmployeeNode>, "items"> & {
   /** Employee rows accumulated across fetched pages. */
   employees: EmployeeNode[] | undefined;
 };
@@ -43,9 +39,9 @@ export function useEmployees(filter: EmployeeFilter = {}, first = 25): Employees
   return { ...rest, employees: items };
 }
 
-export function useAssignableTalents({
-  skip = false,
-}: { skip?: boolean } = {}): QueryState<Array<AssignableTalentNode> | undefined> {
+export function useAssignableTalents({ skip = false }: { skip?: boolean } = {}): QueryState<
+  Array<AssignableTalentNode> | undefined
+> {
   const result = useQuery(AssignableTalentsDocument, {
     variables: { first: 100 },
     skip,

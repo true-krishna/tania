@@ -7,10 +7,7 @@ import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { useToast } from "@/components/Toast";
 import { CreateEmployeeDocument } from "@/generated/graphql";
-import {
-  EmployeeFormFields,
-  type PersonalFieldPlaceholders,
-} from "./EmployeeFormFields";
+import { EmployeeFormFields, type PersonalFieldPlaceholders } from "./EmployeeFormFields";
 import {
   buildCreateEmployeeInput,
   createEmptyFormValues,
@@ -38,26 +35,17 @@ const CREATE_PLACEHOLDERS: PersonalFieldPlaceholders = {
   phone: "cth. 081234567890",
 };
 
-export function CreateEmployeeForm({
-  formId,
-  onBusyChange,
-  onClose,
-}: CreateEmployeeFormProps) {
+export function CreateEmployeeForm({ formId, onBusyChange, onClose }: CreateEmployeeFormProps) {
   const { pushToast } = useToast();
   const [createEmployee] = useMutation(CreateEmployeeDocument, {
     refetchQueries: ["Employees"],
   });
 
-  const [values, setValues] = React.useState<CreateFormValues>(
-    createEmptyFormValues
-  );
+  const [values, setValues] = React.useState<CreateFormValues>(createEmptyFormValues);
   const [errors, setErrors] = React.useState<FormErrors<CreateFormValues>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
 
-  function setField<Key extends keyof CreateFormValues>(
-    key: Key,
-    value: CreateFormValues[Key]
-  ) {
+  function setField<Key extends keyof CreateFormValues>(key: Key, value: CreateFormValues[Key]) {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
     setFormError(null);

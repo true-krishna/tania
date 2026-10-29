@@ -101,8 +101,8 @@ describe("mapAssignmentSubmitError", () => {
     expect(
       mapAssignmentSubmitError(
         gqlError("BAD_USER_INPUT", "periodEnd", "invalid periodEnd: must not precede periodStart"),
-        "fallback"
-      )
+        "fallback",
+      ),
     ).toEqual({
       field: "periodEnd",
       message: "Tanggal selesai tidak boleh lebih awal dari tanggal mulai.",
@@ -115,18 +115,20 @@ describe("mapAssignmentSubmitError", () => {
         gqlError(
           "BAD_USER_INPUT",
           "employeeId",
-          "invalid employeeId: must reference an active, assignable talent"
+          "invalid employeeId: must reference an active, assignable talent",
         ),
-        "fallback"
-      )
+        "fallback",
+      ),
     ).toEqual({ field: "employeeId", message: "Talent harus karyawan aktif dan assignable." });
   });
 
   it("falls back to the code label for a BAD_USER_INPUT field the form does not map", () => {
-    expect(mapAssignmentSubmitError(gqlError("BAD_USER_INPUT", "periodStart"), "fallback")).toEqual({
-      field: null,
-      message: ERROR_LABEL.BAD_USER_INPUT,
-    });
+    expect(mapAssignmentSubmitError(gqlError("BAD_USER_INPUT", "periodStart"), "fallback")).toEqual(
+      {
+        field: null,
+        message: ERROR_LABEL.BAD_USER_INPUT,
+      },
+    );
     expect(mapAssignmentSubmitError(gqlError("BAD_USER_INPUT"), "fallback")).toEqual({
       field: null,
       message: ERROR_LABEL.BAD_USER_INPUT,
@@ -134,20 +136,29 @@ describe("mapAssignmentSubmitError", () => {
   });
 
   it("maps CONFLICT, FORBIDDEN, NOT_FOUND and PRECONDITION_FAILED to action messages", () => {
-    expect(mapAssignmentSubmitError(gqlError("CONFLICT", undefined, "resource already exists"), "f")).toEqual({
+    expect(
+      mapAssignmentSubmitError(gqlError("CONFLICT", undefined, "resource already exists"), "f"),
+    ).toEqual({
       field: null,
       message: "Talent ini sudah memiliki assignment aktif pada project tersebut.",
     });
-    expect(mapAssignmentSubmitError(gqlError("FORBIDDEN", undefined, "operation not permitted"), "f")).toEqual({
+    expect(
+      mapAssignmentSubmitError(gqlError("FORBIDDEN", undefined, "operation not permitted"), "f"),
+    ).toEqual({
       field: null,
       message: "Anda tidak memiliki izin untuk aksi ini.",
     });
-    expect(mapAssignmentSubmitError(gqlError("NOT_FOUND", undefined, "resource not found"), "f")).toEqual({
+    expect(
+      mapAssignmentSubmitError(gqlError("NOT_FOUND", undefined, "resource not found"), "f"),
+    ).toEqual({
       field: null,
       message: "Data tidak ditemukan atau di luar cakupan chapter Anda.",
     });
     expect(
-      mapAssignmentSubmitError(gqlError("PRECONDITION_FAILED", undefined, "precondition not satisfied"), "f")
+      mapAssignmentSubmitError(
+        gqlError("PRECONDITION_FAILED", undefined, "precondition not satisfied"),
+        "f",
+      ),
     ).toEqual({ field: null, message: "Assignment sudah selesai dan tidak dapat diubah." });
   });
 
@@ -161,16 +172,22 @@ describe("mapAssignmentSubmitError", () => {
       message: "pesan server",
     });
     const network = new ApolloError({ networkError: new Error("boom") });
-    expect(mapAssignmentSubmitError(network, "fallback")).toEqual({ field: null, message: "fallback" });
-    expect(mapAssignmentSubmitError(null, "fallback")).toEqual({ field: null, message: "fallback" });
+    expect(mapAssignmentSubmitError(network, "fallback")).toEqual({
+      field: null,
+      message: "fallback",
+    });
+    expect(mapAssignmentSubmitError(null, "fallback")).toEqual({
+      field: null,
+      message: "fallback",
+    });
   });
 });
 
 describe("errorMessage", () => {
   it("prefers the server message when the code is known", () => {
-    expect(errorMessage(gqlError("CONFLICT", undefined, "Email sudah terdaftar."), "Terjadi kesalahan.")).toBe(
-      "Email sudah terdaftar."
-    );
+    expect(
+      errorMessage(gqlError("CONFLICT", undefined, "Email sudah terdaftar."), "Terjadi kesalahan."),
+    ).toBe("Email sudah terdaftar.");
   });
 
   it("falls back to the code label when the server message is absent", () => {
@@ -181,7 +198,9 @@ describe("errorMessage", () => {
   });
 
   it("falls back to the plain error message when the code is unknown", () => {
-    expect(errorMessage(gqlError("SOMETHING_NEW", undefined, "FORBIDDEN"), "bawah")).toBe("FORBIDDEN");
+    expect(errorMessage(gqlError("SOMETHING_NEW", undefined, "FORBIDDEN"), "bawah")).toBe(
+      "FORBIDDEN",
+    );
   });
 
   it("falls back to the caller fallback for a network error", () => {

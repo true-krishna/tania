@@ -5,9 +5,7 @@ import { getPeriodFixture } from "./mocks";
 import type { PeriodFixture } from "./types";
 
 export type WorkloadFixtureState =
-  | { status: "loading" }
-  | { status: "ready"; fixture: PeriodFixture }
-  | { status: "error" };
+  { status: "loading" } | { status: "ready"; fixture: PeriodFixture } | { status: "error" };
 
 /**
  * Loads the fixture for a period. WAD latency is simulated so the loading state

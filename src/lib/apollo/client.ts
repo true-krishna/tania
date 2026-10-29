@@ -84,7 +84,7 @@ export function createApolloClient(): ApolloClient<unknown> {
     const isAuthError =
       networkError?.message.includes("401") ||
       graphQLErrors?.some(
-        (e) => e.extensions?.code === "UNAUTHENTICATED" || e.extensions?.code === "UNAUTHORIZED"
+        (e) => e.extensions?.code === "UNAUTHENTICATED" || e.extensions?.code === "UNAUTHORIZED",
       );
 
     if (!isAuthError) return;

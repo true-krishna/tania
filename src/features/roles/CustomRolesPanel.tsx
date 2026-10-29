@@ -11,7 +11,6 @@ import { roleLabel } from "@/features/accounts/roles";
 import type { AccessRole } from "@/generated/graphql/types";
 import type { Role } from "./useRoles";
 
-
 const TEMPLATES: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
 
 export interface CustomRolesPanelProps {

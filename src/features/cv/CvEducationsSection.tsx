@@ -56,38 +56,26 @@ function buildEducationInput(values: EducationValues): CvEducationInput {
   };
 }
 
-export function CvEducationsSection({
-  cv,
-}: {
-  cv: CvFieldsFragment | undefined;
-}) {
-  const {
-    isEditing,
-    removeItem,
-    reset,
-    saving,
-    setValues,
-    startEditing,
-    submit,
-    values,
-  } = useCvCollection<EducationItem, EducationValues, CvEducationInput>({
-    addDocument: AddCvEducationDocument,
-    buildInput: buildEducationInput,
-    createValues: createEducationValues,
-    getItemId: (education) => education.id,
-    messages: {
-      added: "Riwayat pendidikan ditambahkan.",
-      addFailed: "Gagal menambah pendidikan.",
-      deleted: "Riwayat pendidikan dihapus.",
-      deleteFailed: "Gagal menghapus pendidikan.",
-      updateFailed: "Gagal memperbarui pendidikan.",
-      updated: "Riwayat pendidikan diperbarui.",
-    },
-    refetchDocument: MyCvProfileDocument,
-    removeDocument: DeleteCvEducationDocument,
-    toValues: toEducationValues,
-    updateDocument: UpdateCvEducationDocument,
-  });
+export function CvEducationsSection({ cv }: { cv: CvFieldsFragment | undefined }) {
+  const { isEditing, removeItem, reset, saving, setValues, startEditing, submit, values } =
+    useCvCollection<EducationItem, EducationValues, CvEducationInput>({
+      addDocument: AddCvEducationDocument,
+      buildInput: buildEducationInput,
+      createValues: createEducationValues,
+      getItemId: (education) => education.id,
+      messages: {
+        added: "Riwayat pendidikan ditambahkan.",
+        addFailed: "Gagal menambah pendidikan.",
+        deleted: "Riwayat pendidikan dihapus.",
+        deleteFailed: "Gagal menghapus pendidikan.",
+        updateFailed: "Gagal memperbarui pendidikan.",
+        updated: "Riwayat pendidikan diperbarui.",
+      },
+      refetchDocument: MyCvProfileDocument,
+      removeDocument: DeleteCvEducationDocument,
+      toValues: toEducationValues,
+      updateDocument: UpdateCvEducationDocument,
+    });
 
   return (
     <CvSectionCard title="Pendidikan">
@@ -106,9 +94,7 @@ export function CvEducationsSection({
                 <p className="text-xs text-zinc-500">
                   {[
                     education.fieldOfStudy,
-                    [education.startYear, education.endYear]
-                      .filter(Boolean)
-                      .join("–"),
+                    [education.startYear, education.endYear].filter(Boolean).join("–"),
                   ]
                     .filter(Boolean)
                     .join(" · ") || "—"}
@@ -138,10 +124,7 @@ export function CvEducationsSection({
         <p className="text-sm text-zinc-500">Belum ada riwayat pendidikan.</p>
       )}
 
-      <form
-        className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-        onSubmit={submit}
-      >
+      <form className="grid grid-cols-1 gap-2 sm:grid-cols-2" onSubmit={submit}>
         <Input
           onChange={(event) =>
             setValues((current) => ({
@@ -205,19 +188,11 @@ export function CvEducationsSection({
           />
         </div>
         <div className="flex gap-2 sm:col-span-2">
-          <Button
-            disabled={saving || !values.institution.trim()}
-            type="submit"
-          >
+          <Button disabled={saving || !values.institution.trim()} type="submit">
             {isEditing ? "Simpan Perubahan" : "+ Tambah Pendidikan"}
           </Button>
           {isEditing ? (
-            <Button
-              disabled={saving}
-              onClick={reset}
-              type="button"
-              variant="secondary"
-            >
+            <Button disabled={saving} onClick={reset} type="button" variant="secondary">
               Batal
             </Button>
           ) : null}

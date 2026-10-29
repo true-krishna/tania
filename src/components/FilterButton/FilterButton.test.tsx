@@ -23,9 +23,7 @@ describe("FilterButton", () => {
 
   it("shows the active count as badge and accessible name", () => {
     render(<FilterButton activeCount={3} />);
-    expect(
-      screen.getByRole("button", { name: "Filter, 3 filter aktif" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filter, 3 filter aktif" })).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 

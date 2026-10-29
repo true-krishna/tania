@@ -144,14 +144,17 @@ const historyResult = {
   },
 };
 
-const historyMock: MockedResponse = { request: { query: ProfileHistoryDocument }, result: historyResult };
+const historyMock: MockedResponse = {
+  request: { query: ProfileHistoryDocument },
+  result: historyResult,
+};
 const profileWithHistoryMocks: MockedResponse[] = [...profileMocks, historyMock];
 
 function renderProfile(mocks = profileMocks) {
   return render(
     <MockedProvider mocks={mocks}>
       <ProfilePage />
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -166,7 +169,7 @@ describe("ProfilePage (TAN-188)", () => {
     expect(await screen.findByRole("heading", { name: "Ilham Fadillah" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Informasi pribadi" })).toHaveAttribute(
       "aria-selected",
-      "true"
+      "true",
     );
     expect(screen.getByText("****5678")).toBeInTheDocument();
     expect(screen.getByText("Laki-laki")).toBeInTheDocument();

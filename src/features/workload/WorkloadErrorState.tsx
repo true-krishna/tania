@@ -7,7 +7,8 @@ export function WorkloadErrorState({ onRetry }: { onRetry: () => void }) {
       <div>
         <p className="text-sm font-semibold text-tp-text">Data workload tidak dapat dimuat.</p>
         <p className="mt-1.5 max-w-[56ch] text-sm text-tp-muted">
-          Sumber data WAD tidak merespons dan tidak ada angka terakhir yang tersimpan untuk periode ini.
+          Sumber data WAD tidak merespons dan tidak ada angka terakhir yang tersimpan untuk periode
+          ini.
         </p>
       </div>
       <button

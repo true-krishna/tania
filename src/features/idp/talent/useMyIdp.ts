@@ -1,10 +1,7 @@
 "use client";
 
 import { useQuery } from "@apollo/client";
-import {
-  MyIdpDocument,
-  type MyIdpQuery,
-} from "@/generated/graphql";
+import { MyIdpDocument, type MyIdpQuery } from "@/generated/graphql";
 import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
 
 type MyIdp = NonNullable<MyIdpQuery["myIdp"]>;

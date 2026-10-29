@@ -62,7 +62,7 @@ function renderPicker({
   return render(
     <MockedProvider mocks={[EMPLOYEES_QUERY] as never}>
       <EmployeePicker label={label} onChange={onChange} value={value} />
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -83,12 +83,8 @@ describe("EmployeePicker", () => {
 
     rerender(
       <MockedProvider mocks={[EMPLOYEES_QUERY] as never}>
-        <EmployeePicker
-          label="Pemilik"
-          onChange={() => {}}
-          value=""
-        />
-      </MockedProvider>
+        <EmployeePicker label="Pemilik" onChange={() => {}} value="" />
+      </MockedProvider>,
     );
 
     const updatedInput = screen.getByRole("combobox", { name: "Pemilik" });
@@ -113,9 +109,7 @@ describe("EmployeePicker", () => {
     renderPicker({ onChange, value: "emp-1" });
     await openOptions();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Bersihkan pilihan karyawan" })
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Bersihkan pilihan karyawan" }));
 
     expect(onChange).toHaveBeenCalledWith("");
   });

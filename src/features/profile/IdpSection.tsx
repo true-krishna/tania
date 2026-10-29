@@ -7,7 +7,11 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useMyIdp } from "@/features/idp/talent/useMyIdp";
 import { IDP_MY } from "@/lib/constants/routes";
-import type { DevelopmentActionStatus, DevelopmentMethod, IdpStatus } from "@/generated/graphql/types";
+import type {
+  DevelopmentActionStatus,
+  DevelopmentMethod,
+  IdpStatus,
+} from "@/generated/graphql/types";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",

@@ -20,8 +20,13 @@ export function useTablePagination<T>(
   rows: Array<T> | undefined,
   options: UseTablePaginationOptions = {},
 ) {
-  const { totalItems, initialPageSize = 10, hasMore = false, loadingMore = false, loadMore } =
-    options;
+  const {
+    totalItems,
+    initialPageSize = 10,
+    hasMore = false,
+    loadingMore = false,
+    loadMore,
+  } = options;
   const [page, setPage] = React.useState(1);
   const [ownedPageSize, setOwnedPageSize] = React.useState(initialPageSize);
   const pageSize = options.pageSize ?? ownedPageSize;

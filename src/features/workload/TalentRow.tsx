@@ -22,7 +22,8 @@ export function TalentRow({
   secondary?: "unit-role" | "role";
   barMax?: number;
 }) {
-  const sub = secondary === "role" ? talent.jobRoleName : `${talent.unitName} · ${talent.jobRoleName}`;
+  const sub =
+    secondary === "role" ? talent.jobRoleName : `${talent.unitName} · ${talent.jobRoleName}`;
   const badge = talent.classification ? (
     <LoadClassificationBadge classification={talent.classification} />
   ) : null;

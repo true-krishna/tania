@@ -58,7 +58,9 @@ export function AnalyticsTables({ analytics }: { analytics: AnalyticsTablesData 
       <Card className="flex flex-col gap-4">
         <div>
           <h2 className="tp-h3">Actual & Estimated Workload</h2>
-          <p className="tp-label mt-1">Jumlah talent per status beban aktual (baris) dan estimasi (kolom).</p>
+          <p className="tp-label mt-1">
+            Jumlah talent per status beban aktual (baris) dan estimasi (kolom).
+          </p>
         </div>
         <Table
           caption="Tabel actual dan estimated workload"
@@ -73,7 +75,9 @@ export function AnalyticsTables({ analytics }: { analytics: AnalyticsTablesData 
       <Card className="flex flex-col gap-4">
         <div>
           <h2 className="tp-h3">Actual Workload dengan Level Kepatuhan TTD</h2>
-          <p className="tp-label mt-1">Jumlah talent per status beban aktual dan level kepatuhan TTD.</p>
+          <p className="tp-label mt-1">
+            Jumlah talent per status beban aktual dan level kepatuhan TTD.
+          </p>
         </div>
         <Table
           caption="Tabel kepatuhan TTD"

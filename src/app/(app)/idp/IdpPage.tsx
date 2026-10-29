@@ -52,7 +52,12 @@ function IdpRosterView({ managing }: { managing: boolean }) {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const formId = React.useId();
-  const { status: query, data, error, refetch } = useIdps({
+  const {
+    status: query,
+    data,
+    error,
+    refetch,
+  } = useIdps({
     status: (status || undefined) as IdpStatus | undefined,
   });
   const { pageRows, pagination, resetPage } = useTablePagination(data);

@@ -34,13 +34,8 @@ export default function CallbackView() {
         setError("Sesi masuk tidak valid atau sudah kedaluwarsa. Silakan coba lagi.");
         return;
       }
-      const {
-        accessToken,
-        accessTokenExpiresAt,
-        refreshToken,
-        refreshTokenExpiresAt,
-        user,
-      } = data.loginWithEntra;
+      const { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user } =
+        data.loginWithEntra;
       setSession({
         accessToken,
         accessTokenExpiresAt,
@@ -87,21 +82,19 @@ export default function CallbackView() {
   }, []);
 
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-tp-bg px-6 py-12" lang="id">
+    <main
+      className="flex min-h-screen w-full items-center justify-center bg-tp-bg px-6 py-12"
+      lang="id"
+    >
       <div className="flex w-full max-w-[440px] flex-col items-center text-center">
-        <h1 className="text-[30px] font-bold leading-[1.2] text-tp-text">
-          Masuk ke TANIA
-        </h1>
+        <h1 className="text-[30px] font-bold leading-[1.2] text-tp-text">Masuk ke TANIA</h1>
 
         {error ? (
           <p
             className="mt-6 flex w-full items-start gap-2.5 rounded-tp-md bg-tp-tint-peach px-4 py-3 text-left text-sm font-semibold text-tp-ink-peach"
             role="alert"
           >
-            <IconAlertCircle
-              aria-hidden="true"
-              className="mt-0.5 h-4.5 w-4.5 shrink-0"
-            />
+            <IconAlertCircle aria-hidden="true" className="mt-0.5 h-4.5 w-4.5 shrink-0" />
             {error}
           </p>
         ) : (

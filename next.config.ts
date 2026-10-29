@@ -5,10 +5,7 @@ const nextConfig: NextConfig = {
   experimental: {
     agentUpgrade: "security",
   },
-  allowedDevOrigins: [
-    "**.trycloudflare.com",
-    "**.ngrok-free.dev"
-  ],
+  allowedDevOrigins: ["**.trycloudflare.com", "**.ngrok-free.dev"],
 };
 
 export default nextConfig;

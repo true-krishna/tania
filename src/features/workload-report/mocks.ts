@@ -60,10 +60,33 @@ export function isReportPeriod(id: string | null | undefined): id is string {
 }
 
 const MONTHS_ID = [
-  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-  "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
 ];
-const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
+];
 
 function periodParts(periode: string): { year: number; month: number } {
   return { year: Number(periode.slice(0, 4)), month: Number(periode.slice(4, 6)) };
@@ -166,16 +189,266 @@ interface TalentSeed {
 }
 
 const TALENT_SEEDS: readonly TalentSeed[] = [
-  { id: "tal-01", name: "Rani Puspita", tribe: "Digital Core", tribeId: "tr-dc", product: "Tania", productId: "pr-tania", squad: "Squad Alpha", squadId: "sq-alpha", unitcode: "Chapter DPS", jobRole: "Backend Engineer", availability: 160, timespent: 216, estimate: 176, backlog: 24, activities: 46, activitiesWithTimespent: 41, training: 2, assignments: 2, ttdComp: 163, costMonthly: 82_000_000, normalizedCount: 2, leaveHours: 0, projectKey: "TANIA", projectPrefix: "TAN" },
-  { id: "tal-02", name: "Dimas Aryo", tribe: "Digital Core", tribeId: "tr-dc", product: "Tania", productId: "pr-tania", squad: "Squad Alpha", squadId: "sq-alpha", unitcode: "Chapter DPS", jobRole: "Frontend Engineer", availability: 160, timespent: 184, estimate: 160, backlog: 19, activities: 38, activitiesWithTimespent: 33, training: 1, assignments: 2, ttdComp: 128, costMonthly: 74_000_000, normalizedCount: 0, leaveHours: 0, projectKey: "TANIA", projectPrefix: "TAN" },
-  { id: "tal-03", name: "Sinta Mahesa", tribe: "Digital Core", tribeId: "tr-dc", product: "Tania", productId: "pr-tania", squad: "Squad Alpha", squadId: "sq-alpha", unitcode: "Chapter DPS", jobRole: "Data Analyst", availability: 160, timespent: 128, estimate: 128, backlog: 11, activities: 27, activitiesWithTimespent: 21, training: 4, assignments: 1, ttdComp: 88, costMonthly: 63_000_000, normalizedCount: 0, leaveHours: 16, projectKey: "TANIA", projectPrefix: "TAN" },
-  { id: "tal-04", name: "Ilham Fadillah", tribe: "Digital Core", tribeId: "tr-dc", product: "Tania", productId: "pr-tania", squad: "Squad Beta", squadId: "sq-beta", unitcode: "Chapter DPS", jobRole: "Project Manager", availability: 160, timespent: 190, estimate: 152, backlog: 8, activities: 31, activitiesWithTimespent: 29, training: 0, assignments: 3, ttdComp: 141, costMonthly: 95_000_000, normalizedCount: 1, leaveHours: 0, projectKey: "TANIA", projectPrefix: "TAN" },
-  { id: "tal-05", name: "Nadia Wulandari", tribe: "Digital Core", tribeId: "tr-dc", product: "Tania", productId: "pr-tania", squad: "Squad Beta", squadId: "sq-beta", unitcode: "Chapter DPS", jobRole: "QA Engineer", availability: 160, timespent: 110, estimate: 144, backlog: 15, activities: 24, activitiesWithTimespent: 18, training: 2, assignments: 1, ttdComp: 64, costMonthly: 58_000_000, normalizedCount: 0, leaveHours: 0, projectKey: "TANIA", projectPrefix: "TAN" },
-  { id: "tal-06", name: "Bayu Prakoso", tribe: "Digital Core", tribeId: "tr-dc", product: "PWA", productId: "pr-pwa", squad: "Squad Gamma", squadId: "sq-gamma", unitcode: "Chapter FES", jobRole: "DevOps Engineer", availability: 152, timespent: 0, estimate: 152, backlog: 9, activities: 12, activitiesWithTimespent: 0, training: 1, assignments: 1, ttdComp: 40, costMonthly: 70_000_000, normalizedCount: 0, leaveHours: 0, projectKey: "PWA", projectPrefix: "PWA" },
-  { id: "tal-07", name: "Citra Lestari", tribe: "Digital Core", tribeId: "tr-dc", product: "PWA", productId: "pr-pwa", squad: "Squad Gamma", squadId: "sq-gamma", unitcode: "Chapter FES", jobRole: "Frontend Engineer", availability: 152, timespent: 199, estimate: 160, backlog: 21, activities: 42, activitiesWithTimespent: 36, training: 0, assignments: 2, ttdComp: 152, costMonthly: 76_000_000, normalizedCount: 1, leaveHours: 8, projectKey: "PWA", projectPrefix: "PWA" },
-  { id: "tal-08", name: "Fajar Nugroho", tribe: "Data & AI", tribeId: "tr-dai", product: "WAD", productId: "pr-wad", squad: "Squad Delta", squadId: "sq-delta", unitcode: "Chapter FES", jobRole: "Data Engineer", availability: 168, timespent: 171, estimate: 168, backlog: 17, activities: 35, activitiesWithTimespent: 30, training: 3, assignments: 2, ttdComp: 104, costMonthly: 81_000_000, normalizedCount: 0, leaveHours: 0, projectKey: "WAD", projectPrefix: "WAD" },
-  { id: "tal-09", name: "Gita Hapsari", tribe: "Data & AI", tribeId: "tr-dai", product: "WAD", productId: "pr-wad", squad: "Squad Delta", squadId: "sq-delta", unitcode: "Chapter FES", jobRole: "ML Engineer", availability: 168, timespent: 224, estimate: 176, backlog: 26, activities: 51, activitiesWithTimespent: 44, training: 1, assignments: 3, ttdComp: 168, costMonthly: 88_000_000, normalizedCount: 3, leaveHours: 0, projectKey: "WAD", projectPrefix: "WAD" },
-  { id: "tal-10", name: "Hendra Wijaya", tribe: "Data & AI", tribeId: "tr-dai", product: "LLM Ops", productId: "pr-llm", squad: "Squad Epsilon", squadId: "sq-eps", unitcode: "Chapter QA", jobRole: "Platform Engineer", availability: 168, timespent: 0, estimate: 168, backlog: 6, activities: 0, activitiesWithTimespent: 0, training: 0, assignments: 1, ttdComp: 0, costMonthly: 79_000_000, normalizedCount: 0, leaveHours: 0, projectKey: "LLMOPS", projectPrefix: "LLM" },
+  {
+    id: "tal-01",
+    name: "Rani Puspita",
+    tribe: "Digital Core",
+    tribeId: "tr-dc",
+    product: "Tania",
+    productId: "pr-tania",
+    squad: "Squad Alpha",
+    squadId: "sq-alpha",
+    unitcode: "Chapter DPS",
+    jobRole: "Backend Engineer",
+    availability: 160,
+    timespent: 216,
+    estimate: 176,
+    backlog: 24,
+    activities: 46,
+    activitiesWithTimespent: 41,
+    training: 2,
+    assignments: 2,
+    ttdComp: 163,
+    costMonthly: 82_000_000,
+    normalizedCount: 2,
+    leaveHours: 0,
+    projectKey: "TANIA",
+    projectPrefix: "TAN",
+  },
+  {
+    id: "tal-02",
+    name: "Dimas Aryo",
+    tribe: "Digital Core",
+    tribeId: "tr-dc",
+    product: "Tania",
+    productId: "pr-tania",
+    squad: "Squad Alpha",
+    squadId: "sq-alpha",
+    unitcode: "Chapter DPS",
+    jobRole: "Frontend Engineer",
+    availability: 160,
+    timespent: 184,
+    estimate: 160,
+    backlog: 19,
+    activities: 38,
+    activitiesWithTimespent: 33,
+    training: 1,
+    assignments: 2,
+    ttdComp: 128,
+    costMonthly: 74_000_000,
+    normalizedCount: 0,
+    leaveHours: 0,
+    projectKey: "TANIA",
+    projectPrefix: "TAN",
+  },
+  {
+    id: "tal-03",
+    name: "Sinta Mahesa",
+    tribe: "Digital Core",
+    tribeId: "tr-dc",
+    product: "Tania",
+    productId: "pr-tania",
+    squad: "Squad Alpha",
+    squadId: "sq-alpha",
+    unitcode: "Chapter DPS",
+    jobRole: "Data Analyst",
+    availability: 160,
+    timespent: 128,
+    estimate: 128,
+    backlog: 11,
+    activities: 27,
+    activitiesWithTimespent: 21,
+    training: 4,
+    assignments: 1,
+    ttdComp: 88,
+    costMonthly: 63_000_000,
+    normalizedCount: 0,
+    leaveHours: 16,
+    projectKey: "TANIA",
+    projectPrefix: "TAN",
+  },
+  {
+    id: "tal-04",
+    name: "Ilham Fadillah",
+    tribe: "Digital Core",
+    tribeId: "tr-dc",
+    product: "Tania",
+    productId: "pr-tania",
+    squad: "Squad Beta",
+    squadId: "sq-beta",
+    unitcode: "Chapter DPS",
+    jobRole: "Project Manager",
+    availability: 160,
+    timespent: 190,
+    estimate: 152,
+    backlog: 8,
+    activities: 31,
+    activitiesWithTimespent: 29,
+    training: 0,
+    assignments: 3,
+    ttdComp: 141,
+    costMonthly: 95_000_000,
+    normalizedCount: 1,
+    leaveHours: 0,
+    projectKey: "TANIA",
+    projectPrefix: "TAN",
+  },
+  {
+    id: "tal-05",
+    name: "Nadia Wulandari",
+    tribe: "Digital Core",
+    tribeId: "tr-dc",
+    product: "Tania",
+    productId: "pr-tania",
+    squad: "Squad Beta",
+    squadId: "sq-beta",
+    unitcode: "Chapter DPS",
+    jobRole: "QA Engineer",
+    availability: 160,
+    timespent: 110,
+    estimate: 144,
+    backlog: 15,
+    activities: 24,
+    activitiesWithTimespent: 18,
+    training: 2,
+    assignments: 1,
+    ttdComp: 64,
+    costMonthly: 58_000_000,
+    normalizedCount: 0,
+    leaveHours: 0,
+    projectKey: "TANIA",
+    projectPrefix: "TAN",
+  },
+  {
+    id: "tal-06",
+    name: "Bayu Prakoso",
+    tribe: "Digital Core",
+    tribeId: "tr-dc",
+    product: "PWA",
+    productId: "pr-pwa",
+    squad: "Squad Gamma",
+    squadId: "sq-gamma",
+    unitcode: "Chapter FES",
+    jobRole: "DevOps Engineer",
+    availability: 152,
+    timespent: 0,
+    estimate: 152,
+    backlog: 9,
+    activities: 12,
+    activitiesWithTimespent: 0,
+    training: 1,
+    assignments: 1,
+    ttdComp: 40,
+    costMonthly: 70_000_000,
+    normalizedCount: 0,
+    leaveHours: 0,
+    projectKey: "PWA",
+    projectPrefix: "PWA",
+  },
+  {
+    id: "tal-07",
+    name: "Citra Lestari",
+    tribe: "Digital Core",
+    tribeId: "tr-dc",
+    product: "PWA",
+    productId: "pr-pwa",
+    squad: "Squad Gamma",
+    squadId: "sq-gamma",
+    unitcode: "Chapter FES",
+    jobRole: "Frontend Engineer",
+    availability: 152,
+    timespent: 199,
+    estimate: 160,
+    backlog: 21,
+    activities: 42,
+    activitiesWithTimespent: 36,
+    training: 0,
+    assignments: 2,
+    ttdComp: 152,
+    costMonthly: 76_000_000,
+    normalizedCount: 1,
+    leaveHours: 8,
+    projectKey: "PWA",
+    projectPrefix: "PWA",
+  },
+  {
+    id: "tal-08",
+    name: "Fajar Nugroho",
+    tribe: "Data & AI",
+    tribeId: "tr-dai",
+    product: "WAD",
+    productId: "pr-wad",
+    squad: "Squad Delta",
+    squadId: "sq-delta",
+    unitcode: "Chapter FES",
+    jobRole: "Data Engineer",
+    availability: 168,
+    timespent: 171,
+    estimate: 168,
+    backlog: 17,
+    activities: 35,
+    activitiesWithTimespent: 30,
+    training: 3,
+    assignments: 2,
+    ttdComp: 104,
+    costMonthly: 81_000_000,
+    normalizedCount: 0,
+    leaveHours: 0,
+    projectKey: "WAD",
+    projectPrefix: "WAD",
+  },
+  {
+    id: "tal-09",
+    name: "Gita Hapsari",
+    tribe: "Data & AI",
+    tribeId: "tr-dai",
+    product: "WAD",
+    productId: "pr-wad",
+    squad: "Squad Delta",
+    squadId: "sq-delta",
+    unitcode: "Chapter FES",
+    jobRole: "ML Engineer",
+    availability: 168,
+    timespent: 224,
+    estimate: 176,
+    backlog: 26,
+    activities: 51,
+    activitiesWithTimespent: 44,
+    training: 1,
+    assignments: 3,
+    ttdComp: 168,
+    costMonthly: 88_000_000,
+    normalizedCount: 3,
+    leaveHours: 0,
+    projectKey: "WAD",
+    projectPrefix: "WAD",
+  },
+  {
+    id: "tal-10",
+    name: "Hendra Wijaya",
+    tribe: "Data & AI",
+    tribeId: "tr-dai",
+    product: "LLM Ops",
+    productId: "pr-llm",
+    squad: "Squad Epsilon",
+    squadId: "sq-eps",
+    unitcode: "Chapter QA",
+    jobRole: "Platform Engineer",
+    availability: 168,
+    timespent: 0,
+    estimate: 168,
+    backlog: 6,
+    activities: 0,
+    activitiesWithTimespent: 0,
+    training: 0,
+    assignments: 1,
+    ttdComp: 0,
+    costMonthly: 79_000_000,
+    normalizedCount: 0,
+    leaveHours: 0,
+    projectKey: "LLMOPS",
+    projectPrefix: "LLM",
+  },
 ];
 
 const PERIOD_FACTOR: Record<string, number> = {
@@ -206,7 +479,10 @@ function metricsFor(periode: string): TalentMetrics[] {
     const estimate = round(seed.estimate * factor);
     const activities = Math.round(seed.activities * factor);
     const backlog = Math.round(seed.backlog * factor);
-    const activitiesWithTimespent = Math.min(activities, Math.round(seed.activitiesWithTimespent * factor));
+    const activitiesWithTimespent = Math.min(
+      activities,
+      Math.round(seed.activitiesWithTimespent * factor),
+    );
     const ratio = seed.availability > 0 ? timespent / seed.availability : 0;
     const estimateRatio = seed.availability > 0 ? estimate / seed.availability : 0;
     return {
@@ -236,8 +512,22 @@ function leavesFor(talentId: string): IndividualLeaves | null {
       totalHours: "16",
       totalHoursHumanReadable: "2 hari",
       leavesList: [
-        { leavesDate: "2026-09-14", leavesDateHumanReadable: "Sen, 14 Sep 2026", leavesDescription: "Cuti tahunan", source: "Diarium", totalHours: "8", totalDays: "1" },
-        { leavesDate: "2026-09-15", leavesDateHumanReadable: "Sel, 15 Sep 2026", leavesDescription: "Cuti tahunan", source: "Diarium", totalHours: "8", totalDays: "1" },
+        {
+          leavesDate: "2026-09-14",
+          leavesDateHumanReadable: "Sen, 14 Sep 2026",
+          leavesDescription: "Cuti tahunan",
+          source: "Diarium",
+          totalHours: "8",
+          totalDays: "1",
+        },
+        {
+          leavesDate: "2026-09-15",
+          leavesDateHumanReadable: "Sel, 15 Sep 2026",
+          leavesDescription: "Cuti tahunan",
+          source: "Diarium",
+          totalHours: "8",
+          totalDays: "1",
+        },
       ],
     };
   }
@@ -246,7 +536,14 @@ function leavesFor(talentId: string): IndividualLeaves | null {
       totalHours: "8",
       totalHoursHumanReadable: "1 hari",
       leavesList: [
-        { leavesDate: "2026-09-21", leavesDateHumanReadable: "Sen, 21 Sep 2026", leavesDescription: "Izin sakit", source: "Diarium", totalHours: "8", totalDays: "1" },
+        {
+          leavesDate: "2026-09-21",
+          leavesDateHumanReadable: "Sen, 21 Sep 2026",
+          leavesDescription: "Izin sakit",
+          source: "Diarium",
+          totalHours: "8",
+          totalDays: "1",
+        },
       ],
     };
   }
@@ -279,7 +576,11 @@ function buildSummary(ms: TalentMetrics[], periodFactor: number): WorkloadReport
     statusLoad: classify(totalTimespent / totalAvailableTime, totalActivities, totalTimespent),
     totalTimespentEstimate: formatHours(totalEstimate),
     loadEstimate: round((totalEstimate / totalAvailableTime) * 100, 1),
-    statusLoadEstimate: classify(totalEstimate / totalAvailableTime, totalActivities, totalEstimate),
+    statusLoadEstimate: classify(
+      totalEstimate / totalAvailableTime,
+      totalActivities,
+      totalEstimate,
+    ),
     ttdCompliance: round(avgTtd, 1),
     talentComplyTtd: ms.filter((t) => t.ttdComp >= 100).length,
     totalTalentNormalized: ms.filter((t) => t.normalizedCount > 0).length,
@@ -304,23 +605,23 @@ interface Group {
   members: TalentMetrics[];
 }
 
-function groupByDimension(
-  level: DistributionDimension,
-  ms: TalentMetrics[],
-): Group[] {
+function groupByDimension(level: DistributionDimension, ms: TalentMetrics[]): Group[] {
   const groups = new Map<string, Group>();
   for (const t of ms) {
     let id: string;
     let nama: string;
     let scope: DistributionScope;
     if (level === "tribe") {
-      id = t.tribeId; nama = t.tribe;
+      id = t.tribeId;
+      nama = t.tribe;
       scope = { tribeId: t.tribeId, productId: null, squadId: null, unitcode: null };
     } else if (level === "product") {
-      id = t.productId; nama = t.product;
+      id = t.productId;
+      nama = t.product;
       scope = { tribeId: t.tribeId, productId: t.productId, squadId: null, unitcode: null };
     } else if (level === "squad") {
-      id = t.squadId; nama = t.squad;
+      id = t.squadId;
+      nama = t.squad;
       scope = { tribeId: t.tribeId, productId: t.productId, squadId: t.squadId, unitcode: null };
     } else if (level === "unitcode") {
       // Unit code hidup di bawah satu squad (tribe → product → squad →
@@ -328,10 +629,21 @@ function groupByDimension(
       // agregat tak cocok dengan talent konstituennya saat drill-down.
       id = `${t.tribeId}/${t.productId}/${t.squadId}/${t.unitcode}`;
       nama = t.unitcode;
-      scope = { tribeId: t.tribeId, productId: t.productId, squadId: t.squadId, unitcode: t.unitcode };
+      scope = {
+        tribeId: t.tribeId,
+        productId: t.productId,
+        squadId: t.squadId,
+        unitcode: t.unitcode,
+      };
     } else {
-      id = t.id; nama = t.name;
-      scope = { tribeId: t.tribeId, productId: t.productId, squadId: t.squadId, unitcode: t.unitcode };
+      id = t.id;
+      nama = t.name;
+      scope = {
+        tribeId: t.tribeId,
+        productId: t.productId,
+        squadId: t.squadId,
+        unitcode: t.unitcode,
+      };
     }
     const existing = groups.get(id);
     if (existing) {
@@ -378,7 +690,11 @@ function buildDistributionRow(group: Group): DistributionRow {
     jmlAssignment: sum((t) => t.assignments),
     totalTimespentEstimate: formatHours(totalEstimate),
     loadEstimate: round((totalEstimate / totalAvailableTime) * 100, 1),
-    statusLoadEstimate: classify(totalEstimate / totalAvailableTime, totalActivities, totalEstimate),
+    statusLoadEstimate: classify(
+      totalEstimate / totalAvailableTime,
+      totalActivities,
+      totalEstimate,
+    ),
     ttdComp: round(ms.reduce((acc, t) => acc + t.ttdComp, 0) / n, 1),
     compLvl: ttdLevelFor(ms.reduce((acc, t) => acc + t.ttdComp, 0) / n),
     isNormalized: ms.some((t) => t.normalizedCount > 0),
@@ -428,14 +744,20 @@ const ESTIMATE_COLUMN = {
   Fit: "fit",
   Stretch: "stretch",
   Overload: "overload",
-} as const satisfies Record<WorkloadStatus, keyof Omit<LoggedVsEstimatedRow, "statusLoad" | "total">>;
+} as const satisfies Record<
+  WorkloadStatus,
+  keyof Omit<LoggedVsEstimatedRow, "statusLoad" | "total">
+>;
 
 const TTD_COLUMN = {
   "Need Improvement": "notAchieved",
   Fair: "lowAchieved",
   Good: "achieved",
   "Very Good": "highAchieved",
-} as const satisfies Record<TtdComplianceLevel, keyof Omit<TtdComplianceRow, "statusLoad" | "total">>;
+} as const satisfies Record<
+  TtdComplianceLevel,
+  keyof Omit<TtdComplianceRow, "statusLoad" | "total">
+>;
 
 interface MutableLoggedVsEstimatedRow {
   statusLoad: WorkloadStatus | typeof GRAND_TOTAL;
@@ -448,7 +770,9 @@ interface MutableLoggedVsEstimatedRow {
   total: number;
 }
 
-function emptyLoggedVsEstimatedRow(statusLoad: WorkloadStatus | typeof GRAND_TOTAL): MutableLoggedVsEstimatedRow {
+function emptyLoggedVsEstimatedRow(
+  statusLoad: WorkloadStatus | typeof GRAND_TOTAL,
+): MutableLoggedVsEstimatedRow {
   return {
     statusLoad,
     undefinedActivity: 0,
@@ -617,7 +941,8 @@ function buildBacklogNormalized(rows: IndividualBacklogRow[]): IndividualBacklog
 }
 
 function buildIndividualSummary(seed: TalentMetrics, periodFactor: number): IndividualSummary {
-  const complianceRatio = seed.activities > 0 ? seed.activitiesWithTimespent / seed.activities : null;
+  const complianceRatio =
+    seed.activities > 0 ? seed.activitiesWithTimespent / seed.activities : null;
   const jiraCompliance =
     complianceRatio === null
       ? null
@@ -638,7 +963,8 @@ function buildIndividualSummary(seed: TalentMetrics, periodFactor: number): Indi
     totalBacklog: seed.backlog,
     jiraCompliance,
     totalActivityNormalized: seed.normalizedCount,
-    percentageNormalized: seed.activities > 0 ? round((seed.normalizedCount / seed.activities) * 100, 1) : 0,
+    percentageNormalized:
+      seed.activities > 0 ? round((seed.normalizedCount / seed.activities) * 100, 1) : 0,
     totalTraining: formatHours(seed.training * 2),
     totalWorkHours: formatInt(seed.availability - seed.leaveHours * periodFactor),
     leaves: leavesFor(seed.id),
@@ -679,10 +1005,18 @@ function buildAssignedProjects(seed: TalentMetrics): IndividualDetailProjectRow[
 
 function buildTimespentPerProject(seed: TalentMetrics): IndividualTimespentPerProjectRow[] {
   const rows: IndividualTimespentPerProjectRow[] = [
-    { squad: seed.squad, projectName: seed.projectKey, timespentTotalAct: seed.timespent > 0 ? round(seed.timespent * 0.85) : 0 },
+    {
+      squad: seed.squad,
+      projectName: seed.projectKey,
+      timespentTotalAct: seed.timespent > 0 ? round(seed.timespent * 0.85) : 0,
+    },
   ];
   if (seed.training > 0) {
-    rows.push({ squad: seed.squad, projectName: "ADHOC", timespentTotalAct: round(seed.timespent * 0.15) });
+    rows.push({
+      squad: seed.squad,
+      projectName: "ADHOC",
+      timespentTotalAct: round(seed.timespent * 0.15),
+    });
   }
   return rows;
 }
@@ -727,12 +1061,27 @@ const BASE_FRESHNESS: Omit<WorkloadFreshness, "sourceStatus" | "lastUpdatedAt" |
  */
 function freshnessFor(periode: string): WorkloadFreshness {
   if (periode === "202608") {
-    return { ...BASE_FRESHNESS, sourceStatus: "OK", lastUpdatedAt: "2026-10-12T09:00:00+07:00", isStale: true };
+    return {
+      ...BASE_FRESHNESS,
+      sourceStatus: "OK",
+      lastUpdatedAt: "2026-10-12T09:00:00+07:00",
+      isStale: true,
+    };
   }
   if (periode === "202606") {
-    return { ...BASE_FRESHNESS, sourceStatus: "UNAVAILABLE", lastUpdatedAt: "2026-10-09T09:00:00+07:00", isStale: true };
+    return {
+      ...BASE_FRESHNESS,
+      sourceStatus: "UNAVAILABLE",
+      lastUpdatedAt: "2026-10-09T09:00:00+07:00",
+      isStale: true,
+    };
   }
-  return { ...BASE_FRESHNESS, sourceStatus: "OK", lastUpdatedAt: "2026-10-16T02:15:00+07:00", isStale: false };
+  return {
+    ...BASE_FRESHNESS,
+    sourceStatus: "OK",
+    lastUpdatedAt: "2026-10-16T02:15:00+07:00",
+    isStale: false,
+  };
 }
 
 function executiveFixtureFor(periode: string): ExecutiveReportFixture {

@@ -267,9 +267,7 @@ export function ModalTitle({ subtitle, className, children, ...rest }: ModalTitl
 }
 
 export function ModalContent({ className, ...rest }: ModalContentProps) {
-  return (
-    <div className={cn("min-h-0 flex-1 overflow-y-auto px-5 py-4", className)} {...rest} />
-  );
+  return <div className={cn("min-h-0 flex-1 overflow-y-auto px-5 py-4", className)} {...rest} />;
 }
 
 export function ModalActions({ className, ...rest }: ModalActionsProps) {

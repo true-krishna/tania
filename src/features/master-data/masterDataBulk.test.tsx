@@ -45,7 +45,11 @@ function bulkSetActiveMock(
           failed: failed.map((failure) => ({
             __typename: "BulkUnitItemResult",
             index: failure.index,
-            error: { __typename: "BulkMasterDataError", code: "REFERENCED", message: failure.message },
+            error: {
+              __typename: "BulkMasterDataError",
+              code: "REFERENCED",
+              message: failure.message,
+            },
           })),
         },
       },
@@ -106,21 +110,20 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
 
   it("confirms bulk deactivation with a count summary before executing (FR-05, US3-3)", async () => {
     auth.role = "ADMIN";
-    renderPage(
-      <UnitsPage />,
-      [
-        unitsListMock,
-        bulkSetActiveMock(BulkSetUnitActiveDocument, "bulkSetUnitActive", {
-          ids: ["u-1", "u-2"],
-          isActive: false,
-        }),
-        unitsRefreshMock,
-      ],
-    );
+    renderPage(<UnitsPage />, [
+      unitsListMock,
+      bulkSetActiveMock(BulkSetUnitActiveDocument, "bulkSetUnitActive", {
+        ids: ["u-1", "u-2"],
+        isActive: false,
+      }),
+      unitsRefreshMock,
+    ]);
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
     selectAllRows();
-    expect(screen.getByRole("toolbar", { name: "Aksi massal Unit" })).toHaveTextContent("2 dipilih");
+    expect(screen.getByRole("toolbar", { name: "Aksi massal Unit" })).toHaveTextContent(
+      "2 dipilih",
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
     const dialog = screen.getByRole("dialog", { name: "Nonaktifkan 2 Unit" });
@@ -130,7 +133,9 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
     // Batal tidak mengeksekusi apa pun dan seleksi tetap ada.
     fireEvent.click(within(dialog).getByRole("button", { name: "Batal" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("toolbar", { name: "Aksi massal Unit" })).toHaveTextContent("2 dipilih");
+    expect(screen.getByRole("toolbar", { name: "Aksi massal Unit" })).toHaveTextContent(
+      "2 dipilih",
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
     fireEvent.click(
@@ -139,7 +144,9 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
       }),
     );
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("2 unit berhasil dinonaktifkan massal.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "2 unit berhasil dinonaktifkan massal.",
+    );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.queryByRole("toolbar")).toBeNull();
   });
@@ -148,17 +155,19 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
     auth.role = "ADMIN";
     const dependencyMessage =
       'Unit "Human Capital" masih dipakai 2 initiative dan 1 kontrak — pindahkan referensinya terlebih dahulu.';
-    renderPage(
-      <UnitsPage />,
-      [
-        unitsListMock,
-        bulkSetActiveMock(BulkSetUnitActiveDocument, "bulkSetUnitActive", {
+    renderPage(<UnitsPage />, [
+      unitsListMock,
+      bulkSetActiveMock(
+        BulkSetUnitActiveDocument,
+        "bulkSetUnitActive",
+        {
           ids: ["u-1", "u-2"],
           isActive: false,
-        }, [{ index: 1, message: dependencyMessage }]),
-        unitsRefreshMock,
-      ],
-    );
+        },
+        [{ index: 1, message: dependencyMessage }],
+      ),
+      unitsRefreshMock,
+    ]);
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
     selectAllRows();
@@ -181,86 +190,100 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
 
   it("activates selected rows in one click without a confirmation step (US3-5)", async () => {
     auth.role = "ADMIN";
-    renderPage(
-      <UnitsPage />,
-      [
-        unitsListMock,
-        bulkSetActiveMock(BulkSetUnitActiveDocument, "bulkSetUnitActive", {
-          ids: ["u-1"],
-          isActive: true,
-        }),
-        unitsRefreshMock,
-      ],
-    );
+    renderPage(<UnitsPage />, [
+      unitsListMock,
+      bulkSetActiveMock(BulkSetUnitActiveDocument, "bulkSetUnitActive", {
+        ids: ["u-1"],
+        isActive: true,
+      }),
+      unitsRefreshMock,
+    ]);
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Pilih Digital Business & Technology" }));
     fireEvent.click(screen.getByRole("button", { name: "Aktifkan" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("1 unit berhasil diaktifkan massal.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "1 unit berhasil diaktifkan massal.",
+    );
     await waitFor(() => expect(screen.queryByRole("toolbar")).not.toBeInTheDocument());
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("applies the same owner chapter to selected job roles in one action (FR-03, US2-1)", async () => {
     auth.role = "ADMIN";
-    renderPage(
-      <JobRolesPage />,
-      [
-        {
-          request: { query: JobRolesDocument, variables: { includeInactive: true } },
-          result: {
-            data: {
-              jobRoles: [
-                { id: "r-1", name: "Backend Engineer", isActive: true, chapter: null, __typename: "JobRole" },
-                { id: "r-2", name: "Product Designer", isActive: true, chapter: null, __typename: "JobRole" },
-              ],
-            },
+    renderPage(<JobRolesPage />, [
+      {
+        request: { query: JobRolesDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            jobRoles: [
+              {
+                id: "r-1",
+                name: "Backend Engineer",
+                isActive: true,
+                chapter: null,
+                __typename: "JobRole",
+              },
+              {
+                id: "r-2",
+                name: "Product Designer",
+                isActive: true,
+                chapter: null,
+                __typename: "JobRole",
+              },
+            ],
           },
         },
-        {
-          request: { query: ChaptersDocument, variables: { includeInactive: true } },
-          result: {
-            data: {
-              chapters: [
-                { id: "c-1", name: "Engineering", isActive: true, jobRoles: [], __typename: "Chapter" },
-              ],
-            },
+      },
+      {
+        request: { query: ChaptersDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            chapters: [
+              {
+                id: "c-1",
+                name: "Engineering",
+                isActive: true,
+                jobRoles: [],
+                __typename: "Chapter",
+              },
+            ],
           },
         },
-        bulkSetActiveMock(BulkSetJobRoleActiveDocument, "bulkSetJobRoleActive", {
-          ids: ["r-1", "r-2"],
-          isActive: false,
-        }),
-        bulkSetActiveMock(BulkSetJobRoleChapterDocument, "bulkSetJobRoleChapter", {
-          ids: ["r-1", "r-2"],
-          chapterId: "c-1",
-        }),
-        {
-          request: { query: JobRolesDocument, variables: { includeInactive: true } },
-          result: {
-            data: {
-              jobRoles: [
-                {
-                  id: "r-1",
-                  name: "Backend Engineer",
-                  isActive: true,
-                  chapter: { id: "c-1", name: "Engineering", __typename: "Chapter" },
-                  __typename: "JobRole",
-                },
-                {
-                  id: "r-2",
-                  name: "Product Designer",
-                  isActive: true,
-                  chapter: { id: "c-1", name: "Engineering", __typename: "Chapter" },
-                  __typename: "JobRole",
-                },
-              ],
-            },
+      },
+      bulkSetActiveMock(BulkSetJobRoleActiveDocument, "bulkSetJobRoleActive", {
+        ids: ["r-1", "r-2"],
+        isActive: false,
+      }),
+      bulkSetActiveMock(BulkSetJobRoleChapterDocument, "bulkSetJobRoleChapter", {
+        ids: ["r-1", "r-2"],
+        chapterId: "c-1",
+      }),
+      {
+        request: { query: JobRolesDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            jobRoles: [
+              {
+                id: "r-1",
+                name: "Backend Engineer",
+                isActive: true,
+                chapter: { id: "c-1", name: "Engineering", __typename: "Chapter" },
+                __typename: "JobRole",
+              },
+              {
+                id: "r-2",
+                name: "Product Designer",
+                isActive: true,
+                chapter: { id: "c-1", name: "Engineering", __typename: "Chapter" },
+                __typename: "JobRole",
+              },
+            ],
           },
         },
-      ],
-    );
+      },
+    ]);
 
     expect(await screen.findByText("Backend Engineer")).toBeInTheDocument();
     selectAllRows();
@@ -269,7 +292,9 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
     fireEvent.change(within(dialog).getByLabelText("Chapter"), { target: { value: "c-1" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Terapkan ke 2 job role" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("2 job role berhasil diubah massal.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "2 job role berhasil diubah massal.",
+    );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     // Turunan berlaku otomatis (US2-3): daftar menampilkan chapter baru hasil
     // penyegaran server, tanpa langkah sinkronisasi manual.
@@ -278,35 +303,40 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
 
   it("requires the target unit when moving initiatives in bulk (FR-19)", async () => {
     auth.role = "ADMIN";
-    renderPage(
-      <ProjectsPage />,
-      [
-        {
-          request: { query: ProjectsDocument, variables: { includeInactive: true } },
-          result: {
-            data: {
-              projects: [
-                {
-                  id: "p-1",
-                  name: "Alpha Transformation",
-                  isActive: true,
-                  unit: { id: "u-1", name: "Digital Business", __typename: "Unit" },
-                  __typename: "Project",
-                },
-              ],
-            },
+    renderPage(<ProjectsPage />, [
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            projects: [
+              {
+                id: "p-1",
+                name: "Alpha Transformation",
+                isActive: true,
+                unit: { id: "u-1", name: "Digital Business", __typename: "Unit" },
+                __typename: "Project",
+              },
+            ],
           },
         },
-        {
-          request: { query: UnitsDocument, variables: { includeInactive: true } },
-          result: {
-            data: {
-              units: [{ id: "u-1", name: "Digital Business", isActive: true, projects: [], __typename: "Unit" }],
-            },
+      },
+      {
+        request: { query: UnitsDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            units: [
+              {
+                id: "u-1",
+                name: "Digital Business",
+                isActive: true,
+                projects: [],
+                __typename: "Unit",
+              },
+            ],
           },
         },
-      ],
-    );
+      },
+    ]);
 
     expect(await screen.findByText("Alpha Transformation")).toBeInTheDocument();
     selectAllRows();
@@ -322,29 +352,32 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
 
   it("deactivates chapters in bulk after confirmation", async () => {
     auth.role = "ADMIN";
-    renderPage(
-      <ChaptersPage />,
-      [
-        {
-          request: { query: ChaptersDocument, variables: { includeInactive: true } },
-          result: {
-            data: {
-              chapters: [
-                { id: "c-1", name: "Engineering", isActive: true, jobRoles: [], __typename: "Chapter" },
-              ],
-            },
+    renderPage(<ChaptersPage />, [
+      {
+        request: { query: ChaptersDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            chapters: [
+              {
+                id: "c-1",
+                name: "Engineering",
+                isActive: true,
+                jobRoles: [],
+                __typename: "Chapter",
+              },
+            ],
           },
         },
-        bulkSetActiveMock(BulkSetChapterActiveDocument, "bulkSetChapterActive", {
-          ids: ["c-1"],
-          isActive: false,
-        }),
-        {
-          request: { query: ChaptersDocument, variables: { includeInactive: true } },
-          result: { data: { chapters: [] } },
-        },
-      ],
-    );
+      },
+      bulkSetActiveMock(BulkSetChapterActiveDocument, "bulkSetChapterActive", {
+        ids: ["c-1"],
+        isActive: false,
+      }),
+      {
+        request: { query: ChaptersDocument, variables: { includeInactive: true } },
+        result: { data: { chapters: [] } },
+      },
+    ]);
 
     expect(await screen.findByText("Engineering")).toBeInTheDocument();
     selectAllRows();
@@ -355,46 +388,45 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
       }),
     );
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("1 chapter berhasil dinonaktifkan massal.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "1 chapter berhasil dinonaktifkan massal.",
+    );
   });
 
   it("reports an already-inactive row as executed unchanged, not as a failure (US3-4)", async () => {
     auth.role = "ADMIN";
-    renderPage(
-      <UnitsPage />,
-      [
-        {
-          request: { query: UnitsDocument, variables: { includeInactive: true } },
-          result: {
-            data: {
-              units: [
-                {
-                  id: "u-1",
-                  code: "DBT",
-                  name: "Digital Business & Technology",
-                  isActive: true,
-                  projects: [],
-                  __typename: "Unit",
-                },
-                {
-                  id: "u-2",
-                  code: "HC",
-                  name: "Human Capital",
-                  isActive: false,
-                  projects: [],
-                  __typename: "Unit",
-                },
-              ],
-            },
+    renderPage(<UnitsPage />, [
+      {
+        request: { query: UnitsDocument, variables: { includeInactive: true } },
+        result: {
+          data: {
+            units: [
+              {
+                id: "u-1",
+                code: "DBT",
+                name: "Digital Business & Technology",
+                isActive: true,
+                projects: [],
+                __typename: "Unit",
+              },
+              {
+                id: "u-2",
+                code: "HC",
+                name: "Human Capital",
+                isActive: false,
+                projects: [],
+                __typename: "Unit",
+              },
+            ],
           },
         },
-        bulkSetActiveMock(BulkSetUnitActiveDocument, "bulkSetUnitActive", {
-          ids: ["u-1", "u-2"],
-          isActive: false,
-        }),
-        unitsRefreshMock,
-      ],
-    );
+      },
+      bulkSetActiveMock(BulkSetUnitActiveDocument, "bulkSetUnitActive", {
+        ids: ["u-1", "u-2"],
+        isActive: false,
+      }),
+      unitsRefreshMock,
+    ]);
 
     expect(await screen.findByText("Digital Business & Technology")).toBeInTheDocument();
     selectAllRows();
@@ -407,7 +439,9 @@ describe("master-data multi-select & aksi massal (TAN-351)", () => {
 
     // Baris yang sudah nonaktif dilaporkan apa adanya (berhasil, tidak berubah)
     // dan tidak dihitung sebagai kegagalan.
-    expect(await screen.findByRole("alert")).toHaveTextContent("2 unit berhasil dinonaktifkan massal.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "2 unit berhasil dinonaktifkan massal.",
+    );
     expect(screen.queryByRole("status")).toBeNull();
     expect(screen.queryByText(/gagal/)).toBeNull();
   });

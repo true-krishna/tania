@@ -10,18 +10,11 @@ import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { useCurrentEvaluationPeriod } from "@/features/evaluations/useCurrentEvaluationPeriod";
 import { useEvaluationRoster } from "@/features/evaluations/useEvaluationRoster";
-import {
-  FillStateBadge,
-  PeriodStateBadge,
-} from "@/features/evaluations/EvaluationBadges";
+import { FillStateBadge, PeriodStateBadge } from "@/features/evaluations/EvaluationBadges";
 import { orDash } from "@/lib/cell";
 import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
-import {
-  EVALUATIONS_MY,
-  EVALUATION_PERIODS,
-  EVALUATION_DETAIL,
-} from "@/lib/constants/routes";
+import { EVALUATIONS_MY, EVALUATION_PERIODS, EVALUATION_DETAIL } from "@/lib/constants/routes";
 
 export default function EvaluationsPage() {
   const role = useSessionRole();
@@ -44,10 +37,10 @@ export default function EvaluationsPage() {
   if (role === "TALENT") {
     return (
       <div className="flex flex-col gap-4">
+        <p className="text-sm text-zinc-600">Anda dapat melihat evaluasi performa milik Anda.</p>
         <p className="text-sm text-zinc-600">
-          Anda dapat melihat evaluasi performa milik Anda.
+          Gunakan menu Evaluations untuk membuka daftar evaluasi Anda.
         </p>
-        <p className="text-sm text-zinc-600">Gunakan menu Evaluations untuk membuka daftar evaluasi Anda.</p>
         <Link
           className="inline-flex w-fit items-center rounded-md bg-tp-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-tp-brand-navy-deep active:bg-tp-brand-navy-deep"
           href={EVALUATIONS_MY}
@@ -58,8 +51,7 @@ export default function EvaluationsPage() {
     );
   }
 
-  if (current.status === "loading" || roster.status === "loading")
-    return <LoadingState />;
+  if (current.status === "loading" || roster.status === "loading") return <LoadingState />;
   if (current.status === "error")
     return <ErrorState message={current.error ?? "Gagal memuat periode evaluasi."} />;
   if (roster.status === "error")
@@ -72,7 +64,10 @@ export default function EvaluationsPage() {
         {role === "ADMIN" ? (
           <p className="text-sm text-zinc-600">
             Buat periode di tab{" "}
-            <Link className="font-medium text-tp-brand-red-deep hover:underline" href={EVALUATION_PERIODS}>
+            <Link
+              className="font-medium text-tp-brand-red-deep hover:underline"
+              href={EVALUATION_PERIODS}
+            >
               Periode
             </Link>
             .
@@ -93,8 +88,7 @@ export default function EvaluationsPage() {
           <div>
             <h2 className="text-base font-semibold text-zinc-900">{period.name}</h2>
             <p className="text-sm text-zinc-600">
-              {period.startDate} — {period.endDate} ·{" "}
-              <PeriodStateBadge state={period.state} />
+              {period.startDate} — {period.endDate} · <PeriodStateBadge state={period.state} />
               {readOnly ? " (hanya-baca)" : ""}
             </p>
           </div>
@@ -126,9 +120,7 @@ export default function EvaluationsPage() {
               title: "Talent",
               render: (_value, entry) => (
                 <>
-                  <span className="text-sm font-medium text-zinc-900">
-                    {entry.talent.fullName}
-                  </span>
+                  <span className="text-sm font-medium text-zinc-900">{entry.talent.fullName}</span>
                   <span className="ml-2 text-xs text-zinc-400">
                     {orDash(entry.talent.nomorInduk)}
                   </span>
@@ -157,8 +149,7 @@ export default function EvaluationsPage() {
                     actions={[
                       {
                         label: readOnly ? "Lihat" : already ? "Nilai ulang" : "Nilai",
-                        onSelect: () =>
-                          router.push(EVALUATION_DETAIL(period.id, entry.talent.id)),
+                        onSelect: () => router.push(EVALUATION_DETAIL(period.id, entry.talent.id)),
                       },
                     ]}
                     label={`Aksi ${entry.talent.fullName}`}

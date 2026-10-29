@@ -14,12 +14,7 @@ type SelectProps = Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "children
 export function Select({ className = "", options, value, ...rest }: SelectProps) {
   return (
     <div className={cn("relative h-11 min-w-0 text-sm", className)}>
-      <select
-        className="tp-select"
-        data-empty={value === "" || undefined}
-        value={value}
-        {...rest}
-      >
+      <select className="tp-select" data-empty={value === "" || undefined} value={value} {...rest}>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

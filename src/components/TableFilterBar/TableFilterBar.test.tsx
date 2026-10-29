@@ -49,7 +49,12 @@ describe("TableFilterBar", () => {
 
   it("offers a clear button on the search input only when it has a value", () => {
     const onSearchChange = vi.fn();
-    const search = { label: "Cari karyawan", onChange: onSearchChange, placeholder: "Cari nama…", value: "budi" };
+    const search = {
+      label: "Cari karyawan",
+      onChange: onSearchChange,
+      placeholder: "Cari nama…",
+      value: "budi",
+    };
     const { rerender } = renderBar({ search });
     fireEvent.click(screen.getByRole("button", { name: "Hapus pencarian" }));
     expect(onSearchChange).toHaveBeenLastCalledWith("");
@@ -126,11 +131,7 @@ describe("TableFilterBar", () => {
     expect(onChange).not.toHaveBeenCalledWith("from", "");
 
     rerender(
-      <TableFilterBar
-        fields={FIELDS}
-        onChange={onChange}
-        values={{ status: "", from: "" }}
-      />,
+      <TableFilterBar fields={FIELDS} onChange={onChange} values={{ status: "", from: "" }} />,
     );
     expect(screen.queryByRole("button", { name: "Reset" })).not.toBeInTheDocument();
   });

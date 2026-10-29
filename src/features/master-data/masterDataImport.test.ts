@@ -68,7 +68,10 @@ describe("importRowsInChunks (TAN-350 — pemecahan potongan ≤100 baris, FR-06
       importChunk: async (variables) =>
         variables.length === 100
           ? successfulChunk(100)
-          : { succeeded: [1], failed: [{ index: 0, message: 'Kode Unit "C102" sudah terdaftar.' }] },
+          : {
+              succeeded: [1],
+              failed: [{ index: 0, message: 'Kode Unit "C102" sudah terdaftar.' }],
+            },
     });
     expect(report.succeeded).toHaveLength(101);
     expect(report.succeeded.at(-1)).toEqual({ rowNumber: 103, label: "Baris 103" });

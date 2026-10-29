@@ -6,7 +6,12 @@ import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import { describe, expect, it, vi } from "vitest";
 import ExcelJS from "exceljs";
 import { ToastProvider } from "@/components/Toast";
-import { ImportProjectsDocument, ImportUnitsDocument, ProjectsDocument, UnitsDocument } from "@/generated/graphql";
+import {
+  ImportProjectsDocument,
+  ImportUnitsDocument,
+  ProjectsDocument,
+  UnitsDocument,
+} from "@/generated/graphql";
 import { MasterDataImportModal } from "./MasterDataImportModal";
 
 const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -135,7 +140,9 @@ describe("MasterDataImportModal — unggah massal Unit (TAN-350)", () => {
       importUnitsMock(rows.slice(0, 100), { succeeded: 100 }),
       importUnitsMock(rows.slice(100), {
         succeeded: 49,
-        failed: [{ index: 0, message: 'Kode Unit "C101" sudah terdaftar dengan nilai unik yang sama.' }],
+        failed: [
+          { index: 0, message: 'Kode Unit "C101" sudah terdaftar dengan nilai unik yang sama.' },
+        ],
       }),
       unitsRefreshMock,
     ]);
@@ -148,7 +155,9 @@ describe("MasterDataImportModal — unggah massal Unit (TAN-350)", () => {
     expect(summary).toHaveTextContent(
       'Baris 102 (C101 — Nama 101) — Kode Unit "C101" sudah terdaftar dengan nilai unik yang sama.',
     );
-    expect(screen.getByRole("button", { name: "Ulangi 1 baris belum berhasil" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Ulangi 1 baris belum berhasil" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("dialog", { name: "Unggah Massal Unit" })).toBeInTheDocument();
   });
 
@@ -173,7 +182,9 @@ describe("MasterDataImportModal — unggah massal Unit (TAN-350)", () => {
     );
     const notExecuted = within(summary).getByRole("list", { name: "Baris tidak dieksekusi" });
     expect(within(notExecuted).getAllByRole("listitem")).toHaveLength(50);
-    expect(screen.getByRole("button", { name: "Ulangi 50 baris belum berhasil" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Ulangi 50 baris belum berhasil" }),
+    ).toBeInTheDocument();
   });
 
   it("rejects a file whose header misses a template column", async () => {
@@ -191,8 +202,17 @@ describe("MasterDataImportModal — unggah massal Unit (TAN-350)", () => {
 
   it("lists structurally invalid rows and sends only the valid ones (FR-02)", async () => {
     const onImported = vi.fn();
-    renderImportModal([importUnitsMock(expectedVariables(2), { succeeded: 2 }), unitsRefreshMock], onImported);
-    await uploadFile(await unitFile([["C1", "Nama 1"], ["", "Tanpa kode"], ["C2", "Nama 2"]]));
+    renderImportModal(
+      [importUnitsMock(expectedVariables(2), { succeeded: 2 }), unitsRefreshMock],
+      onImported,
+    );
+    await uploadFile(
+      await unitFile([
+        ["C1", "Nama 1"],
+        ["", "Tanpa kode"],
+        ["C2", "Nama 2"],
+      ]),
+    );
     await screen.findByText(/2 baris unit terbaca, 1 baris tidak valid/);
     expect(screen.getByRole("list", { name: "Baris tidak valid" })).toHaveTextContent(
       "Baris 3: kolom code wajib diisi.",
@@ -267,7 +287,9 @@ describe("MasterDataImportModal — unggah massal Unit (TAN-350)", () => {
     expect(summary).toHaveTextContent(
       "Baris 4 (Project Gamma) — Unit tujuan nonaktif — pilih unit yang aktif.",
     );
-    expect(screen.getByRole("button", { name: "Ulangi 2 baris belum berhasil" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Ulangi 2 baris belum berhasil" }),
+    ).toBeInTheDocument();
   });
 
   it("re-runs only the rows that did not succeed on retry (FR-02)", async () => {
@@ -276,7 +298,9 @@ describe("MasterDataImportModal — unggah massal Unit (TAN-350)", () => {
       [
         importUnitsMock(expectedVariables(2), {
           succeeded: 1,
-          failed: [{ index: 1, message: 'Kode Unit "C2" sudah terdaftar dengan nilai unik yang sama.' }],
+          failed: [
+            { index: 1, message: 'Kode Unit "C2" sudah terdaftar dengan nilai unik yang sama.' },
+          ],
         }),
         importUnitsMock([{ code: "C2", name: "Nama 2" }], { succeeded: 1 }),
         unitsRefreshMock,

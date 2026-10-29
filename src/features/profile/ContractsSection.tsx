@@ -14,11 +14,7 @@ import { useModuleAccess } from "@/lib/auth/access";
 import { CONTRACT_DETAIL } from "@/lib/constants/routes";
 import type { ProfileContract } from "./useProfile";
 
-export function ContractsSection({
-  contracts,
-}: {
-  contracts: readonly ProfileContract[];
-}) {
+export function ContractsSection({ contracts }: { contracts: readonly ProfileContract[] }) {
   const linked = useModuleAccess("contracts").canRead;
 
   if (contracts.length === 0) {

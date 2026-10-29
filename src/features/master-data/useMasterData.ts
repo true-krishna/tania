@@ -35,9 +35,9 @@ export function useJobRoles(): QueryState<JobRolesQuery["jobRoles"] | undefined>
   return toQueryState({ ...result, data: result.data?.jobRoles });
 }
 
-export function useProjects({
-  skip = false,
-}: { skip?: boolean } = {}): QueryState<ProjectsQuery["projects"] | undefined> {
+export function useProjects({ skip = false }: { skip?: boolean } = {}): QueryState<
+  ProjectsQuery["projects"] | undefined
+> {
   const result = useQuery(ProjectsDocument, {
     variables: { includeInactive: true },
     skip,

@@ -64,7 +64,7 @@ describe("JobRolesPage (Apollo)", () => {
         <ToastProvider>
           <JobRolesPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Software Engineer")).toBeInTheDocument();
@@ -81,7 +81,7 @@ describe("JobRolesPage (Apollo)", () => {
         <ToastProvider>
           <JobRolesPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Software Engineer")).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("JobRolesPage (Apollo)", () => {
         <ToastProvider>
           <JobRolesPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Software Engineer")).toBeInTheDocument();

@@ -19,11 +19,7 @@ export type {
 } from "./types";
 
 export { ActivitySplitChart } from "./ActivitySplitChart";
-export {
-  DataLamaChip,
-  HanyaBacaChip,
-  LoadClassificationBadge,
-} from "./LoadClassificationBadge";
+export { DataLamaChip, HanyaBacaChip, LoadClassificationBadge } from "./LoadClassificationBadge";
 export { DistributionBlock } from "./DistributionBlock";
 export { EmployeeWorkloadTab } from "./EmployeeWorkloadTab";
 export { formatUpdatedAt } from "./formatUpdatedAt";

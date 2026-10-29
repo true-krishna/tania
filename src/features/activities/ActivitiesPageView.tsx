@@ -159,7 +159,10 @@ export function ActivitiesPageView() {
         </p>
       ) : null}
       {deleteError ? (
-        <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <p
+          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          role="alert"
+        >
           {deleteError}
         </p>
       ) : null}
@@ -179,11 +182,7 @@ export function ActivitiesPageView() {
           />
         </ModalContent>
         <ModalActions>
-          <Button
-            disabled={creating || updating}
-            form={formId}
-            type="submit"
-          >
+          <Button disabled={creating || updating} form={formId} type="submit">
             {creating || updating
               ? "Menyimpan…"
               : editing

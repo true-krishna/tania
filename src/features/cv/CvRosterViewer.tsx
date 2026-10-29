@@ -18,9 +18,7 @@ export function CvRosterViewer({ audience }: { audience: CvAudience }) {
 
   if (talents.status === "loading") return <LoadingState />;
   if (talents.status === "error") {
-    return (
-      <ErrorState message={talents.error ?? "Gagal memuat daftar talent."} />
-    );
+    return <ErrorState message={talents.error ?? "Gagal memuat daftar talent."} />;
   }
 
   return (

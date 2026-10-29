@@ -26,9 +26,7 @@ export function AssistantConversationList({
 }: AssistantConversationListProps) {
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold text-tp-muted">
-        Percakapan saya
-      </p>
+      <p className="mb-2 text-xs font-semibold text-tp-muted">Percakapan saya</p>
       {loading && !hasData ? (
         <LoadingState label="Memuat percakapan…" />
       ) : error ? (
@@ -40,14 +38,12 @@ export function AssistantConversationList({
           {nodes.map((conversation) => (
             <li key={conversation.id}>
               <button
-                aria-current={
-                  conversation.id === activeId ? "true" : undefined
-                }
+                aria-current={conversation.id === activeId ? "true" : undefined}
                 className={cn(
                   "tp-chip",
                   conversation.id === activeId
                     ? "border border-tp-line bg-tp-brand-red-tint text-tp-brand-red-ink"
-                    : CHIP_VARIANTS.neutral
+                    : CHIP_VARIANTS.neutral,
                 )}
                 onClick={() => onSelect(conversation.id)}
                 type="button"

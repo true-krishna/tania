@@ -122,9 +122,7 @@ export default function AssignmentsPage() {
 
   function toggleRow(row: AssignmentRow, checked: boolean) {
     setSelectedIds((prev) =>
-      checked && !prev.includes(row.id)
-        ? [...prev, row.id]
-        : prev.filter((id) => id !== row.id)
+      checked && !prev.includes(row.id) ? [...prev, row.id] : prev.filter((id) => id !== row.id),
     );
   }
 
@@ -133,7 +131,7 @@ export default function AssignmentsPage() {
     setSelectedIds((prev) =>
       checked
         ? Array.from(new Set([...prev, ...pageIds]))
-        : prev.filter((id) => !pageIds.includes(id))
+        : prev.filter((id) => !pageIds.includes(id)),
     );
   }
 
@@ -144,7 +142,13 @@ export default function AssignmentsPage() {
       labelledBy?: string;
       onChange: (value: string) => void;
       value: string;
-    }) => <TalentOptions labelledBy={context.labelledBy} onChange={context.onChange} value={context.value} />,
+    }) => (
+      <TalentOptions
+        labelledBy={context.labelledBy}
+        onChange={context.onChange}
+        value={context.value}
+      />
+    ),
     type: "custom" as const,
   };
   const fields = [
@@ -222,7 +226,9 @@ export default function AssignmentsPage() {
                     title: (
                       <input
                         aria-label="Pilih semua baris di halaman ini"
-                        checked={pageRows.length > 0 && pageRows.every((row) => selectedIdSet.has(row.id))}
+                        checked={
+                          pageRows.length > 0 && pageRows.every((row) => selectedIdSet.has(row.id))
+                        }
                         className="h-4 w-4"
                         onChange={(e) => toggleAllRows(e.target.checked)}
                         type="checkbox"
@@ -276,9 +282,7 @@ export default function AssignmentsPage() {
             {
               key: "status",
               title: "Status",
-              render: (_value, assignment) => (
-                <AssignmentStatusBadge status={assignment.status} />
-              ),
+              render: (_value, assignment) => <AssignmentStatusBadge status={assignment.status} />,
             },
             {
               key: "actions",
@@ -299,26 +303,26 @@ export default function AssignmentsPage() {
           ]}
           dataSource={pageRows}
           pagination={pagination}
-           rowKey={(assignment) => assignment.id}
-         />
-       )}
+          rowKey={(assignment) => assignment.id}
+        />
+      )}
 
-       {manage ? (
-         <>
-           <BulkCreateAssignmentModal
-             onClose={() => setBulkCreateOpen(false)}
-             onCreated={resetPage}
-             open={bulkCreateOpen}
-           />
-           <CreateAssignmentModal
-             onClose={() => setCreateOpen(false)}
-             onCreated={() => {
-               resetPage();
-             }}
-             open={createOpen}
-           />
-         </>
-       ) : null}
-     </section>
-   );
- }
+      {manage ? (
+        <>
+          <BulkCreateAssignmentModal
+            onClose={() => setBulkCreateOpen(false)}
+            onCreated={resetPage}
+            open={bulkCreateOpen}
+          />
+          <CreateAssignmentModal
+            onClose={() => setCreateOpen(false)}
+            onCreated={() => {
+              resetPage();
+            }}
+            open={createOpen}
+          />
+        </>
+      ) : null}
+    </section>
+  );
+}

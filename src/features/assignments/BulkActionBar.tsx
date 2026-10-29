@@ -67,8 +67,8 @@ export function BulkActionBar({ rows, onClear, onDone }: BulkActionBarProps) {
         <span className="text-sm font-medium text-tp-text">{rows.length} dipilih</span>
         {skipped > 0 ? (
           <span className="text-xs text-tp-muted">
-            {skipped} baris berstatus selesai dilewati — hanya assignment berjalan yang dapat
-            diubah atau dihapus massal.
+            {skipped} baris berstatus selesai dilewati — hanya assignment berjalan yang dapat diubah
+            atau dihapus massal.
           </span>
         ) : null}
         <span className="flex-1" />
@@ -221,7 +221,11 @@ function BulkEditModal({
             </p>
           ) : null}
           {result ? (
-            <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
+            <BulkResultSummary
+              failed={result.failed}
+              labelFor={labelFor}
+              succeeded={result.succeeded}
+            />
           ) : null}
           <p className="text-sm text-tp-muted">
             Perubahan yang sama diterapkan ke {idsToSend.length} assignment berjalan. Talent tidak
@@ -240,7 +244,11 @@ function BulkEditModal({
             />
           </InputControl>
           <InputControl label="Tanggal mulai baru">
-            <Input onChange={(e) => setPeriodStart(e.target.value)} type="date" value={periodStart} />
+            <Input
+              onChange={(e) => setPeriodStart(e.target.value)}
+              type="date"
+              value={periodStart}
+            />
           </InputControl>
           <InputControl
             error={errors.periodEnd}
@@ -335,7 +343,11 @@ function BulkDeleteDialog({
             </p>
           ) : null}
           {result ? (
-            <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
+            <BulkResultSummary
+              failed={result.failed}
+              labelFor={labelFor}
+              succeeded={result.succeeded}
+            />
           ) : (
             <>
               <p className="text-sm text-tp-text">

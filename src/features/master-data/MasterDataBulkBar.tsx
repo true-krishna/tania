@@ -89,7 +89,9 @@ export function MasterDataBulkBar({ entity, rows, target, onClear }: MasterDataB
     resultDialogClose.markAttempted();
     setResultDialog({
       report,
-      title: isActive ? `Hasil Aktifkan Massal ${config.label}` : `Hasil Nonaktif Massal ${config.label}`,
+      title: isActive
+        ? `Hasil Aktifkan Massal ${config.label}`
+        : `Hasil Nonaktif Massal ${config.label}`,
     });
   }
 
@@ -116,7 +118,12 @@ export function MasterDataBulkBar({ entity, rows, target, onClear }: MasterDataB
             Ubah {target.label}…
           </Button>
         ) : null}
-        <Button disabled={running} onClick={() => void runActive(true)} type="button" variant="secondary">
+        <Button
+          disabled={running}
+          onClick={() => void runActive(true)}
+          type="button"
+          variant="secondary"
+        >
           Aktifkan
         </Button>
         <Button
@@ -169,15 +176,16 @@ export function MasterDataBulkBar({ entity, rows, target, onClear }: MasterDataB
             </div>
           </ModalContent>
           <ModalActions>
-            <Button disabled={running} onClick={deactivateDialog.handleClose} type="button" variant="secondary">
+            <Button
+              disabled={running}
+              onClick={deactivateDialog.handleClose}
+              type="button"
+              variant="secondary"
+            >
               {deactivateResult ? "Tutup" : "Batal"}
             </Button>
             {deactivateResult ? null : (
-              <Button
-                disabled={running}
-                onClick={() => void confirmDeactivate()}
-                type="button"
-              >
+              <Button disabled={running} onClick={() => void confirmDeactivate()} type="button">
                 {running ? "Menyimpan…" : `Nonaktifkan ${rows.length} ${noun}`}
               </Button>
             )}
@@ -263,11 +271,8 @@ function BulkChangeModal({
     }
     setRunning(true);
     try {
-      const report = await run(
-        entity,
-        { kind: "change-select", value },
-        rows,
-        (current, total) => setProgress(total > 1 ? { current, total } : null),
+      const report = await run(entity, { kind: "change-select", value }, rows, (current, total) =>
+        setProgress(total > 1 ? { current, total } : null),
       );
       setProgress(null);
       setResult(report);
@@ -291,7 +296,12 @@ function BulkChangeModal({
     <Modal onClose={dialog.handleClose} open size="md">
       <ModalTitle>{`Ubah ${target.label} Massal`}</ModalTitle>
       <ModalContent>
-        <form aria-label={`Ubah ${target.label} Massal`} className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
+        <form
+          aria-label={`Ubah ${target.label} Massal`}
+          className="flex flex-col gap-4"
+          id={formId}
+          onSubmit={onSubmit}
+        >
           {result ? (
             <MasterDataBulkReport
               formatEntry={(entry) => entry.label}

@@ -10,7 +10,12 @@ import { useToast } from "@/components/Toast";
 import { errorMessage } from "@/lib/errors";
 import { BulkResultSummary, type BulkRowResult } from "./BulkResultSummary";
 import { BULK_ASSIGNMENT_MAX_ROWS, useImportAssignments } from "./useBulkAssignments";
-import { TEMPLATE_COLUMNS, TEMPLATE_URL, parseTemplate, type ImportTemplateRow } from "./talentTemplate";
+import {
+  TEMPLATE_COLUMNS,
+  TEMPLATE_URL,
+  parseTemplate,
+  type ImportTemplateRow,
+} from "./talentTemplate";
 
 type ImportVariables = {
   employeeId: string;
@@ -37,7 +42,9 @@ export function BulkCreateAssignmentModal({
 }: BulkCreateAssignmentModalProps) {
   const [importAssignments, { loading }] = useImportAssignments();
   const [parsedRows, setParsedRows] = React.useState<ImportTemplateRow[] | null>(null);
-  const [invalidRows, setInvalidRows] = React.useState<readonly { rowNumber: number; reason: string }[]>([]);
+  const [invalidRows, setInvalidRows] = React.useState<
+    readonly { rowNumber: number; reason: string }[]
+  >([]);
   const [fileName, setFileName] = React.useState<string | null>(null);
   const [fileError, setFileError] = React.useState<string | null>(null);
   const [parsing, setParsing] = React.useState(false);
@@ -64,7 +71,9 @@ export function BulkCreateAssignmentModal({
   }
 
   const retryRows = result
-    ? result.failed.map((row) => sentRows?.[row.index]).filter((row): row is ImportTemplateRow => !!row)
+    ? result.failed
+        .map((row) => sentRows?.[row.index])
+        .filter((row): row is ImportTemplateRow => !!row)
     : null;
   const rowsToSend = retryRows ?? parsedRows ?? [];
   const isRetry = retryRows !== null;
@@ -152,7 +161,7 @@ export function BulkCreateAssignmentModal({
     const name = row.assignment?.talent?.fullName;
     if (name) return name;
     if (row.employeeId) return row.employeeId;
-    return `Baris ${(sentRows?.[row.index]?.rowNumber ?? row.index + 2)}`;
+    return `Baris ${sentRows?.[row.index]?.rowNumber ?? row.index + 2}`;
   }
 
   return (
@@ -171,7 +180,11 @@ export function BulkCreateAssignmentModal({
             </p>
           ) : null}
           {result ? (
-            <BulkResultSummary failed={result.failed} labelFor={labelFor} succeeded={result.succeeded} />
+            <BulkResultSummary
+              failed={result.failed}
+              labelFor={labelFor}
+              succeeded={result.succeeded}
+            />
           ) : null}
           <InputControl
             error={fileError ?? undefined}
@@ -188,7 +201,9 @@ export function BulkCreateAssignmentModal({
               </a>
             </div>
             <InputDropzone
-              accept={{ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] }}
+              accept={{
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+              }}
               ariaLabel="Unggah berkas Excel assignment"
               disabled={parsing}
               hint={
@@ -220,12 +235,7 @@ export function BulkCreateAssignmentModal({
         </form>
       </ModalContent>
       <ModalActions>
-        <Button
-          disabled={loading || parsing}
-          onClick={onClose}
-          type="button"
-          variant="secondary"
-        >
+        <Button disabled={loading || parsing} onClick={onClose} type="button" variant="secondary">
           {result ? "Tutup" : "Batal"}
         </Button>
         <Button disabled={loading || parsing} form={formId} type="submit">

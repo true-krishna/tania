@@ -1,10 +1,6 @@
 export { AnalyticsTables } from "./AnalyticsTables";
 export { BacklogTable } from "./BacklogTable";
-export {
-  kitChartColor,
-  neutralChartColor,
-  workloadChartColor,
-} from "./chart-colors";
+export { kitChartColor, neutralChartColor, workloadChartColor } from "./chart-colors";
 export {
   buildBacklogPieOption,
   buildOvertimeLineOption,
@@ -21,10 +17,7 @@ export {
 } from "./ExecutiveSummaryCards";
 export { formatTimestamp } from "./formatTimestamp";
 export { IndividualCharts } from "./IndividualCharts";
-export {
-  IndividualLeavesCard,
-  IndividualSummaryCards,
-} from "./IndividualSummaryCards";
+export { IndividualLeavesCard, IndividualSummaryCards } from "./IndividualSummaryCards";
 export { ExecutiveReportView } from "./ExecutiveReportView";
 export { LoadStatusBadge, TtdLevelBadge } from "./LoadStatusBadge";
 export {

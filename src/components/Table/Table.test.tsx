@@ -47,7 +47,9 @@ describe("Table", () => {
 
   it("passes the dataIndex value into render", () => {
     renderTable({
-      columns: [{ key: "unit", title: "Divisi", dataIndex: "unit", render: (value) => `${value}!` }],
+      columns: [
+        { key: "unit", title: "Divisi", dataIndex: "unit", render: (value) => `${value}!` },
+      ],
     });
     expect(screen.getByRole("cell", { name: "Digital Business!" })).toBeInTheDocument();
   });
@@ -67,9 +69,7 @@ describe("Table", () => {
   it("omits the pagination footer when pagination is not given", () => {
     renderTable();
     expect(screen.queryByText(/Menampilkan/)).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Halaman sebelumnya" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Halaman sebelumnya" })).not.toBeInTheDocument();
   });
 
   it("shows the visible range and current page", () => {

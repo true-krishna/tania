@@ -17,7 +17,7 @@ export type QueryState<T> = {
 };
 
 export function toQueryState<T>(
-  result: Pick<QueryResult<T>, "loading" | "error" | "data">
+  result: Pick<QueryResult<T>, "loading" | "error" | "data">,
 ): QueryState<T> {
   const status = result.loading ? "loading" : result.error ? "error" : "ready";
   return {

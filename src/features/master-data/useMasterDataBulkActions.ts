@@ -23,8 +23,7 @@ import {
 } from "./useMasterDataImport";
 
 export type MasterDataBulkAction =
-  | { kind: "set-active"; isActive: boolean }
-  | { kind: "change-select"; value: string };
+  { kind: "set-active"; isActive: boolean } | { kind: "change-select"; value: string };
 
 export type MasterDataBulkSelectionRow = { id: string; label: string };
 

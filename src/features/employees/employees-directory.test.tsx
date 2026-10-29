@@ -39,7 +39,12 @@ function employeeNode(i: number) {
   };
 }
 
-function employeesPage(totalCount: number, ids: number[], hasNextPage: boolean, endCursor: string | null) {
+function employeesPage(
+  totalCount: number,
+  ids: number[],
+  hasNextPage: boolean,
+  endCursor: string | null,
+) {
   return {
     __typename: "EmployeeConnection",
     totalCount,
@@ -74,7 +79,14 @@ const firstPageMock = {
   },
 };
 
-function pageMock(first: number, after: string | null, from: number, to: number, hasNextPage: boolean, endCursor: string | null) {
+function pageMock(
+  first: number,
+  after: string | null,
+  from: number,
+  to: number,
+  hasNextPage: boolean,
+  endCursor: string | null,
+) {
   return {
     request: { query: EmployeesDocument, variables: { filter: {}, first, after } },
     result: {
@@ -96,7 +108,7 @@ function renderDirectory(mocks: React.ComponentProps<typeof MockedProvider>["moc
   return render(
     <MockedProvider cache={appCache()} mocks={mocks}>
       <EmployeesPage />
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -133,65 +145,83 @@ describe("EmployeeDirectory pagination (Operation)", () => {
 
   // Interaction-heavy: jsdom + Apollo scheduling in CI needs more than the
   // default 5s test timeout.
-  it("chains the cursor fetch for a page beyond the loaded rows, with hint and locked controls", { timeout: 20000 }, async () => {
-    const fiftyRows = pageMock(50, null, 1, 50, true, "C50");
-    const delayedSecondChunk = { ...pageMock(50, "C50", 51, 100, true, "C100"), delay: 150 };
-    const lastChunk = pageMock(50, "C100", 101, 147, false, "C147");
-    const { container } = renderDirectory([
-      unitsMock,
-      firstPageMock,
-      fiftyRows,
-      delayedSecondChunk,
-      lastChunk,
-    ]);
-    await waitFor(() => expect(tableRows(container)).toHaveLength(25));
+  it(
+    "chains the cursor fetch for a page beyond the loaded rows, with hint and locked controls",
+    { timeout: 20000 },
+    async () => {
+      const fiftyRows = pageMock(50, null, 1, 50, true, "C50");
+      const delayedSecondChunk = { ...pageMock(50, "C50", 51, 100, true, "C100"), delay: 150 };
+      const lastChunk = pageMock(50, "C100", 101, 147, false, "C147");
+      const { container } = renderDirectory([
+        unitsMock,
+        firstPageMock,
+        fiftyRows,
+        delayedSecondChunk,
+        lastChunk,
+      ]);
+      await waitFor(() => expect(tableRows(container)).toHaveLength(25));
 
-    await choosePageSize("50");
-    await waitFor(() => expect(tableRows(container)).toHaveLength(50));
+      await choosePageSize("50");
+      await waitFor(() => expect(tableRows(container)).toHaveLength(50));
 
-    fireEvent.click(screen.getByRole("button", { name: "3" }));
+      fireEvent.click(screen.getByRole("button", { name: "3" }));
 
-    // While the fetchMore chain is in flight the table shows a loading hint
-    // and the pagination controls are locked.
-    expect(await screen.findByText(/Memuat baris 101–147 dari 147/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled();
-    expect(tableRows(container)).toHaveLength(1); // only the loading-hint row
+      // While the fetchMore chain is in flight the table shows a loading hint
+      // and the pagination controls are locked.
+      expect(await screen.findByText(/Memuat baris 101–147 dari 147/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled();
+      expect(tableRows(container)).toHaveLength(1); // only the loading-hint row
 
-    await waitFor(() => expect(tableRows(container)).toHaveLength(47), { timeout: 4000 });
-    expect(screen.getByText("Karyawan 147")).toBeInTheDocument();
-    expect(screen.queryByText(/Memuat baris/)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled(); // last page
-  });
+      await waitFor(() => expect(tableRows(container)).toHaveLength(47), { timeout: 4000 });
+      expect(screen.getByText("Karyawan 147")).toBeInTheDocument();
+      expect(screen.queryByText(/Memuat baris/)).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Halaman berikutnya" })).toBeDisabled(); // last page
+    },
+  );
 
-  it("shows the stall banner with a reload action when a fetch adds no rows", { timeout: 20000 }, async () => {
-    const duplicateSecondPage = {
-      request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: "C25" } },
-      result: {
-        data: { employees: employeesPage(147, ids(1, 25), true, "C25") },
-      },
-    };
-    const freshFirstPage = {
-      request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
-      result: {
-        data: { employees: employeesPage(147, ids(1, 25), true, "C25") },
-      },
-    };
-    const { container } = renderDirectory([unitsMock, firstPageMock, duplicateSecondPage, freshFirstPage]);
-    await waitFor(() => expect(tableRows(container)).toHaveLength(25));
+  it(
+    "shows the stall banner with a reload action when a fetch adds no rows",
+    { timeout: 20000 },
+    async () => {
+      const duplicateSecondPage = {
+        request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: "C25" } },
+        result: {
+          data: { employees: employeesPage(147, ids(1, 25), true, "C25") },
+        },
+      };
+      const freshFirstPage = {
+        request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
+        result: {
+          data: { employees: employeesPage(147, ids(1, 25), true, "C25") },
+        },
+      };
+      const { container } = renderDirectory([
+        unitsMock,
+        firstPageMock,
+        duplicateSecondPage,
+        freshFirstPage,
+      ]);
+      await waitFor(() => expect(tableRows(container)).toHaveLength(25));
 
-    fireEvent.click(screen.getByRole("button", { name: "2" }));
+      fireEvent.click(screen.getByRole("button", { name: "2" }));
 
-    expect(await screen.findByText(/Sebagian data belum berhasil dimuat/i)).toBeInTheDocument();
+      expect(await screen.findByText(/Sebagian data belum berhasil dimuat/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /muat ulang/i }));
-    await waitFor(() => expect(screen.queryByText(/Sebagian data belum berhasil dimuat/i)).not.toBeInTheDocument());
-    await waitFor(() => expect(tableRows(container)).toHaveLength(25));
-    expect(screen.getByText("Karyawan 01")).toBeInTheDocument();
-  });
+      fireEvent.click(screen.getByRole("button", { name: /muat ulang/i }));
+      await waitFor(() =>
+        expect(screen.queryByText(/Sebagian data belum berhasil dimuat/i)).not.toBeInTheDocument(),
+      );
+      await waitFor(() => expect(tableRows(container)).toHaveLength(25));
+      expect(screen.getByText("Karyawan 01")).toBeInTheDocument();
+    },
+  );
 
   it("debounces the search input so partial typing does not trigger the query", async () => {
     const emptySearchMock = {
-      request: { query: EmployeesDocument, variables: { filter: { search: "zzz" }, first: 25, after: null } },
+      request: {
+        query: EmployeesDocument,
+        variables: { filter: { search: "zzz" }, first: 25, after: null },
+      },
       result: {
         data: { employees: employeesPage(0, [], false, null) },
       },
@@ -205,7 +235,7 @@ describe("EmployeeDirectory pagination (Operation)", () => {
 
     await waitFor(
       () => expect(screen.getByText(/Tidak ada karyawan yang cocok/i)).toBeInTheDocument(),
-      { timeout: 2000 }
+      { timeout: 2000 },
     );
   });
 });

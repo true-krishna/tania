@@ -24,13 +24,27 @@ export function TalentWorkloadDetail({ fixture }: { fixture: TalentWorkloadFixtu
                 <caption className="sr-only">Tabel assignment project talent</caption>
                 <thead>
                   <tr>
-                    <th className="text-left" scope="col">Project</th>
-                    <th className="text-left" scope="col">Tribe</th>
-                    <th className="text-left" scope="col">Product</th>
-                    <th className="text-left" scope="col">Squad</th>
-                    <th className="text-right" scope="col">Availability</th>
-                    <th className="text-right" scope="col">Time Spent</th>
-                    <th className="text-left" scope="col">Keterangan</th>
+                    <th className="text-left" scope="col">
+                      Project
+                    </th>
+                    <th className="text-left" scope="col">
+                      Tribe
+                    </th>
+                    <th className="text-left" scope="col">
+                      Product
+                    </th>
+                    <th className="text-left" scope="col">
+                      Squad
+                    </th>
+                    <th className="text-right" scope="col">
+                      Availability
+                    </th>
+                    <th className="text-right" scope="col">
+                      Time Spent
+                    </th>
+                    <th className="text-left" scope="col">
+                      Keterangan
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

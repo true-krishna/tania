@@ -68,7 +68,12 @@ const employeeNode = {
           terminatedAt: null,
           notes: null,
           unit: { __typename: "Unit", id: "u-1", name: "Digital" },
-          jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer", chapter: { __typename: "Chapter", id: "ch-1", name: "Platform" } },
+          jobRole: {
+            __typename: "JobRole",
+            id: "jr-1",
+            name: "Engineer",
+            chapter: { __typename: "Chapter", id: "ch-1", name: "Platform" },
+          },
           createdAt: "2025-06-20T09:00:00Z",
           updatedAt: "2025-06-20T09:00:00Z",
         },
@@ -201,7 +206,7 @@ function renderDetail(mocks: React.ComponentProps<typeof MockedProvider>["mocks"
       <MockedProvider mocks={mocks}>
         <EmployeeDetailPage params={Promise.resolve({ id: "emp-1" })} />
       </MockedProvider>
-    </React.Suspense>
+    </React.Suspense>,
   );
 }
 
@@ -211,7 +216,9 @@ describe("EmployeeDetailPage (riwayat kontrak + riwayat perubahan, T022)", () =>
       renderDetail([employeeMock, auditLogsMock, entraProvisionMock]);
     });
 
-    expect(await screen.findByRole("heading", { name: /detail karyawan|andi pratama/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /detail karyawan|andi pratama/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText("************1234")).toBeInTheDocument();
     expect(screen.queryByText(/3273012345678901/)).not.toBeInTheDocument();
 
@@ -354,7 +361,7 @@ describe("EmployeeDetailPage — edit modal (TAN-357)", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Simpan" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      /perubahan data andi pratama berhasil disimpan/i
+      /perubahan data andi pratama berhasil disimpan/i,
     );
     expect(screen.queryByRole("dialog")).toBeNull();
 
@@ -396,8 +403,6 @@ describe("EmployeeDetailPage provisi akun Entra (TAN-272 U1)", () => {
     expect(await within(card).findByText("Akun dibuat")).toBeInTheDocument();
     expect(within(card).getByText("Email aktivasi terkirim")).toBeInTheDocument();
     expect(within(card).getByText("rina.kusuma@digitaltelkom.id")).toBeInTheDocument();
-    expect(
-      within(card).getByText(/wajib ganti password pada login pertama/i)
-    ).toBeInTheDocument();
+    expect(within(card).getByText(/wajib ganti password pada login pertama/i)).toBeInTheDocument();
   });
 });

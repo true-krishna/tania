@@ -14,18 +14,10 @@ import {
   GENERATION_ORDER,
   prepareDistribution,
 } from "./DistributionChart";
-import {
-  buildMovementOption,
-  canUseDivergingBars,
-  MovementTrendChart,
-} from "./MovementTrendChart";
+import { buildMovementOption, canUseDivergingBars, MovementTrendChart } from "./MovementTrendChart";
 import { chartFileName, downloadChart } from "./downloadChart";
 import { formatMonthLabel, PeriodFilter } from "./PeriodFilter";
-import {
-  TALENT_REPORT_QUERY,
-  TALENT_REPORT_RANGE_QUERY,
-  useTalentReport,
-} from "./useTalentReport";
+import { TALENT_REPORT_QUERY, TALENT_REPORT_RANGE_QUERY, useTalentReport } from "./useTalentReport";
 import { TalentReportContent } from "./TalentReportPageView";
 import {
   MOCK_MOVEMENT_TREND,
@@ -288,12 +280,7 @@ describe("DistributionChart data-prep (T020)", () => {
       ],
       GENERATION_ORDER,
     );
-    expect(generation.map((d) => d.label)).toEqual([
-      "Baby Boomer",
-      "Gen X",
-      "Milenial",
-      "Gen Z",
-    ]);
+    expect(generation.map((d) => d.label)).toEqual(["Baby Boomer", "Gen X", "Milenial", "Gen Z"]);
 
     const education = prepareDistribution(
       [
@@ -305,13 +292,7 @@ describe("DistributionChart data-prep (T020)", () => {
       ],
       EDUCATION_ORDER,
     );
-    expect(education.map((d) => d.label)).toEqual([
-      "SMA/SMK Sederajat",
-      "D3",
-      "S1",
-      "S2",
-      "S3",
-    ]);
+    expect(education.map((d) => d.label)).toEqual(["SMA/SMK Sederajat", "D3", "S1", "S2", "S3"]);
   });
 
   it("always places MISSING last and labels OTHER as Lainnya", () => {
@@ -364,7 +345,13 @@ describe("DistributionChart data-prep (T020)", () => {
 
   it("renders judul & rentang via TitleComponent di dalam kanvas saat disuplai (T034 / SC-03)", () => {
     const theme = resolveChartTheme();
-    const titled = buildDistributionOption([], "bar", theme, "Talent per role", "Januari 2025 – Oktober 2026");
+    const titled = buildDistributionOption(
+      [],
+      "bar",
+      theme,
+      "Talent per role",
+      "Januari 2025 – Oktober 2026",
+    );
     const title = (titled as { title: { text: string; subtext: string; left: string } }).title;
     expect(title.text).toBe("Talent per role");
     expect(title.subtext).toBe("Januari 2025 – Oktober 2026");
@@ -542,9 +529,7 @@ describe("useTalentReport (T022 / FR-11, FR-12, FR-15)", () => {
       {
         request: { query: TALENT_REPORT_QUERY, variables: { period: fullPeriod } },
         result: {
-          errors: [
-            new GraphQLError("Akses ditolak.", { extensions: { code: "FORBIDDEN" } }),
-          ],
+          errors: [new GraphQLError("Akses ditolak.", { extensions: { code: "FORBIDDEN" } })],
         },
       },
     ]);
@@ -605,9 +590,7 @@ describe("TalentReportContent (T023 / SC-04, SC-05)", () => {
       {
         request: { query: TALENT_REPORT_QUERY, variables: { period: fullPeriod } },
         result: {
-          errors: [
-            new GraphQLError("Akses ditolak.", { extensions: { code: "FORBIDDEN" } }),
-          ],
+          errors: [new GraphQLError("Akses ditolak.", { extensions: { code: "FORBIDDEN" } })],
         },
       },
     ]);
@@ -751,7 +734,10 @@ describe("MovementTrendChart (T026 / V-5)", () => {
 
     const diverging = screen.getByRole("tab", { name: "Bar divergen" });
     expect(diverging).toHaveAttribute("aria-disabled", "true");
-    expect(diverging).toHaveAttribute("title", "Bar divergen hanya untuk rentang maksimal 12 bulan");
+    expect(diverging).toHaveAttribute(
+      "title",
+      "Bar divergen hanya untuk rentang maksimal 12 bulan",
+    );
     expect(diverging).toHaveAttribute("aria-selected", "false");
 
     fireEvent.click(diverging);

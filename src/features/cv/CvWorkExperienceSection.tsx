@@ -4,11 +4,7 @@ import { AssignmentStatusBadge } from "@/features/assignments/AssignmentStatusBa
 import type { CvFieldsFragment } from "@/generated/graphql";
 import { CvSectionCard } from "./CvSectionCard";
 
-export function CvWorkExperienceSection({
-  cv,
-}: {
-  cv: CvFieldsFragment | undefined;
-}) {
+export function CvWorkExperienceSection({ cv }: { cv: CvFieldsFragment | undefined }) {
   const experiences = cv?.workExperience ?? [];
 
   return (
@@ -24,14 +20,10 @@ export function CvWorkExperienceSection({
               key={experience.id}
             >
               <div>
-                <p className="font-medium text-zinc-900">
-                  {experience.project.name}
-                </p>
+                <p className="font-medium text-zinc-900">{experience.project.name}</p>
                 <p className="text-xs text-zinc-500">
                   {experience.periodStart}
-                  {experience.periodEnd
-                    ? ` — ${experience.periodEnd}`
-                    : " — sekarang"}
+                  {experience.periodEnd ? ` — ${experience.periodEnd}` : " — sekarang"}
                 </p>
               </div>
               <AssignmentStatusBadge status={experience.status} />

@@ -47,13 +47,16 @@ describe("AuditPage — Admin (FR-17)", () => {
       <MockedProvider
         mocks={[
           {
-            request: { query: AuditLogsDocument, variables: { filter: {}, first: 25, after: null } },
+            request: {
+              query: AuditLogsDocument,
+              variables: { filter: {}, first: 25, after: null },
+            },
             result: { data: { auditLogs } },
           },
         ]}
       >
         <AuditPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText(/1 catatan/)).toBeInTheDocument();
@@ -80,7 +83,10 @@ describe("AuditPage — Admin (FR-17)", () => {
       <MockedProvider
         mocks={[
           {
-            request: { query: AuditLogsDocument, variables: { filter: {}, first: 25, after: null } },
+            request: {
+              query: AuditLogsDocument,
+              variables: { filter: {}, first: 25, after: null },
+            },
             result: {
               data: {
                 auditLogs: {
@@ -95,7 +101,7 @@ describe("AuditPage — Admin (FR-17)", () => {
         ]}
       >
         <AuditPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText(/Akses menu · TALENT:idp/)).toBeInTheDocument();
@@ -115,13 +121,16 @@ describe("AuditPage — Admin (FR-17)", () => {
       <MockedProvider
         mocks={[
           {
-            request: { query: AuditLogsDocument, variables: { filter: {}, first: 25, after: null } },
+            request: {
+              query: AuditLogsDocument,
+              variables: { filter: {}, first: 25, after: null },
+            },
             result: { data: { auditLogs: twelveLogs } },
           },
         ]}
       >
         <AuditPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Aktor 1")).toBeInTheDocument();
@@ -140,7 +149,7 @@ describe("AuditPage — Admin (FR-17)", () => {
     render(
       <MockedProvider mocks={[]}>
         <AuditPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText(/hanya dapat diakses oleh peran Admin/i)).toBeInTheDocument();

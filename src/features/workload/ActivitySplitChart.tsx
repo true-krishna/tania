@@ -18,7 +18,10 @@ export function ActivitySplitChart({ split }: { split: ActivitySplit | null }) {
         className="flex h-3.5 gap-0.5 overflow-hidden rounded-full bg-tp-bg"
         role="img"
       >
-        <span className="block h-full bg-tp-brand-navy" style={{ width: `${workingPercentage}%` }} />
+        <span
+          className="block h-full bg-tp-brand-navy"
+          style={{ width: `${workingPercentage}%` }}
+        />
         <span
           className="block h-full bg-tp-brand-navy"
           style={{ width: `${trainingPercentage}%`, opacity: 0.35 }}

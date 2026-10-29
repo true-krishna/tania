@@ -32,7 +32,10 @@ describe("WorkloadPageView — role-adaptive landing (SC-003 / US4)", () => {
   it("lands CHAPTER on the chapter list and offers the own view as a second tab", async () => {
     render(<WorkloadPageView />);
 
-    expect(screen.getByRole("tab", { name: "Chapter saya" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Chapter saya" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(screen.getByRole("tab", { name: "Workload saya" })).toBeInTheDocument();
     expect(await screen.findByText("Talent dalam Chapter DPS")).toBeInTheDocument();
     // Highest load first, overload visible on the row (SC-003).
@@ -96,7 +99,9 @@ describe("WorkloadPageView — state matrix (design §6)", () => {
     h.params.set("period", "prd_7c04");
     render(<WorkloadPageView />);
 
-    expect(await screen.findByText("Belum ada data workload untuk periode ini.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Belum ada data workload untuk periode ini."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Catat aktivitas/ })).toBeInTheDocument();
   });
 
@@ -125,9 +130,7 @@ describe("WorkloadPageView — state matrix (design §6)", () => {
 
     expect(await screen.findByText("Beban kerja periode ini")).toBeInTheDocument();
     expect(screen.getByText("Data tidak lengkap", { selector: "span" })).toBeInTheDocument();
-    expect(
-      screen.getByText(/rincian alokasi aktivitas belum tersedia/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/rincian alokasi aktivitas belum tersedia/)).toBeInTheDocument();
   });
 
   it("explains the missing TMS link instead of showing figures", async () => {

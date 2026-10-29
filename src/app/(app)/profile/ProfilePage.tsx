@@ -42,7 +42,7 @@ export default function ProfilePage() {
   );
   const selectedTab: ProfileTab = tabs.some((item) => item.id === tab) ? tab : "personal";
   const history = useProfileHistory(
-    tabs.some((item) => item.id === "contracts" || item.id === "assignments")
+    tabs.some((item) => item.id === "contracts" || item.id === "assignments"),
   );
 
   return (

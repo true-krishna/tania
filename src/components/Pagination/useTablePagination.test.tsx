@@ -8,9 +8,7 @@ const ROWS = Array.from({ length: 57 }, (_, i) => i);
 
 describe("useTablePagination", () => {
   it("slices the current page out of the rows", () => {
-    const { result } = renderHook(() =>
-      useTablePagination(ROWS, { initialPageSize: 10 }),
-    );
+    const { result } = renderHook(() => useTablePagination(ROWS, { initialPageSize: 10 }));
 
     expect(result.current.pageRows).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     expect(result.current.pagination).toMatchObject({
@@ -21,9 +19,7 @@ describe("useTablePagination", () => {
   });
 
   it("moves pages through onPageChange and reports the safe page", () => {
-    const { result } = renderHook(() =>
-      useTablePagination(ROWS, { initialPageSize: 10 }),
-    );
+    const { result } = renderHook(() => useTablePagination(ROWS, { initialPageSize: 10 }));
 
     act(() => result.current.pagination.onPageChange(3));
     expect(result.current.pageRows).toEqual([20, 21, 22, 23, 24, 25, 26, 27, 28, 29]);
@@ -34,9 +30,7 @@ describe("useTablePagination", () => {
   });
 
   it("resets to page 1 when the page size changes", () => {
-    const { result } = renderHook(() =>
-      useTablePagination(ROWS, { initialPageSize: 10 }),
-    );
+    const { result } = renderHook(() => useTablePagination(ROWS, { initialPageSize: 10 }));
 
     act(() => result.current.pagination.onPageChange(4));
     act(() => result.current.pagination.onPageSizeChange(50));
@@ -97,8 +91,7 @@ describe("useTablePagination", () => {
       loaded += 25;
     });
     const { result, rerender } = renderHook(
-      ({ rows }) =>
-        useTablePagination(rows, { totalItems: 57, hasMore: true, loadMore }),
+      ({ rows }) => useTablePagination(rows, { totalItems: 57, hasMore: true, loadMore }),
       { initialProps: { rows: Array.from({ length: 2 }, (_, i) => i) } },
     );
 
@@ -116,8 +109,7 @@ describe("useTablePagination", () => {
   it("does not loop when a fetch adds no rows", () => {
     const loadMore = vi.fn();
     const { rerender } = renderHook(
-      ({ rows }) =>
-        useTablePagination(rows, { totalItems: 57, hasMore: true, loadMore }),
+      ({ rows }) => useTablePagination(rows, { totalItems: 57, hasMore: true, loadMore }),
       { initialProps: { rows: Array.from({ length: 2 }, (_, i) => i) } },
     );
 
@@ -134,9 +126,7 @@ describe("useTablePagination", () => {
   it("stops auto-fetching once the wanted rows are loaded", () => {
     const loadMore = vi.fn();
     const rows = Array.from({ length: 25 }, (_, i) => i);
-    renderHook(() =>
-      useTablePagination(rows, { totalItems: 57, hasMore: true, loadMore }),
-    );
+    renderHook(() => useTablePagination(rows, { totalItems: 57, hasMore: true, loadMore }));
 
     expect(loadMore).not.toHaveBeenCalled();
   });

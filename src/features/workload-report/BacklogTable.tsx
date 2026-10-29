@@ -31,7 +31,12 @@ function normalizedSortValue(row: IndividualBacklogNormalizedRow, key: SortKey):
   return row.timespent === null ? -1 : Number(row.timespent);
 }
 
-function sortBy<T>(rows: T[], key: SortKey, dir: "asc" | "desc", valueOf: (row: T, key: SortKey) => number | string): T[] {
+function sortBy<T>(
+  rows: T[],
+  key: SortKey,
+  dir: "asc" | "desc",
+  valueOf: (row: T, key: SortKey) => number | string,
+): T[] {
   const sorted = [...rows].sort((a, b) => {
     const av = valueOf(a, key);
     const bv = valueOf(b, key);
@@ -102,12 +107,16 @@ export function BacklogTable({
       ? backlog.filter(
           (row) =>
             !query ||
-            [row.issueKey, row.projectKey, row.backlog].some((v) => (v ?? "").toLowerCase().includes(query)),
+            [row.issueKey, row.projectKey, row.backlog].some((v) =>
+              (v ?? "").toLowerCase().includes(query),
+            ),
         )
       : backlogNormalized.filter(
           (row) =>
             !query ||
-            [row.issueKey, row.projectKey, row.backlog].some((v) => (v ?? "").toLowerCase().includes(query)),
+            [row.issueKey, row.projectKey, row.backlog].some((v) =>
+              (v ?? "").toLowerCase().includes(query),
+            ),
         );
   const sortedRows = sort
     ? variant === "detail"
@@ -149,7 +158,9 @@ export function BacklogTable({
   const detailColumns: TableColumn<IndividualBacklogRow>[] = [
     {
       key: "issueKey",
-      title: <SortHeader label="Activity Key" onToggle={toggleSort} sort={sort} sortKey="issueKey" />,
+      title: (
+        <SortHeader label="Activity Key" onToggle={toggleSort} sort={sort} sortKey="issueKey" />
+      ),
       headerProps: sortHeaderProps(sort, "issueKey"),
       className: "font-medium text-tp-text",
       render: (_value, row) => (
@@ -174,18 +185,26 @@ export function BacklogTable({
       key: "status",
       title: "Status",
       render: (_value, row) =>
-        row.status ? <Chip variant={STATUS_VARIANT[row.status] ?? "neutral"}>{row.status}</Chip> : "—",
+        row.status ? (
+          <Chip variant={STATUS_VARIANT[row.status] ?? "neutral"}>{row.status}</Chip>
+        ) : (
+          "—"
+        ),
     },
     { key: "priority", title: "Priority", render: (_value, row) => row.priority ?? "—" },
     {
       key: "updated",
-      title: <SortHeader label="Activity Time" onToggle={toggleSort} sort={sort} sortKey="updated" />,
+      title: (
+        <SortHeader label="Activity Time" onToggle={toggleSort} sort={sort} sortKey="updated" />
+      ),
       headerProps: sortHeaderProps(sort, "updated"),
       render: (_value, row) => formatTimestamp(row.updated),
     },
     {
       key: "timespent",
-      title: <SortHeader label="Time Spent" onToggle={toggleSort} sort={sort} sortKey="timespent" />,
+      title: (
+        <SortHeader label="Time Spent" onToggle={toggleSort} sort={sort} sortKey="timespent" />
+      ),
       headerProps: sortHeaderProps(sort, "timespent"),
       align: "right",
       render: (_value, row) => (row.timespent === null ? "—" : `${row.timespent} jam`),
@@ -195,7 +214,9 @@ export function BacklogTable({
   const normalizedColumns: TableColumn<IndividualBacklogNormalizedRow>[] = [
     {
       key: "issueKey",
-      title: <SortHeader label="Activity Key" onToggle={toggleSort} sort={sort} sortKey="issueKey" />,
+      title: (
+        <SortHeader label="Activity Key" onToggle={toggleSort} sort={sort} sortKey="issueKey" />
+      ),
       headerProps: sortHeaderProps(sort, "issueKey"),
       className: "font-medium text-tp-text",
       render: (_value, row) => row.issueKey ?? "—",
@@ -209,13 +230,22 @@ export function BacklogTable({
     },
     {
       key: "updated",
-      title: <SortHeader label="Activity Time" onToggle={toggleSort} sort={sort} sortKey="updated" />,
+      title: (
+        <SortHeader label="Activity Time" onToggle={toggleSort} sort={sort} sortKey="updated" />
+      ),
       headerProps: sortHeaderProps(sort, "updated"),
       render: (_value, row) => formatTimestamp(row.updated),
     },
     {
       key: "timespent",
-      title: <SortHeader label="Filled Time Spent" onToggle={toggleSort} sort={sort} sortKey="timespent" />,
+      title: (
+        <SortHeader
+          label="Filled Time Spent"
+          onToggle={toggleSort}
+          sort={sort}
+          sortKey="timespent"
+        />
+      ),
       headerProps: sortHeaderProps(sort, "timespent"),
       align: "right",
       className: "font-medium text-tp-ink-peach",

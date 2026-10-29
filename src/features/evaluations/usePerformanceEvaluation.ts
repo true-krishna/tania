@@ -23,8 +23,7 @@ export function usePerformanceEvaluation(
 ): QueryState<Node | null> {
   const result = useQuery(PerformanceEvaluationForTalentDocument, {
     skip: !periodId || !employeeId,
-    variables:
-      periodId && employeeId ? { periodId, employeeId } : undefined,
+    variables: periodId && employeeId ? { periodId, employeeId } : undefined,
   });
   const node = result.data?.performanceEvaluations?.edges?.[0]?.node ?? null;
   return toQueryState({ ...result, data: node });

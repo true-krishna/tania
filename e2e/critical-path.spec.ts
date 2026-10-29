@@ -212,8 +212,12 @@ test("T028 — Unduh PNG per grafik: event, pola nama, dimensi ≥ 2× (SC-03)",
     const box = await chartOf(page, chartTitle).boundingBox();
     expect(box).not.toBeNull();
     const { width, height } = pngSize(file as string);
-    expect(width, "lebar PNG ≥ 2×").toBeGreaterThanOrEqual(Math.floor(2 * (box as { width: number }).width));
-    expect(height, "tinggi PNG ≥ 2×").toBeGreaterThanOrEqual(Math.floor(2 * (box as { height: number }).height));
+    expect(width, "lebar PNG ≥ 2×").toBeGreaterThanOrEqual(
+      Math.floor(2 * (box as { width: number }).width),
+    );
+    expect(height, "tinggi PNG ≥ 2×").toBeGreaterThanOrEqual(
+      Math.floor(2 * (box as { height: number }).height),
+    );
   }
 });
 
@@ -236,7 +240,9 @@ test("T028 — Chapter hanya melihat cakupan chapter-nya (SC-05)", async ({ page
   expect(totals.movement).toBeLessThan(OPERATION_FULL_RANGE.movement);
 });
 
-test("T028 — Talent tidak melihat laporan; rute warisan /reports/talent dihapus (FR-01)", async ({ page }) => {
+test("T028 — Talent tidak melihat laporan; rute warisan /reports/talent dihapus (FR-01)", async ({
+  page,
+}) => {
   await loginAs(page, SEED_USERS.TALENT);
 
   // Laporan Talent = Dashboard (TAN-345): rute warisan dihapus, bukan redirect —
@@ -258,7 +264,9 @@ test("T028 — Talent tidak melihat laporan; rute warisan /reports/talent dihapu
 // `E2E_AI_PROVIDER=1` — lihat `e2e/README.md`.
 // ---------------------------------------------------------------------------
 
-test("T029 — Chapter membuka panel: fokus, chip, batas 2.000 karakter, tutup (tanpa provider)", async ({ page }) => {
+test("T029 — Chapter membuka panel: fokus, chip, batas 2.000 karakter, tutup (tanpa provider)", async ({
+  page,
+}) => {
   await loginAs(page, SEED_USERS.CHAPTER);
   await page.goto("/dashboard");
 
@@ -347,7 +355,9 @@ test("T034 — Chapter menerima balasan grounded dari asisten (butuh provider)",
   await expect(bubble).toBeFocused();
 });
 
-test("T034 — gagal ramah lalu coba ulang idempoten dengan clientRequestId sama (butuh provider)", async ({ page }) => {
+test("T034 — gagal ramah lalu coba ulang idempoten dengan clientRequestId sama (butuh provider)", async ({
+  page,
+}) => {
   test.skip(
     process.env.E2E_AI_PROVIDER !== "1",
     "butuh API + provider AI: jalankan dengan E2E_AI_PROVIDER=1 (lihat e2e/README.md)",
@@ -437,9 +447,7 @@ test("T028 — tanpa SSO aktif, /login menampilkan form email langsung", async (
   await expect(page.locator("#login-email")).toBeVisible();
   await expect(page.locator("#login-password")).toBeVisible();
   // Tidak ada tombol SSO menggantung saat `enabled=false`.
-  await expect(
-    page.getByRole("button", { name: /sso telkom/i }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /sso telkom/i })).toHaveCount(0);
   // Beri waktu query entraSsoStart selesai: tidak boleh ada pengalihan otomatis.
   await page.waitForTimeout(2000);
   await expect(page).toHaveURL(/\/login$/);

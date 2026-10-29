@@ -54,11 +54,7 @@ export default function EvaluationFormPage() {
   const current = useCurrentEvaluationPeriod();
   const roster = useEvaluationRoster(current.data?.id ?? null);
 
-  if (
-    draft.status === "loading" ||
-    current.status === "loading" ||
-    roster.status === "loading"
-  )
+  if (draft.status === "loading" || current.status === "loading" || roster.status === "loading")
     return <LoadingState />;
   if (draft.status === "error")
     return <ErrorState message={draft.error ?? "Gagal memuat evaluasi."} />;
@@ -85,7 +81,10 @@ export default function EvaluationFormPage() {
     return (
       <section className="flex flex-col gap-4">
         <ErrorState message="Periode evaluasi tidak ditemukan atau akses ditolak." />
-        <Link className="text-sm font-medium text-tp-brand-red-deep hover:underline" href={EVALUATIONS}>
+        <Link
+          className="text-sm font-medium text-tp-brand-red-deep hover:underline"
+          href={EVALUATIONS}
+        >
           ← Kembali ke roster
         </Link>
       </section>
@@ -200,9 +199,7 @@ function EvaluationForm({
 
       <div className="flex flex-col gap-3 rounded-lg border border-board-border bg-board p-4 shadow-sm">
         {criteria.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            Template periode ini tidak memiliki kriteria.
-          </p>
+          <p className="text-sm text-zinc-500">Template periode ini tidak memiliki kriteria.</p>
         ) : (
           criteria
             .slice()
@@ -257,7 +254,12 @@ function EvaluationForm({
         </p>
       ) : (
         <div className="flex gap-2">
-          <Button disabled={busy || !touched} onClick={handleUpsert} type="button" variant="secondary">
+          <Button
+            disabled={busy || !touched}
+            onClick={handleUpsert}
+            type="button"
+            variant="secondary"
+          >
             Simpan draf
           </Button>
           <Button disabled={busy} onClick={handleSubmit} type="button">
@@ -326,8 +328,10 @@ function answerToString(
   answerType: EvaluationAnswerType,
   value: { valueNumeric?: number | null; valueBool?: boolean | null; valueText?: string | null },
 ): string {
-  if (value.valueBool !== null && value.valueBool !== undefined) return value.valueBool ? "yes" : "no";
-  if (value.valueNumeric !== null && value.valueNumeric !== undefined) return String(value.valueNumeric);
+  if (value.valueBool !== null && value.valueBool !== undefined)
+    return value.valueBool ? "yes" : "no";
+  if (value.valueNumeric !== null && value.valueNumeric !== undefined)
+    return String(value.valueNumeric);
   return value.valueText ?? "";
 }
 

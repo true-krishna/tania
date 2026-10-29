@@ -56,8 +56,8 @@ export function BrandPanel() {
               lebih terbuka.
             </p>
             <p className="mt-5 max-w-[27rem] text-base leading-[1.6] text-tp-muted">
-              Platform HR yang mendukung setiap langkah perjalanan kariermu, dari
-              pengembangan diri hingga pencapaian masa depan.
+              Platform HR yang mendukung setiap langkah perjalanan kariermu, dari pengembangan diri
+              hingga pencapaian masa depan.
             </p>
           </div>
         </div>

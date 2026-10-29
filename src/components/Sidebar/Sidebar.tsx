@@ -11,12 +11,7 @@ import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/cn";
 import type { AccessRole } from "@/generated/graphql";
 import type { MenuAccessConfig, MenuConfigStatus } from "@/lib/auth/menuAccess";
-import {
-  NAV,
-  visibleNavEntries,
-  type NavEntry,
-  type NavSubmenu,
-} from "./nav";
+import { NAV, visibleNavEntries, type NavEntry, type NavSubmenu } from "./nav";
 
 interface SidebarProps {
   role: AccessRole | null;
@@ -25,7 +20,6 @@ interface SidebarProps {
   menuStatus?: MenuConfigStatus;
   roleName?: string | null;
 }
-
 
 function useActiveHref(
   pathname: string,
@@ -37,7 +31,12 @@ function useActiveHref(
     let best = "";
     for (const entry of entries) {
       if (roleScoped && role && !entry.roles.includes(role)) continue;
-      const hrefs = entry.kind === "link" ? [entry.href] : entry.children.filter((c) => !roleScoped || !role || c.roles.includes(role)).map((c) => c.href);
+      const hrefs =
+        entry.kind === "link"
+          ? [entry.href]
+          : entry.children
+              .filter((c) => !roleScoped || !role || c.roles.includes(role))
+              .map((c) => c.href);
       for (const href of hrefs) {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         if (active && href.length > best.length) best = href;
@@ -57,11 +56,7 @@ export function Sidebar({
   const configured = !!menuConfig && !!roleName;
   const entries = React.useMemo(
     () =>
-      configured
-        ? visibleNavEntries(menuConfig, roleName)
-        : menuStatus === "ready"
-          ? NAV
-          : [],
+      configured ? visibleNavEntries(menuConfig, roleName) : menuStatus === "ready" ? NAV : [],
     [configured, menuConfig, menuStatus, roleName],
   );
   const activeHref = useActiveHref(pathname, role, entries, !configured);
@@ -75,7 +70,9 @@ export function Sidebar({
 
   const hidden = (entry: NavEntry) => !configured && !!role && !entry.roles.includes(role);
   const childrenOf = (entry: NavSubmenu) =>
-    configured ? entry.children : entry.children.filter((child) => !role || child.roles.includes(role));
+    configured
+      ? entry.children
+      : entry.children.filter((child) => !role || child.roles.includes(role));
 
   const menuNotice =
     menuStatus === "error"
@@ -124,7 +121,10 @@ export function Sidebar({
         {brand}
       </div>
 
-      <nav aria-label="Main navigation" className="hidden min-w-0 flex-1 flex-col overflow-y-auto min-[861px]:flex">
+      <nav
+        aria-label="Main navigation"
+        className="hidden min-w-0 flex-1 flex-col overflow-y-auto min-[861px]:flex"
+      >
         {menuStatus === "loading" && !configured ? (
           <div aria-hidden className="flex flex-col gap-1">
             {[0, 1, 2, 3, 4].map((row) => (
@@ -157,7 +157,9 @@ export function Sidebar({
                       title={collapsed ? entry.label : undefined}
                     >
                       <entry.icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
-                      <span className={collapsed ? "sr-only" : "min-w-0 truncate"}>{entry.label}</span>
+                      <span className={collapsed ? "sr-only" : "min-w-0 truncate"}>
+                        {entry.label}
+                      </span>
                     </Link>
                   </li>
                 );
@@ -268,7 +270,9 @@ export function Sidebar({
 
             return (
               <React.Fragment key={entry.id}>
-                <span className="flex-none whitespace-nowrap px-2 text-tp-muted">{entry.label}</span>
+                <span className="flex-none whitespace-nowrap px-2 text-tp-muted">
+                  {entry.label}
+                </span>
                 {children.map((child) => {
                   const active = activeHref === child.href;
                   return (

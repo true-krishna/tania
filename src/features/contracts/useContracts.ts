@@ -9,8 +9,7 @@ import {
 } from "@/generated/graphql";
 import type { EmploymentContractFilter } from "@/generated/graphql/types";
 
-type ContractNode =
-  EmploymentContractsQuery["employmentContracts"]["edges"][number]["node"];
+type ContractNode = EmploymentContractsQuery["employmentContracts"]["edges"][number]["node"];
 
 export type EmploymentContractsState = {
   status: "loading" | "ready" | "error";
@@ -28,14 +27,14 @@ export type EmploymentContractsState = {
  * same accumulate-on-fetchMore pattern as the employees list (T023).
  */
 export function useEmploymentContracts(
-  filter: EmploymentContractFilter = {}
+  filter: EmploymentContractFilter = {},
 ): EmploymentContractsState {
   const clean = useMemo(
     () =>
       Object.fromEntries(
-        Object.entries(filter ?? {}).filter(([, v]) => v !== undefined)
+        Object.entries(filter ?? {}).filter(([, v]) => v !== undefined),
       ) as EmploymentContractFilter,
-    [filter]
+    [filter],
   );
 
   const { loading, error, data, fetchMore } = useQuery<
@@ -60,7 +59,7 @@ export function useEmploymentContracts(
         if (!fetchMoreResult?.employmentContracts) return prev;
         const seen = new Set(prev.employmentContracts.edges.map((e) => e.node.id));
         const appended = fetchMoreResult.employmentContracts.edges.filter(
-          (edge) => !seen.has(edge.node.id)
+          (edge) => !seen.has(edge.node.id),
         );
         return {
           employmentContracts: {

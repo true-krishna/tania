@@ -62,7 +62,11 @@ afterEach(() => {
 describe("AppLayout session expiry redirect", () => {
   it("routes to /login when the session expires while the app is open", () => {
     tokenStore.setSession(SESSION);
-    render(<AppLayout><main>konten</main></AppLayout>);
+    render(
+      <AppLayout>
+        <main>konten</main>
+      </AppLayout>,
+    );
 
     notifySessionExpired();
 
@@ -72,7 +76,11 @@ describe("AppLayout session expiry redirect", () => {
   it("does not route in local-only mode", () => {
     process.env.NEXT_PUBLIC_AUTH_LOCAL_ONLY = "1";
     tokenStore.setSession(SESSION);
-    render(<AppLayout><main>konten</main></AppLayout>);
+    render(
+      <AppLayout>
+        <main>konten</main>
+      </AppLayout>,
+    );
 
     notifySessionExpired();
 
@@ -83,14 +91,22 @@ describe("AppLayout session expiry redirect", () => {
 describe("AppLayout asisten data (FR-01)", () => {
   it("menampilkan bubble asisten untuk CHAPTER", () => {
     tokenStore.setSession({ ...SESSION, accessRole: "CHAPTER" });
-    render(<AppLayout><main>konten</main></AppLayout>);
+    render(
+      <AppLayout>
+        <main>konten</main>
+      </AppLayout>,
+    );
 
     expect(screen.getByRole("button", { name: "Asisten data" })).toBeInTheDocument();
   });
 
   it("tidak menampilkan bubble asisten untuk ADMIN", () => {
     tokenStore.setSession(SESSION);
-    render(<AppLayout><main>konten</main></AppLayout>);
+    render(
+      <AppLayout>
+        <main>konten</main>
+      </AppLayout>,
+    );
 
     expect(screen.queryByRole("button", { name: "Asisten data" })).toBeNull();
   });
@@ -112,7 +128,11 @@ describe("AppLayout asisten data (FR-01)", () => {
       loading: false,
       error: undefined,
     };
-    render(<AppLayout><main>konten</main></AppLayout>);
+    render(
+      <AppLayout>
+        <main>konten</main>
+      </AppLayout>,
+    );
 
     expect(screen.queryByRole("button", { name: "Asisten data" })).toBeNull();
   });
@@ -134,7 +154,11 @@ describe("AppLayout asisten data (FR-01)", () => {
       loading: false,
       error: undefined,
     };
-    render(<AppLayout><main>konten</main></AppLayout>);
+    render(
+      <AppLayout>
+        <main>konten</main>
+      </AppLayout>,
+    );
 
     expect(screen.getByRole("button", { name: "Asisten data" })).toBeInTheDocument();
   });

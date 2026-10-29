@@ -1,10 +1,7 @@
 "use client";
 
 import { useQuery } from "@apollo/client";
-import {
-  EvaluationRosterDocument,
-  type EvaluationRosterQuery,
-} from "@/generated/graphql";
+import { EvaluationRosterDocument, type EvaluationRosterQuery } from "@/generated/graphql";
 import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
 
 type Entry = EvaluationRosterQuery["evaluationRoster"][number];

@@ -46,7 +46,7 @@ type GraphQLResult = Record<string, unknown>;
 async function gql<T = GraphQLResult>(
   api: APIRequestContext,
   query: string,
-  token?: string
+  token?: string,
 ): Promise<T> {
   const response = await api.post(API_URL, {
     data: { query },
@@ -58,20 +58,18 @@ async function gql<T = GraphQLResult>(
   };
   if (body.errors?.length) {
     const first = body.errors[0];
-    throw new Error(
-      `GraphQL ${String(first.extensions?.code ?? "")}: ${first.message}\n${query}`
-    );
+    throw new Error(`GraphQL ${String(first.extensions?.code ?? "")}: ${first.message}\n${query}`);
   }
   return body.data as T;
 }
 
 async function loginApi(
   api: APIRequestContext,
-  email: string
+  email: string,
 ): Promise<{ accessToken: string; userId: string }> {
   const data = await gql<{ login: { accessToken: string; user: { id: string } } }>(
     api,
-    `mutation { login(input: {email: "${email}", password: "${SEED_PASSWORD}"}) { accessToken user { id } } }`
+    `mutation { login(input: {email: "${email}", password: "${SEED_PASSWORD}"}) { accessToken user { id } } }`,
   );
   return { accessToken: data.login.accessToken, userId: data.login.user.id };
 }
@@ -93,7 +91,7 @@ function mainNav(page: Page) {
 async function expectNav(
   page: Page,
   visible: readonly string[],
-  hidden: readonly string[]
+  hidden: readonly string[],
 ): Promise<void> {
   const nav = mainNav(page);
   await expect(nav).toBeVisible();
@@ -127,19 +125,19 @@ test.describe("Konfigurasi RBAC dinamis (W4/TAN-265)", () => {
     const { createRole } = await gql<{ createRole: { id: string } }>(
       api,
       `mutation { createRole(input: {name: "${roleName}", label: "PM QA W4", templateRole: CHAPTER}) { id name templateRole } }`,
-      admin.accessToken
+      admin.accessToken,
     );
     const roleId = createRole.id;
 
     const { units } = await gql<{ units: { id: string }[] }>(
       api,
       `query { units { id } }`,
-      admin.accessToken
+      admin.accessToken,
     );
     const { jobRoles } = await gql<{ jobRoles: { id: string; chapter: unknown }[] }>(
       api,
       `query { jobRoles { id chapter { id } } }`,
-      admin.accessToken
+      admin.accessToken,
     );
     const jobRole = jobRoles.find((role) => role.chapter);
     expect(jobRole, "seed harus punya minimal satu job role ber-chapter").toBeTruthy();
@@ -148,7 +146,7 @@ test.describe("Konfigurasi RBAC dinamis (W4/TAN-265)", () => {
       api,
       `mutation { createEmployee(input: {nik: "${nik}", fullName: "PM QA W4", email: "${email}",
         birthDate: "1997-05-05", gender: FEMALE, joinedAt: "${today}"}) { id } }`,
-      admin.accessToken
+      admin.accessToken,
     );
     const employeeId = createEmployee.id;
     await gql(
@@ -156,7 +154,7 @@ test.describe("Konfigurasi RBAC dinamis (W4/TAN-265)", () => {
       `mutation { createEmploymentContract(input: {employeeId: "${employeeId}", contractNo: "W4-C-${suffix.slice(-6)}",
         contractType: KARYAWAN_TETAP, nomorInduk: "${nomorInduk}", jobRoleId: "${jobRole!.id}",
         workLocation: JAKARTA, unitId: "${units[0].id}", startDate: "${today}"}) { id } }`,
-      admin.accessToken
+      admin.accessToken,
     );
     const { createUserAccount } = await gql<{
       createUserAccount: { id: string; roleName: string; accessRole: string };
@@ -164,7 +162,7 @@ test.describe("Konfigurasi RBAC dinamis (W4/TAN-265)", () => {
       api,
       `mutation { createUserAccount(employeeId: "${employeeId}", email: "${email}", roleName: "${roleName}",
         temporaryPassword: "${SEED_PASSWORD}") { id roleName accessRole } }`,
-      admin.accessToken
+      admin.accessToken,
     );
     const userId = createUserAccount.id;
     expect(createUserAccount.roleName).toBe(roleName);
@@ -178,7 +176,7 @@ test.describe("Konfigurasi RBAC dinamis (W4/TAN-265)", () => {
         api,
         `mutation { setRoleMenuAccess(roleId: "${roleId}",
           entries: [{menuEntryId: "idp", visible: false, accessLevel: NONE}]) { menuEntryId visible accessLevel } }`,
-        admin.accessToken
+        admin.accessToken,
       );
       const idpCell = setRoleMenuAccess.find((cell) => cell.menuEntryId === "idp");
       expect(idpCell?.visible).toBe(false);
@@ -189,7 +187,7 @@ test.describe("Konfigurasi RBAC dinamis (W4/TAN-265)", () => {
       await expectNav(
         page,
         CHAPTER_NAV.filter((label) => label !== "IDP"),
-        [...CHAPTER_NAV_HIDDEN, "IDP"]
+        [...CHAPTER_NAV_HIDDEN, "IDP"],
       );
 
       // Reset: kembali ke matriks default tanpa deploy dan tanpa login baru —
@@ -197,25 +195,31 @@ test.describe("Konfigurasi RBAC dinamis (W4/TAN-265)", () => {
       await gql(
         api,
         `mutation { resetRoleMenuConfig(roleId: "${roleId}") { menuEntryId visible } }`,
-        admin.accessToken
+        admin.accessToken,
       );
       await page.reload();
       await expectNav(page, CHAPTER_NAV, CHAPTER_NAV_HIDDEN);
     } finally {
       // Bersih-bersih: lepas akun dari role dulu (role yang masih dipakai tidak
       // boleh dihapus), lalu hapus role-nya.
-      await gql(api, `mutation { resetRoleMenuConfig(roleId: "${roleId}") { menuEntryId } }`, admin.accessToken).catch(
-        () => undefined
-      );
+      await gql(
+        api,
+        `mutation { resetRoleMenuConfig(roleId: "${roleId}") { menuEntryId } }`,
+        admin.accessToken,
+      ).catch(() => undefined);
       await gql(
         api,
         `mutation { updateUserAccessRole(userId: "${userId}", accessRole: CHAPTER) { id } }`,
-        admin.accessToken
+        admin.accessToken,
       ).catch(() => undefined);
-      await gql(api, `mutation { setUserAccountStatus(userId: "${userId}", status: INACTIVE) { id } }`, admin.accessToken).catch(
-        () => undefined
+      await gql(
+        api,
+        `mutation { setUserAccountStatus(userId: "${userId}", status: INACTIVE) { id } }`,
+        admin.accessToken,
+      ).catch(() => undefined);
+      await gql(api, `mutation { deleteRole(id: "${roleId}") }`, admin.accessToken).catch(
+        () => undefined,
       );
-      await gql(api, `mutation { deleteRole(id: "${roleId}") }`, admin.accessToken).catch(() => undefined);
     }
   });
 });

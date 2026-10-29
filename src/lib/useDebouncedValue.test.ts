@@ -11,10 +11,9 @@ describe("useDebouncedValue", () => {
 
   it("only publishes the value after it has stayed unchanged for the delay", () => {
     vi.useFakeTimers();
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebouncedValue(value, 300),
-      { initialProps: { value: "a" } },
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebouncedValue(value, 300), {
+      initialProps: { value: "a" },
+    });
     expect(result.current).toBe("a");
 
     rerender({ value: "ab" });

@@ -82,7 +82,11 @@ export default function DashboardPage() {
       {dash.__typename === "AdminDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard icon={IconUserShield} label="Akun tidak aktif" value={dash.inactiveAccounts} />
+            <StatCard
+              icon={IconUserShield}
+              label="Akun tidak aktif"
+              value={dash.inactiveAccounts}
+            />
             <StatCard
               icon={IconTarget}
               label="Talent per chapter"
@@ -98,7 +102,12 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Panel title="Talent per Chapter">
               {dash.talentsPerChapter.length ? (
-                <BarList items={dash.talentsPerChapter.map((c) => ({ label: c.chapter.name, value: c.count }))} />
+                <BarList
+                  items={dash.talentsPerChapter.map((c) => ({
+                    label: c.chapter.name,
+                    value: c.count,
+                  }))}
+                />
               ) : (
                 <EmptyNote>Belum ada talent pada chapter mana pun.</EmptyNote>
               )}
@@ -106,7 +115,12 @@ export default function DashboardPage() {
 
             <Panel title="Akun per Peran">
               {dash.accountsPerRole.length ? (
-                <BarList items={dash.accountsPerRole.map((c) => ({ label: roleLabel[c.role], value: c.count }))} />
+                <BarList
+                  items={dash.accountsPerRole.map((c) => ({
+                    label: roleLabel[c.role],
+                    value: c.count,
+                  }))}
+                />
               ) : (
                 <EmptyNote>Belum ada akun.</EmptyNote>
               )}
@@ -204,7 +218,11 @@ export default function DashboardPage() {
       {dash.__typename === "TalentDashboard" ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard icon={IconClipboardText} label="Penugasan aktif" value={dash.activeAssignments.length} />
+            <StatCard
+              icon={IconClipboardText}
+              label="Penugasan aktif"
+              value={dash.activeAssignments.length}
+            />
           </div>
 
           <Panel title="Penugasan Aktif">

@@ -1,16 +1,8 @@
-import type {
-  ContractType,
-  EmploymentContractQuery,
-} from "@/generated/graphql";
-import {
-  isOpenEndedContractType,
-  workLocationFormValue,
-} from "./labels";
+import type { ContractType, EmploymentContractQuery } from "@/generated/graphql";
+import { isOpenEndedContractType, workLocationFormValue } from "./labels";
 import type { BandPosition, WorkLocation } from "@/generated/graphql";
 
-export type SourceContract = NonNullable<
-  EmploymentContractQuery["employmentContract"]
->;
+export type SourceContract = NonNullable<EmploymentContractQuery["employmentContract"]>;
 
 export type RenewContractFormValues = {
   bandPosition: BandPosition;
@@ -28,9 +20,7 @@ export type RenewContractFormValues = {
   workLocation: WorkLocation | "";
 };
 
-export type RenewContractFormErrors = Partial<
-  Record<keyof RenewContractFormValues, string>
->;
+export type RenewContractFormErrors = Partial<Record<keyof RenewContractFormValues, string>>;
 
 export function dayAfter(value: string | null | undefined): string {
   if (!value) return "";
@@ -40,9 +30,7 @@ export function dayAfter(value: string | null | undefined): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function createRenewContractValues(
-  contract: SourceContract
-): RenewContractFormValues {
+export function createRenewContractValues(contract: SourceContract): RenewContractFormValues {
   return {
     bandPosition: contract.bandPosition,
     contractNo: "",
@@ -62,7 +50,7 @@ export function createRenewContractValues(
 
 export function validateRenewPeriod(
   values: RenewContractFormValues,
-  predecessor: SourceContract
+  predecessor: SourceContract,
 ): RenewContractFormErrors {
   const errors: RenewContractFormErrors = {};
 
@@ -82,16 +70,13 @@ export function validateRenewPeriod(
       errors.endDate = "Tanggal selesai tidak boleh sebelum tanggal mulai.";
     }
   } else if (values.endDate) {
-    errors.endDate =
-      "Tanggal selesai harus kosong untuk kontrak tanpa batas waktu.";
+    errors.endDate = "Tanggal selesai harus kosong untuk kontrak tanpa batas waktu.";
   }
 
   return errors;
 }
 
-export function validateRenewAttributes(
-  values: RenewContractFormValues
-): RenewContractFormErrors {
+export function validateRenewAttributes(values: RenewContractFormValues): RenewContractFormErrors {
   const errors: RenewContractFormErrors = {};
 
   if (!values.nomorInduk.trim()) {

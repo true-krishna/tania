@@ -33,7 +33,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const displayName =
-    session?.fullName?.trim() || session?.email?.split("@")[0] || (role ? roleLabel[role] : "Tania");
+    session?.fullName?.trim() ||
+    session?.email?.split("@")[0] ||
+    (role ? roleLabel[role] : "Tania");
   const accessRoleName = roleName ?? session?.roleName ?? session?.accessRole ?? null;
   const accessConfig = React.useMemo(
     () => menuConfig ?? (menuStatus === "error" || menuStatus === "empty" ? {} : null),
@@ -70,7 +72,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           />
           <div className="flex min-h-screen min-w-0 flex-1 flex-col">
             <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-tp-line bg-tp-surface px-4 py-3 min-[861px]:px-6 min-[861px]:py-4">
-              <p className="truncate text-sm font-semibold text-zinc-700">{sectionForPath(pathname)}</p>
+              <p className="truncate text-sm font-semibold text-zinc-700">
+                {sectionForPath(pathname)}
+              </p>
               <div className="flex items-center gap-3">
                 <UserMenu
                   email={session?.email}
@@ -85,9 +89,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 />
               </div>
             </header>
-            <main className="flex-1 px-4 py-4 min-[861px]:px-6 min-[861px]:py-6">
-              {children}
-            </main>
+            <main className="flex-1 px-4 py-4 min-[861px]:px-6 min-[861px]:py-6">{children}</main>
           </div>
         </div>
         {assistantAllowed && <AssistantBubble />}

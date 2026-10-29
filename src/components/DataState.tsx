@@ -1,6 +1,5 @@
 import { Chip } from "@/components/Chip";
 
-
 export function LoadingState({ label = "Memuat…" }: { label?: string }) {
   return (
     <div className="flex items-center justify-center rounded-tp-lg border border-tp-line bg-tp-surface p-6">
@@ -17,7 +16,10 @@ export function LoadingState({ label = "Memuat…" }: { label?: string }) {
 
 export function ErrorState({ message }: { message: string }) {
   return (
-    <div className="rounded-tp-lg bg-tp-tint-peach px-5 py-4 text-sm text-tp-ink-peach" role="alert">
+    <div
+      className="rounded-tp-lg bg-tp-tint-peach px-5 py-4 text-sm text-tp-ink-peach"
+      role="alert"
+    >
       {message}
     </div>
   );

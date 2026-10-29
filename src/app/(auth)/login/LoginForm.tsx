@@ -27,8 +27,7 @@ export default function LoginForm() {
   const sessionRole = useSessionRole();
   const searchParams = useSearchParams();
   const returnReason = searchParams.get("sso");
-  const entraCode =
-    (searchParams.get("entra") ?? "").replace(/[^\w.-]/g, "").slice(0, 40) || null;
+  const entraCode = (searchParams.get("entra") ?? "").replace(/[^\w.-]/g, "").slice(0, 40) || null;
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [remember, setRemember] = React.useState(false);
@@ -135,9 +134,7 @@ export default function LoginForm() {
               <Brand className="text-[28px]" variant="large" />
             </div>
 
-            <h1 className="mt-6 text-[30px] font-bold leading-[1.2] text-tp-text lg:mt-0">
-              Masuk
-            </h1>
+            <h1 className="mt-6 text-[30px] font-bold leading-[1.2] text-tp-text lg:mt-0">Masuk</h1>
 
             <p className="mt-2 text-sm leading-[1.6] text-tp-muted">
               Gunakan email akun TANIA Anda.
@@ -217,10 +214,7 @@ export default function LoginForm() {
                   className="flex items-start gap-2.5 rounded-tp-md bg-tp-tint-peach px-4 py-3 text-sm font-semibold text-tp-ink-peach"
                   role="alert"
                 >
-                  <IconAlertCircle
-                    aria-hidden="true"
-                    className="mt-0.5 h-4.5 w-4.5 shrink-0"
-                  />
+                  <IconAlertCircle aria-hidden="true" className="mt-0.5 h-4.5 w-4.5 shrink-0" />
                   {error}
                 </p>
               ) : null}
@@ -247,8 +241,8 @@ export default function LoginForm() {
                 </p>
               ) : ssoError ? (
                 <p className="text-center text-sm text-tp-muted" role="status">
-                  Masuk dengan SSO Telkom sedang tidak tersedia. Silakan masuk
-                  dengan email &amp; kata sandi.
+                  Masuk dengan SSO Telkom sedang tidak tersedia. Silakan masuk dengan email &amp;
+                  kata sandi.
                 </p>
               ) : null}
 

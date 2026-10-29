@@ -53,10 +53,7 @@ export function DistributionFilterBar({
             aria-label="Filter tribe"
             className="h-9 w-44"
             onChange={(event) => onChange("tribeId", event.target.value)}
-            options={[
-              { label: "Semua tribe", value: "" },
-              ...uniqueOptions(tables.rows.tribe),
-            ]}
+            options={[{ label: "Semua tribe", value: "" }, ...uniqueOptions(tables.rows.tribe)]}
             value={filter.tribeId ?? ""}
           />
         </label>
@@ -68,10 +65,7 @@ export function DistributionFilterBar({
             aria-label="Filter product"
             className="h-9 w-44"
             onChange={(event) => onChange("productId", event.target.value)}
-            options={[
-              { label: "Semua product", value: "" },
-              ...productOptions,
-            ]}
+            options={[{ label: "Semua product", value: "" }, ...productOptions]}
             value={filter.productId ?? ""}
           />
         </label>
@@ -95,10 +89,7 @@ export function DistributionFilterBar({
             aria-label="Filter unit code"
             className="h-9 w-44"
             onChange={(event) => onChange("unitcode", event.target.value)}
-            options={[
-              { label: "Semua unit code", value: "" },
-              ...unitcodeOptions,
-            ]}
+            options={[{ label: "Semua unit code", value: "" }, ...unitcodeOptions]}
             value={filter.unitcode ?? ""}
           />
         </label>

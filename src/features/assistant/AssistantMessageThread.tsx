@@ -38,10 +38,7 @@ export function AssistantMessageThread({
         <LoadingState label="Memuat riwayat…" />
       ) : activeId && error ? (
         <ErrorState
-          message={errorMessage(
-            error,
-            "Percakapan tidak ditemukan atau bukan milik Anda."
-          )}
+          message={errorMessage(error, "Percakapan tidak ditemukan atau bukan milik Anda.")}
         />
       ) : thread.length === 0 && activePending.length === 0 ? (
         <EmptyState message="Mulai dengan salah satu pertanyaan contoh di bawah." />
@@ -49,9 +46,7 @@ export function AssistantMessageThread({
         <div className="flex flex-col gap-3">
           {thread.map((message) => {
             const clientRequestId = message.clientRequestId;
-            const isUnanswered = unanswered.some(
-              (item) => item.id === message.id
-            );
+            const isUnanswered = unanswered.some((item) => item.id === message.id);
 
             return (
               <AssistantMessageBubble
@@ -63,9 +58,7 @@ export function AssistantMessageThread({
                       {!quotaMessage && clientRequestId ? (
                         <Button
                           className="text-xs"
-                          onClick={() =>
-                            onRetry(message.content, clientRequestId)
-                          }
+                          onClick={() => onRetry(message.content, clientRequestId)}
                           variant="secondary"
                         >
                           Coba ulang
@@ -89,9 +82,7 @@ export function AssistantMessageThread({
                     {!quotaMessage ? (
                       <Button
                         className="text-xs"
-                        onClick={() =>
-                          onRetry(item.content, item.clientRequestId)
-                        }
+                        onClick={() => onRetry(item.content, item.clientRequestId)}
                         variant="secondary"
                       >
                         Coba ulang

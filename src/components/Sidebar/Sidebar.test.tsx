@@ -92,9 +92,18 @@ describe("Sidebar", () => {
     renderSidebar({ role: "OPERATION", pathname: "/employees" });
     const group = desktopNav().getByRole("button", { name: "Employee" });
     expect(group).toHaveAttribute("aria-expanded", "true");
-    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("href", "/employees");
-    expect(desktopNav().getByRole("link", { name: "Kontrak" })).toHaveAttribute("href", "/contracts");
-    expect(desktopNav().getByRole("link", { name: "Assignments" })).toHaveAttribute("href", "/assignments");
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute(
+      "href",
+      "/employees",
+    );
+    expect(desktopNav().getByRole("link", { name: "Kontrak" })).toHaveAttribute(
+      "href",
+      "/contracts",
+    );
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toHaveAttribute(
+      "href",
+      "/assignments",
+    );
   });
 
   it("expands a multi-page section on click", () => {
@@ -113,32 +122,53 @@ describe("Sidebar", () => {
   // — Overview dan Talent.
   it("renders Workload as a plain link for TALENT and a two-item group for leadership", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().getByRole("link", { name: "Workload" })).toHaveAttribute("href", "/workload");
+    expect(desktopNav().getByRole("link", { name: "Workload" })).toHaveAttribute(
+      "href",
+      "/workload",
+    );
     expect(desktopNav().queryByRole("button", { name: "Workload" })).toBeNull();
     talent.unmount();
 
     renderSidebar({ role: "OPERATION" });
     fireEvent.click(desktopNav().getByRole("button", { name: "Workload" }));
-    expect(desktopNav().getByRole("link", { name: "Overview" })).toHaveAttribute("href", "/workload/executive");
-    expect(desktopNav().getByRole("link", { name: "Talent" })).toHaveAttribute("href", "/workload/talent");
+    expect(desktopNav().getByRole("link", { name: "Overview" })).toHaveAttribute(
+      "href",
+      "/workload/executive",
+    );
+    expect(desktopNav().getByRole("link", { name: "Talent" })).toHaveAttribute(
+      "href",
+      "/workload/talent",
+    );
     expect(desktopNav().queryByRole("link", { name: "Workload saya" })).toBeNull();
   });
 
   it("opens the section that owns the current route and marks the child active", () => {
     renderSidebar({ pathname: "/master-data/units" });
-    expect(desktopNav().getByRole("button", { name: /Master Data/ })).toHaveAttribute("aria-expanded", "true");
-    expect(desktopNav().getByRole("link", { name: "Unit" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("button", { name: /Master Data/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(desktopNav().getByRole("link", { name: "Unit" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   it("marks the most specific route active", () => {
     renderSidebar({ pathname: "/master-data/projects/new" });
-    expect(desktopNav().getByRole("link", { name: "Initiative" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("link", { name: "Initiative" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     expect(desktopNav().getByRole("link", { name: "Unit" })).not.toHaveAttribute("aria-current");
   });
 
   it("shows only the role-scoped child of a section", () => {
     renderSidebar({ role: "TALENT", pathname: "/employees/emp-1" });
-    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     // TAN-343: Assignments & Kontrak bukan milik Talent.
     expect(desktopNav().queryByRole("link", { name: "Assignments" })).toBeNull();
     expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
@@ -146,7 +176,10 @@ describe("Sidebar", () => {
 
   it("marks the active link in the compact strip without expanding anything", () => {
     renderSidebar({ role: "TALENT", pathname: "/employees" });
-    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute("aria-current", "page");
+    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     // The strip is flat: no expandable group buttons.
     expect(compactNav().queryByRole("button")).toBeNull();
   });

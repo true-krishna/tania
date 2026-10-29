@@ -7,9 +7,7 @@ import { GENDER_LABEL } from "@/features/employees/labels";
 import type { FormErrors } from "./employeeFormValidation";
 import type { PersonalFormValues } from "./employeeFormValues";
 
-export type PersonalFieldPlaceholders = Partial<
-  Record<keyof PersonalFormValues, string>
->;
+export type PersonalFieldPlaceholders = Partial<Record<keyof PersonalFormValues, string>>;
 
 type EmployeeFormFieldsProps = {
   errors: FormErrors<PersonalFormValues>;
@@ -56,9 +54,10 @@ export function EmployeeFormFields({
           onChange={(event) => onChange("gender", event.target.value)}
           options={[
             { label: "— pilih jenis kelamin —", value: "" },
-            ...(
-              Object.keys(GENDER_LABEL) as Array<keyof typeof GENDER_LABEL>
-            ).map((value) => ({ label: GENDER_LABEL[value], value })),
+            ...(Object.keys(GENDER_LABEL) as Array<keyof typeof GENDER_LABEL>).map((value) => ({
+              label: GENDER_LABEL[value],
+              value,
+            })),
           ]}
           value={values.gender}
         />
@@ -79,11 +78,7 @@ export function EmployeeFormFields({
           value={values.address}
         />
       </InputControl>
-      <InputControl
-        error={errors.latestEducation}
-        helper="(opsional)"
-        label="Pendidikan terakhir"
-      >
+      <InputControl error={errors.latestEducation} helper="(opsional)" label="Pendidikan terakhir">
         <Input
           onChange={(event) => onChange("latestEducation", event.target.value)}
           placeholder={placeholders?.latestEducation}
@@ -91,11 +86,7 @@ export function EmployeeFormFields({
           value={values.latestEducation}
         />
       </InputControl>
-      <InputControl
-        error={errors.institutionName}
-        helper="(opsional)"
-        label="Nama institusi"
-      >
+      <InputControl error={errors.institutionName} helper="(opsional)" label="Nama institusi">
         <Input
           onChange={(event) => onChange("institutionName", event.target.value)}
           placeholder={placeholders?.institutionName}

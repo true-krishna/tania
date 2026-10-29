@@ -9,9 +9,7 @@ import { getGraphqlEndpoint } from "@/lib/apollo/endpoint";
  * retried. Throws when the refresh fails (invalid/expired refresh token),
  * which leads the link to clear the session and force sign-in again.
  */
-export async function refreshSessionToken(
-  refreshToken: string
-): Promise<AuthSessionFragment> {
+export async function refreshSessionToken(refreshToken: string): Promise<AuthSessionFragment> {
   const uri = getGraphqlEndpoint();
   if (!uri) throw new Error("GraphQL endpoint is not configured.");
 

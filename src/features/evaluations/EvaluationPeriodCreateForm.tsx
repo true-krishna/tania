@@ -8,10 +8,7 @@ import { InputControl } from "@/components/InputControl";
 import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
 import { useEvaluationTemplates } from "@/features/evaluations/useEvaluationTemplates";
-import {
-  CreateEvaluationPeriodDocument,
-  EvaluationPeriodsDocument,
-} from "@/generated/graphql";
+import { CreateEvaluationPeriodDocument, EvaluationPeriodsDocument } from "@/generated/graphql";
 
 type FormValues = { name: string; templateId: string; startDate: string; endDate: string };
 const EMPTY: FormValues = { name: "", templateId: "", startDate: "", endDate: "" };
@@ -90,7 +87,11 @@ export function EvaluationPeriodCreateForm({
   return (
     <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
       <InputControl error={errors.name} label="Nama Periode">
-        <Input onChange={(e) => set("name", e.target.value)} placeholder="cth: Q3 2025" value={values.name} />
+        <Input
+          onChange={(e) => set("name", e.target.value)}
+          placeholder="cth: Q3 2025"
+          value={values.name}
+        />
       </InputControl>
       <InputControl error={errors.templateId} label="Template Evaluasi">
         <Select
@@ -104,10 +105,18 @@ export function EvaluationPeriodCreateForm({
       </InputControl>
       <div className="grid grid-cols-2 gap-3">
         <InputControl error={errors.startDate} label="Tanggal Mulai">
-          <Input onChange={(e) => set("startDate", e.target.value)} type="date" value={values.startDate} />
+          <Input
+            onChange={(e) => set("startDate", e.target.value)}
+            type="date"
+            value={values.startDate}
+          />
         </InputControl>
         <InputControl error={errors.endDate} label="Tanggal Selesai">
-          <Input onChange={(e) => set("endDate", e.target.value)} type="date" value={values.endDate} />
+          <Input
+            onChange={(e) => set("endDate", e.target.value)}
+            type="date"
+            value={values.endDate}
+          />
         </InputControl>
       </div>
     </form>

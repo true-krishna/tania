@@ -13,11 +13,7 @@ import {
   type TablerIcon,
 } from "@tabler/icons-react";
 import type { AccessRole } from "@/generated/graphql";
-import {
-  menuEntryIdForHref,
-  visibleByConfig,
-  type MenuAccessConfig,
-} from "@/lib/auth/menuAccess";
+import { menuEntryIdForHref, visibleByConfig, type MenuAccessConfig } from "@/lib/auth/menuAccess";
 import {
   ACCOUNTS,
   ACTIVITIES,
@@ -102,7 +98,13 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * Chapter/Operation (Talent ditunda), Provisi Entra hanya Operation.
  */
 export const NAV: readonly NavEntry[] = [
-  { kind: "link", href: DASHBOARD, label: "Dashboard", icon: IconLayoutGrid, roles: ["CHAPTER", "OPERATION"] },
+  {
+    kind: "link",
+    href: DASHBOARD,
+    label: "Dashboard",
+    icon: IconLayoutGrid,
+    roles: ["CHAPTER", "OPERATION"],
+  },
   { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
   /**
    * Umpan balik pemilik produk (TAN-227): level user memakai satu menu

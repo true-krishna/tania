@@ -1,8 +1,6 @@
 import type { EmploymentContractQuery } from "@/generated/graphql";
 
-export type Contract = NonNullable<
-  EmploymentContractQuery["employmentContract"]
->;
+export type Contract = NonNullable<EmploymentContractQuery["employmentContract"]>;
 
 export const DEPENDENCY_WARNING =
   "Karyawan masih memiliki assignment aktif atau IDP berjalan. Tindakan ini tetap berjalan dan assignment/IDP berjalan tetap tersimpan sebagai riwayat.";

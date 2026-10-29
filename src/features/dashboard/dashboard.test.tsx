@@ -10,10 +10,7 @@ import {
   TALENT_REPORT_QUERY,
   TALENT_REPORT_RANGE_QUERY,
 } from "@/features/talent-report/useTalentReport";
-import {
-  MOCK_TALENT_REPORT,
-  MOCK_TALENT_REPORT_RANGE,
-} from "@/features/talent-report/mocks";
+import { MOCK_TALENT_REPORT, MOCK_TALENT_REPORT_RANGE } from "@/features/talent-report/mocks";
 
 const echartsMock = vi.hoisted(() => {
   const instance = {
@@ -96,7 +93,9 @@ function talentReportData(report: typeof MOCK_TALENT_REPORT) {
   };
 }
 
-function talentReportMocks(report: typeof MOCK_TALENT_REPORT = MOCK_TALENT_REPORT): MockedResponse[] {
+function talentReportMocks(
+  report: typeof MOCK_TALENT_REPORT = MOCK_TALENT_REPORT,
+): MockedResponse[] {
   return [
     {
       request: { query: TALENT_REPORT_RANGE_QUERY },
@@ -115,12 +114,14 @@ function talentReportMocks(report: typeof MOCK_TALENT_REPORT = MOCK_TALENT_REPOR
 
 function renderDashboard(member: Record<string, unknown>, extraMocks: MockedResponse[] = []) {
   render(
-    <MockedProvider mocks={[
-      { request: { query: DashboardDocument }, result: { data: { dashboard: member } } },
-      ...extraMocks,
-    ]}>
+    <MockedProvider
+      mocks={[
+        { request: { query: DashboardDocument }, result: { data: { dashboard: member } } },
+        ...extraMocks,
+      ]}
+    >
       <DashboardPage />
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -145,7 +146,11 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
       __typename: "AdminDashboard",
       talentsPerChapter: [
         { __typename: "ChapterCount", chapter, count: 3 },
-        { __typename: "ChapterCount", chapter: { __typename: "Chapter", id: "ch-2", name: "Frontend" }, count: 2 },
+        {
+          __typename: "ChapterCount",
+          chapter: { __typename: "Chapter", id: "ch-2", name: "Frontend" },
+          count: 2,
+        },
       ],
       accountsPerRole: [
         { __typename: "RoleCount", role: "ADMIN", count: 1 },
@@ -298,7 +303,7 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
       const view = render(
         <MockedProvider mocks={[]}>
           <DashboardPage />
-        </MockedProvider>
+        </MockedProvider>,
       );
       await waitFor(() => expect(h.replace).toHaveBeenCalledWith(landing));
       expect(screen.queryByText("Dashboard")).toBeNull();

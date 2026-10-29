@@ -25,13 +25,18 @@ const SEGMENT_CLASS: Record<(typeof LEGEND)[number]["key"], string> = {
 };
 
 function StackedBar({ row }: { row: DistributionRowData }) {
-  const total = row.counts.optimal + row.counts.underload + row.counts.overload + row.counts.undefined;
+  const total =
+    row.counts.optimal + row.counts.underload + row.counts.overload + row.counts.undefined;
   if (total === 0) return <div className="h-3 rounded-full bg-tp-bg" />;
 
   const aria = `${row.counts.optimal} optimal, ${row.counts.underload} beban kurang, ${row.counts.overload} kelebihan beban, ${row.counts.undefined} data tidak lengkap`;
 
   return (
-    <div aria-label={aria} className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-tp-bg" role="img">
+    <div
+      aria-label={aria}
+      className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-tp-bg"
+      role="img"
+    >
       {LEGEND.map((segment) => {
         const count = row.counts[segment.key];
         if (count === 0) return null;

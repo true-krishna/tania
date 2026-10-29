@@ -11,7 +11,12 @@ type MasterDataBulkReportProps = {
   stopPrefix: string;
 };
 
-export function MasterDataBulkReport({ report, formatEntry, hint, stopPrefix }: MasterDataBulkReportProps) {
+export function MasterDataBulkReport({
+  report,
+  formatEntry,
+  hint,
+  stopPrefix,
+}: MasterDataBulkReportProps) {
   return (
     <div
       className="flex flex-col gap-2 rounded-lg border border-tp-line bg-tp-bg px-3 py-2 text-sm"
@@ -20,8 +25,7 @@ export function MasterDataBulkReport({ report, formatEntry, hint, stopPrefix }: 
       <p className="font-medium text-tp-text">
         {report.succeeded.length} baris berhasil
         {report.failed.length > 0 ? `, ${report.failed.length} gagal` : ""}
-        {report.notExecuted.length > 0 ? `, ${report.notExecuted.length} belum dieksekusi` : ""}
-        .
+        {report.notExecuted.length > 0 ? `, ${report.notExecuted.length} belum dieksekusi` : ""}.
       </p>
       {report.stopReason ? (
         <p className="text-red-700" role="alert">

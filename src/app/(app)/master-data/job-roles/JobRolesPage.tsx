@@ -2,10 +2,7 @@
 
 import { useToast } from "@/components/Toast";
 import { useChapters, useJobRoles } from "@/features/master-data/useMasterData";
-import {
-  MasterDataSection,
-  type MasterDataItem,
-} from "@/features/master-data/MasterDataSection";
+import { MasterDataSection, type MasterDataItem } from "@/features/master-data/MasterDataSection";
 import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useJobRoleMutations } from "@/features/master-data/useMasterDataMutations";
 
@@ -35,12 +32,20 @@ export default function JobRolesPage() {
       error={error}
       extraColumn={{ label: "Chapter", render: (role) => role.chapter?.name ?? "Tanpa chapter" }}
       importSlot={({ close, onImported, open }) => (
-        <MasterDataImportModal entity="jobRole" onClose={close} onImported={onImported} open={open} />
+        <MasterDataImportModal
+          entity="jobRole"
+          onClose={close}
+          onImported={onImported}
+          open={open}
+        />
       )}
       items={data}
       nameLabel="Nama Job Role"
       onCreate={({ name, selectValue }) =>
-        detectError(() => jobRoleMutations.create({ name, selectValue }), `Job role "${name}" berhasil dibuat.`)
+        detectError(
+          () => jobRoleMutations.create({ name, selectValue }),
+          `Job role "${name}" berhasil dibuat.`,
+        )
       }
       onToggleActive={(id, isActive) =>
         detectError(

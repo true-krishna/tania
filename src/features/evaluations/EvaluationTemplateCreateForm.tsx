@@ -7,10 +7,7 @@ import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { Select } from "@/components/Select";
 import { useToast } from "@/components/Toast";
-import {
-  CreateEvaluationTemplateDocument,
-  EvaluationTemplatesDocument,
-} from "@/generated/graphql";
+import { CreateEvaluationTemplateDocument, EvaluationTemplatesDocument } from "@/generated/graphql";
 import type { EvaluationAnswerType } from "@/generated/graphql/types";
 
 type CriterionRow = { label: string; answerType: EvaluationAnswerType };
@@ -53,7 +50,8 @@ export function EvaluationTemplateCreateForm({
     const next: Partial<Record<"name" | "criteria", string>> = {};
     if (!name.trim()) next.name = "Nama template wajib diisi.";
     if (criteria.length === 0) next.criteria = "Tambahkan minimal satu kriteria.";
-    if (criteria.some((c) => !c.label.trim())) next.criteria = "Setiap kriteria wajib memiliki label.";
+    if (criteria.some((c) => !c.label.trim()))
+      next.criteria = "Setiap kriteria wajib memiliki label.";
     return next;
   }
 
@@ -90,7 +88,11 @@ export function EvaluationTemplateCreateForm({
   return (
     <form className="flex flex-col gap-4" id={formId} onSubmit={onSubmit}>
       <InputControl error={errors.name} label="Nama Template">
-        <Input onChange={(e) => setName(e.target.value)} placeholder="cth: Framework Performa 2025" value={name} />
+        <Input
+          onChange={(e) => setName(e.target.value)}
+          placeholder="cth: Framework Performa 2025"
+          value={name}
+        />
       </InputControl>
 
       <fieldset className="flex flex-col gap-3">
@@ -111,7 +113,9 @@ export function EvaluationTemplateCreateForm({
             <div className="w-44">
               <span className="mb-1 block text-xs text-zinc-500">Tipe jawaban</span>
               <Select
-                onChange={(e) => setCriterion(index, { answerType: e.target.value as EvaluationAnswerType })}
+                onChange={(e) =>
+                  setCriterion(index, { answerType: e.target.value as EvaluationAnswerType })
+                }
                 options={[
                   { value: "SCALE_1_5", label: "Skala 1–5" },
                   { value: "SCALE_1_10", label: "Skala 1–10" },

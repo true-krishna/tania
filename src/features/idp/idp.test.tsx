@@ -151,13 +151,16 @@ describe("IdpPage (Apollo, US3)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
+          {
+            request: { query: IdpsDocument, variables: { filter: {}, first: 100 } },
+            result: idpsResult,
+          },
         ]}
       >
         <ToastProvider>
           <IdpPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -174,9 +177,15 @@ describe("IdpPage (Apollo, US3)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
           {
-            request: { query: IdpsDocument, variables: { filter: { status: "COMPLETED" }, first: 100 } },
+            request: { query: IdpsDocument, variables: { filter: {}, first: 100 } },
+            result: idpsResult,
+          },
+          {
+            request: {
+              query: IdpsDocument,
+              variables: { filter: { status: "COMPLETED" }, first: 100 },
+            },
             result: filteredResult,
           },
         ]}
@@ -184,7 +193,7 @@ describe("IdpPage (Apollo, US3)", () => {
         <ToastProvider>
           <IdpPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     await screen.findByText("Andi Pratama");
@@ -219,7 +228,7 @@ describe("IdpPage (Apollo, US3)", () => {
         <ToastProvider>
           <IdpPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText(/tidak ada idp yang cocok/i)).toBeInTheDocument();
@@ -231,13 +240,16 @@ describe("IdpPage (Apollo, US3)", () => {
       render(
         <MockedProvider
           mocks={[
-            { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
+            {
+              request: { query: IdpsDocument, variables: { filter: {}, first: 100 } },
+              result: idpsResult,
+            },
           ]}
         >
           <ToastProvider>
             <IdpPage />
           </ToastProvider>
-        </MockedProvider>
+        </MockedProvider>,
       );
 
       expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -280,7 +292,7 @@ describe("IdpPage (Apollo, US3)", () => {
           <ToastProvider>
             <IdpPage />
           </ToastProvider>
-        </MockedProvider>
+        </MockedProvider>,
       );
 
       expect(await screen.findByText("IDP Saya")).toBeInTheDocument();
@@ -294,14 +306,20 @@ describe("IdpPage (Apollo, US3)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
-          { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: assignableTalentsResult },
+          {
+            request: { query: IdpsDocument, variables: { filter: {}, first: 100 } },
+            result: idpsResult,
+          },
+          {
+            request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+            result: assignableTalentsResult,
+          },
         ]}
       >
         <ToastProvider>
           <IdpPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
@@ -317,14 +335,20 @@ describe("IdpPage (Apollo, US3)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: IdpsDocument, variables: { filter: {}, first: 100 } }, result: idpsResult },
-          { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: assignableTalentsResult },
+          {
+            request: { query: IdpsDocument, variables: { filter: {}, first: 100 } },
+            result: idpsResult,
+          },
+          {
+            request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+            result: assignableTalentsResult,
+          },
         ]}
       >
         <ToastProvider>
           <IdpPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     await screen.findByText("Andi Pratama");
@@ -338,7 +362,10 @@ describe("IdpPage (Apollo, US3)", () => {
 
 describe("CreateIdpForm (Apollo form, US3)", () => {
   const newMocks = [
-    { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: assignableTalentsResult },
+    {
+      request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+      result: assignableTalentsResult,
+    },
     {
       request: {
         query: CreateIdpDocument,
@@ -369,13 +396,9 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
     render(
       <MockedProvider mocks={newMocks}>
         <ToastProvider>
-          <CreateIdpForm
-            formId="idp-form"
-            onBusyChange={onBusyChange}
-            onSuccess={onSuccess}
-          />
+          <CreateIdpForm formId="idp-form" onBusyChange={onBusyChange} onSuccess={onSuccess} />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     return { onSuccess, onBusyChange };
   }
@@ -396,9 +419,11 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
     expect(await screen.findByRole("combobox", { name: /talent/i })).toBeInTheDocument();
 
     const talentSelect = screen.getByRole("combobox", { name: /talent/i });
-    expect(Array.from(talentSelect.querySelectorAll("option")).some((o) => o.textContent?.includes("Andi Pratama"))).toBe(
-      true
-    );
+    expect(
+      Array.from(talentSelect.querySelectorAll("option")).some((o) =>
+        o.textContent?.includes("Andi Pratama"),
+      ),
+    ).toBe(true);
 
     fireEvent.change(talentSelect, { target: { value: "emp-1" } });
     fireEvent.change(screen.getByLabelText(/development objective/i), {
@@ -411,7 +436,9 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
       target: { value: "Butuh concurrency" },
     });
     fireEvent.change(screen.getByLabelText(/timeline mulai/i), { target: { value: "2025-07-01" } });
-    fireEvent.change(screen.getByLabelText(/timeline selesai/i), { target: { value: "2025-09-30" } });
+    fireEvent.change(screen.getByLabelText(/timeline selesai/i), {
+      target: { value: "2025-09-30" },
+    });
     fireEvent.change(screen.getByLabelText(/success indicators/i), {
       target: { value: "Selesaikan 3 fitur" },
     });
@@ -430,7 +457,10 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
 
   it("shows an error toast when the create mutation fails", async () => {
     const failingMocks = [
-      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: assignableTalentsResult },
+      {
+        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        result: assignableTalentsResult,
+      },
       {
         request: {
           query: CreateIdpDocument,
@@ -456,11 +486,13 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
         <ToastProvider>
           <CreateIdpForm formId="idp-form" onBusyChange={() => {}} />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByRole("combobox", { name: /talent/i })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole("combobox", { name: /talent/i }), { target: { value: "emp-1" } });
+    fireEvent.change(screen.getByRole("combobox", { name: /talent/i }), {
+      target: { value: "emp-1" },
+    });
     fireEvent.change(screen.getByLabelText(/development objective/i), {
       target: { value: "Menjadi Go backend engineer yang andal" },
     });
@@ -471,7 +503,9 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
       target: { value: "Butuh concurrency" },
     });
     fireEvent.change(screen.getByLabelText(/timeline mulai/i), { target: { value: "2025-07-01" } });
-    fireEvent.change(screen.getByLabelText(/timeline selesai/i), { target: { value: "2025-09-30" } });
+    fireEvent.change(screen.getByLabelText(/timeline selesai/i), {
+      target: { value: "2025-09-30" },
+    });
     fireEvent.change(screen.getByLabelText(/success indicators/i), {
       target: { value: "Selesaikan 3 fitur" },
     });
@@ -534,7 +568,16 @@ describe("IdpDetailPage (Apollo, US3)", () => {
         },
       },
       result: {
-        data: { addIdpReview: { __typename: "ReviewLog", id: "rev-2", reviewDate: "2025-09-01", summary: "Progres stabil", followUp: "Lanjut", createdAt: "2025-09-01T00:00:00Z" } },
+        data: {
+          addIdpReview: {
+            __typename: "ReviewLog",
+            id: "rev-2",
+            reviewDate: "2025-09-01",
+            summary: "Progres stabil",
+            followUp: "Lanjut",
+            createdAt: "2025-09-01T00:00:00Z",
+          },
+        },
       },
     },
     {
@@ -543,7 +586,6 @@ describe("IdpDetailPage (Apollo, US3)", () => {
     },
   ];
 
-
   it("renders all IDP components and the review history", async () => {
     await act(async () => {
       render(
@@ -551,7 +593,7 @@ describe("IdpDetailPage (Apollo, US3)", () => {
           <MockedProvider mocks={detailMocks}>
             <IdpDetailPage params={Promise.resolve({ id: "idp-1" })} />
           </MockedProvider>
-        </React.Suspense>
+        </React.Suspense>,
       );
     });
 
@@ -572,7 +614,7 @@ describe("IdpDetailPage (Apollo, US3)", () => {
           <MockedProvider mocks={detailMocks}>
             <IdpDetailPage params={Promise.resolve({ id: "idp-1" })} />
           </MockedProvider>
-        </React.Suspense>
+        </React.Suspense>,
       );
     });
 
@@ -582,9 +624,9 @@ describe("IdpDetailPage (Apollo, US3)", () => {
     fireEvent.change(statusSelect, { target: { value: "COMPLETED" } });
 
     // refetch (IdpDocument) supplies updated status; await the new select value
-    expect(await screen.findByRole("combobox", { name: /status aksi training go lanjutan/i })).toHaveValue(
-      "COMPLETED"
-    );
+    expect(
+      await screen.findByRole("combobox", { name: /status aksi training go lanjutan/i }),
+    ).toHaveValue("COMPLETED");
   });
 
   it("records a review check-in", async () => {
@@ -594,7 +636,7 @@ describe("IdpDetailPage (Apollo, US3)", () => {
           <MockedProvider mocks={detailMocks}>
             <IdpDetailPage params={Promise.resolve({ id: "idp-1" })} />
           </MockedProvider>
-        </React.Suspense>
+        </React.Suspense>,
       );
     });
     await screen.findByText(/catat hasil review/i);
@@ -617,7 +659,7 @@ describe("IdpDetailPage (Apollo, US3)", () => {
           <MockedProvider mocks={detailMocks}>
             <IdpDetailPage params={Promise.resolve({ id: "idp-1" })} />
           </MockedProvider>
-        </React.Suspense>
+        </React.Suspense>,
       );
     });
     await screen.findByText(/tutup idp ini/i);
@@ -636,12 +678,14 @@ describe("IdpDetailPage (Apollo, US3)", () => {
             <MockedProvider mocks={detailMocks}>
               <IdpDetailPage params={Promise.resolve({ id: "idp-1" })} />
             </MockedProvider>
-          </React.Suspense>
+          </React.Suspense>,
         );
       });
 
       expect(await screen.findByText(/training go lanjutan/i)).toBeInTheDocument();
-      expect(screen.queryByRole("combobox", { name: /status aksi training go lanjutan/i })).toBeNull();
+      expect(
+        screen.queryByRole("combobox", { name: /status aksi training go lanjutan/i }),
+      ).toBeNull();
       expect(screen.queryByText(/tambah aksi pengembangan/i)).toBeNull();
       expect(screen.queryByText(/catat hasil review/i)).toBeNull();
       expect(screen.queryByText(/tutup idp ini/i)).toBeNull();

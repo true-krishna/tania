@@ -15,11 +15,7 @@ import {
   ENTITY_LABEL,
   entityLabel,
 } from "@/features/audit/actionLabels";
-import type {
-  AccessRole,
-  AuditAction,
-  AuditLogFilter,
-} from "@/generated/graphql/types";
+import type { AccessRole, AuditAction, AuditLogFilter } from "@/generated/graphql/types";
 import { orDash } from "@/lib/cell";
 
 const ROLE_LABEL: Record<AccessRole, string> = roleLabel;

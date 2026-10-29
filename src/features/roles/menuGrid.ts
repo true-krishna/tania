@@ -84,7 +84,11 @@ export function cellRule(templateRole: AccessRole, entryId: string): CellRule {
     // Master-data management is a Locked permission with no configurable entry:
     // other roles may read (or hide) the pages, never manage them.
     return admin
-      ? { allowed: ["MANAGE"], disabled: true, reason: "Pengelolaan master data tetap milik Admin." }
+      ? {
+          allowed: ["MANAGE"],
+          disabled: true,
+          reason: "Pengelolaan master data tetap milik Admin.",
+        }
       : { allowed: ["NONE", "READ"] };
   }
   return { allowed: ALL_LEVELS, disabled: false };

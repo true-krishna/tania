@@ -30,8 +30,7 @@ export function DistributionSection({
   tables: DistributionTables;
   canSeeCost: boolean;
 }) {
-  const [dimension, setDimension] =
-    React.useState<DistributionDimension>("tribe");
+  const [dimension, setDimension] = React.useState<DistributionDimension>("tribe");
   const [normalized, setNormalized] = React.useState(false);
   const [filter, setFilter] = React.useState<DistributionFilter>(EMPTY_FILTER);
   const [sort, setSort] = React.useState<SortState>(null);
@@ -41,18 +40,15 @@ export function DistributionSection({
 
   const filterKeys = FILTER_SCOPE[dimension];
   const standardRows = tables.rows[dimension].filter((row) =>
-    scopeMatches(row, filter, filterKeys)
+    scopeMatches(row, filter, filterKeys),
   );
   const normalizedRows = tables.normalizedRows[dimension].filter((row) =>
-    normalizedScopeMatches(row, filter, filterKeys)
+    normalizedScopeMatches(row, filter, filterKeys),
   );
   const visibleRows = normalized ? normalizedRows.length : standardRows.length;
   const pageStart = (page - 1) * pageSize;
   const pageEnd = page * pageSize;
-  const standardShownRows = sortRows(standardRows, sort).slice(
-    pageStart,
-    pageEnd
-  );
+  const standardShownRows = sortRows(standardRows, sort).slice(pageStart, pageEnd);
   const normalizedShownRows = normalizedRows.slice(pageStart, pageEnd);
 
   function changeDimension(nextDimension: DistributionDimension) {
@@ -109,8 +105,7 @@ export function DistributionSection({
         <div>
           <h2 className="tp-h3">Distribusi beban</h2>
           <p className="tp-label mt-1">
-            Agregat per dimensi organisasi — angka dari data, bukan dihitung
-            ulang.
+            Agregat per dimensi organisasi — angka dari data, bukan dihitung ulang.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -119,11 +114,7 @@ export function DistributionSection({
             <Select
               aria-label="Dimensi distribusi"
               className="h-10 w-40"
-              onChange={(event) =>
-                changeDimension(
-                  event.target.value as DistributionDimension
-                )
-              }
+              onChange={(event) => changeDimension(event.target.value as DistributionDimension)}
               options={DISTRIBUTION_DIMENSIONS.map((option) => ({
                 label: DIMENSION_LABELS[option],
                 value: option,
@@ -136,9 +127,7 @@ export function DistributionSection({
             <Select
               aria-label="Varian tabel distribusi"
               className="h-10 w-44"
-              onChange={(event) =>
-                changeNormalized(event.target.value === "normalized")
-              }
+              onChange={(event) => changeNormalized(event.target.value === "normalized")}
               options={[
                 { label: "Standar", value: "standard" },
                 { label: "Ternormalisasi", value: "normalized" },

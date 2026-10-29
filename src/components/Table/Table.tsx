@@ -97,7 +97,11 @@ export function Table<T>({
           <thead>
             <tr>
               {expandable ? (
-                <th aria-label={expandable.columnAriaLabel} className={expandable.columnClassName} scope="col" />
+                <th
+                  aria-label={expandable.columnAriaLabel}
+                  className={expandable.columnClassName}
+                  scope="col"
+                />
               ) : null}
               {columns.map((column) => (
                 <th
@@ -186,7 +190,9 @@ export function Table<T>({
                     {expandable && expanded ? (
                       <tr id={expandable.expandedRowId?.(record, index)}>
                         <td className="bg-tp-bg" colSpan={colSpan}>
-                          <div className="px-2 py-3">{expandable.expandedRowRender(record, index)}</div>
+                          <div className="px-2 py-3">
+                            {expandable.expandedRowRender(record, index)}
+                          </div>
                         </td>
                       </tr>
                     ) : null}

@@ -4,11 +4,7 @@ import { Input } from "@/components/Input";
 import { InputControl } from "@/components/InputControl";
 import { Select } from "@/components/Select";
 import type { ContractType } from "@/generated/graphql";
-import {
-  CONTRACT_TYPE_LABEL,
-  CONTRACT_TYPE_ORDER,
-  isOpenEndedContractType,
-} from "./labels";
+import { CONTRACT_TYPE_LABEL, CONTRACT_TYPE_ORDER, isOpenEndedContractType } from "./labels";
 import {
   dayAfter,
   type RenewContractFormErrors,
@@ -38,9 +34,7 @@ export function RenewContractPeriodFields({
       </h3>
       <InputControl error={errors.contractType} label="Jenis kontrak">
         <Select
-          onChange={(event) =>
-            onContractTypeChange(event.target.value as ContractType)
-          }
+          onChange={(event) => onContractTypeChange(event.target.value as ContractType)}
           options={CONTRACT_TYPE_ORDER.map((type) => ({
             label: CONTRACT_TYPE_LABEL[type],
             value: type,

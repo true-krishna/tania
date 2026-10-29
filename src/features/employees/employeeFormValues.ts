@@ -85,9 +85,7 @@ function buildOptionalFields(values: PersonalFormValues) {
   };
 }
 
-export function buildPersonalInput(
-  values: ValidPersonalFormValues
-): PersonalInput {
+export function buildPersonalInput(values: ValidPersonalFormValues): PersonalInput {
   return {
     address: values.address.trim(),
     birthDate: values.birthDate,
@@ -101,7 +99,7 @@ export function buildPersonalInput(
 }
 
 export function buildCreateEmployeeInput(
-  values: CreateFormValues & { gender: Gender }
+  values: CreateFormValues & { gender: Gender },
 ): CreateEmployeeInput {
   return {
     nik: values.nik.trim(),
@@ -110,7 +108,7 @@ export function buildCreateEmployeeInput(
 }
 
 export function buildUpdateEmployeeInput(
-  values: EditFormValues & { gender: Gender }
+  values: EditFormValues & { gender: Gender },
 ): UpdateEmployeeInput {
   const nikBaru = values.nikBaru.trim();
 

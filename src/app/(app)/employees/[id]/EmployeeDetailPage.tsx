@@ -23,10 +23,7 @@ import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { EmployeeWorkloadTab } from "@/features/workload";
 import { EmployeeEntraProvisionCard } from "@/features/entra/EmployeeEntraProvisionCard";
 import { ToastProvider } from "@/components/Toast";
-import {
-  DeactivateEmployeeDocument,
-  type EmployeeQuery,
-} from "@/generated/graphql";
+import { DeactivateEmployeeDocument, type EmployeeQuery } from "@/generated/graphql";
 import { useModuleAccess } from "@/lib/auth/access";
 import { useSessionRole } from "@/lib/auth/guard";
 import { CONTRACT_NEW, CONTRACT_DETAIL, EMPLOYEES } from "@/lib/constants/routes";
@@ -81,7 +78,9 @@ function EmployeeDetailView({ employeeId: id }: { employeeId: string }) {
           ) : undefined
         }
         subtitle={
-          employee ? `${employee.nomorInduk ?? "Tanpa kontrak aktif"} · ${employee.email}` : undefined
+          employee
+            ? `${employee.nomorInduk ?? "Tanpa kontrak aktif"} · ${employee.email}`
+            : undefined
         }
         title={employee?.fullName ?? "Detail karyawan"}
       />
@@ -152,7 +151,9 @@ function EmployeeDetailView({ employeeId: id }: { employeeId: string }) {
                 <dd className="text-zinc-900">{employee.address ?? "—"}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-zinc-500">Pendidikan Terakhir</dt>
+                <dt className="text-xs uppercase tracking-wide text-zinc-500">
+                  Pendidikan Terakhir
+                </dt>
                 <dd className="text-zinc-900">{employee.latestEducation ?? "—"}</dd>
               </div>
               <div>
@@ -198,7 +199,11 @@ function EmployeeDetailView({ employeeId: id }: { employeeId: string }) {
             ) : (
               <div className="flex flex-col gap-3">
                 {employee.contracts.edges.map((edge) => (
-                  <ContractHistoryCard contract={edge.node} key={edge.node.id} linked={linkContracts} />
+                  <ContractHistoryCard
+                    contract={edge.node}
+                    key={edge.node.id}
+                    linked={linkContracts}
+                  />
                 ))}
               </div>
             )}
@@ -292,9 +297,7 @@ function ContractHistoryCard({ contract, linked }: { contract: ContractRow; link
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-zinc-500">Chapter</dt>
-          <dd className="text-zinc-900">
-            {contract.jobRole.chapter?.name ?? "Tanpa chapter"}
-          </dd>
+          <dd className="text-zinc-900">{contract.jobRole.chapter?.name ?? "Tanpa chapter"}</dd>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-zinc-500">Job Title</dt>

@@ -117,7 +117,11 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
   const router = useRouter();
   const [searchInput, setSearchInput] = React.useState("");
   const search = useDebouncedValue(searchInput);
-  const [filters, setFilters] = React.useState<{ chapterId: string; status: string; unitId: string }>({
+  const [filters, setFilters] = React.useState<{
+    chapterId: string;
+    status: string;
+    unitId: string;
+  }>({
     chapterId: "",
     status: "",
     unitId: "",
@@ -144,7 +148,7 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
       chapterId: filters.chapterId || undefined,
       status: (filters.status || undefined) as EmployeeStatus | undefined,
     },
-    pageSize
+    pageSize,
   );
   const { pageRows, pagination, resetPage } = useTablePagination(employees, {
     totalItems: totalCount,
@@ -197,7 +201,10 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             label: "Chapter",
             options: [
               { value: "", label: "Semua" },
-              ...(chapters.data ?? []).map((chapter) => ({ value: chapter.id, label: chapter.name })),
+              ...(chapters.data ?? []).map((chapter) => ({
+                value: chapter.id,
+                label: chapter.name,
+              })),
             ],
             type: "select",
           },
@@ -206,9 +213,9 @@ function EmployeeDirectory({ manage }: { manage: boolean }) {
             label: "Status",
             options: [
               { value: "", label: "Semua" },
-              ...(Object.keys(EMPLOYEE_STATUS_LABEL) as Array<
-                keyof typeof EMPLOYEE_STATUS_LABEL
-              >).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] })),
+              ...(
+                Object.keys(EMPLOYEE_STATUS_LABEL) as Array<keyof typeof EMPLOYEE_STATUS_LABEL>
+              ).map((value) => ({ value, label: EMPLOYEE_STATUS_LABEL[value] })),
             ],
             type: "select",
           },

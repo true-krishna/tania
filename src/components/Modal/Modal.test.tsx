@@ -25,12 +25,7 @@ function BasicModal({
   children?: React.ReactNode;
 }) {
   return (
-    <Modal
-      disableBackdropClick={disableBackdropClick}
-      onClose={onClose}
-      open={open}
-      size={size}
-    >
+    <Modal disableBackdropClick={disableBackdropClick} onClose={onClose} open={open} size={size}>
       <ModalTitle>Tambah data</ModalTitle>
       <ModalContent>{children}</ModalContent>
     </Modal>

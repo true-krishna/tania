@@ -2,10 +2,7 @@
 
 import { useToast } from "@/components/Toast";
 import { useProjects, useUnits } from "@/features/master-data/useMasterData";
-import {
-  MasterDataSection,
-  type MasterDataItem,
-} from "@/features/master-data/MasterDataSection";
+import { MasterDataSection, type MasterDataItem } from "@/features/master-data/MasterDataSection";
 import { MasterDataImportModal } from "@/features/master-data/MasterDataImportModal";
 import { useProjectMutations } from "@/features/master-data/useMasterDataMutations";
 
@@ -35,12 +32,20 @@ export default function ProjectsPage() {
       error={error}
       extraColumn={{ label: "Unit", render: (project) => project.unit.name }}
       importSlot={({ close, onImported, open }) => (
-        <MasterDataImportModal entity="project" onClose={close} onImported={onImported} open={open} />
+        <MasterDataImportModal
+          entity="project"
+          onClose={close}
+          onImported={onImported}
+          open={open}
+        />
       )}
       items={data}
       nameLabel="Nama Initiative"
       onCreate={({ name, selectValue }) =>
-        detectError(() => projectMutations.create({ name, selectValue }), `Initiative "${name}" berhasil dibuat.`)
+        detectError(
+          () => projectMutations.create({ name, selectValue }),
+          `Initiative "${name}" berhasil dibuat.`,
+        )
       }
       onToggleActive={(id, isActive) =>
         detectError(
@@ -49,7 +54,10 @@ export default function ProjectsPage() {
         )
       }
       onUpdate={(id, { name, selectValue }) =>
-        detectError(() => projectMutations.update(id, { name, selectValue }), "Initiative berhasil diubah.")
+        detectError(
+          () => projectMutations.update(id, { name, selectValue }),
+          "Initiative berhasil diubah.",
+        )
       }
       searchable
       select={{

@@ -55,10 +55,14 @@ describe("parseMasterDataImportTemplate (TAN-350)", () => {
   it("reads unit rows with their file rowNumbers and trims values", async () => {
     const parsed = await parseMasterDataImportTemplate(
       "unit",
-      await templateFile("unit", ["code", "name"], [
-        ["  DBT  ", " Digital Business "],
-        ["ECSS", "Enabler & Corporate Shared Services"],
-      ]),
+      await templateFile(
+        "unit",
+        ["code", "name"],
+        [
+          ["  DBT  ", " Digital Business "],
+          ["ECSS", "Enabler & Corporate Shared Services"],
+        ],
+      ),
     );
     expect(parsed).toEqual({
       ok: true,
@@ -88,11 +92,15 @@ describe("parseMasterDataImportTemplate (TAN-350)", () => {
   it("lists rows with missing required cells as invalid, keeping valid rows", async () => {
     const parsed = await parseMasterDataImportTemplate(
       "unit",
-      await templateFile("unit", ["code", "name"], [
-        ["DBT", "Digital Business"],
-        ["", "Nama tanpa kode"],
-        ["ENG", ""],
-      ]),
+      await templateFile(
+        "unit",
+        ["code", "name"],
+        [
+          ["DBT", "Digital Business"],
+          ["", "Nama tanpa kode"],
+          ["ENG", ""],
+        ],
+      ),
     );
     expect(parsed).toEqual({
       ok: true,
@@ -107,10 +115,14 @@ describe("parseMasterDataImportTemplate (TAN-350)", () => {
   it("treats the job role chapter column as optional", async () => {
     const parsed = await parseMasterDataImportTemplate(
       "jobRole",
-      await templateFile("jobRole", ["name", "chapter"], [
-        ["Backend Engineer", "Engineering"],
-        ["Frontend Engineer", ""],
-      ]),
+      await templateFile(
+        "jobRole",
+        ["name", "chapter"],
+        [
+          ["Backend Engineer", "Engineering"],
+          ["Frontend Engineer", ""],
+        ],
+      ),
     );
     expect(parsed).toEqual({
       ok: true,

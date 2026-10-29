@@ -103,9 +103,9 @@ export default function ContractsPage() {
             label: "Status",
             options: [
               { value: "", label: "Semua" },
-              ...(Object.keys(CONTRACT_STATUS_LABEL) as Array<
-                keyof typeof CONTRACT_STATUS_LABEL
-              >).map((value) => ({ value, label: CONTRACT_STATUS_LABEL[value] })),
+              ...(
+                Object.keys(CONTRACT_STATUS_LABEL) as Array<keyof typeof CONTRACT_STATUS_LABEL>
+              ).map((value) => ({ value, label: CONTRACT_STATUS_LABEL[value] })),
             ],
             type: "select",
           },

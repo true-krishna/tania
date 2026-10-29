@@ -36,7 +36,9 @@ export function EvaluationsShell({ children }: { children: React.ReactNode }) {
                   <Link
                     aria-current={active ? "page" : undefined}
                     className={`block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active ? "bg-tp-brand-navy text-tp-on-nav" : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                      active
+                        ? "bg-tp-brand-navy text-tp-on-nav"
+                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                     }`}
                     href={href}
                   >

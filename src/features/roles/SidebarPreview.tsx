@@ -6,7 +6,6 @@ import type { Role } from "./useRoles";
 import type { MenuAccessConfig } from "@/lib/auth/menuAccess";
 import { gridOf, type GridCell } from "./menuGrid";
 
-
 export interface SidebarPreviewProps {
   role: Role | null;
   cells: readonly GridCell[];
@@ -21,8 +20,8 @@ export function SidebarPreview({ role, cells }: SidebarPreviewProps) {
   if (!role) {
     return (
       <p className="text-sm text-tp-muted">
-        Pilih &ldquo;Pratinjau&rdquo; pada sebuah kolom role untuk melihat sidebar yang akan
-        dilihat role tersebut.
+        Pilih &ldquo;Pratinjau&rdquo; pada sebuah kolom role untuk melihat sidebar yang akan dilihat
+        role tersebut.
       </p>
     );
   }

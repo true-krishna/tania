@@ -106,7 +106,12 @@ export function ActivityList({
               <RowActionsMenu
                 actions={[
                   { label: "Ubah", onSelect: () => onEdit(activity), disabled: busy },
-                  { label: "Hapus", onSelect: () => onDelete(activity), danger: true, disabled: busy },
+                  {
+                    label: "Hapus",
+                    onSelect: () => onDelete(activity),
+                    danger: true,
+                    disabled: busy,
+                  },
                 ]}
                 label={`Aksi ${activity.title}`}
               />

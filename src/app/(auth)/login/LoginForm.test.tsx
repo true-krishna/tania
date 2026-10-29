@@ -44,7 +44,7 @@ function renderLogin(mocks: unknown[]) {
   return render(
     <MockedProvider mocks={mocks as never}>
       <LoginForm />
-    </MockedProvider>
+    </MockedProvider>,
   );
 }
 
@@ -191,9 +191,7 @@ describe("kembali dari Microsoft (?sso=)", () => {
     params = new URLSearchParams("sso=error");
     renderLogin([ssoStartMock(true, AUTHORIZATION_URL)]);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      /masuk dengan microsoft gagal/i,
-    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(/masuk dengan microsoft gagal/i);
     expect(screen.getByLabelText(EMAIL_LABEL)).toBeInTheDocument();
     expect(locationAssign).not.toHaveBeenCalled();
   });

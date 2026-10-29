@@ -5,10 +5,6 @@ export const metadata: Metadata = {
   title: "Detail IDP",
 };
 
-export default function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return <IdpDetailPage params={params} />;
 }

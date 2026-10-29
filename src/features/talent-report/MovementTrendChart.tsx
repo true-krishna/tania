@@ -7,10 +7,9 @@ import { resolveChartTheme, type ChartTheme } from "./chart-theme";
 import type { EChartHandle } from "./EChart";
 import type { ReportMonthlyMovement } from "@/generated/graphql/types";
 
-const EChart = dynamic(
-  () => import("./EChart").then((m) => ({ default: m.EChart })),
-  { ssr: false },
-);
+const EChart = dynamic(() => import("./EChart").then((m) => ({ default: m.EChart })), {
+  ssr: false,
+});
 
 export type MovementView = "line" | "diverging";
 
@@ -51,7 +50,11 @@ export function buildMovementOption(
           subtextStyle: { color: theme.mutedColor, fontFamily: theme.fontFamily, fontSize: 11 },
         }
       : undefined,
-    legend: { top: title ? 44 : undefined, data: ["New talent", "Churn"], textStyle: { color: theme.textColor } },
+    legend: {
+      top: title ? 44 : undefined,
+      data: ["New talent", "Churn"],
+      textStyle: { color: theme.textColor },
+    },
     grid: { left: 8, right: 16, top: title ? 72 : 24, bottom: 8, containLabel: true },
     tooltip: { trigger: "axis" as const },
     xAxis: {
@@ -167,9 +170,7 @@ export function MovementTrendChart({
                 selectView(effectiveView === "line" ? "diverging" : "line");
               }}
               role="tab"
-              title={
-                disabled ? "Bar divergen hanya untuk rentang maksimal 12 bulan" : undefined
-              }
+              title={disabled ? "Bar divergen hanya untuk rentang maksimal 12 bulan" : undefined}
               type="button"
             >
               {item.label}

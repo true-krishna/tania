@@ -175,7 +175,7 @@ describe("EmployeeFormModal — create mode (TAN-315)", () => {
         <ToastProvider>
           <EmployeeFormModal mode="create" onClose={() => {}} open={true} />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(screen.getByRole("dialog", { name: /tambah karyawan/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/^nik/i)).toHaveValue("");
@@ -188,7 +188,7 @@ describe("EmployeeFormModal — create mode (TAN-315)", () => {
         <ToastProvider>
           <EmployeeFormModal mode="create" onClose={() => {}} open={true} />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     const form = document.querySelector("form");
@@ -207,7 +207,7 @@ describe("EmployeeFormModal — create mode (TAN-315)", () => {
         <ToastProvider>
           <EmployeeFormModal mode="create" onClose={() => {}} open={true} />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     submitForm();
     expect(screen.getByText(/nik wajib diisi/i)).toBeInTheDocument();
@@ -228,11 +228,13 @@ describe("EmployeeFormModal — create mode (TAN-315)", () => {
         <ToastProvider>
           <EmployeeFormModal
             mode="create"
-            onClose={() => { closed = true; }}
+            onClose={() => {
+              closed = true;
+            }}
             open={true}
           />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     fillCreateForm();
     submitForm();
@@ -246,13 +248,11 @@ describe("EmployeeFormModal — create mode (TAN-315)", () => {
         <ToastProvider>
           <EmployeeFormModal mode="create" onClose={() => {}} open={true} />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     fillCreateForm();
     submitForm();
-    expect(
-      await screen.findByText(/email atau nik sudah terdaftar/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/email atau nik sudah terdaftar/i)).toBeInTheDocument();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
@@ -263,11 +263,13 @@ describe("EmployeeFormModal — create mode (TAN-315)", () => {
         <ToastProvider>
           <EmployeeFormModal
             mode="create"
-            onClose={() => { closed = true; }}
+            onClose={() => {
+              closed = true;
+            }}
             open={true}
           />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: /batal/i }));
     expect(closed).toBe(true);
@@ -279,14 +281,9 @@ describe("EmployeeFormModal — edit mode (TAN-315)", () => {
     render(
       <MockedProvider mocks={[employeesMock, employeeDetailMock]}>
         <ToastProvider>
-          <EmployeeFormModal
-            employeeId="emp-1"
-            mode="edit"
-            onClose={() => {}}
-            open={true}
-          />
+          <EmployeeFormModal employeeId="emp-1" mode="edit" onClose={() => {}} open={true} />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByRole("dialog", { name: /ubah data/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/nama lengkap/i)).toHaveValue("Andi Pratama");
@@ -298,14 +295,9 @@ describe("EmployeeFormModal — edit mode (TAN-315)", () => {
     render(
       <MockedProvider mocks={[employeesMock, employeeDetailMock]}>
         <ToastProvider>
-          <EmployeeFormModal
-            employeeId="emp-1"
-            mode="edit"
-            onClose={() => {}}
-            open={true}
-          />
+          <EmployeeFormModal employeeId="emp-1" mode="edit" onClose={() => {}} open={true} />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByRole("dialog", { name: /ubah data/i })).toBeInTheDocument();
     expect(screen.getByText(/nik saat ini/i)).toBeInTheDocument();
@@ -322,15 +314,19 @@ describe("EmployeeFormModal — edit mode (TAN-315)", () => {
           <EmployeeFormModal
             employeeId="emp-1"
             mode="edit"
-            onClose={() => { closed = true; }}
+            onClose={() => {
+              closed = true;
+            }}
             open={true}
           />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByRole("dialog", { name: /ubah data/i })).toBeInTheDocument();
     submitForm();
-    expect(await screen.findByRole("alert")).toHaveTextContent(/perubahan data andi pratama berhasil disimpan/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /perubahan data andi pratama berhasil disimpan/i,
+    );
     expect(closed).toBe(true);
   });
 });

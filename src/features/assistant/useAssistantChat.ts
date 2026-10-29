@@ -9,38 +9,20 @@ import {
   SendChatMessageDocument,
 } from "@/generated/graphql";
 import { useToast } from "@/components/Toast";
-import {
-  errorMessage,
-  errorRetryAfterSeconds,
-  graphQLErrorCode,
-} from "@/lib/errors";
+import { errorMessage, errorRetryAfterSeconds, graphQLErrorCode } from "@/lib/errors";
 import { CHAT_MAX_LENGTH } from "./assistantConfig";
-import {
-  newClientRequestId,
-  unansweredUserMessages,
-  type PendingSend,
-} from "./chatMessages";
+import { newClientRequestId, unansweredUserMessages, type PendingSend } from "./chatMessages";
 
 type QuotaState = {
   message: string;
   retryAfterSeconds: number;
 };
 
-export function useAssistantChat({
-  open,
-  enabled,
-}: {
-  open: boolean;
-  enabled: boolean;
-}) {
+export function useAssistantChat({ open, enabled }: { open: boolean; enabled: boolean }) {
   const { pushToast } = useToast();
-  const [selectedId, setSelectedId] = React.useState<
-    string | null | undefined
-  >(undefined);
+  const [selectedId, setSelectedId] = React.useState<string | null | undefined>(undefined);
   const [draft, setDraft] = React.useState("");
-  const [pending, setPending] = React.useState<Record<string, PendingSend[]>>(
-    {}
-  );
+  const [pending, setPending] = React.useState<Record<string, PendingSend[]>>({});
   const [quota, setQuota] = React.useState<QuotaState | null>(null);
 
   const conversations = useQuery(ChatConversationsDocument, {
@@ -48,10 +30,8 @@ export function useAssistantChat({
     fetchPolicy: "cache-and-network",
   });
 
-  const defaultConversationId =
-    conversations.data?.chatConversations.edges[0]?.node.id ?? null;
-  const activeId =
-    selectedId === undefined ? defaultConversationId : selectedId;
+  const defaultConversationId = conversations.data?.chatConversations.edges[0]?.node.id ?? null;
+  const activeId = selectedId === undefined ? defaultConversationId : selectedId;
 
   const messages = useQuery(ChatMessagesDocument, {
     variables: { conversationId: activeId ?? "" },
@@ -65,30 +45,21 @@ export function useAssistantChat({
   const quotaWaitMs = (quota?.retryAfterSeconds ?? 0) * 1000;
   React.useEffect(() => {
     if (!quota) return;
-    const timer = window.setTimeout(
-      () => setQuota(null),
-      Math.max(quotaWaitMs, 1000)
-    );
+    const timer = window.setTimeout(() => setQuota(null), Math.max(quotaWaitMs, 1000));
     return () => window.clearTimeout(timer);
   }, [quota, quotaWaitMs]);
 
   const activePending = activeId ? (pending[activeId] ?? []) : [];
 
-  async function deliver(
-    conversationId: string,
-    content: string,
-    clientRequestId: string
-  ) {
+  async function deliver(conversationId: string, content: string, clientRequestId: string) {
     setPending((previous) => {
       const list = previous[conversationId] ?? [];
-      const exists = list.some(
-        (item) => item.clientRequestId === clientRequestId
-      );
+      const exists = list.some((item) => item.clientRequestId === clientRequestId);
       const next = exists
         ? list.map((item) =>
             item.clientRequestId === clientRequestId
               ? { ...item, status: "sending" as const }
-              : item
+              : item,
           )
         : [...list, { clientRequestId, content, status: "sending" as const }];
       return { ...previous, [conversationId]: next };
@@ -101,7 +72,7 @@ export function useAssistantChat({
       setPending((previous) => ({
         ...previous,
         [conversationId]: (previous[conversationId] ?? []).filter(
-          (item) => item.clientRequestId !== clientRequestId
+          (item) => item.clientRequestId !== clientRequestId,
         ),
       }));
       setQuota(null);
@@ -110,29 +81,18 @@ export function useAssistantChat({
       setPending((previous) => ({
         ...previous,
         [conversationId]: (previous[conversationId] ?? []).map((item) =>
-          item.clientRequestId === clientRequestId
-            ? { ...item, status: "failed" as const }
-            : item
+          item.clientRequestId === clientRequestId ? { ...item, status: "failed" as const } : item,
         ),
       }));
       const apolloError = error as ApolloError;
       if (graphQLErrorCode(apolloError) === "CHAT_RATE_LIMITED") {
         setQuota({
-          message: errorMessage(
-            apolloError,
-            "Batas pertanyaan per jam tercapai."
-          ),
+          message: errorMessage(apolloError, "Batas pertanyaan per jam tercapai."),
           retryAfterSeconds: errorRetryAfterSeconds(apolloError) ?? 0,
         });
         return;
       }
-      pushToast(
-        "error",
-        errorMessage(
-          apolloError,
-          "Asisten gagal menjawab. Silakan coba lagi."
-        )
-      );
+      pushToast("error", errorMessage(apolloError, "Asisten gagal menjawab. Silakan coba lagi."));
     }
   }
 
@@ -152,10 +112,7 @@ export function useAssistantChat({
       } catch (error) {
         pushToast(
           "error",
-          errorMessage(
-            error as ApolloError,
-            "Percakapan baru gagal dibuat. Silakan coba lagi."
-          )
+          errorMessage(error as ApolloError, "Percakapan baru gagal dibuat. Silakan coba lagi."),
         );
         return;
       }
@@ -179,13 +136,10 @@ export function useAssistantChat({
   const conversationNodes =
     conversations.data?.chatConversations.edges.map((edge) => edge.node) ?? [];
   const thread = activeId
-    ? [
-        ...(messages.data?.chatMessages.edges.map((edge) => edge.node) ?? []),
-      ].reverse()
+    ? [...(messages.data?.chatMessages.edges.map((edge) => edge.node) ?? [])].reverse()
     : [];
   const unanswered = unansweredUserMessages(thread);
-  const busy =
-    sendState.loading || activePending.some((item) => item.status === "sending");
+  const busy = sendState.loading || activePending.some((item) => item.status === "sending");
 
   return {
     activeId,

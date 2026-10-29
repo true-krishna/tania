@@ -49,8 +49,20 @@ beforeEach(() => {
 const unit = { __typename: "Unit", id: "u-1", name: "Digital" };
 
 const employeeNodes = [
-  { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001", assignable: true },
-  { __typename: "Employee", id: "emp-5", fullName: "Eko Prasetyo", nomorInduk: "EMP-005", assignable: false },
+  {
+    __typename: "Employee",
+    id: "emp-1",
+    fullName: "Andi Pratama",
+    nomorInduk: "EMP-001",
+    assignable: true,
+  },
+  {
+    __typename: "Employee",
+    id: "emp-5",
+    fullName: "Eko Prasetyo",
+    nomorInduk: "EMP-005",
+    assignable: false,
+  },
 ];
 const employeesResult = {
   data: {
@@ -106,15 +118,31 @@ describe("AssignmentsPage (Apollo, US2)", () => {
         <ToastProvider>
           <AssignmentsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
   }
 
   it("renders the assignment list after the queries resolve", async () => {
     renderPage([
-      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
-      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+      {
+        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        result: {
+          data: {
+            assignableTalents: {
+              __typename: "EmployeeConnection",
+              edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }],
+            },
+          },
+        },
+      },
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: projectsResult,
+      },
+      {
+        request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+        result: assignmentsResult,
+      },
     ]);
 
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
@@ -135,12 +163,30 @@ describe("AssignmentsPage (Apollo, US2)", () => {
       status: "COMPLETED",
       periodStart: "2025-01-01",
       periodEnd: "2025-06-30",
-      talent: { __typename: "Employee", id: "emp-1", fullName: "Andi Pratama", nomorInduk: "EMP-001" },
+      talent: {
+        __typename: "Employee",
+        id: "emp-1",
+        fullName: "Andi Pratama",
+        nomorInduk: "EMP-001",
+      },
       project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
     };
     renderPage([
-      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
-      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+      {
+        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        result: {
+          data: {
+            assignableTalents: {
+              __typename: "EmployeeConnection",
+              edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }],
+            },
+          },
+        },
+      },
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: projectsResult,
+      },
       {
         request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
         result: {
@@ -175,15 +221,39 @@ describe("AssignmentsPage (Apollo, US2)", () => {
       status: "ACTIVE",
       periodStart: "2025-08-01",
       periodEnd: null,
-      talent: { __typename: "Employee", id: "emp-2", fullName: "Rina Kartika", nomorInduk: "EMP-002" },
+      talent: {
+        __typename: "Employee",
+        id: "emp-2",
+        fullName: "Rina Kartika",
+        nomorInduk: "EMP-002",
+      },
       project: { __typename: "Project", id: "prj-1", name: "Network Modernization" },
     };
     renderPage([
-      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: { data: { assignableTalents: { __typename: "EmployeeConnection", edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }] } } } },
-      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
       {
-        request: { query: AssignmentsDocument, variables: { filter: { projectId: "prj-1" }, first: 100 } },
+        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        result: {
+          data: {
+            assignableTalents: {
+              __typename: "EmployeeConnection",
+              edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }],
+            },
+          },
+        },
+      },
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: projectsResult,
+      },
+      {
+        request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+        result: assignmentsResult,
+      },
+      {
+        request: {
+          query: AssignmentsDocument,
+          variables: { filter: { projectId: "prj-1" }, first: 100 },
+        },
         result: {
           data: {
             assignments: {
@@ -213,13 +283,25 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
-          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-          { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+          {
+            request: {
+              query: EmployeesDocument,
+              variables: { filter: {}, first: 25, after: null },
+            },
+            result: employeesResult,
+          },
+          {
+            request: { query: ProjectsDocument, variables: { includeInactive: true } },
+            result: projectsResult,
+          },
+          {
+            request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+            result: assignmentsResult,
+          },
         ]}
       >
         <AssignmentsPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
@@ -235,12 +317,18 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-          { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+          {
+            request: { query: ProjectsDocument, variables: { includeInactive: true } },
+            result: projectsResult,
+          },
+          {
+            request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+            result: assignmentsResult,
+          },
         ]}
       >
         <AssignmentsPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
@@ -254,8 +342,17 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
-          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+          {
+            request: {
+              query: EmployeesDocument,
+              variables: { filter: {}, first: 25, after: null },
+            },
+            result: employeesResult,
+          },
+          {
+            request: { query: ProjectsDocument, variables: { includeInactive: true } },
+            result: projectsResult,
+          },
           {
             request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
             result: {
@@ -269,7 +366,7 @@ describe("AssignmentsPage (Apollo, US2)", () => {
         ]}
       >
         <AssignmentsPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("cakupan chapter tidak terdefinisi")).toBeInTheDocument();
@@ -280,8 +377,17 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     render(
       <MockedProvider
         mocks={[
-          { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
-          { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
+          {
+            request: {
+              query: EmployeesDocument,
+              variables: { filter: {}, first: 25, after: null },
+            },
+            result: employeesResult,
+          },
+          {
+            request: { query: ProjectsDocument, variables: { includeInactive: true } },
+            result: projectsResult,
+          },
           {
             request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
             result: {
@@ -298,7 +404,7 @@ describe("AssignmentsPage (Apollo, US2)", () => {
         ]}
       >
         <AssignmentsPage />
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText(/tidak ada assignment yang cocok/i)).toBeInTheDocument();
@@ -315,7 +421,10 @@ describe("CreateAssignmentModal (TAN-316)", () => {
     },
   };
   const baseMocks = [
-    { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: createProjectsResult },
+    {
+      request: { query: ProjectsDocument, variables: { includeInactive: true } },
+      result: createProjectsResult,
+    },
     {
       request: { query: AssignableTalentsDocument, variables: { first: 100 } },
       result: {
@@ -327,7 +436,10 @@ describe("CreateAssignmentModal (TAN-316)", () => {
         },
       },
     },
-    { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+    {
+      request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+      result: assignmentsResult,
+    },
     {
       request: {
         query: CreateAssignmentDocument,
@@ -340,7 +452,9 @@ describe("CreateAssignmentModal (TAN-316)", () => {
           },
         },
       },
-      result: { data: { createAssignment: { id: "asg-2", status: "ACTIVE", __typename: "Assignment" } } },
+      result: {
+        data: { createAssignment: { id: "asg-2", status: "ACTIVE", __typename: "Assignment" } },
+      },
     },
     {
       request: {
@@ -354,7 +468,9 @@ describe("CreateAssignmentModal (TAN-316)", () => {
           },
         },
       },
-      result: { data: { createAssignment: { id: "asg-3", status: "ACTIVE", __typename: "Assignment" } } },
+      result: {
+        data: { createAssignment: { id: "asg-3", status: "ACTIVE", __typename: "Assignment" } },
+      },
     },
   ];
 
@@ -364,7 +480,7 @@ describe("CreateAssignmentModal (TAN-316)", () => {
         <ToastProvider>
           <AssignmentsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
   }
 
@@ -449,7 +565,10 @@ describe("CreateAssignmentModal (TAN-316)", () => {
   it("creates the assignment, closes the modal, and shows a success toast", async () => {
     const listRefreshMocks = [
       ...baseMocks,
-      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: assignmentsResult },
+      {
+        request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+        result: assignmentsResult,
+      },
     ];
     renderListWithCreate(listRefreshMocks);
     await openCreateModal();
@@ -466,7 +585,7 @@ describe("CreateAssignmentModal (TAN-316)", () => {
     await openCreateModal();
 
     const projectOptions = Array.from(
-      screen.getByRole("combobox", { name: /project/i }).querySelectorAll("option")
+      screen.getByRole("combobox", { name: /project/i }).querySelectorAll("option"),
     ).map((o) => o.textContent);
     expect(projectOptions.some((t) => t?.includes("Legacy System"))).toBe(false);
     expect(projectOptions.some((t) => t?.includes("Network Modernization"))).toBe(true);
@@ -479,7 +598,9 @@ describe("CreateAssignmentModal (TAN-316)", () => {
     await openCreateModal();
 
     fillCreateForm();
-    fireEvent.change(screen.getByLabelText(/tanggal selesai/i), { target: { value: "2025-12-31" } });
+    fireEvent.change(screen.getByLabelText(/tanggal selesai/i), {
+      target: { value: "2025-12-31" },
+    });
     fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/berhasil dibuat/i);
@@ -513,10 +634,14 @@ describe("CreateAssignmentModal (TAN-316)", () => {
     });
     await openCreateModal();
     fillCreateForm();
-    fireEvent.change(screen.getByLabelText(/tanggal selesai/i), { target: { value: "2025-06-30" } });
+    fireEvent.change(screen.getByLabelText(/tanggal selesai/i), {
+      target: { value: "2025-06-30" },
+    });
     fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
 
-    expect(await screen.findByText("Tanggal selesai tidak boleh lebih awal dari tanggal mulai.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Tanggal selesai tidak boleh lebih awal dari tanggal mulai."),
+    ).toBeInTheDocument();
     const periodEndField = screen.getByLabelText(/tanggal selesai/i).closest("label")!;
     expect(within(periodEndField).getByText(/tidak boleh lebih awal/i)).toBeInTheDocument();
     expect(screen.getByRole("dialog", { name: /buat assignment/i })).toBeInTheDocument();
@@ -548,7 +673,7 @@ describe("CreateAssignmentModal (TAN-316)", () => {
     fireEvent.submit(screen.getByRole("form", { name: /buat assignment/i }));
 
     expect(
-      await screen.findByText("Talent ini sudah memiliki assignment aktif pada project tersebut.")
+      await screen.findByText("Talent ini sudah memiliki assignment aktif pada project tersebut."),
     ).toBeInTheDocument();
     expect(screen.queryByText(/resource already exists/i)).toBeNull();
     expect(screen.getByRole("dialog", { name: /buat assignment/i })).toBeInTheDocument();
@@ -607,8 +732,14 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
     },
   };
   const baseDetailMocks = [
-    { request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult },
-    { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: detailProjectsResult },
+    {
+      request: { query: AssignmentsDocument, variables: { first: 100 } },
+      result: assignmentsResult,
+    },
+    {
+      request: { query: ProjectsDocument, variables: { includeInactive: true } },
+      result: detailProjectsResult,
+    },
   ];
 
   const renderDetail = async (mocks: ReadonlyArray<MockedResponse>) => {
@@ -618,12 +749,12 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
           <MockedProvider mocks={mocks}>
             <AssignmentDetailPage params={Promise.resolve({ id: "asg-1" })} />
           </MockedProvider>
-        </React.Suspense>
+        </React.Suspense>,
       );
     });
   };
 
-  it("shows a completed assignment as \"Selesai\" without edit or end actions (O4)", async () => {
+  it('shows a completed assignment as "Selesai" without edit or end actions (O4)', async () => {
     await renderDetail([
       {
         request: { query: AssignmentsDocument, variables: { first: 100 } },
@@ -679,15 +810,23 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       },
     ]);
 
-    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    const editForm = await screen
+      .findByRole("button", { name: /simpan/i })
+      .then((b) => b.closest("form")!);
     // Master data nonaktif tidak lagi jadi pilihan (T002); peran tidak lagi
     // diminta pada form ubah (TAN-133).
     expect(within(editForm).queryByText("Legacy System")).toBeNull();
     expect(within(editForm).queryByRole("combobox", { name: /job role/i })).toBeNull();
 
-    fireEvent.change(within(editForm).getByRole("combobox", { name: /project/i }), { target: { value: "prj-2" } });
-    fireEvent.change(within(editForm).getByLabelText(/tanggal mulai/i), { target: { value: "2025-08-01" } });
-    fireEvent.change(within(editForm).getByLabelText(/tanggal selesai/i), { target: { value: "2026-01-31" } });
+    fireEvent.change(within(editForm).getByRole("combobox", { name: /project/i }), {
+      target: { value: "prj-2" },
+    });
+    fireEvent.change(within(editForm).getByLabelText(/tanggal mulai/i), {
+      target: { value: "2025-08-01" },
+    });
+    fireEvent.change(within(editForm).getByLabelText(/tanggal selesai/i), {
+      target: { value: "2026-01-31" },
+    });
     fireEvent.submit(editForm);
 
     expect(await screen.findByText(/perubahan tersimpan/i)).toBeInTheDocument();
@@ -699,11 +838,17 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
   it("rejects an end date earlier than the start date on the edit form without sending the mutation", async () => {
     await renderDetail(baseDetailMocks);
 
-    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
-    fireEvent.change(within(editForm).getByLabelText(/tanggal selesai/i), { target: { value: "2025-06-30" } });
+    const editForm = await screen
+      .findByRole("button", { name: /simpan/i })
+      .then((b) => b.closest("form")!);
+    fireEvent.change(within(editForm).getByLabelText(/tanggal selesai/i), {
+      target: { value: "2025-06-30" },
+    });
     fireEvent.submit(editForm);
 
-    expect(await screen.findByText(/tidak boleh lebih awal dari tanggal mulai/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/tidak boleh lebih awal dari tanggal mulai/i),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
   });
 
@@ -728,13 +873,19 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       },
     ]);
 
-    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    const editForm = await screen
+      .findByRole("button", { name: /simpan/i })
+      .then((b) => b.closest("form")!);
     fireEvent.submit(editForm);
 
     // Pesan menempel pada field Tanggal Selesai di form ubah.
-    const periodEndField = within(editForm).getByLabelText(/tanggal selesai/i).closest("label")!;
+    const periodEndField = within(editForm)
+      .getByLabelText(/tanggal selesai/i)
+      .closest("label")!;
     expect(
-      await within(periodEndField).findByText("Tanggal selesai tidak boleh lebih awal dari tanggal mulai.")
+      await within(periodEndField).findByText(
+        "Tanggal selesai tidak boleh lebih awal dari tanggal mulai.",
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
   });
@@ -760,11 +911,13 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       },
     ]);
 
-    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    const editForm = await screen
+      .findByRole("button", { name: /simpan/i })
+      .then((b) => b.closest("form")!);
     fireEvent.submit(editForm);
 
     expect(
-      await screen.findByText("Talent ini sudah memiliki assignment aktif pada project tersebut.")
+      await screen.findByText("Talent ini sudah memiliki assignment aktif pada project tersebut."),
     ).toBeInTheDocument();
     expect(screen.queryByText(/perubahan tersimpan/i)).toBeNull();
   });
@@ -790,7 +943,9 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       },
     ]);
 
-    const editForm = await screen.findByRole("button", { name: /simpan/i }).then((b) => b.closest("form")!);
+    const editForm = await screen
+      .findByRole("button", { name: /simpan/i })
+      .then((b) => b.closest("form")!);
     fireEvent.submit(editForm);
 
     expect(await screen.findByText("Anda tidak memiliki izin untuk aksi ini.")).toBeInTheDocument();
@@ -801,15 +956,31 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
     await renderDetail([
       ...baseDetailMocks,
       {
-        request: { query: EndAssignmentDocument, variables: { id: "asg-1", periodEnd: "2025-12-31" } },
-        result: { data: { endAssignment: { __typename: "Assignment", id: "asg-1", status: "COMPLETED", periodEnd: "2025-12-31" } } },
+        request: {
+          query: EndAssignmentDocument,
+          variables: { id: "asg-1", periodEnd: "2025-12-31" },
+        },
+        result: {
+          data: {
+            endAssignment: {
+              __typename: "Assignment",
+              id: "asg-1",
+              status: "COMPLETED",
+              periodEnd: "2025-12-31",
+            },
+          },
+        },
       },
     ]);
 
-    const endForm = await screen.findByRole("button", { name: /akhiri assignment/i }).then((b) => b.closest("form")!);
+    const endForm = await screen
+      .findByRole("button", { name: /akhiri assignment/i })
+      .then((b) => b.closest("form")!);
     // Tanpa default otomatis: input mulai kosong (T004).
     expect((within(endForm).getByLabelText(/tanggal selesai/i) as HTMLInputElement).value).toBe("");
-    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), { target: { value: "2025-12-31" } });
+    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), {
+      target: { value: "2025-12-31" },
+    });
     fireEvent.submit(endForm);
 
     expect(await screen.findByText(/assignment selesai/i)).toBeInTheDocument();
@@ -820,18 +991,26 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
   it("rejects an end date earlier than the start date before sending the mutation (T005)", async () => {
     await renderDetail(baseDetailMocks);
 
-    const endForm = await screen.findByRole("button", { name: /akhiri assignment/i }).then((b) => b.closest("form")!);
-    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), { target: { value: "2025-06-30" } });
+    const endForm = await screen
+      .findByRole("button", { name: /akhiri assignment/i })
+      .then((b) => b.closest("form")!);
+    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), {
+      target: { value: "2025-06-30" },
+    });
     fireEvent.submit(endForm);
 
-    expect(await screen.findByText(/tidak boleh lebih awal dari tanggal mulai/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/tidak boleh lebih awal dari tanggal mulai/i),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/assignment selesai/i)).toBeNull();
   });
 
   it("requires the end date to be filled before ending (FR-06)", async () => {
     await renderDetail(baseDetailMocks);
 
-    const endForm = await screen.findByRole("button", { name: /akhiri assignment/i }).then((b) => b.closest("form")!);
+    const endForm = await screen
+      .findByRole("button", { name: /akhiri assignment/i })
+      .then((b) => b.closest("form")!);
     fireEvent.submit(endForm);
 
     expect(await screen.findByText(/tanggal selesai wajib diisi/i)).toBeInTheDocument();
@@ -841,7 +1020,10 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
     await renderDetail([
       ...baseDetailMocks,
       {
-        request: { query: EndAssignmentDocument, variables: { id: "asg-1", periodEnd: "2025-12-31" } },
+        request: {
+          query: EndAssignmentDocument,
+          variables: { id: "asg-1", periodEnd: "2025-12-31" },
+        },
         result: {
           errors: [
             new GraphQLError("assignment sudah selesai sebelumnya", {
@@ -852,8 +1034,12 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       },
     ]);
 
-    const endForm = await screen.findByRole("button", { name: /akhiri assignment/i }).then((b) => b.closest("form")!);
-    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), { target: { value: "2025-12-31" } });
+    const endForm = await screen
+      .findByRole("button", { name: /akhiri assignment/i })
+      .then((b) => b.closest("form")!);
+    fireEvent.change(within(endForm).getByLabelText(/tanggal selesai/i), {
+      target: { value: "2025-12-31" },
+    });
     fireEvent.submit(endForm);
 
     expect(await screen.findByText("assignment sudah selesai sebelumnya")).toBeInTheDocument();
@@ -864,7 +1050,12 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
   for (const role of ["OPERATION", "TALENT"] as const) {
     it(`hides the edit and end actions for ${role} (T033)`, async () => {
       auth.role = role;
-      await renderDetail([{ request: { query: AssignmentsDocument, variables: { first: 100 } }, result: assignmentsResult }]);
+      await renderDetail([
+        {
+          request: { query: AssignmentsDocument, variables: { first: 100 } },
+          result: assignmentsResult,
+        },
+      ]);
 
       expect(await screen.findByText("Talent")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /akhiri assignment/i })).toBeNull();
@@ -1001,9 +1192,18 @@ describe("Bulk assignment (TAN-337)", () => {
 
   function bulkMocks(...mutations: MockedResponse[]): MockedResponse[] {
     return [
-      { request: { query: AssignableTalentsDocument, variables: { first: 100 } }, result: bulkTalentsResult },
-      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: twoAssignmentsResult },
+      {
+        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        result: bulkTalentsResult,
+      },
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: projectsResult,
+      },
+      {
+        request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+        result: twoAssignmentsResult,
+      },
       ...mutations,
     ];
   }
@@ -1014,7 +1214,7 @@ describe("Bulk assignment (TAN-337)", () => {
         <ToastProvider>
           <AssignmentsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
   }
 
@@ -1060,8 +1260,18 @@ describe("Bulk assignment (TAN-337)", () => {
             variables: {
               input: {
                 rows: [
-                  { employeeId: "EMP-001", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
-                  { employeeId: "EMP-002", projectId: "prj-1", periodStart: "2025-08-01", periodEnd: "2025-12-31" },
+                  {
+                    employeeId: "EMP-001",
+                    projectId: "Network Modernization",
+                    periodStart: "2025-07-01",
+                    periodEnd: undefined,
+                  },
+                  {
+                    employeeId: "EMP-002",
+                    projectId: "prj-1",
+                    periodStart: "2025-08-01",
+                    periodEnd: "2025-12-31",
+                  },
                 ],
               },
             },
@@ -1070,14 +1280,17 @@ describe("Bulk assignment (TAN-337)", () => {
             data: {
               importAssignments: {
                 __typename: "BulkAssignmentResult",
-                succeeded: [createdRow(0, "emp-1", "asg-10", "Andi Pratama"), createdRow(1, "emp-2", "asg-11", "Budi Santoso")],
+                succeeded: [
+                  createdRow(0, "emp-1", "asg-10", "Andi Pratama"),
+                  createdRow(1, "emp-2", "asg-11", "Budi Santoso"),
+                ],
                 failed: [],
               },
             },
           },
         },
         listRefreshMock,
-      )
+      ),
     );
     await openBulkCreateModal();
     await uploadAssignmentFile([
@@ -1086,7 +1299,9 @@ describe("Bulk assignment (TAN-337)", () => {
     ]);
     fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/2 assignment berhasil dibuat massal/);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /2 assignment berhasil dibuat massal/,
+    );
     expect(screen.queryByRole("dialog", { name: /buat assignment massal/i })).toBeNull();
   });
 
@@ -1099,8 +1314,18 @@ describe("Bulk assignment (TAN-337)", () => {
             variables: {
               input: {
                 rows: [
-                  { employeeId: "EMP-001", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
-                  { employeeId: "EMP-002", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
+                  {
+                    employeeId: "EMP-001",
+                    projectId: "Network Modernization",
+                    periodStart: "2025-07-01",
+                    periodEnd: undefined,
+                  },
+                  {
+                    employeeId: "EMP-002",
+                    projectId: "Network Modernization",
+                    periodStart: "2025-07-01",
+                    periodEnd: undefined,
+                  },
                 ],
               },
             },
@@ -1128,7 +1353,7 @@ describe("Bulk assignment (TAN-337)", () => {
           },
         },
         listRefreshMock,
-      )
+      ),
     );
     await openBulkCreateModal();
     await uploadAssignmentFile([
@@ -1140,7 +1365,7 @@ describe("Bulk assignment (TAN-337)", () => {
     const summary = await screen.findByRole("status");
     expect(summary).toHaveTextContent("1 berhasil, 1 gagal.");
     expect(summary).toHaveTextContent(
-      "EMP-002 — Talent sudah memiliki assignment aktif pada project tersebut."
+      "EMP-002 — Talent sudah memiliki assignment aktif pada project tersebut.",
     );
     expect(screen.getByRole("dialog", { name: /buat assignment massal/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /ulangi 1 baris gagal/i })).toBeInTheDocument();
@@ -1153,7 +1378,12 @@ describe("Bulk assignment (TAN-337)", () => {
         variables: {
           input: {
             rows: [
-              { employeeId: "EMP-002", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
+              {
+                employeeId: "EMP-002",
+                projectId: "Network Modernization",
+                periodStart: "2025-07-01",
+                periodEnd: undefined,
+              },
             ],
           },
         },
@@ -1176,8 +1406,18 @@ describe("Bulk assignment (TAN-337)", () => {
             variables: {
               input: {
                 rows: [
-                  { employeeId: "EMP-001", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
-                  { employeeId: "EMP-002", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
+                  {
+                    employeeId: "EMP-001",
+                    projectId: "Network Modernization",
+                    periodStart: "2025-07-01",
+                    periodEnd: undefined,
+                  },
+                  {
+                    employeeId: "EMP-002",
+                    projectId: "Network Modernization",
+                    periodStart: "2025-07-01",
+                    periodEnd: undefined,
+                  },
                 ],
               },
             },
@@ -1206,7 +1446,7 @@ describe("Bulk assignment (TAN-337)", () => {
         },
         retryMock,
         listRefreshMock,
-      )
+      ),
     );
     await openBulkCreateModal();
     await uploadAssignmentFile([
@@ -1217,7 +1457,9 @@ describe("Bulk assignment (TAN-337)", () => {
     await screen.findByRole("status");
 
     fireEvent.click(screen.getByRole("button", { name: /ulangi 1 baris gagal/i }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/1 assignment berhasil dibuat massal/);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /1 assignment berhasil dibuat massal/,
+    );
     expect(screen.queryByRole("dialog", { name: /buat assignment massal/i })).toBeNull();
   });
 
@@ -1230,8 +1472,18 @@ describe("Bulk assignment (TAN-337)", () => {
             variables: {
               input: {
                 rows: [
-                  { employeeId: "EMP-001", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
-                  { employeeId: "EMP-002", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
+                  {
+                    employeeId: "EMP-001",
+                    projectId: "Network Modernization",
+                    periodStart: "2025-07-01",
+                    periodEnd: undefined,
+                  },
+                  {
+                    employeeId: "EMP-002",
+                    projectId: "Network Modernization",
+                    periodStart: "2025-07-01",
+                    periodEnd: undefined,
+                  },
                 ],
               },
             },
@@ -1261,7 +1513,8 @@ describe("Bulk assignment (TAN-337)", () => {
                     error: {
                       __typename: "BulkAssignmentError",
                       code: "PROJECT_INACTIVE",
-                      message: 'Project "Network Modernization" tidak ditemukan pada Master Data Project aktif.',
+                      message:
+                        'Project "Network Modernization" tidak ditemukan pada Master Data Project aktif.',
                     },
                   },
                 ],
@@ -1270,7 +1523,7 @@ describe("Bulk assignment (TAN-337)", () => {
           },
         },
         listRefreshMock,
-      )
+      ),
     );
     await openBulkCreateModal();
     await uploadAssignmentFile([
@@ -1281,8 +1534,12 @@ describe("Bulk assignment (TAN-337)", () => {
 
     const summary = await screen.findByRole("status");
     expect(summary).toHaveTextContent("0 berhasil, 2 gagal.");
-    expect(summary).toHaveTextContent('EMP-001 — Nomor induk "EMP-001" tidak dikenal sebagai talent.');
-    expect(summary).toHaveTextContent('EMP-002 — Project "Network Modernization" tidak ditemukan pada Master Data Project aktif.');
+    expect(summary).toHaveTextContent(
+      'EMP-001 — Nomor induk "EMP-001" tidak dikenal sebagai talent.',
+    );
+    expect(summary).toHaveTextContent(
+      'EMP-002 — Project "Network Modernization" tidak ditemukan pada Master Data Project aktif.',
+    );
     expect(screen.getByRole("dialog", { name: /buat assignment massal/i })).toBeInTheDocument();
   });
 
@@ -1308,7 +1565,12 @@ describe("Bulk assignment (TAN-337)", () => {
             variables: {
               input: {
                 rows: [
-                  { employeeId: "EMP-001", projectId: "Network Modernization", periodStart: "2025-07-01", periodEnd: undefined },
+                  {
+                    employeeId: "EMP-001",
+                    projectId: "Network Modernization",
+                    periodStart: "2025-07-01",
+                    periodEnd: undefined,
+                  },
                 ],
               },
             },
@@ -1324,7 +1586,7 @@ describe("Bulk assignment (TAN-337)", () => {
           },
         },
         listRefreshMock,
-      )
+      ),
     );
     await openBulkCreateModal();
     await uploadAssignmentFile([
@@ -1340,7 +1602,9 @@ describe("Bulk assignment (TAN-337)", () => {
     expect(invalid).toHaveTextContent("Baris 5: kolom project_id wajib diisi");
 
     fireEvent.submit(screen.getByRole("form", { name: /buat assignment massal/i }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/1 assignment berhasil dibuat massal/);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /1 assignment berhasil dibuat massal/,
+    );
   });
 
   it("rejects a template whose first row lacks the import columns (FR-12)", async () => {
@@ -1375,7 +1639,10 @@ describe("Bulk assignment (TAN-337)", () => {
     renderBulkPage(bulkMocks());
     await openBulkCreateModal();
 
-    await uploadAssignmentFile([["EMP-001", "Network Modernization", "2025-07-01", ""]], { awaitRead: false, name: "talent.csv" });
+    await uploadAssignmentFile([["EMP-001", "Network Modernization", "2025-07-01", ""]], {
+      awaitRead: false,
+      name: "talent.csv",
+    });
     expect(await screen.findByRole("alert")).toHaveTextContent("Berkas harus berformat .xlsx.");
   });
 
@@ -1383,7 +1650,12 @@ describe("Bulk assignment (TAN-337)", () => {
     renderBulkPage(bulkMocks());
     await openBulkCreateModal();
     await uploadAssignmentFile(
-      Array.from({ length: 101 }, (_, i) => [`EMP-${String(i + 1).padStart(3, "0")}`, "Network Modernization", "2025-07-01", ""]),
+      Array.from({ length: 101 }, (_, i) => [
+        `EMP-${String(i + 1).padStart(3, "0")}`,
+        "Network Modernization",
+        "2025-07-01",
+        "",
+      ]),
       { awaitRead: false },
     );
     expect(
@@ -1395,13 +1667,21 @@ describe("Bulk assignment (TAN-337)", () => {
     ).toBeInTheDocument();
   });
 
-
   it("hides selection and bulk actions from non-managing roles (T033/FR-08)", async () => {
     auth.role = "OPERATION";
     renderBulkPage([
-      { request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } }, result: employeesResult },
-      { request: { query: ProjectsDocument, variables: { includeInactive: true } }, result: projectsResult },
-      { request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } }, result: twoAssignmentsResult },
+      {
+        request: { query: EmployeesDocument, variables: { filter: {}, first: 25, after: null } },
+        result: employeesResult,
+      },
+      {
+        request: { query: ProjectsDocument, variables: { includeInactive: true } },
+        result: projectsResult,
+      },
+      {
+        request: { query: AssignmentsDocument, variables: { filter: {}, first: 100 } },
+        result: twoAssignmentsResult,
+      },
     ]);
 
     expect(await screen.findByRole("link", { name: "Andi Pratama" })).toBeInTheDocument();
@@ -1417,7 +1697,12 @@ describe("Bulk assignment (TAN-337)", () => {
           request: {
             query: BulkUpdateAssignmentsDocument,
             variables: {
-              input: { ids: ["asg-1"], projectId: "prj-1", periodStart: undefined, periodEnd: undefined },
+              input: {
+                ids: ["asg-1"],
+                projectId: "prj-1",
+                periodStart: undefined,
+                periodEnd: undefined,
+              },
             },
           },
           result: {
@@ -1431,7 +1716,7 @@ describe("Bulk assignment (TAN-337)", () => {
           },
         },
         listRefreshMock,
-      )
+      ),
     );
     await selectRow("Andi Pratama");
     await selectRow("Budi Santoso");
@@ -1447,7 +1732,9 @@ describe("Bulk assignment (TAN-337)", () => {
     });
     fireEvent.submit(editForm);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/1 assignment berhasil diubah massal/);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /1 assignment berhasil diubah massal/,
+    );
     expect(screen.queryByRole("dialog", { name: /ubah assignment massal/i })).toBeNull();
   });
 
@@ -1470,14 +1757,16 @@ describe("Bulk assignment (TAN-337)", () => {
             data: {
               bulkDeleteAssignments: {
                 __typename: "BulkAssignmentResult",
-                succeeded: [{ __typename: "BulkAssignmentItemResult", index: 0, assignmentId: "asg-1" }],
+                succeeded: [
+                  { __typename: "BulkAssignmentItemResult", index: 0, assignmentId: "asg-1" },
+                ],
                 failed: [],
               },
             },
           },
         },
         listRefreshMock,
-      )
+      ),
     );
     await selectRow("Andi Pratama");
     fireEvent.click(screen.getByRole("button", { name: /hapus massal/i }));
@@ -1509,7 +1798,8 @@ describe("Bulk assignment (TAN-337)", () => {
                     error: {
                       __typename: "BulkAssignmentError",
                       code: "REFERENCED",
-                      message: "Assignment masih dirujuk aktivitas kerja personal dan tidak dapat dihapus.",
+                      message:
+                        "Assignment masih dirujuk aktivitas kerja personal dan tidak dapat dihapus.",
                     },
                   },
                 ],
@@ -1518,7 +1808,7 @@ describe("Bulk assignment (TAN-337)", () => {
           },
         },
         listRefreshMock,
-      )
+      ),
     );
     await selectRow("Andi Pratama");
     fireEvent.click(screen.getByRole("button", { name: /hapus massal/i }));
@@ -1528,7 +1818,7 @@ describe("Bulk assignment (TAN-337)", () => {
     const summary = await screen.findByRole("status");
     expect(summary).toHaveTextContent("0 berhasil, 1 gagal.");
     expect(summary).toHaveTextContent(
-      "Andi Pratama → Network Modernization — Assignment masih dirujuk aktivitas kerja personal dan tidak dapat dihapus."
+      "Andi Pratama → Network Modernization — Assignment masih dirujuk aktivitas kerja personal dan tidak dapat dihapus.",
     );
     expect(screen.getByRole("dialog", { name: /hapus assignment massal/i })).toBeInTheDocument();
   });

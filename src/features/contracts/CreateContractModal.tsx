@@ -63,13 +63,7 @@ const EMPTY: FormValues = {
 const CONFLICT_MESSAGE =
   "Nomor kontrak atau nomor induk sudah dipakai. Periksa kembali isian tersebut.";
 
-export function CreateContractModal({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+export function CreateContractModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const units = useUnits();
   const jobRoles = useJobRoles();
   const employees = useEmployees({}, 100);
@@ -144,7 +138,7 @@ export function CreateContractModal({
   }
 
   const selectedJobRole = values.jobRoleId
-    ? (jobRoles.data ?? []).find((jr) => jr.id === values.jobRoleId) ?? null
+    ? ((jobRoles.data ?? []).find((jr) => jr.id === values.jobRoleId) ?? null)
     : null;
 
   async function onSubmit(e: React.FormEvent) {
@@ -186,7 +180,7 @@ export function CreateContractModal({
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         CONFLICT_MESSAGE,
-        "Gagal membuat kontrak."
+        "Gagal membuat kontrak.",
       );
       if (submitError.field && submitError.field in values) {
         setErrors((prev) => ({
@@ -285,7 +279,9 @@ export function CreateContractModal({
         <InputControl
           error={errors.jobRoleId}
           helper={
-            selectedJobRole ? `Chapter: ${selectedJobRole.chapter?.name ?? "Tanpa chapter"}` : undefined
+            selectedJobRole
+              ? `Chapter: ${selectedJobRole.chapter?.name ?? "Tanpa chapter"}`
+              : undefined
           }
           label="Posisi / Job Role"
         >

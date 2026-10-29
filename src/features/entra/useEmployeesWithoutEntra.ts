@@ -9,8 +9,7 @@ import {
 } from "@/generated/graphql";
 import type { EntraEmployeeSortField, SortDirection } from "@/generated/graphql/types";
 
-type EmployeeNode =
-  EmployeesWithoutEntraQuery["employeesWithoutEntra"]["edges"][number]["node"];
+type EmployeeNode = EmployeesWithoutEntraQuery["employeesWithoutEntra"]["edges"][number]["node"];
 
 /** Default page size of the FR-44 list — shared with refetches after provisioning. */
 export const ENTRA_LIST_VARIABLES = {
@@ -44,7 +43,7 @@ export type EmployeesWithoutEntraState = {
  * server-side so cursor pagination stays consistent across pages.
  */
 export function useEmployeesWithoutEntra(
-  options: EmployeesWithoutEntraOptions = {}
+  options: EmployeesWithoutEntraOptions = {},
 ): EmployeesWithoutEntraState {
   const { search = "", sortBy = "FULL_NAME", sortDirection = "ASC" } = options;
   const variables = React.useMemo<EmployeesWithoutEntraQueryVariables>(
@@ -55,7 +54,7 @@ export function useEmployeesWithoutEntra(
       sortBy,
       sortDirection,
     }),
-    [search, sortBy, sortDirection]
+    [search, sortBy, sortDirection],
   );
 
   const { loading, error, data, fetchMore } = useQuery<
@@ -81,7 +80,7 @@ export function useEmployeesWithoutEntra(
         if (!fetchMoreResult?.employeesWithoutEntra) return prev;
         const seen = new Set(prev.employeesWithoutEntra.edges.map((edge) => edge.node.id));
         const appended = fetchMoreResult.employeesWithoutEntra.edges.filter(
-          (edge) => !seen.has(edge.node.id)
+          (edge) => !seen.has(edge.node.id),
         );
         return {
           employeesWithoutEntra: {

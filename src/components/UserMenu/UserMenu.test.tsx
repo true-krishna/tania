@@ -43,9 +43,7 @@ describe("UserMenu", () => {
   });
 
   it("falls back to the role label when there is no email", () => {
-    render(
-      <UserMenu name="Admin" onLogout={() => {}} roleLabel="Administrator" />,
-    );
+    render(<UserMenu name="Admin" onLogout={() => {}} roleLabel="Administrator" />);
     fireEvent.click(screen.getByRole("button", { name: "Menu akun: Admin" }));
     expect(screen.getAllByText("Administrator").length).toBeGreaterThan(0);
   });

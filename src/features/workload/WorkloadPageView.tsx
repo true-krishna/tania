@@ -63,7 +63,9 @@ export function WorkloadPageView() {
 
   const tabs = tabsForRole(role);
   const [activeTab, setActiveTab] = React.useState<TabId>(tabs[0].id as TabId);
-  const selectedTab: TabId = tabs.some((t) => t.id === activeTab) ? activeTab : (tabs[0].id as TabId);
+  const selectedTab: TabId = tabs.some((t) => t.id === activeTab)
+    ? activeTab
+    : (tabs[0].id as TabId);
 
   function setPeriod(nextPeriodId: string) {
     router.replace(`${WORKLOAD}?period=${nextPeriodId}`);
@@ -135,7 +137,11 @@ export function WorkloadPageView() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         {tabs.length > 1 ? (
-          <WorkloadTabs onChange={(id) => setActiveTab(id as TabId)} tabs={tabs} value={selectedTab} />
+          <WorkloadTabs
+            onChange={(id) => setActiveTab(id as TabId)}
+            tabs={tabs}
+            value={selectedTab}
+          />
         ) : (
           <span />
         )}

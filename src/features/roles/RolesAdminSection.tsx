@@ -110,10 +110,7 @@ export function RolesAdminSection() {
     try {
       await report(
         () =>
-          mutations.saveMenuAccess(
-            role.id,
-            gridInput(draft[role.id] ?? {}, baselineGrid(role)),
-          ),
+          mutations.saveMenuAccess(role.id, gridInput(draft[role.id] ?? {}, baselineGrid(role))),
         `Konfigurasi menu ${role.label} tersimpan.`,
       );
       clearRoleDraft(role.id);
@@ -173,7 +170,10 @@ export function RolesAdminSection() {
         {allRoles.length ? (
           <p className="text-xs text-tp-muted">
             {allRoles
-              .map((role) => `${role.label}: ${visibleRowCount(draft[role.id] ?? {})}/${MENU_ROWS.length}`)
+              .map(
+                (role) =>
+                  `${role.label}: ${visibleRowCount(draft[role.id] ?? {})}/${MENU_ROWS.length}`,
+              )
               .join(" · ")}
           </p>
         ) : null}

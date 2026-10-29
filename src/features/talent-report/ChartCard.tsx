@@ -20,12 +20,7 @@ export function ChartCard({ title, subtitle, onDownload, children }: ChartCardPr
           <h2 className="tp-h3">{title}</h2>
           <p className="tp-label">{subtitle}</p>
         </div>
-        <Button
-          disabled={!onDownload}
-          onClick={onDownload}
-          type="button"
-          variant="secondary"
-        >
+        <Button disabled={!onDownload} onClick={onDownload} type="button" variant="secondary">
           <IconDownload aria-hidden="true" size={16} />
           Unduh PNG
         </Button>

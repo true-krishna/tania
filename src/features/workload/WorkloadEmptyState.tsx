@@ -7,8 +7,7 @@ export type EmptyStateVariant = "no-data" | "tms-null-self" | "tms-null-other";
 const COPY: Record<EmptyStateVariant, { lead: string; body: string }> = {
   "no-data": {
     lead: "Belum ada data workload untuk periode ini.",
-    body:
-      "Tidak ada aktivitas tercatat di WAD untuk periode ini. Angka nol sengaja tidak ditampilkan agar tidak menyesatkan — beban kerja akan tampil setelah aktivitas tercatat.",
+    body: "Tidak ada aktivitas tercatat di WAD untuk periode ini. Angka nol sengaja tidak ditampilkan agar tidak menyesatkan — beban kerja akan tampil setelah aktivitas tercatat.",
   },
   "tms-null-self": {
     lead: "Anda belum terhubung ke TMS.",
@@ -16,8 +15,7 @@ const COPY: Record<EmptyStateVariant, { lead: string; body: string }> = {
   },
   "tms-null-other": {
     lead: "Talent ini belum terhubung ke TMS.",
-    body:
-      "Data workload akan tampil setelah TMS ID diisi pada data master karyawan. Hubungi Operation/Admin untuk melengkapinya.",
+    body: "Data workload akan tampil setelah TMS ID diisi pada data master karyawan. Hubungi Operation/Admin untuk melengkapinya.",
   },
 };
 

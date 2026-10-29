@@ -22,9 +22,7 @@ export function TalentTable({
   const filtered = rows.filter(
     (row) =>
       !query ||
-      [row.nama, row.tribe, row.squad].some((value) =>
-        (value ?? "").toLowerCase().includes(query),
-      ),
+      [row.nama, row.tribe, row.squad].some((value) => (value ?? "").toLowerCase().includes(query)),
   );
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize);
 
@@ -64,7 +62,12 @@ export function TalentTable({
           },
           { key: "tribe", title: "Tribe", render: (_value, row) => row.tribe ?? "—" },
           { key: "squad", title: "Squad", render: (_value, row) => row.squad ?? "—" },
-          { key: "fte", title: "Beban (FTE)", align: "right", render: (_value, row) => `${row.fte}%` },
+          {
+            key: "fte",
+            title: "Beban (FTE)",
+            align: "right",
+            render: (_value, row) => `${row.fte}%`,
+          },
           {
             key: "statusLoad",
             title: "Status beban",

@@ -28,13 +28,18 @@ const ROLES: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"]
 
 /** Sidebar hrefs, flattened — the grid must equal this set, id for id. */
 const NAV_ENTRY_IDS = NAV.flatMap((entry) =>
-  entry.kind === "link" ? [menuEntryIdForHref(entry.href)] : entry.children.map((c) => menuEntryIdForHref(c.href)),
+  entry.kind === "link"
+    ? [menuEntryIdForHref(entry.href)]
+    : entry.children.map((c) => menuEntryIdForHref(c.href)),
 );
 
 /** The server's cells for one role: the default matrix, as `roleMenuConfig` returns it. */
 function cellsOf(role: string): GridCell[] {
   return MENU_ROWS.map((row) => {
-    const cell = DEFAULT_MENU_ACCESS[role][row.id] ?? { visible: false, accessLevel: "NONE" as const };
+    const cell = DEFAULT_MENU_ACCESS[role][row.id] ?? {
+      visible: false,
+      accessLevel: "NONE" as const,
+    };
     return {
       roleId: `role-${role.toLowerCase()}`,
       roleName: role,
@@ -61,20 +66,33 @@ describe("MENU_ROWS mengikuti katalog menu", () => {
   });
 
   it("setiap entri punya default di matriks 002 — tidak ada menu tanpa akses awal", () => {
-    const inMatrix = new Set(Object.values(DEFAULT_MENU_ACCESS).flatMap((grid) => Object.keys(grid)));
+    const inMatrix = new Set(
+      Object.values(DEFAULT_MENU_ACCESS).flatMap((grid) => Object.keys(grid)),
+    );
     for (const row of MENU_ROWS) {
       expect(inMatrix.has(row.id), `${row.id} tidak ada di DEFAULT_MENU_ACCESS`).toBe(true);
     }
     // And the other way round: no entry of the matrix is unreachable from the grid.
     for (const id of inMatrix) {
-      expect(MENU_ROWS.some((row) => row.id === id), `${id} tidak muncul di grid`).toBe(true);
+      expect(
+        MENU_ROWS.some((row) => row.id === id),
+        `${id} tidak muncul di grid`,
+      ).toBe(true);
     }
   });
 
   it("menandai entri bersarang dengan label induknya", () => {
     const nested = MENU_ROWS.filter((row) => row.parent);
     expect(nested.map((row) => row.id)).toContain("evaluations/periods");
-    expect(nested.every((row) => row.parent === "Evaluations" || row.parent === "Master Data" || row.parent === "Employee" || row.parent === "Workload")).toBe(true);
+    expect(
+      nested.every(
+        (row) =>
+          row.parent === "Evaluations" ||
+          row.parent === "Master Data" ||
+          row.parent === "Employee" ||
+          row.parent === "Workload",
+      ),
+    ).toBe(true);
   });
 });
 
@@ -135,7 +153,10 @@ describe("draft grid", () => {
   });
 
   it("gridInput mengirim seluruh katalog, dengan visible mengikuti level", () => {
-    const input = gridInput({ idp: cellOf("READ"), accounts: { visible: true, accessLevel: "NONE" } });
+    const input = gridInput({
+      idp: cellOf("READ"),
+      accounts: { visible: true, accessLevel: "NONE" },
+    });
     expect(input).toHaveLength(MENU_ROWS.length);
     expect(input.find((cell) => cell.menuEntryId === "idp")).toEqual({
       menuEntryId: "idp",
@@ -179,7 +200,9 @@ describe("draft grid", () => {
   it("visibleRowCount menghitung menu yang tampil", () => {
     const talent = gridOf(cellsOf("TALENT"), "TALENT");
     expect(visibleRowCount(talent)).toBe(
-      MENU_ROWS.filter((row) => (DEFAULT_MENU_ACCESS["TALENT"][row.id]?.accessLevel ?? "NONE") !== "NONE").length,
+      MENU_ROWS.filter(
+        (row) => (DEFAULT_MENU_ACCESS["TALENT"][row.id]?.accessLevel ?? "NONE") !== "NONE",
+      ).length,
     );
     expect(visibleRowCount({})).toBe(0);
   });
@@ -187,7 +210,9 @@ describe("draft grid", () => {
   it("gridCells menyiapkan pratinjau dari draft yang belum disimpan", () => {
     const cells = gridCells("role-talent", "TALENT", { idp: cellOf("NONE") });
     expect(cells).toHaveLength(MENU_ROWS.length);
-    expect(cells.every((cell) => cell.roleName === "TALENT" && cell.roleId === "role-talent")).toBe(true);
+    expect(cells.every((cell) => cell.roleName === "TALENT" && cell.roleId === "role-talent")).toBe(
+      true,
+    );
     expect(cells.find((cell) => cell.menuEntryId === "idp")?.visible).toBe(false);
   });
 });

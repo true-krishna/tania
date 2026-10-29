@@ -80,7 +80,7 @@ export function useCvCollection<TItem, TValues, TInput>({
           ? error.message
           : isEditing
             ? messages.updateFailed
-            : messages.addFailed
+            : messages.addFailed,
       );
     }
   }
@@ -90,10 +90,7 @@ export function useCvCollection<TItem, TValues, TInput>({
       await remove({ variables: { id } });
       pushToast("success", messages.deleted);
     } catch (error) {
-      pushToast(
-        "error",
-        error instanceof Error ? error.message : messages.deleteFailed
-      );
+      pushToast("error", error instanceof Error ? error.message : messages.deleteFailed);
     }
   }
 

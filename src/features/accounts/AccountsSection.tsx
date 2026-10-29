@@ -140,17 +140,13 @@ export function AccountsSection({
     {
       key: "role",
       title: "Peran",
-      render: (_value, account) => (
-        <RoleBadge options={options} roleName={account.roleName} />
-      ),
+      render: (_value, account) => <RoleBadge options={options} roleName={account.roleName} />,
     },
     {
       key: "chapter",
       title: "Chapter",
       render: (_value, account) =>
-        account.accessRole !== "CHAPTER"
-          ? "—"
-          : orDash(account.employee?.chapter?.name),
+        account.accessRole !== "CHAPTER" ? "—" : orDash(account.employee?.chapter?.name),
     },
     {
       key: "status",
@@ -184,10 +180,7 @@ export function AccountsSection({
               {
                 label: account.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan",
                 onSelect: () =>
-                  void onSetStatus(
-                    account.id,
-                    account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                  ),
+                  void onSetStatus(account.id, account.status === "ACTIVE" ? "INACTIVE" : "ACTIVE"),
               },
               { label: "Cabut Sesi", onSelect: () => setConfirmRevokeId(account.id) },
             ]}

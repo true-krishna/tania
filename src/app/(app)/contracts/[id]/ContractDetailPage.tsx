@@ -131,9 +131,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Chapter</dt>
-            <dd className="text-zinc-900">
-              {contract.jobRole.chapter?.name ?? "Tanpa chapter"}
-            </dd>
+            <dd className="text-zinc-900">{contract.jobRole.chapter?.name ?? "Tanpa chapter"}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Job Title</dt>
@@ -183,7 +181,10 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <dt className="text-xs uppercase tracking-wide text-zinc-500">Kontrak Pendahulu</dt>
             <dd className="text-zinc-900">
               {contract.predecessor ? (
-                <Link className="text-tp-brand-red-deep hover:underline" href={CONTRACT_DETAIL(contract.predecessor.id)}>
+                <Link
+                  className="text-tp-brand-red-deep hover:underline"
+                  href={CONTRACT_DETAIL(contract.predecessor.id)}
+                >
                   {contract.predecessor.contractNo}
                 </Link>
               ) : (
@@ -234,7 +235,7 @@ function ContractEditForm({
     UpdateEmploymentContractDocument,
     {
       refetchQueries: [{ query: EmploymentContractDocument, variables: { id } }],
-    }
+    },
   );
   const [values, setValues] = React.useState<FormValues>(() => ({
     contractNo: contract.contractNo ?? "",
@@ -287,7 +288,7 @@ function ContractEditForm({
       const submitError = mapSubmitError(
         err instanceof ApolloError ? err : null,
         CONFLICT_MESSAGE,
-        "Gagal menyimpan perubahan."
+        "Gagal menyimpan perubahan.",
       );
       if (submitError.field && submitError.field in values) {
         setErrors((prev) => ({
@@ -363,11 +364,7 @@ function ContractEditForm({
         />
       </InputControl>
       <InputControl error={errors.notes} helper="(opsional)" label="Catatan">
-        <Input
-          onChange={(e) => set("notes", e.target.value)}
-          type="text"
-          value={values.notes}
-        />
+        <Input onChange={(e) => set("notes", e.target.value)} type="text" value={values.notes} />
       </InputControl>
       <div className="flex gap-2">
         <Button disabled={saving} type="submit">

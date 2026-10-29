@@ -25,10 +25,7 @@ import {
   UpdateDevelopmentActionStatusDocument,
 } from "@/generated/graphql";
 import { IDP } from "@/lib/constants/routes";
-import type {
-  DevelopmentActionStatus,
-  DevelopmentMethod,
-} from "@/generated/graphql/types";
+import type { DevelopmentActionStatus, DevelopmentMethod } from "@/generated/graphql/types";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -121,7 +118,11 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
       await addAction({
         variables: {
           idpId: id,
-          input: { description: actionDesc.trim(), method: actionMethod, dueDate: actionDue || undefined },
+          input: {
+            description: actionDesc.trim(),
+            method: actionMethod,
+            dueDate: actionDue || undefined,
+          },
         },
       });
       setActionDesc("");
@@ -143,7 +144,11 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
       await addReview({
         variables: {
           idpId: id,
-          input: { reviewDate, summary: reviewSummary.trim(), followUp: reviewFollowUp.trim() || undefined },
+          input: {
+            reviewDate,
+            summary: reviewSummary.trim(),
+            followUp: reviewFollowUp.trim() || undefined,
+          },
         },
       });
       setReviewDate("");
@@ -182,13 +187,18 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
       <ToastStack onDismiss={dismissToast} toasts={toasts} />
 
       <Card className="max-w-3xl">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">Komponen IDP</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          Komponen IDP
+        </h2>
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Definition label="Development Objective" value={idp.developmentObjective} />
           <Definition label="Penilaian Kondisi Saat Ini" value={idp.currentAssessment} />
           <Definition label="Identifikasi Gap" value={idp.gapAnalysis} />
           <Definition label="Success Indicators" value={idp.successIndicators} />
-          <Definition label="Timeline & Milestone" value={`${idp.timelineStart} — ${idp.timelineEnd}`} />
+          <Definition
+            label="Timeline & Milestone"
+            value={`${idp.timelineStart} — ${idp.timelineEnd}`}
+          />
         </dl>
       </Card>
 
@@ -218,13 +228,18 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                     className="w-fit h-8 text-xs"
                     onChange={(e) => {
                       const status = e.target.value as DevelopmentActionStatus;
-                      updateActionStatus({ variables: { id: action.id, status } }).catch((err: unknown) => {
-                        addToast("error", err instanceof Error ? err.message : "Gagal memperbarui status aksi.");
-                      });
+                      updateActionStatus({ variables: { id: action.id, status } }).catch(
+                        (err: unknown) => {
+                          addToast(
+                            "error",
+                            err instanceof Error ? err.message : "Gagal memperbarui status aksi.",
+                          );
+                        },
+                      );
                     }}
-                    options={(["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]).map(
-                      (s) => ({ value: s, label: ACTION_STATUS_LABEL[s] }),
-                    )}
+                    options={(
+                      ["TODO", "IN_PROGRESS", "COMPLETED"] as DevelopmentActionStatus[]
+                    ).map((s) => ({ value: s, label: ACTION_STATUS_LABEL[s] }))}
                     value={action.status}
                   />
                 ) : (
@@ -236,37 +251,51 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         )}
 
         {managing ? (
-          <form className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4" onSubmit={handleAddAction}>
-          <h3 className="text-sm font-medium text-zinc-700">Tambah aksi pengembangan</h3>          <InputControl label="Deskripsi / tindakan">
-            <Input onChange={(e) => setActionDesc(e.target.value)} placeholder="Mis. Ikuti training Go lanjutan" value={actionDesc} />
-          </InputControl>
-          <div className="grid grid-cols-2 gap-3">
-            <InputControl label="Metode">
-              <Select
-                onChange={(e) => setActionMethod(e.target.value as DevelopmentMethod)}
-                options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
-                  value: m,
-                  label: METHOD_LABEL[m],
-                }))}
-                value={actionMethod}
+          <form
+            className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4"
+            onSubmit={handleAddAction}
+          >
+            <h3 className="text-sm font-medium text-zinc-700">Tambah aksi pengembangan</h3>{" "}
+            <InputControl label="Deskripsi / tindakan">
+              <Input
+                onChange={(e) => setActionDesc(e.target.value)}
+                placeholder="Mis. Ikuti training Go lanjutan"
+                value={actionDesc}
               />
             </InputControl>
-            <InputControl label="Tenggat (opsional)">
-              <Input onChange={(e) => setActionDue(e.target.value)} type="date" value={actionDue} />
-            </InputControl>
-          </div>
-          {actionError ? <p className="text-xs text-red-600">{actionError}</p> : null}
-          <div>
-            <Button disabled={addingAction} type="submit">
-              Tambah aksi
-            </Button>
-          </div>
+            <div className="grid grid-cols-2 gap-3">
+              <InputControl label="Metode">
+                <Select
+                  onChange={(e) => setActionMethod(e.target.value as DevelopmentMethod)}
+                  options={(Object.keys(METHOD_LABEL) as DevelopmentMethod[]).map((m) => ({
+                    value: m,
+                    label: METHOD_LABEL[m],
+                  }))}
+                  value={actionMethod}
+                />
+              </InputControl>
+              <InputControl label="Tenggat (opsional)">
+                <Input
+                  onChange={(e) => setActionDue(e.target.value)}
+                  type="date"
+                  value={actionDue}
+                />
+              </InputControl>
+            </div>
+            {actionError ? <p className="text-xs text-red-600">{actionError}</p> : null}
+            <div>
+              <Button disabled={addingAction} type="submit">
+                Tambah aksi
+              </Button>
+            </div>
           </form>
         ) : null}
       </Card>
 
       <Card className="max-w-3xl">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">Riwayat Review</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          Riwayat Review
+        </h2>
         {idp.reviews.length === 0 ? (
           <p className="text-sm text-zinc-500">Belum ada catatan review.</p>
         ) : (
@@ -289,44 +318,54 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
         )}
 
         {managing ? (
-          <form className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4" onSubmit={handleAddReview}>
-          <h3 className="text-sm font-medium text-zinc-700">Catat hasil review</h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <InputControl label="Tanggal review">
-              <Input aria-label="Tanggal review" onChange={(e) => setReviewDate(e.target.value)} type="date" value={reviewDate} />
+          <form
+            className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4"
+            onSubmit={handleAddReview}
+          >
+            <h3 className="text-sm font-medium text-zinc-700">Catat hasil review</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <InputControl label="Tanggal review">
+                <Input
+                  aria-label="Tanggal review"
+                  onChange={(e) => setReviewDate(e.target.value)}
+                  type="date"
+                  value={reviewDate}
+                />
+              </InputControl>
+            </div>
+            <InputControl label="Ringkasan hasil">
+              <textarea
+                aria-label="Ringkasan hasil"
+                className={BLOCK}
+                onChange={(e) => setReviewSummary(e.target.value)}
+                placeholder="Catat perkembangan talent sejak review terakhir…"
+                rows={3}
+                value={reviewSummary}
+              />
             </InputControl>
-          </div>
-          <InputControl label="Ringkasan hasil">
-            <textarea
-              aria-label="Ringkasan hasil"
-              className={BLOCK}
-              onChange={(e) => setReviewSummary(e.target.value)}
-              placeholder="Catat perkembangan talent sejak review terakhir…"
-              rows={3}
-              value={reviewSummary}
-            />
-          </InputControl>
-          <InputControl label="Tindak lanjut (opsional)">
-            <textarea
-              aria-label="Tindak lanjut"
-              className={BLOCK}
-              onChange={(e) => setReviewFollowUp(e.target.value)}
-              rows={2}
-              value={reviewFollowUp}
-            />
-          </InputControl>
-          {reviewError ? <p className="text-xs text-red-600">{reviewError}</p> : null}
-          <div>
-            <Button disabled={addingReview} type="submit">
-              Simpan review
-            </Button>
-          </div>
+            <InputControl label="Tindak lanjut (opsional)">
+              <textarea
+                aria-label="Tindak lanjut"
+                className={BLOCK}
+                onChange={(e) => setReviewFollowUp(e.target.value)}
+                rows={2}
+                value={reviewFollowUp}
+              />
+            </InputControl>
+            {reviewError ? <p className="text-xs text-red-600">{reviewError}</p> : null}
+            <div>
+              <Button disabled={addingReview} type="submit">
+                Simpan review
+              </Button>
+            </div>
           </form>
         ) : null}
       </Card>
 
       <Card className="max-w-3xl">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">Riwayat Revisi</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          Riwayat Revisi
+        </h2>
         {idp.revisions.length === 0 ? (
           <p className="text-sm text-zinc-500">Belum ada revisi dokumen.</p>
         ) : (
@@ -337,7 +376,9 @@ export default function IdpDetailPage({ params }: { params: Promise<{ id: string
                   Revisi #{rev.revisionNo}
                   <span className="text-xs text-zinc-500"> · {rev.createdAt}</span>
                 </p>
-                {rev.changeNote ? <p className="mt-0.5 text-sm text-zinc-600">{rev.changeNote}</p> : null}
+                {rev.changeNote ? (
+                  <p className="mt-0.5 text-sm text-zinc-600">{rev.changeNote}</p>
+                ) : null}
               </li>
             ))}
           </ul>

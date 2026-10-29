@@ -16,13 +16,10 @@ export function RenewContractModal({
 }) {
   const units = useUnits();
   const jobRoles = useJobRoles();
-  const { data: contractData, loading: contractLoading } = useQuery(
-    EmploymentContractDocument,
-    {
-      skip: !open || !contractId,
-      variables: { id: contractId ?? "" },
-    }
-  );
+  const { data: contractData, loading: contractLoading } = useQuery(EmploymentContractDocument, {
+    skip: !open || !contractId,
+    variables: { id: contractId ?? "" },
+  });
 
   return (
     <RenewContractDialog

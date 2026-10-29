@@ -12,15 +12,7 @@ type InputControlProps = {
 };
 
 export function InputControl(props: InputControlProps) {
-  const {
-    children,
-    className,
-    error,
-    helper,
-    htmlFor,
-    label,
-    required,
-  } = props;
+  const { children, className, error, helper, htmlFor, label, required } = props;
 
   return (
     <label

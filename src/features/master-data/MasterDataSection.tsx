@@ -37,9 +37,16 @@ type MasterDataSectionProps<T extends MasterDataItem> = {
   searchable?: boolean;
   bulkEntity?: MasterDataImportEntity;
   onCreate: (values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
-  onUpdate: (id: string, values: { name: string; selectValue?: string; code?: string }) => Promise<void>;
+  onUpdate: (
+    id: string,
+    values: { name: string; selectValue?: string; code?: string },
+  ) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
-  importSlot?: (controls: { close: () => void; onImported: () => void; open: boolean }) => React.ReactNode;
+  importSlot?: (controls: {
+    close: () => void;
+    onImported: () => void;
+    open: boolean;
+  }) => React.ReactNode;
 };
 
 export function MasterDataSection<T extends MasterDataItem>({
@@ -186,7 +193,9 @@ export function MasterDataSection<T extends MasterDataItem>({
             title: (
               <input
                 aria-label="Pilih semua baris di halaman ini"
-                checked={pageRows.length > 0 && pageRows.every((item) => selectedIdSet.has(item.id))}
+                checked={
+                  pageRows.length > 0 && pageRows.every((item) => selectedIdSet.has(item.id))
+                }
                 className="h-4 w-4"
                 onChange={(e) => toggleAllRows(e.target.checked)}
                 type="checkbox"
@@ -292,7 +301,11 @@ export function MasterDataSection<T extends MasterDataItem>({
         <ModalContent>
           <form className="flex flex-col gap-4" id={formId} onSubmit={handleSubmit}>
             <InputControl error={nameError} label={nameLabel}>
-              <Input onChange={(e) => setName(e.target.value)} placeholder="cth: Digital Business" value={name} />
+              <Input
+                onChange={(e) => setName(e.target.value)}
+                placeholder="cth: Digital Business"
+                value={name}
+              />
             </InputControl>
             {codeLabel ? (
               <InputControl error={codeError} label={codeLabel}>

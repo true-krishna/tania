@@ -65,9 +65,7 @@ function readSession(): Session | null {
 const REMEMBER_ME_MAX_AGE = 30 * 24 * 60 * 60;
 
 function readCookieValue(cookie: string): string | null {
-  const match = cookie.match(
-    new RegExp("(?:^|; )" + SESSION_COOKIE + "=([^;]*)")
-  );
+  const match = cookie.match(new RegExp("(?:^|; )" + SESSION_COOKIE + "=([^;]*)"));
   return match ? match[1] : null;
 }
 
@@ -81,10 +79,7 @@ export function getSession(): Session | null {
   return readSession();
 }
 
-export function setSession(
-  next: Session | null,
-  options?: { remember?: boolean },
-): void {
+export function setSession(next: Session | null, options?: { remember?: boolean }): void {
   if (typeof document === "undefined") return;
   if (!next) {
     clearSession();

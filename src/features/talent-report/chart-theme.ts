@@ -42,7 +42,7 @@ export interface ChartTheme {
 
 /** Nilai fallback = literal token `--tp-*` v4.3.1 di `src/app/globals.css`. */
 const FALLBACK: ChartTheme = {
-  fontFamily: 'Nunito Sans, system-ui, sans-serif',
+  fontFamily: "Nunito Sans, system-ui, sans-serif",
   textColor: "#212121",
   mutedColor: "#5e6c84",
   lineColor: "#dfe1e6",
@@ -54,8 +54,7 @@ const FALLBACK: ChartTheme = {
 
 function readToken(root: Element | undefined, name: string, fallback: string): string {
   const view =
-    root?.ownerDocument?.defaultView ??
-    (typeof window !== "undefined" ? window : undefined);
+    root?.ownerDocument?.defaultView ?? (typeof window !== "undefined" ? window : undefined);
   if (!view) return fallback;
   const target = root ?? view.document.documentElement;
   const value = view.getComputedStyle(target).getPropertyValue(name).trim();

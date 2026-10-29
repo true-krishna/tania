@@ -1,10 +1,7 @@
 "use client";
 
 import { useQuery } from "@apollo/client";
-import {
-  EmploymentContractDocument,
-  type EmploymentContractQuery,
-} from "@/generated/graphql";
+import { EmploymentContractDocument, type EmploymentContractQuery } from "@/generated/graphql";
 import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
 
 /**
@@ -12,7 +9,7 @@ import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
  * Backed by the served `employmentContract(id)` query.
  */
 export function useEmploymentContract(
-  id: string
+  id: string,
 ): QueryState<NonNullable<EmploymentContractQuery["employmentContract"]> | undefined> {
   const result = useQuery(EmploymentContractDocument, {
     variables: { id },

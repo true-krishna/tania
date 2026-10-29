@@ -18,10 +18,7 @@ import {
   type WorkLocation,
 } from "@/generated/graphql";
 import { workLocationFormValue } from "./labels";
-import {
-  ContractCycleSection,
-  ContractCycleSuccess,
-} from "./ContractCycleSection";
+import { ContractCycleSection, ContractCycleSuccess } from "./ContractCycleSection";
 import { MUTATION_NOTICE, todayISO, type Contract } from "./contractCycle";
 import { mapSubmitError } from "@/lib/errors";
 import { CONTRACT_DETAIL } from "@/lib/constants/routes";
@@ -58,35 +55,25 @@ export function MutationAction({ contract }: { contract: Contract }) {
     unitId: contract.unit.id,
     workLocation: workLocationFormValue(contract.workLocation),
   }));
-  const [errors, setErrors] = React.useState<
-    Partial<Record<keyof MutationValues, string>>
-  >({});
+  const [errors, setErrors] = React.useState<Partial<Record<keyof MutationValues, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
-  const [record, { data, loading }] = useMutation(
-    RecordEmployeeMutationDocument,
-    {
-      refetchQueries: [
-        { query: EmploymentContractDocument, variables: { id: contract.id } },
-        {
-          query: EmployeeDocument,
-          variables: { id: contract.employee.id },
-        },
-      ],
-    }
-  );
+  const [record, { data, loading }] = useMutation(RecordEmployeeMutationDocument, {
+    refetchQueries: [
+      { query: EmploymentContractDocument, variables: { id: contract.id } },
+      {
+        query: EmployeeDocument,
+        variables: { id: contract.employee.id },
+      },
+    ],
+  });
 
-  function setField<Key extends keyof MutationValues>(
-    key: Key,
-    value: MutationValues[Key]
-  ) {
+  function setField<Key extends keyof MutationValues>(key: Key, value: MutationValues[Key]) {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
     setFormError(null);
   }
 
-  function validate(
-    toCheck: MutationValues
-  ): Partial<Record<keyof MutationValues, string>> {
+  function validate(toCheck: MutationValues): Partial<Record<keyof MutationValues, string>> {
     const next: Partial<Record<keyof MutationValues, string>> = {};
     if (!toCheck.effectiveDate) {
       next.effectiveDate = "Tanggal efektif wajib diisi.";
@@ -143,7 +130,7 @@ export function MutationAction({ contract }: { contract: Contract }) {
       const submitError = mapSubmitError(
         error instanceof ApolloError ? error : null,
         "Tidak dapat mencatat mutasi (nomor kontrak/nomor induk atau periode bertentangan).",
-        "Gagal mencatat mutasi."
+        "Gagal mencatat mutasi.",
       );
       if (submitError.field && submitError.field in values) {
         setErrors((previous) => ({
@@ -163,14 +150,10 @@ export function MutationAction({ contract }: { contract: Contract }) {
         success={
           <>
             <ContractCycleSuccess>
-              Mutasi tercatat. Kontrak baru{" "}
-              <strong>{created.contractNo}</strong> efektif{" "}
+              Mutasi tercatat. Kontrak baru <strong>{created.contractNo}</strong> efektif{" "}
               {created.startDate}; kontrak lama tetap tersimpan sebagai riwayat.
             </ContractCycleSuccess>
-            <Link
-              className="w-fit no-underline"
-              href={CONTRACT_DETAIL(created.id)}
-            >
+            <Link className="w-fit no-underline" href={CONTRACT_DETAIL(created.id)}>
               <Button type="button" variant="secondary">
                 Buka kontrak baru
               </Button>
@@ -188,9 +171,7 @@ export function MutationAction({ contract }: { contract: Contract }) {
       <form className="flex flex-col gap-3" onSubmit={onSubmit}>
         <InputControl error={errors.effectiveDate} label="Tanggal efektif">
           <Input
-            onChange={(event) =>
-              setField("effectiveDate", event.target.value)
-            }
+            onChange={(event) => setField("effectiveDate", event.target.value)}
             type="date"
             value={values.effectiveDate}
           />
@@ -238,10 +219,7 @@ export function MutationAction({ contract }: { contract: Contract }) {
         </InputControl>
         <InputControl error={errors.workLocation} label="Work location">
           <Select
-            onChange={(event) => setField(
-              "workLocation",
-              event.target.value as WorkLocation | ""
-            )}
+            onChange={(event) => setField("workLocation", event.target.value as WorkLocation | "")}
             options={[
               { label: "— pilih lokasi kerja —", value: "" },
               { label: "Jakarta", value: "JAKARTA" },
@@ -252,10 +230,7 @@ export function MutationAction({ contract }: { contract: Contract }) {
         </InputControl>
         <InputControl error={errors.bandPosition} label="Band position">
           <Select
-            onChange={(event) => setField(
-              "bandPosition",
-              event.target.value as BandPosition
-            )}
+            onChange={(event) => setField("bandPosition", event.target.value as BandPosition)}
             options={[
               { label: "Belum ditetapkan", value: "UNDEFINED" },
               { label: "I", value: "I" },

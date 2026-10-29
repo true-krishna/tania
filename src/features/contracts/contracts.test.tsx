@@ -23,7 +23,9 @@ import {
 import { workLocationFormValue } from "@/features/contracts/labels";
 
 const nav = vi.hoisted(() => ({ push: vi.fn() }));
-const auth = vi.hoisted(() => ({ role: "OPERATION" as "ADMIN" | "OPERATION" | "CHAPTER" | "TALENT" }));
+const auth = vi.hoisted(() => ({
+  role: "OPERATION" as "ADMIN" | "OPERATION" | "CHAPTER" | "TALENT",
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => nav,
@@ -136,7 +138,7 @@ async function renderCreateModal(mocks: React.ComponentProps<typeof MockedProvid
             <CreateContractModal onClose={() => {}} open={true} />
           </ToastProvider>
         </MockedProvider>
-      </React.Suspense>
+      </React.Suspense>,
     );
   });
 }
@@ -220,7 +222,9 @@ describe("CreateContractModal (form tambah kontrak, T023)", () => {
     });
     submitForm();
 
-    expect(screen.getByText(/tanggal selesai wajib untuk kontrak berbatas waktu/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/tanggal selesai wajib untuk kontrak berbatas waktu/i),
+    ).toBeInTheDocument();
   });
 
   it("offers the TMS contract types and treats KARYAWAN TETAP as open-ended", async () => {
@@ -274,7 +278,9 @@ describe("CreateContractModal (form tambah kontrak, T023)", () => {
       {
         request: { query: CreateEmploymentContractDocument, variables: { input: validInput } },
         result: {
-          errors: [new GraphQLError("resource already exists", { extensions: { code: "CONFLICT" } })],
+          errors: [
+            new GraphQLError("resource already exists", { extensions: { code: "CONFLICT" } }),
+          ],
         },
       },
     ];
@@ -285,7 +291,7 @@ describe("CreateContractModal (form tambah kontrak, T023)", () => {
     submitForm();
 
     expect(
-      await screen.findByText(/nomor kontrak atau nomor induk sudah dipakai/i)
+      await screen.findByText(/nomor kontrak atau nomor induk sudah dipakai/i),
     ).toBeInTheDocument();
   });
 
@@ -311,9 +317,7 @@ describe("CreateContractModal (form tambah kontrak, T023)", () => {
     fillValidForm();
     submitForm();
 
-    expect(
-      await screen.findByText(/overlaps an existing contract period/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/overlaps an existing contract period/i)).toBeInTheDocument();
   });
 });
 
@@ -385,7 +389,7 @@ async function renderRenewModal(mocks: React.ComponentProps<typeof MockedProvide
             <RenewContractModal contractId="ctr-1" onClose={() => {}} open={true} />
           </ToastProvider>
         </MockedProvider>
-      </React.Suspense>
+      </React.Suspense>,
     );
   });
 }
@@ -470,7 +474,10 @@ const contractListNode = {
 };
 
 const listMock = {
-  request: { query: EmploymentContractsDocument, variables: { filter: {}, first: 25, after: null } },
+  request: {
+    query: EmploymentContractsDocument,
+    variables: { filter: {}, first: 25, after: null },
+  },
   result: {
     data: {
       employmentContracts: {
@@ -490,7 +497,7 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
         <ToastProvider>
           <ContractsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("PKWT/2025/002")).toBeInTheDocument();
@@ -508,7 +515,7 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
         <ToastProvider>
           <ContractsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
     expect(await screen.findByText("PKWT/2025/002")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "+ Tambah Kontrak" })).toBeNull();
@@ -522,7 +529,7 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
           <ToastProvider>
             <ContractsPage />
           </ToastProvider>
-        </MockedProvider>
+        </MockedProvider>,
       );
       expect(await screen.findByRole("button", { name: "+ Tambah Kontrak" })).toBeInTheDocument();
     } finally {
@@ -536,7 +543,7 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
         <ToastProvider>
           <ContractsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("PKWT/2025/002")).toBeInTheDocument();
@@ -553,7 +560,7 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
         <ToastProvider>
           <ContractsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     expect(await screen.findByText("PKWT/2025/002")).toBeInTheDocument();
@@ -587,7 +594,7 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
         <ToastProvider>
           <ContractsPage />
         </ToastProvider>
-      </MockedProvider>
+      </MockedProvider>,
     );
 
     await screen.findByText("PKWT/2025/002");
@@ -597,9 +604,7 @@ describe("ContractsPage (daftar kontrak, T023)", () => {
       target: { value: "KARYAWAN_TETAP" },
     });
 
-    expect(
-      screen.getByRole("button", { name: "Filter, 1 filter aktif" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filter, 1 filter aktif" })).toBeInTheDocument();
     expect(await screen.findByText(/tidak ada kontrak yang cocok/i)).toBeInTheDocument();
   });
 });
@@ -695,7 +700,7 @@ describe("ContractDetailPage (detail kontrak + riwayat, T023)", () => {
           <MockedProvider mocks={[detailMock, contractAuditMock]}>
             <ContractDetailPage params={Promise.resolve({ id: "ctr-1" })} />
           </MockedProvider>
-        </React.Suspense>
+        </React.Suspense>,
       );
     });
 
@@ -719,7 +724,7 @@ describe("ContractDetailPage (detail kontrak + riwayat, T023)", () => {
           <MockedProvider mocks={[detailMock, contractAuditMock]}>
             <ContractDetailPage params={Promise.resolve({ id: "ctr-1" })} />
           </MockedProvider>
-        </React.Suspense>
+        </React.Suspense>,
       );
     });
 
@@ -741,7 +746,7 @@ describe("ContractDetailPage (detail kontrak + riwayat, T023)", () => {
             <MockedProvider mocks={[detailMock, contractAuditMock]}>
               <ContractDetailPage params={Promise.resolve({ id: "ctr-1" })} />
             </MockedProvider>
-          </React.Suspense>
+          </React.Suspense>,
         );
       });
 
@@ -798,7 +803,7 @@ describe("Lokasi kerja belum tercatat (legacy, FR-33 phase 1)", () => {
           <MockedProvider mocks={[legacyDetailMock, legacyAuditMock]}>
             <ContractDetailPage params={Promise.resolve({ id: "ctr-legacy" })} />
           </MockedProvider>
-        </React.Suspense>
+        </React.Suspense>,
       );
     });
 
