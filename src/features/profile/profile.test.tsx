@@ -5,7 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import ProfilePage from "@/app/(app)/profile/page";
-import { MyIdpDocument, ProfileDocument, ProfileHistoryDocument } from "@/generated/graphql";
+import {
+  MyCvProfileDocument,
+  MyIdpDocument,
+  ProfileDocument,
+  ProfileHistoryDocument,
+} from "@/generated/graphql";
 
 const h = vi.hoisted(() => ({
   role: { current: "TALENT" as string | null },
@@ -127,6 +132,25 @@ const profileMocks: MockedResponse[] = [
   { request: { query: MyIdpDocument }, result: myIdpResult },
 ];
 
+const ownCvResult = {
+  data: {
+    myCvProfile: {
+      __typename: "CvProfile",
+      id: "cv-1",
+      summary: "Ringkasan saya",
+      educations: [],
+      certifications: [],
+      skills: [],
+      workExperience: [],
+    },
+  },
+};
+
+const cvMock: MockedResponse = {
+  request: { query: MyCvProfileDocument },
+  result: ownCvResult,
+};
+
 // Riwayat kontrak & assignment kueri terpisah (TAN-343) — hanya untuk peran
 // dengan sel `contracts`/`assignments` (Operation/Chapter).
 const historyResult = {
@@ -207,13 +231,11 @@ describe("ProfilePage (TAN-188)", () => {
     expect(screen.getByText("Berjalan")).toBeInTheDocument();
   });
 
-  it("shows the own workload view on the Workload tab", async () => {
+  it("tidak menampilkan tab Workload selama modulnya disembunyikan (TAN-374)", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Workload" }));
-
-    expect(await screen.findByText("Beban kerja periode ini")).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Workload" })).toBeNull();
   });
 
   it("menampilkan tab IDP untuk semua peran setelah aktivasi (klarifikasi 9)", async () => {
@@ -236,6 +258,19 @@ describe("ProfilePage (TAN-188)", () => {
 
     expect(screen.getByRole("tab", { name: "IDP Saya" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Informasi pribadi" })).toBeInTheDocument();
+    // TAN-372: CV bukan lagi menu — tab CV hanya untuk pemiliknya (Talent).
+    expect(screen.queryByRole("tab", { name: "CV Saya" })).toBeNull();
+  });
+
+  it("menyunting CV sendiri dari tab CV (TAN-372)", async () => {
+    renderProfile([...profileMocks, cvMock]);
+    await screen.findByRole("heading", { name: "Ilham Fadillah" });
+
+    fireEvent.click(screen.getByRole("tab", { name: "CV Saya" }));
+
+    expect(await screen.findByText("Ringkasan Profil")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Tulis ringkasan singkat/)).toHaveValue("Ringkasan saya");
+    expect(screen.getByRole("button", { name: "+ Tambah Pendidikan" })).toBeInTheDocument();
   });
 
   it("menyajikan ringkasan IDP di dalam tab", async () => {

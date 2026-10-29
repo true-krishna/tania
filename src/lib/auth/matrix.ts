@@ -8,9 +8,11 @@ import type { AccessRole } from "@/generated/graphql";
  * gives Admin full manage on every active module.
  *
  * 2026-10-16 (clarify 5/6): the active modules below mirror the
- * amended matrix — Kontrak `+CHAPTER` (scoped read), CV `+OPERATION`
- * (read-only), Master Data `[CHAPTER, OPERATION, ADMIN]` (Talent has no
- * access).
+ * amended matrix — Kontrak `+CHAPTER` (scoped read), Master Data
+ * `[CHAPTER, OPERATION, ADMIN]` (Talent has no access).
+ *
+ * 2026-10-29 (TAN-372): CV is no longer a module of its own — it lives inside
+ * the talent profile, so it has no menu matrix row.
  *
  * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation are active, so every role
  * has an entry (`ALL`): Admin kelola · Operation lihat · Chapter `kelola cakupan`
@@ -24,49 +26,54 @@ import type { AccessRole } from "@/generated/graphql";
  * fokus RBAC + Master Data + Audit (tanpa Karyawan/Kontrak/Assignment/Entra/
  * Dashboard), Dashboard hanya Operation & Chapter, dan Talent tanpa Assignment
  * & Dashboard (fitur self-service ditunda). Backend tetap titik penegakan.
+ *
+ * 2026-10-29 (TAN-374, keputusan TAN-364): Admin kembali memegang Dashboard,
+ * Data Karyawan, Kontrak, Assignments dan Provisi Entra; modul Workload keluar
+ * dari matriks (menu disembunyikan sampai TAN-378).
+ *
+ * 2026-10-29 (TAN-376): `/admin/roles` (Menu & Akses) menjadi modul `adminRoles`
+ * yang hanya dimiliki Admin, sejalan dengan entri katalog terkunci TAN-381.
  */
 export type Module =
   | "dashboard"
   | "activities"
-  | "workload"
   | "employees"
   | "entra"
   | "contracts"
   | "assignments"
   | "idp"
   | "evaluations"
-  | "cv"
   | "masterData"
   | "accounts"
+  | "adminRoles"
   | "audit";
 
 const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
 
 export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
-  // TAN-343: dashboard hanya Operation & Chapter.
-  dashboard: ["OPERATION", "CHAPTER"],
+  dashboard: ["ADMIN", "OPERATION", "CHAPTER"],
   activities: ALL,
-  workload: ALL,
-  employees: ["OPERATION", "CHAPTER", "TALENT"],
-  entra: ["OPERATION"],
-  contracts: ["CHAPTER", "OPERATION"],
-  assignments: ["CHAPTER", "OPERATION"],
+  employees: ["ADMIN", "OPERATION", "CHAPTER", "TALENT"],
+  entra: ["ADMIN", "OPERATION"],
+  contracts: ["ADMIN", "OPERATION", "CHAPTER"],
+  assignments: ["ADMIN", "OPERATION", "CHAPTER"],
   // Aktif sejak 2026-10-16 (klarifikasi 9): Admin kelola · Operation lihat ·
   // Chapter kelola cakupan · Talent kelola miliknya.
   idp: ALL,
   evaluations: ALL,
-  cv: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
   masterData: ["CHAPTER", "OPERATION", "ADMIN"],
   accounts: ["ADMIN"],
+  adminRoles: ["ADMIN"],
   audit: ["ADMIN"],
 };
 
 const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
-  // TAN-343: kelola Operation/Chapter saja — Admin memegang tanpa sel.
-  employees: ["OPERATION"],
-  assignments: ["CHAPTER"],
-  contracts: ["OPERATION"],
+  employees: ["ADMIN", "OPERATION"],
+  assignments: ["ADMIN", "CHAPTER"],
+  contracts: ["ADMIN", "OPERATION"],
+  entra: ["ADMIN", "OPERATION"],
   masterData: ["ADMIN"],
+  adminRoles: ["ADMIN"],
   // IDP & evaluasi: Chapter menilai/mengelola dalam cakupannya, Admin penuh;
   // Operation hanya membaca dan Talent hanya miliknya (kontrol "miliknya" ada di
   // halaman masing-masing, bukan di `canManage`).
