@@ -109,15 +109,13 @@ describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
 
   /** The static role filter a caller falls back to with no configuration. */
   function staticHrefs(role: AccessRole) {
-    return NAV.flatMap((entry) =>
-      entry.kind === "link"
-        ? entry.roles.includes(role)
-          ? [entry.href]
-          : []
-        : entry.roles.includes(role)
-          ? entry.children.filter((child) => child.roles.includes(role)).map((child) => child.href)
-          : [],
-    );
+    return NAV.flatMap((entry) => {
+      if (!entry.roles.includes(role)) return [];
+      if (entry.kind === "link") return [entry.href];
+      return entry.children
+        .filter((child) => child.roles.includes(role))
+        .map((child) => child.href);
+    });
   }
 
   it("tanpa konfigurasi sidebar tetap memakai filter role statis NAV", () => {
