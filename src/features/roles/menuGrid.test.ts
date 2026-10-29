@@ -87,10 +87,7 @@ describe("MENU_ROWS mengikuti katalog menu", () => {
     expect(
       nested.every(
         (row) =>
-          row.parent === "Evaluations" ||
-          row.parent === "Master Data" ||
-          row.parent === "Employee" ||
-          row.parent === "Workload",
+          row.parent === "Evaluations" || row.parent === "Master Data" || row.parent === "Employee",
       ),
     ).toBe(true);
   });

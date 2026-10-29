@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { ReportSkeleton, TalentWorkloadView } from "@/features/workload-report";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { landingRoute } from "@/lib/auth/landing";
+import { resolveSession } from "@/lib/auth/route-gate";
+import { SESSION_COOKIE } from "@/lib/constants/storage";
 
 export const metadata: Metadata = {
   title: "Workload Talent",
 };
 
-export default function WorkloadTalentPage() {
-  return (
-    <Suspense fallback={<ReportSkeleton variant="talent" />}>
-      <TalentWorkloadView />
-    </Suspense>
-  );
+export default async function Page() {
+  const session = resolveSession((await cookies()).get(SESSION_COOKIE)?.value);
+  redirect(landingRoute(session?.accessRole));
 }

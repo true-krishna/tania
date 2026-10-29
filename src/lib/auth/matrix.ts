@@ -26,11 +26,14 @@ import type { AccessRole } from "@/generated/graphql";
  * fokus RBAC + Master Data + Audit (tanpa Karyawan/Kontrak/Assignment/Entra/
  * Dashboard), Dashboard hanya Operation & Chapter, dan Talent tanpa Assignment
  * & Dashboard (fitur self-service ditunda). Backend tetap titik penegakan.
+ *
+ * 2026-10-29 (TAN-374, keputusan TAN-364): Admin kembali memegang Dashboard,
+ * Data Karyawan, Kontrak, Assignments dan Provisi Entra; modul Workload keluar
+ * dari matriks (menu disembunyikan sampai TAN-378).
  */
 export type Module =
   | "dashboard"
   | "activities"
-  | "workload"
   | "employees"
   | "entra"
   | "contracts"
@@ -44,14 +47,12 @@ export type Module =
 const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
 
 export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
-  // TAN-343: dashboard hanya Operation & Chapter.
-  dashboard: ["OPERATION", "CHAPTER"],
+  dashboard: ["ADMIN", "OPERATION", "CHAPTER"],
   activities: ALL,
-  workload: ALL,
-  employees: ["OPERATION", "CHAPTER", "TALENT"],
-  entra: ["OPERATION"],
-  contracts: ["CHAPTER", "OPERATION"],
-  assignments: ["CHAPTER", "OPERATION"],
+  employees: ["ADMIN", "OPERATION", "CHAPTER", "TALENT"],
+  entra: ["ADMIN", "OPERATION"],
+  contracts: ["ADMIN", "OPERATION", "CHAPTER"],
+  assignments: ["ADMIN", "OPERATION", "CHAPTER"],
   // Aktif sejak 2026-10-16 (klarifikasi 9): Admin kelola · Operation lihat ·
   // Chapter kelola cakupan · Talent kelola miliknya.
   idp: ALL,
@@ -62,10 +63,10 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
 };
 
 const MANAGE_ROLES: Partial<Record<Module, readonly AccessRole[]>> = {
-  // TAN-343: kelola Operation/Chapter saja — Admin memegang tanpa sel.
-  employees: ["OPERATION"],
-  assignments: ["CHAPTER"],
-  contracts: ["OPERATION"],
+  employees: ["ADMIN", "OPERATION"],
+  assignments: ["ADMIN", "CHAPTER"],
+  contracts: ["ADMIN", "OPERATION"],
+  entra: ["ADMIN", "OPERATION"],
   masterData: ["ADMIN"],
   // IDP & evaluasi: Chapter menilai/mengelola dalam cakupannya, Admin penuh;
   // Operation hanya membaca dan Talent hanya miliknya (kontrol "miliknya" ada di

@@ -13,11 +13,10 @@ import { useSessionRole } from "@/lib/auth/guard";
 import { EMPLOYEES } from "@/lib/constants/routes";
 import { EmployeeDetailContent } from "./EmployeeDetailContent";
 
-type DetailTab = "overview" | "workload" | "cv";
+type DetailTab = "overview" | "cv";
 
 const DETAIL_TABS: { id: DetailTab; label: string }[] = [
   { id: "overview", label: "Ringkasan" },
-  { id: "workload", label: "Workload" },
   { id: "cv", label: "CV" },
 ];
 

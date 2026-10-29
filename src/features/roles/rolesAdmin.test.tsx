@@ -52,7 +52,7 @@ const ROLES = [
   },
 ] as const;
 
-/** The server's grid: the default matrix, 22 entries per role (termasuk baris tanpa rute "Asisten data"). */
+/** The server's grid: the default matrix, 18 entries per role (termasuk baris tanpa rute "Asisten data"). */
 const CONFIG_CELLS = ROLES.flatMap((role) =>
   MENU_ROWS.map((row) => {
     const cell = DEFAULT_MENU_ACCESS[role.name][row.id] ?? {
@@ -110,7 +110,7 @@ function expectedTalentGrid(entryId: string, level: MenuAccessLevel): RoleGrid {
 }
 
 describe("halaman Menu & Akses per Role — bagian grid", () => {
-  it("menampilkan grid 22 entri dan menghitung menu yang tampil", async () => {
+  it("menampilkan grid 18 entri dan menghitung menu yang tampil", async () => {
     renderSection([ROLES_QUERY, CONFIG_QUERY]);
     expect(await screen.findByText("Grid Menu × Role")).toBeInTheDocument();
     for (const row of MENU_ROWS) {

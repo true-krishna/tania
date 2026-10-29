@@ -8,7 +8,6 @@ import { EmployeeEntraProvisionCard } from "@/features/entra/EmployeeEntraProvis
 import { EmployeeCvContent } from "@/features/cv/EmployeeCvContent";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { EMPLOYEE_STATUS_LABEL, GENDER_LABEL } from "@/features/employees/labels";
-import { EmployeeWorkloadTab } from "@/features/workload";
 import type { EmployeeQuery } from "@/generated/graphql";
 import type { QueryStatus } from "@/lib/apollo/toQueryState";
 import { CONTRACT_NEW } from "@/lib/constants/routes";
@@ -31,7 +30,7 @@ export function EmployeeDetailContent({
   onDeactivate,
 }: {
   id: string;
-  tab: "overview" | "workload" | "cv";
+  tab: "overview" | "cv";
   status: QueryStatus;
   data: EmployeeDetail | undefined;
   error: string | null;
@@ -42,7 +41,6 @@ export function EmployeeDetailContent({
   deactivating: boolean;
   onDeactivate: () => void;
 }) {
-  if (tab === "workload") return <EmployeeWorkloadTab employeeId={id} />;
   if (tab === "cv") return <EmployeeCvContent employeeId={id} />;
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;

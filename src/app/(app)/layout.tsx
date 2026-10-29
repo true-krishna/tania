@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { useMutation } from "@apollo/client";
 import { LogoutDocument } from "@/generated/graphql";
-import { IconChartBar, IconClockHour3, IconUser } from "@tabler/icons-react";
+import { IconClockHour3, IconUser } from "@tabler/icons-react";
 import { Sidebar, sectionForPath } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { AssistantBubble } from "@/features/assistant/AssistantBubble";
@@ -17,7 +17,7 @@ import { AuthGuard, useSession, useSessionRole } from "@/lib/auth/guard";
 import { defaultEntryReadable, serverAllows } from "@/lib/auth/menuAccess";
 import { onSessionExpired } from "@/lib/auth/session-expiry";
 import { clearSession, getSession } from "@/lib/auth/token-store";
-import { ACTIVITIES, LOGIN, PROFILE, WORKLOAD } from "@/lib/constants/routes";
+import { ACTIVITIES, LOGIN, PROFILE } from "@/lib/constants/routes";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -81,7 +81,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   items={[
                     { href: PROFILE, label: "Profil saya", icon: IconUser },
                     { href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3 },
-                    { href: WORKLOAD, label: "Workload", icon: IconChartBar },
                   ]}
                   name={displayName}
                   onLogout={handleLogout}

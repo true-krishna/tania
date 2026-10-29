@@ -231,13 +231,11 @@ describe("ProfilePage (TAN-188)", () => {
     expect(screen.getByText("Berjalan")).toBeInTheDocument();
   });
 
-  it("shows the own workload view on the Workload tab", async () => {
+  it("tidak menampilkan tab Workload selama modulnya disembunyikan (TAN-374)", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Workload" }));
-
-    expect(await screen.findByText("Beban kerja periode ini")).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Workload" })).toBeNull();
   });
 
   it("menampilkan tab IDP untuk semua peran setelah aktivasi (klarifikasi 9)", async () => {

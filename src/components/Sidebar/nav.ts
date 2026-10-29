@@ -1,5 +1,4 @@
 import {
-  IconChartBar,
   IconClipboardCheck,
   IconClock,
   IconClockHour3,
@@ -32,9 +31,6 @@ import {
   MASTER_DATA_UNITS,
   ROLES_ADMIN,
   TALENT_ASSIGNMENT,
-  WORKLOAD,
-  WORKLOAD_EXECUTIVE,
-  WORKLOAD_TALENT,
 } from "@/lib/constants/routes";
 
 export interface NavLink {
@@ -75,12 +71,17 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * module a role may *read* has a menu entry, even when the page turns out
  * read-only for that role — Data Karyawan for Chapter (scoped) and Talent
  * (own record), Kontrak for Chapter (scoped, read-only), Assignments for
- * Operation (read-only) and Talent (own history), Master Data for Operation
- * (read-only) and Chapter (scoped read).
+ * Operation (read-only), Master Data for Operation (read-only) and Chapter
+ * (scoped read).
  *
  * 2026-10-29 (TAN-372): CV is no longer a menu — it lives inside the talent
  * profile (`/profile` for the caller's own CV, `/employees/[id]` read-only for
  * Chapter/Operation/Admin).
+ *
+ * 2026-10-29 (TAN-374, keputusan TAN-364): Admin kembali memegang Dashboard,
+ * grup Employee (Data Karyawan, Kontrak, Assignments) dan Provisi Entra; menu
+ * Workload dihapus seluruhnya — prototipenya masih fixture dan modulnya baru
+ * diaktifkan lagi oleh TAN-378.
  *
  * 2026-10-16 (clarify 5/6): Kontrak `+CHAPTER` (cakupan, hanya baca), Master
  * Data = `[CHAPTER, OPERATION, ADMIN]` (Talent tanpa akses).
@@ -97,6 +98,8 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * 2026-10-27 (TAN-343): sel default mengikuti definisi peran baru — Dashboard
  * hanya Operation & Chapter, Employee tanpa Admin, Assignments hanya
  * Chapter/Operation (Talent ditunda), Provisi Entra hanya Operation.
+ * Bagian Dashboard/Employee/Entra dari amandemen ini dicabut TAN-374: Admin
+ * mengelola seluruh modul operasional lagi.
  */
 export const NAV: readonly NavEntry[] = [
   {
@@ -104,39 +107,32 @@ export const NAV: readonly NavEntry[] = [
     href: DASHBOARD,
     label: "Dashboard",
     icon: IconLayoutGrid,
-    roles: ["CHAPTER", "OPERATION"],
+    roles: ["CHAPTER", "OPERATION", "ADMIN"],
   },
   { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
-  /**
-   * Umpan balik pemilik produk (TAN-227): level user memakai satu menu
-   * Workload tanpa submenu; level executive memakai grup dengan dua submenu
-   * — Overview dan Talent (tabel talent dengan workload).
-   */
-  { kind: "link", href: WORKLOAD, label: "Workload", icon: IconChartBar, roles: ["TALENT"] },
-  {
-    kind: "group",
-    id: "workload",
-    label: "Workload",
-    icon: IconChartBar,
-    roles: ["CHAPTER", "OPERATION", "ADMIN"],
-    children: [
-      { href: WORKLOAD_EXECUTIVE, label: "Overview", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: WORKLOAD_TALENT, label: "Talent", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-    ],
-  },
   {
     kind: "group",
     id: "employee",
     label: "Employee",
     icon: IconUsers,
-    roles: ["TALENT", "CHAPTER", "OPERATION"],
+    roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
     children: [
-      { href: EMPLOYEES, label: "Data Karyawan", roles: ["TALENT", "CHAPTER", "OPERATION"] },
-      { href: CONTRACTS, label: "Kontrak", roles: ["CHAPTER", "OPERATION"] },
-      { href: TALENT_ASSIGNMENT, label: "Assignments", roles: ["CHAPTER", "OPERATION"] },
+      {
+        href: EMPLOYEES,
+        label: "Data Karyawan",
+        roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
+      },
+      { href: CONTRACTS, label: "Kontrak", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: TALENT_ASSIGNMENT, label: "Assignments", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
     ],
   },
-  { kind: "link", href: ENTRA, label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION"] },
+  {
+    kind: "link",
+    href: ENTRA,
+    label: "Provisi Entra",
+    icon: IconUserPlus,
+    roles: ["OPERATION", "ADMIN"],
+  },
   { kind: "link", href: IDP, label: "IDP", icon: IconTarget, roles: ALL },
   {
     kind: "group",

@@ -32,26 +32,37 @@ const SEED_USERS = {
 
 type Role = keyof typeof SEED_USERS;
 
-async function loginAs(page: Page, email: string): Promise<void> {
+/** Landing pasca-login (static by design, TAN-343/TAN-373). */
+const LANDING: Record<Role, RegExp> = {
+  ADMIN: /\/accounts$/,
+  OPERATION: /\/dashboard$/,
+  CHAPTER: /\/dashboard$/,
+  TALENT: /\/employees\/[^/]+$/,
+};
+
+async function loginAs(page: Page, role: Role): Promise<void> {
   await page.goto("/login");
   const emailInput = page.locator("#login-email");
   await emailInput.waitFor({ state: "visible", timeout: 15_000 });
-  await emailInput.fill(email);
+  await emailInput.fill(SEED_USERS[role]);
   await page.locator("#login-password").fill(SEED_PASSWORD);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
-  await page.waitForURL(/\/dashboard/);
+  await page.waitForURL(LANDING[role]);
 }
 
 function mainNav(page: Page) {
   return page.getByRole("navigation", { name: /^Main navigation$/ });
 }
 
-/** Entri sidebar yang wajib tampil (matriks peran & modul, plan §2/R2.2 + §14.7 + §14.11). */
+/**
+ * Entri sidebar yang wajib tampil (matriks peran & modul). TAN-374 (keputusan
+ * TAN-364): Admin memegang seluruh modul operasional lagi, Workload hilang
+ * untuk semua peran, Talent hanya permukaan miliknya.
+ */
 const NAV_VISIBLE: Record<Role, readonly string[]> = {
   ADMIN: [
     "Dashboard",
     "Aktivitas saya",
-    "Workload",
     "Data Karyawan",
     "Kontrak",
     "Assignments",
@@ -65,7 +76,6 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
   OPERATION: [
     "Dashboard",
     "Aktivitas saya",
-    "Workload",
     "Data Karyawan",
     "Kontrak",
     "Assignments",
@@ -77,7 +87,6 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
   CHAPTER: [
     "Dashboard",
     "Aktivitas saya",
-    "Workload",
     "Data Karyawan",
     "Kontrak",
     "Assignments",
@@ -85,28 +94,30 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Evaluations",
     "Master Data",
   ],
-  TALENT: [
-    "Dashboard",
-    "Aktivitas saya",
-    "Workload",
-    "Data Karyawan",
-    "Assignments",
-    "IDP",
-    "Evaluations",
-  ],
+  TALENT: ["Aktivitas saya", "Data Karyawan", "IDP", "Evaluations"],
 };
 
 /**
  * Entri sidebar yang wajib tidak tampil. IDP & Evaluations tidak lagi di sini:
  * sejak aktivasi 2026-10-16 (klarifikasi 9) keduanya tampil untuk semua peran,
- * hanya aksesnya yang berbeda.
+ * hanya aksesnya yang berbeda. TAN-372: CV bukan lagi menu. TAN-374: Workload
+ * hilang untuk semua peran.
  */
 const NAV_HIDDEN: Record<Role, readonly string[]> = {
-  // TAN-372: CV bukan lagi menu — kontennya pindah ke profil talent.
-  ADMIN: ["CV"],
-  OPERATION: ["CV", "Accounts", "Audit"],
-  CHAPTER: ["CV", "Provisi Entra", "Accounts", "Audit"],
-  TALENT: ["CV", "Kontrak", "Provisi Entra", "Master Data", "Accounts", "Audit"],
+  ADMIN: ["CV", "Workload"],
+  OPERATION: ["CV", "Workload", "Accounts", "Audit"],
+  CHAPTER: ["CV", "Workload", "Provisi Entra", "Accounts", "Audit"],
+  TALENT: [
+    "CV",
+    "Workload",
+    "Dashboard",
+    "Kontrak",
+    "Assignments",
+    "Provisi Entra",
+    "Master Data",
+    "Accounts",
+    "Audit",
+  ],
 };
 
 /** Rute modul yang aktif: URL langsung harus membuka halamannya (bukan 404). */
@@ -115,8 +126,9 @@ const ACTIVE_ROUTES = ["/idp", "/evaluations"] as const;
 test.describe("RBAC matrix (T041)", () => {
   for (const role of ["ADMIN", "OPERATION", "CHAPTER", "TALENT"] as const) {
     test(`T041 — ${role}: nav sesuai matriks, modul aktif terbuka`, async ({ page }) => {
-      await loginAs(page, SEED_USERS[role]);
-      await page.goto("/dashboard");
+      await loginAs(page, role);
+      // Halaman netral: semua peran memegang Aktivitas saya.
+      await page.goto("/activities");
 
       const nav = mainNav(page);
       await expect(nav).toBeVisible();
@@ -137,11 +149,18 @@ test.describe("RBAC matrix (T041)", () => {
         const response = await page.goto(route);
         expect(response?.status(), `${route} harus terbuka untuk ${role}`).toBe(200);
       }
+
+      if (role === "ADMIN") {
+        // TAN-374: Workload tersembunyi — rutenya mengalihkan, bukan merender fixture.
+        await page.goto("/workload");
+        await page.waitForURL(/\/accounts$/);
+        await expect(page.getByText("Workload", { exact: true })).toHaveCount(0);
+      }
     });
   }
 
   test("T041 — ADMIN: kelola penuh pada modul aktif (TAN-212 clarify 4)", async ({ page }) => {
-    await loginAs(page, SEED_USERS.ADMIN);
+    await loginAs(page, "ADMIN");
     // Baris matriks Assignment/Entra: Admin kelola penuh, jadi aksi kelola
     // tersedia dan server tidak lagi menolak rutenya.
     await page.goto("/assignments");
@@ -162,7 +181,7 @@ test.describe("RBAC matrix (T041)", () => {
   test("T041 — OPERATION: Assignment hanya baca (tanpa aksi), Employees kelola", async ({
     page,
   }) => {
-    await loginAs(page, SEED_USERS.OPERATION);
+    await loginAs(page, "OPERATION");
 
     await page.goto("/assignments");
     await expect(page.getByRole("heading", { name: "Assignments" })).toBeVisible();
@@ -183,7 +202,7 @@ test.describe("RBAC matrix (T041)", () => {
   });
 
   test("T041 — CHAPTER: Assignment kelola, Employees hanya cakupan chapter", async ({ page }) => {
-    await loginAs(page, SEED_USERS.CHAPTER);
+    await loginAs(page, "CHAPTER");
 
     await page.goto("/assignments");
     await expect(page.getByRole("link", { name: /Buat Assignment/ })).toBeVisible();
@@ -195,13 +214,8 @@ test.describe("RBAC matrix (T041)", () => {
     await expect(page.getByRole("link", { name: /Tambah Karyawan/ })).toHaveCount(0);
   });
 
-  test("T041 — TALENT: Assignment miliknya, Employees mengarah ke data diri", async ({ page }) => {
-    await loginAs(page, SEED_USERS.TALENT);
-
-    await page.goto("/assignments");
-    await expect(page.getByText("Riwayat penugasan Anda.")).toBeVisible();
-    // Filter talent tidak berarti untuk "miliknya" (server memfilter otomatis).
-    await expect(page.getByText("Talent", { exact: true })).toHaveCount(0);
+  test("T041 — TALENT: Employees mengarah ke data diri, IDP miliknya", async ({ page }) => {
+    await loginAs(page, "TALENT");
 
     await page.goto("/employees");
     await page.waitForURL(/\/employees\/[^/]+$/);

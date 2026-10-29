@@ -47,9 +47,6 @@ export function menuEntryIdForHref(href: string): string {
 export const MODULE_OF_HREF: Record<string, Module> = {
   "/dashboard": "dashboard",
   "/activities": "activities",
-  "/workload": "workload",
-  "/workload/executive": "workload",
-  "/workload/talent": "workload",
   "/employees": "employees",
   "/contracts": "contracts",
   "/assignments": "assignments",
@@ -77,7 +74,6 @@ export const MODULE_OF_HREF: Record<string, Module> = {
 export const MODULE_ENTRIES: Record<Module, readonly string[]> = {
   dashboard: ["dashboard"],
   activities: ["activities"],
-  workload: ["workload", "workload/executive", "workload/talent"],
   employees: ["employees"],
   entra: ["entra"],
   contracts: ["contracts"],
@@ -101,24 +97,19 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
     for (const role of roles) matrix[entry][role] = level;
   };
   const all: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
-  const execs: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER"];
 
-  // TAN-343: dashboard hanya Operation & Chapter (sel default).
-  set("dashboard", "READ", ["OPERATION", "CHAPTER"]);
+  // TAN-374: Admin memegang seluruh modul operasional lagi; Workload tidak
+  // punya sel sampai TAN-378 menyambungkan data nyata.
+  set("dashboard", "READ", ["ADMIN", "OPERATION", "CHAPTER"]);
   set("activities", "READ", all);
-  // Talent gets the single Workload link; the other roles get the group pages.
-  set("workload", "READ", ["TALENT"]);
-  set("workload/executive", "READ", execs);
-  set("workload/talent", "READ", execs);
-  // TAN-343: Admin memegang tanpa sel pada employees/contracts/assignments/
-  // entra; Talent tanpa Assignment (fitur self-service ditunda).
-  set("employees", "MANAGE", ["OPERATION"]);
+  // Talent tanpa Assignment (fitur self-service ditunda).
+  set("employees", "MANAGE", ["ADMIN", "OPERATION"]);
   set("employees", "READ", ["CHAPTER", "TALENT"]);
-  set("contracts", "MANAGE", ["OPERATION"]);
+  set("contracts", "MANAGE", ["ADMIN", "OPERATION"]);
   set("contracts", "READ", ["CHAPTER"]);
-  set("assignments", "MANAGE", ["CHAPTER"]);
+  set("assignments", "MANAGE", ["ADMIN", "CHAPTER"]);
   set("assignments", "READ", ["OPERATION"]);
-  set("entra", "MANAGE", ["OPERATION"]);
+  set("entra", "MANAGE", ["ADMIN", "OPERATION"]);
   // IDP: Chapter manages its scope, Talent its own record, Operation reads.
   set("idp", "MANAGE", ["ADMIN", "CHAPTER", "TALENT"]);
   set("idp", "READ", ["OPERATION"]);

@@ -9,7 +9,7 @@ import { useSessionRole } from "@/lib/auth/guard";
 import type { Module } from "@/lib/auth/matrix";
 import { ProfileTabContent } from "./ProfileTabContent";
 
-type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp" | "cv";
+type ProfileTab = "personal" | "contracts" | "assignments" | "idp" | "cv";
 
 const PROFILE_TABS: {
   id: ProfileTab;
@@ -20,7 +20,6 @@ const PROFILE_TABS: {
   { id: "personal", label: "Informasi pribadi" },
   { id: "contracts", label: "Kontrak", module: "contracts" },
   { id: "assignments", label: "Assignment", module: "assignments" },
-  { id: "workload", label: "Workload" },
   { id: "idp", label: "IDP Saya", module: "idp" },
   { id: "cv", label: "CV Saya", roles: ["TALENT"] },
 ];

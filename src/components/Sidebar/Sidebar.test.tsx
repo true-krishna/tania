@@ -76,9 +76,12 @@ describe("Sidebar", () => {
     expect(desktopNav().getByRole("link", { name: "Kontrak" })).toBeInTheDocument();
     chapter.unmount();
 
-    // TAN-343: Admin tidak memegang sel Employee — tanpa grup sama sekali.
+    // TAN-374: Admin memegang Employee lagi — ketiga halamannya tampil.
     const admin = renderSidebar({ role: "ADMIN" });
-    expect(desktopNav().queryByRole("button", { name: "Employee" })).toBeNull();
+    fireEvent.click(desktopNav().getByRole("button", { name: "Employee" }));
+    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Kontrak" })).toBeInTheDocument();
+    expect(desktopNav().getByRole("link", { name: "Assignments" })).toBeInTheDocument();
     admin.unmount();
 
     renderSidebar({ role: "OPERATION" });
@@ -88,7 +91,7 @@ describe("Sidebar", () => {
   });
 
   it("merges Employees, Kontrak, and Assignments under one Employee section (TAN-173)", () => {
-    // Operation memegang ketiganya (TAN-343: Admin tidak lagi punya sel ini).
+    // Operation memegang ketiganya (TAN-374: Admin juga memegang ketiganya).
     renderSidebar({ role: "OPERATION", pathname: "/employees" });
     const group = desktopNav().getByRole("button", { name: "Employee" });
     expect(group).toHaveAttribute("aria-expanded", "true");
@@ -117,29 +120,15 @@ describe("Sidebar", () => {
     expect(desktopNav().getByRole("link", { name: "Unit" })).toBeInTheDocument();
   });
 
-  // Umpan balik pemilik produk (TAN-227): level user memakai satu menu
-  // Workload tanpa submenu; level executive memakai grup dengan dua submenu
-  // — Overview dan Talent.
-  it("renders Workload as a plain link for TALENT and a two-item group for leadership", () => {
-    const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().getByRole("link", { name: "Workload" })).toHaveAttribute(
-      "href",
-      "/workload",
-    );
-    expect(desktopNav().queryByRole("button", { name: "Workload" })).toBeNull();
-    talent.unmount();
-
-    renderSidebar({ role: "OPERATION" });
-    fireEvent.click(desktopNav().getByRole("button", { name: "Workload" }));
-    expect(desktopNav().getByRole("link", { name: "Overview" })).toHaveAttribute(
-      "href",
-      "/workload/executive",
-    );
-    expect(desktopNav().getByRole("link", { name: "Talent" })).toHaveAttribute(
-      "href",
-      "/workload/talent",
-    );
-    expect(desktopNav().queryByRole("link", { name: "Workload saya" })).toBeNull();
+  // TAN-374 (keputusan TAN-364): Workload disembunyikan sampai datanya nyata.
+  it("does not render Workload for any role", () => {
+    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
+      const view = renderSidebar({ role });
+      expect(desktopNav().queryByRole("link", { name: "Workload" })).toBeNull();
+      expect(desktopNav().queryByRole("button", { name: "Workload" })).toBeNull();
+      expect(compactNav().queryByRole("link", { name: "Workload" })).toBeNull();
+      view.unmount();
+    }
   });
 
   it("opens the section that owns the current route and marks the child active", () => {
