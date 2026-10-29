@@ -41,9 +41,6 @@ export const IDP_NEW = "/idp/new";
 export const IDP_MY = "/idp/my";
 export const IDP_DETAIL = (id: string) => `/idp/${id}`;
 
-// CV
-export const CV = "/cv";
-
 // EVALUATIONS
 export const EVALUATIONS = "/evaluations";
 export const EVALUATIONS_MY = "/evaluations/my";

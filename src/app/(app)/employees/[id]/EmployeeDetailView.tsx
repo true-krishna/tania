@@ -13,15 +13,18 @@ import { useSessionRole } from "@/lib/auth/guard";
 import { EMPLOYEES } from "@/lib/constants/routes";
 import { EmployeeDetailContent } from "./EmployeeDetailContent";
 
-type DetailTab = "overview" | "workload";
+type DetailTab = "overview" | "workload" | "cv";
 
 const DETAIL_TABS: { id: DetailTab; label: string }[] = [
   { id: "overview", label: "Ringkasan" },
   { id: "workload", label: "Workload" },
+  { id: "cv", label: "CV" },
 ];
 
 export function EmployeeDetailView({ employeeId: id }: { employeeId: string }) {
   const role = useSessionRole();
+  const showCv = role === "CHAPTER" || role === "OPERATION" || role === "ADMIN";
+  const tabs = DETAIL_TABS.filter((item) => item.id !== "cv" || showCv);
   const manage = useModuleAccess("employees").canManage;
   const showHistory = role === "OPERATION" || role === "ADMIN";
   const showEntra = useModuleAccess("entra").canRead;
@@ -57,7 +60,7 @@ export function EmployeeDetailView({ employeeId: id }: { employeeId: string }) {
         className="flex gap-6 border-b border-board-border"
         role="tablist"
       >
-        {DETAIL_TABS.map((item) => {
+        {tabs.map((item) => {
           const selected = item.id === tab;
           return (
             <button

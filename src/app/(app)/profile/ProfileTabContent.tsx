@@ -1,6 +1,7 @@
 "use client";
 
 import { ErrorState, LoadingState } from "@/components/DataState";
+import { TalentCvEditor } from "@/features/cv/TalentCvEditor";
 import {
   AssignmentsSection,
   ContractsSection,
@@ -10,7 +11,7 @@ import {
 import type { ProfileEmployee, useProfileHistory } from "@/features/profile";
 import { WorkloadSection } from "@/features/profile/WorkloadSection";
 
-type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp";
+type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp" | "cv";
 
 type HistoryState = ReturnType<typeof useProfileHistory>;
 
@@ -29,6 +30,7 @@ export function ProfileTabContent({
 }) {
   if (selectedTab === "workload") return <WorkloadSection />;
   if (selectedTab === "idp") return <IdpSection />;
+  if (selectedTab === "cv") return <TalentCvEditor />;
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat profil."} />;
   if (!employee) return <PersonalInfoSection employee={undefined} />;

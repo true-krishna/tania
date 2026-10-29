@@ -5,6 +5,7 @@ import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/DataState";
 import { EmployeeEntraProvisionCard } from "@/features/entra/EmployeeEntraProvisionCard";
+import { EmployeeCvContent } from "@/features/cv/EmployeeCvContent";
 import { RecordChangeHistory } from "@/features/audit/RecordChangeHistory";
 import { EMPLOYEE_STATUS_LABEL, GENDER_LABEL } from "@/features/employees/labels";
 import { EmployeeWorkloadTab } from "@/features/workload";
@@ -30,7 +31,7 @@ export function EmployeeDetailContent({
   onDeactivate,
 }: {
   id: string;
-  tab: "overview" | "workload";
+  tab: "overview" | "workload" | "cv";
   status: QueryStatus;
   data: EmployeeDetail | undefined;
   error: string | null;
@@ -42,6 +43,7 @@ export function EmployeeDetailContent({
   onDeactivate: () => void;
 }) {
   if (tab === "workload") return <EmployeeWorkloadTab employeeId={id} />;
+  if (tab === "cv") return <EmployeeCvContent employeeId={id} />;
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
   if (!data) return <ErrorState message="Karyawan tidak ditemukan." />;

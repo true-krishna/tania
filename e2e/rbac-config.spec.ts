@@ -35,11 +35,11 @@ const CHAPTER_NAV = [
   "Kontrak",
   "Assignments",
   "IDP",
-  "CV",
   "Evaluations",
   "Master Data",
 ] as const;
-const CHAPTER_NAV_HIDDEN = ["Provisi Entra", "Accounts", "Audit"] as const;
+// TAN-372: CV bukan lagi menu — kontennya pindah ke profil talent.
+const CHAPTER_NAV_HIDDEN = ["CV", "Provisi Entra", "Accounts", "Audit"] as const;
 
 type GraphQLResult = Record<string, unknown>;
 

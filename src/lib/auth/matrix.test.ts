@@ -18,7 +18,6 @@ const EXPECTED: Record<Module, Record<AccessRole, boolean>> = {
   // peran, yang berbeda hanya aksesnya di dalam halaman (lihat EXPECTED_MANAGE).
   idp: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
   evaluations: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
-  cv: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
   masterData: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   accounts: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   audit: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
@@ -37,7 +36,6 @@ const EXPECTED_MANAGE: Record<Module, Record<AccessRole, boolean>> = {
   // hanya baca dan Talent hanya miliknya (klarifikasi 9).
   idp: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: false },
   evaluations: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: false },
-  cv: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   masterData: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   accounts: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   audit: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },

@@ -44,6 +44,10 @@ function withCell(
 }
 
 describe("NAV mirrors the role & module matrix (R2.2)", () => {
+  it("tidak punya entri menu CV untuk peran mana pun (TAN-372)", () => {
+    expect(LEAVES.some((leaf) => leaf.label === "CV")).toBe(false);
+  });
+
   for (const leaf of LEAVES) {
     it(`${leaf.href} punya modul matriks`, () => {
       expect(MODULE_OF_HREF[leaf.href], `${leaf.href} tidak dipetakan ke modul`).toBeDefined();
@@ -242,7 +246,7 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
   });
 
   it("konfigurasi default identik matriks default per entry (TAN-343)", () => {
-    // Every entry of the 21-leaf registry carries the same level the server's
+    // Every entry of the 20-leaf registry carries the same level the server's
     // fallback matrix gives, so an empty `role_menu_config` changes nothing.
     // Sejak TAN-343: dashboard hanya Operation/Chapter, Employee tanpa Admin,
     // Assignments tanpa Admin & Talent, Entra hanya Operation.
@@ -257,7 +261,6 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
       assignments: { CHAPTER: "MANAGE", OPERATION: "READ" },
       entra: { OPERATION: "MANAGE" },
       idp: { ADMIN: "MANAGE", CHAPTER: "MANAGE", TALENT: "MANAGE", OPERATION: "READ" },
-      cv: { ADMIN: "READ", OPERATION: "READ", CHAPTER: "READ", TALENT: "MANAGE" },
       evaluations: { ADMIN: "MANAGE", CHAPTER: "MANAGE", OPERATION: "READ" },
       "evaluations/periods": { ADMIN: "MANAGE" },
       "evaluations/templates": { ADMIN: "MANAGE" },

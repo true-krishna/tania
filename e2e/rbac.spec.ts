@@ -57,7 +57,6 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Assignments",
     "Provisi Entra",
     "IDP",
-    "CV",
     "Evaluations",
     "Master Data",
     "Accounts",
@@ -72,7 +71,6 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Assignments",
     "Provisi Entra",
     "IDP",
-    "CV",
     "Evaluations",
     "Master Data",
   ],
@@ -84,7 +82,6 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Kontrak",
     "Assignments",
     "IDP",
-    "CV",
     "Evaluations",
     "Master Data",
   ],
@@ -95,7 +92,6 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Data Karyawan",
     "Assignments",
     "IDP",
-    "CV",
     "Evaluations",
   ],
 };
@@ -106,10 +102,11 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
  * hanya aksesnya yang berbeda.
  */
 const NAV_HIDDEN: Record<Role, readonly string[]> = {
-  ADMIN: [],
-  OPERATION: ["Accounts", "Audit"],
-  CHAPTER: ["Provisi Entra", "Accounts", "Audit"],
-  TALENT: ["Kontrak", "Provisi Entra", "Master Data", "Accounts", "Audit"],
+  // TAN-372: CV bukan lagi menu — kontennya pindah ke profil talent.
+  ADMIN: ["CV"],
+  OPERATION: ["CV", "Accounts", "Audit"],
+  CHAPTER: ["CV", "Provisi Entra", "Accounts", "Audit"],
+  TALENT: ["CV", "Kontrak", "Provisi Entra", "Master Data", "Accounts", "Audit"],
 };
 
 /** Rute modul yang aktif: URL langsung harus membuka halamannya (bukan 404). */
@@ -145,7 +142,7 @@ test.describe("RBAC matrix (T041)", () => {
 
   test("T041 — ADMIN: kelola penuh pada modul aktif (TAN-212 clarify 4)", async ({ page }) => {
     await loginAs(page, SEED_USERS.ADMIN);
-    // Baris matriks Assignment/CV/Entra: Admin kelola penuh, jadi aksi kelola
+    // Baris matriks Assignment/Entra: Admin kelola penuh, jadi aksi kelola
     // tersedia dan server tidak lagi menolak rutenya.
     await page.goto("/assignments");
     await expect(page.getByRole("heading", { name: "Assignments" })).toBeVisible();

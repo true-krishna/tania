@@ -55,7 +55,6 @@ export const MODULE_OF_HREF: Record<string, Module> = {
   "/assignments": "assignments",
   "/entra": "entra",
   "/idp": "idp",
-  "/cv": "cv",
   "/evaluations": "evaluations",
   "/evaluations/periods": "evaluations",
   "/evaluations/templates": "evaluations",
@@ -85,7 +84,6 @@ export const MODULE_ENTRIES: Record<Module, readonly string[]> = {
   assignments: ["assignments"],
   idp: ["idp"],
   evaluations: ["evaluations", "evaluations/periods", "evaluations/templates", "evaluations/my"],
-  cv: ["cv"],
   masterData: [
     "master-data/units",
     "master-data/chapters",
@@ -124,8 +122,6 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
   // IDP: Chapter manages its scope, Talent its own record, Operation reads.
   set("idp", "MANAGE", ["ADMIN", "CHAPTER", "TALENT"]);
   set("idp", "READ", ["OPERATION"]);
-  set("cv", "MANAGE", ["TALENT"]);
-  set("cv", "READ", ["ADMIN", "OPERATION", "CHAPTER"]);
   set("evaluations", "MANAGE", ["ADMIN", "CHAPTER"]);
   set("evaluations", "READ", ["OPERATION"]);
   set("evaluations/periods", "MANAGE", ["ADMIN"]);

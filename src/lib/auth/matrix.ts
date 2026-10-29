@@ -8,9 +8,11 @@ import type { AccessRole } from "@/generated/graphql";
  * gives Admin full manage on every active module.
  *
  * 2026-10-16 (clarify 5/6): the active modules below mirror the
- * amended matrix — Kontrak `+CHAPTER` (scoped read), CV `+OPERATION`
- * (read-only), Master Data `[CHAPTER, OPERATION, ADMIN]` (Talent has no
- * access).
+ * amended matrix — Kontrak `+CHAPTER` (scoped read), Master Data
+ * `[CHAPTER, OPERATION, ADMIN]` (Talent has no access).
+ *
+ * 2026-10-29 (TAN-372): CV is no longer a module of its own — it lives inside
+ * the talent profile, so it has no menu matrix row.
  *
  * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation are active, so every role
  * has an entry (`ALL`): Admin kelola · Operation lihat · Chapter `kelola cakupan`
@@ -35,7 +37,6 @@ export type Module =
   | "assignments"
   | "idp"
   | "evaluations"
-  | "cv"
   | "masterData"
   | "accounts"
   | "audit";
@@ -55,7 +56,6 @@ export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   // Chapter kelola cakupan · Talent kelola miliknya.
   idp: ALL,
   evaluations: ALL,
-  cv: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
   masterData: ["CHAPTER", "OPERATION", "ADMIN"],
   accounts: ["ADMIN"],
   audit: ["ADMIN"],

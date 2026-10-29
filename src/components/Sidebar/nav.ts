@@ -4,7 +4,6 @@ import {
   IconClock,
   IconClockHour3,
   IconDatabase,
-  IconFileCv,
   IconLayoutGrid,
   IconTarget,
   IconUserPlus,
@@ -19,7 +18,6 @@ import {
   ACTIVITIES,
   AUDIT,
   CONTRACTS,
-  CV,
   DASHBOARD,
   EMPLOYEES,
   ENTRA,
@@ -76,13 +74,16 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
  * R2.2 (002-tania-rbac): each entry mirrors the role/module matrix. Every
  * module a role may *read* has a menu entry, even when the page turns out
  * read-only for that role — Data Karyawan for Chapter (scoped) and Talent
- * (own record), Kontrak for Chapter (scoped, read-only), CV for Operation,
- * Assignments for Operation (read-only) and Talent (own history), Master Data
- * for Operation (read-only) and Chapter (scoped read).
+ * (own record), Kontrak for Chapter (scoped, read-only), Assignments for
+ * Operation (read-only) and Talent (own history), Master Data for Operation
+ * (read-only) and Chapter (scoped read).
  *
- * 2026-10-16 (clarify 5/6): Kontrak `+CHAPTER` (cakupan, hanya baca), CV
- * `+OPERATION` (hanya baca), Master Data = `[CHAPTER, OPERATION, ADMIN]`
- * (Talent tanpa akses).
+ * 2026-10-29 (TAN-372): CV is no longer a menu — it lives inside the talent
+ * profile (`/profile` for the caller's own CV, `/employees/[id]` read-only for
+ * Chapter/Operation/Admin).
+ *
+ * 2026-10-16 (clarify 5/6): Kontrak `+CHAPTER` (cakupan, hanya baca), Master
+ * Data = `[CHAPTER, OPERATION, ADMIN]` (Talent tanpa akses).
  *
  * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation tampil untuk **semua**
  * peran; yang berbeda hanya aksesnya. `/idp` terbuka bagi keempat peran (Talent
@@ -137,7 +138,6 @@ export const NAV: readonly NavEntry[] = [
   },
   { kind: "link", href: ENTRA, label: "Provisi Entra", icon: IconUserPlus, roles: ["OPERATION"] },
   { kind: "link", href: IDP, label: "IDP", icon: IconTarget, roles: ALL },
-  { kind: "link", href: CV, label: "CV", icon: IconFileCv, roles: ALL },
   {
     kind: "group",
     id: "evaluations",
