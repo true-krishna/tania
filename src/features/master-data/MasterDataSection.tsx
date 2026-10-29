@@ -1,20 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Table, type TableColumn } from "@/components/Table";
 import { Button } from "@/components/Button";
-import { EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/DataState";
-import { Input } from "@/components/Input";
-import { InputControl } from "@/components/InputControl";
-import { Modal, ModalActions, ModalContent, ModalTitle } from "@/components/Modal";
+import { ErrorState, LoadingState } from "@/components/DataState";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/components/Pagination";
-import { RowActionsMenu } from "@/components/RowActionsMenu";
-import { Select } from "@/components/Select";
 import { TableFilterBar } from "@/components/TableFilterBar";
 import { useModuleAccess } from "@/lib/auth/access";
 import { MasterDataBulkBar, type MasterDataBulkTarget } from "./MasterDataBulkBar";
+import { MasterDataFormModal } from "./MasterDataFormModal";
+import { MasterDataTable } from "./MasterDataTable";
 import type { MasterDataImportEntity } from "./masterDataImportTemplate";
+import { useMasterDataColumns } from "./useMasterDataColumns";
 
 export type MasterDataItem = { id: string; name: string; isActive: boolean };
 
@@ -122,6 +119,19 @@ export function MasterDataSection<T extends MasterDataItem>({
   const { pageRows, pagination, resetPage } = useTablePagination(visibleItems);
 
   const searchLabel = `Cari ${nameLabel.toLowerCase()}`;
+  const columns = useMasterDataColumns<T>({
+    nameLabel,
+    extraColumn,
+    manage,
+    selectionEnabled,
+    selectedIdSet,
+    pageRows,
+    toggleAllRows,
+    toggleRow,
+    editingId,
+    onEdit: startEdit,
+    onToggleActive: (id, isActive) => void onToggleActive(id, isActive),
+  });
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -185,81 +195,6 @@ export function MasterDataSection<T extends MasterDataItem>({
 
   const editing = creating || editingId !== null;
 
-  const columns: TableColumn<T>[] = [
-    ...(selectionEnabled
-      ? [
-          {
-            key: "select",
-            title: (
-              <input
-                aria-label="Pilih semua baris di halaman ini"
-                checked={
-                  pageRows.length > 0 && pageRows.every((item) => selectedIdSet.has(item.id))
-                }
-                className="h-4 w-4"
-                onChange={(e) => toggleAllRows(e.target.checked)}
-                type="checkbox"
-              />
-            ),
-            render: (_value: unknown, item: T) => (
-              <input
-                aria-label={`Pilih ${item.name}`}
-                checked={selectedIdSet.has(item.id)}
-                className="h-4 w-4"
-                onChange={(e) => toggleRow(item.id, e.target.checked)}
-                type="checkbox"
-              />
-            ),
-          } satisfies TableColumn<T>,
-        ]
-      : []),
-    {
-      key: "name",
-      title: nameLabel,
-      className: "text-zinc-900",
-      render: (_value, item) => item.name,
-    },
-    ...(extraColumn
-      ? [
-          {
-            key: "extra",
-            title: extraColumn.label,
-            className: "text-zinc-600",
-            render: (_value: unknown, item: T) => extraColumn.render(item),
-          } satisfies TableColumn<T>,
-        ]
-      : []),
-    {
-      key: "status",
-      title: "Status",
-      render: (_value, item) => <StatusBadge active={item.isActive} />,
-    },
-    ...(manage
-      ? [
-          {
-            key: "actions",
-            title: "Aksi",
-            className: "col-action",
-            render: (_value: unknown, item: T) =>
-              editingId === item.id ? (
-                <span className="text-xs text-zinc-400">Mengedit…</span>
-              ) : (
-                <RowActionsMenu
-                  actions={[
-                    { label: "Ubah", onSelect: () => startEdit(item) },
-                    {
-                      label: item.isActive ? "Nonaktifkan" : "Aktifkan",
-                      onSelect: () => void onToggleActive(item.id, !item.isActive),
-                    },
-                  ]}
-                  label={`Aksi ${item.name}`}
-                />
-              ),
-          } satisfies TableColumn<T>,
-        ]
-      : []),
-  ];
-
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
@@ -296,49 +231,28 @@ export function MasterDataSection<T extends MasterDataItem>({
         />
       ) : null}
 
-      <Modal onClose={reset} open={editing} size="md">
-        <ModalTitle>{editingId !== null ? `Ubah ${nameLabel}` : addLabel}</ModalTitle>
-        <ModalContent>
-          <form className="flex flex-col gap-4" id={formId} onSubmit={handleSubmit}>
-            <InputControl error={nameError} label={nameLabel}>
-              <Input
-                onChange={(e) => setName(e.target.value)}
-                placeholder="cth: Digital Business"
-                value={name}
-              />
-            </InputControl>
-            {codeLabel ? (
-              <InputControl error={codeError} label={codeLabel}>
-                <Input
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder={codePlaceholder ?? "cth: DBT"}
-                  value={code}
-                />
-              </InputControl>
-            ) : null}
-            {select ? (
-              <InputControl error={selectError} label={select.label}>
-                <Select
-                  onChange={(e) => setSelectValue(e.target.value)}
-                  options={[
-                    { value: "", label: `— ${select.placeholder} —` },
-                    ...select.options.map((o) => ({ value: o.id, label: o.name })),
-                  ]}
-                  value={selectValue}
-                />
-              </InputControl>
-            ) : null}
-          </form>
-        </ModalContent>
-        <ModalActions>
-          <Button disabled={busy} form={formId} type="submit">
-            Simpan
-          </Button>
-          <Button disabled={busy} onClick={reset} type="button" variant="secondary">
-            Batal
-          </Button>
-        </ModalActions>
-      </Modal>
+      <MasterDataFormModal
+        addLabel={addLabel}
+        busy={busy}
+        code={code}
+        codeError={codeError}
+        codeLabel={codeLabel}
+        codePlaceholder={codePlaceholder}
+        editingId={editingId}
+        formId={formId}
+        name={name}
+        nameError={nameError}
+        nameLabel={nameLabel}
+        onClose={reset}
+        onCodeChange={setCode}
+        onNameChange={setName}
+        onSelectChange={setSelectValue}
+        onSubmit={handleSubmit}
+        open={editing}
+        select={select}
+        selectError={selectError}
+        selectValue={selectValue}
+      />
 
       {importSlot
         ? importSlot({
@@ -357,19 +271,15 @@ export function MasterDataSection<T extends MasterDataItem>({
         />
       ) : null}
 
-      {!items || items.length === 0 ? (
-        <EmptyState message={emptyMessage} />
-      ) : visibleItems && visibleItems.length === 0 ? (
-        <p className="text-sm text-tp-muted">Tidak ada hasil yang cocok dengan pencarian.</p>
-      ) : (
-        <Table
-          caption={caption}
-          columns={columns}
-          dataSource={pageRows}
-          pagination={pagination}
-          rowKey={(item) => item.id}
-        />
-      )}
+      <MasterDataTable
+        caption={caption}
+        columns={columns}
+        emptyMessage={emptyMessage}
+        items={items}
+        pageRows={pageRows}
+        pagination={pagination}
+        visibleItems={visibleItems}
+      />
     </div>
   );
 }
