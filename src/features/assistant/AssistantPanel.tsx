@@ -5,11 +5,12 @@ import { IconPlus } from "@tabler/icons-react";
 import { Button } from "@/components/Button";
 import { CHIP_VARIANTS } from "@/components/Chip";
 import { useSessionRole } from "@/lib/auth/guard";
+import { useMenuEntryAccess } from "@/lib/auth/access";
 import { cn } from "@/lib/cn";
 import { AssistantComposer } from "./AssistantComposer";
 import { AssistantConversationList } from "./AssistantConversationList";
 import { AssistantMessageThread } from "./AssistantMessageThread";
-import { SAMPLE_QUESTIONS, type AssistantRole } from "./assistantConfig";
+import { sampleQuestionsFor } from "./assistantConfig";
 import { useAssistantChat } from "./useAssistantChat";
 
 export function AssistantPanel({
@@ -22,14 +23,14 @@ export function AssistantPanel({
   triggerRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
   const role = useSessionRole();
-  const assistantRole: AssistantRole | null =
-    role === "CHAPTER" || role === "OPERATION" ? role : null;
+  const { canRead: allowed } = useMenuEntryAccess("assistant");
+  const roleLabel = role === "CHAPTER" ? "Chapter" : role === "OPERATION" ? "Operation" : null;
   const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const chat = useAssistantChat({ open, role: assistantRole });
+  const chat = useAssistantChat({ open, enabled: allowed });
 
   React.useEffect(() => {
-    if (open && assistantRole) inputRef.current?.focus();
-  }, [open, assistantRole]);
+    if (open && allowed) inputRef.current?.focus();
+  }, [open, allowed]);
 
   function closeAndRestoreFocus() {
     onClose();
@@ -43,7 +44,7 @@ export function AssistantPanel({
     }
   }
 
-  if (!open || !assistantRole) return null;
+  if (!open || !allowed) return null;
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
@@ -67,8 +68,8 @@ export function AssistantPanel({
               Asisten Data
             </h2>
             <p className="text-xs text-tp-muted">
-              Jawaban berdasar data dalam hak akses Anda (
-              {assistantRole === "CHAPTER" ? "Chapter" : "Operation"}).
+              Jawaban berdasar data dalam hak akses Anda
+              {roleLabel ? ` (${roleLabel})` : ""}.
             </p>
           </div>
           <Button onClick={chat.startNewConversation} variant="secondary">
@@ -104,7 +105,7 @@ export function AssistantPanel({
               Pertanyaan contoh
             </p>
             <div className="flex flex-wrap gap-2">
-              {SAMPLE_QUESTIONS[assistantRole].map((question) => (
+              {sampleQuestionsFor(role).map((question) => (
                 <button
                   className={cn("tp-chip", CHIP_VARIANTS.neutral, "text-left")}
                   key={question}

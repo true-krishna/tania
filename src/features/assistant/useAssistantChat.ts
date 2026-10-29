@@ -14,7 +14,7 @@ import {
   errorRetryAfterSeconds,
   graphQLErrorCode,
 } from "@/lib/errors";
-import { CHAT_MAX_LENGTH, type AssistantRole } from "./assistantConfig";
+import { CHAT_MAX_LENGTH } from "./assistantConfig";
 import {
   newClientRequestId,
   unansweredUserMessages,
@@ -28,10 +28,10 @@ type QuotaState = {
 
 export function useAssistantChat({
   open,
-  role,
+  enabled,
 }: {
   open: boolean;
-  role: AssistantRole | null;
+  enabled: boolean;
 }) {
   const { pushToast } = useToast();
   const [selectedId, setSelectedId] = React.useState<
@@ -44,7 +44,7 @@ export function useAssistantChat({
   const [quota, setQuota] = React.useState<QuotaState | null>(null);
 
   const conversations = useQuery(ChatConversationsDocument, {
-    skip: !open || !role,
+    skip: !open || !enabled,
     fetchPolicy: "cache-and-network",
   });
 
@@ -55,7 +55,7 @@ export function useAssistantChat({
 
   const messages = useQuery(ChatMessagesDocument, {
     variables: { conversationId: activeId ?? "" },
-    skip: !open || !role || !activeId,
+    skip: !open || !enabled || !activeId,
     fetchPolicy: "cache-and-network",
   });
 
