@@ -146,6 +146,24 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
 /** The 002 baseline configuration, identical to the server's fallback matrix. */
 export const DEFAULT_MENU_ACCESS: MenuAccessConfig = buildDefaultMenuAccess();
 
+/**
+ * The baseline grid for one caller, keyed by the caller's own role name.
+ *
+ * Used only when `myMenuConfig` fails: the server falls back to this same
+ * matrix, so showing it (instead of an empty sidebar that denies every page)
+ * keeps the UI in step with what the server would actually authorize. A custom
+ * role inherits the grid of its template role.
+ */
+export function defaultMenuAccessFor(
+  roleName: string | null,
+  templateRole: AccessRole | null,
+): MenuAccessConfig | null {
+  if (!roleName || !templateRole) return null;
+  const cells = DEFAULT_MENU_ACCESS[templateRole];
+  if (!cells) return null;
+  return { [roleName]: cells };
+}
+
 /** Configured level of one cell; an absent row is NONE (deny by default). */
 export function accessLevel(
   config: MenuAccessConfig,

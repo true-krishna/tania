@@ -23,7 +23,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const role = useSessionRole();
   const session = useSession();
-  const { config: menuConfig, roleName, status: menuStatus } = useMyMenuConfig();
+  const {
+    config: menuConfig,
+    roleName,
+    status: menuStatus,
+    refetch: refetchMenu,
+  } = useMyMenuConfig();
   const pathname = usePathname();
   const [logout] = useMutation(LogoutDocument);
 
@@ -38,7 +43,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     (role ? roleLabel[role] : "Tania");
   const accessRoleName = roleName ?? session?.roleName ?? session?.accessRole ?? null;
   const accessConfig = React.useMemo(
-    () => menuConfig ?? (menuStatus === "error" || menuStatus === "empty" ? {} : null),
+    () => menuConfig ?? (menuStatus === "empty" ? {} : null),
     [menuConfig, menuStatus],
   );
   const assistantAllowed = React.useMemo(() => {
@@ -66,6 +71,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Sidebar
             menuConfig={menuConfig}
             menuStatus={menuStatus}
+            onRetryMenu={refetchMenu}
             pathname={pathname}
             role={role}
             roleName={roleName}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import * as React from "react";
 import type { MenuConfigStatus } from "@/lib/auth/menuAccess";
 import type { NavEntry, NavSubmenu } from "./nav";
+import { SidebarNotice } from "./SidebarNotice";
 
 export function SidebarCompactNav({
   menuStatus,
@@ -11,6 +12,7 @@ export function SidebarCompactNav({
   notice,
   entries,
   activeHref,
+  onRetry,
   isHidden,
   childrenOf,
 }: {
@@ -19,6 +21,7 @@ export function SidebarCompactNav({
   notice: string | null;
   entries: readonly NavEntry[];
   activeHref: string;
+  onRetry?: () => void;
   isHidden: (entry: NavEntry) => boolean;
   childrenOf: (entry: NavSubmenu) => NavSubmenu["children"];
 }) {
@@ -30,18 +33,7 @@ export function SidebarCompactNav({
     );
   }
 
-  if (notice) {
-    return (
-      <span
-        className="flex-none whitespace-nowrap px-2 text-sm text-tp-muted"
-        role={menuStatus === "error" ? "alert" : undefined}
-      >
-        {menuStatus === "error" ? "Menu akses gagal dimuat." : notice}
-      </span>
-    );
-  }
-
-  return entries.map((entry) => {
+  const links = entries.map((entry) => {
     if (isHidden(entry)) return null;
 
     if (entry.kind === "link") {
@@ -81,4 +73,13 @@ export function SidebarCompactNav({
       </React.Fragment>
     );
   });
+
+  if (!notice) return links;
+
+  return (
+    <>
+      <SidebarNotice notice={notice} onRetry={onRetry} status={menuStatus} />
+      {links}
+    </>
+  );
 }

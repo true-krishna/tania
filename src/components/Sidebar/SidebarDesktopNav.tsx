@@ -5,6 +5,7 @@ import { IconChevronDown } from "@tabler/icons-react";
 import { cn } from "@/lib/cn";
 import type { MenuConfigStatus } from "@/lib/auth/menuAccess";
 import type { NavEntry, NavSubmenu } from "./nav";
+import { SidebarNotice } from "./SidebarNotice";
 
 export function SidebarDesktopNav({
   menuStatus,
@@ -16,6 +17,7 @@ export function SidebarDesktopNav({
   activeGroupId,
   openOverride,
   onToggleGroup,
+  onRetry,
   isHidden,
   childrenOf,
 }: {
@@ -28,6 +30,7 @@ export function SidebarDesktopNav({
   activeGroupId: string | undefined;
   openOverride: Record<string, boolean>;
   onToggleGroup: (entryId: string, open: boolean) => void;
+  onRetry?: () => void;
   isHidden: (entry: NavEntry) => boolean;
   childrenOf: (entry: NavSubmenu) => NavSubmenu["children"];
 }) {
@@ -44,18 +47,7 @@ export function SidebarDesktopNav({
     );
   }
 
-  if (notice) {
-    return (
-      <p
-        className="px-2 py-1 text-sm text-tp-muted"
-        role={menuStatus === "error" ? "alert" : undefined}
-      >
-        {notice}
-      </p>
-    );
-  }
-
-  return (
+  const list = (
     <ul className="flex flex-col gap-1">
       {entries.map((entry) => {
         if (isHidden(entry)) return null;
@@ -140,5 +132,14 @@ export function SidebarDesktopNav({
         );
       })}
     </ul>
+  );
+
+  if (!notice) return list;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <SidebarNotice notice={notice} onRetry={onRetry} status={menuStatus} />
+      {entries.length > 0 ? list : null}
+    </div>
   );
 }
