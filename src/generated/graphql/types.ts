@@ -1779,11 +1779,13 @@ export type OperationDashboard = {
   contractsExpiringIn30Days: Scalars['Int']['output'];
   /** Kontrak berjalan yang berakhir dalam 90 hari ke depan (FR-40). */
   contractsExpiringIn90Days: Scalars['Int']['output'];
+  /** Kontrak berjalan hari ini milik talent aktif, per unit; total barisnya sama dengan totalActiveEmployees. */
   employeesPerUnit: Array<UnitCount>;
   nonAssignableEmployees: Scalars['Int']['output'];
   /** Karyawan aktif pra-pensiun: usia ≥ retirement_age − 1 (FR-40; default 55 → ≥ 54). */
   preRetirementEmployees: Scalars['Int']['output'];
   recentEmployeeChanges: Array<Employee>;
+  /** Talent aktif: karyawan berstatus ACTIVE dengan kontrak berjalan hari ini (sudah mulai, belum berakhir/expire, tidak diakhiri dini) — sama dengan jumlah kontrak aktif yang berlaku. */
   totalActiveEmployees: Scalars['Int']['output'];
 };
 
