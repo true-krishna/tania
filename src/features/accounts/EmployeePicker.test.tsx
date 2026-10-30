@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import * as React from "react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { EmployeeLookupDocument } from "@/generated/graphql";
 import { EmployeePicker } from "./EmployeePicker";
@@ -50,6 +51,39 @@ const EMPLOYEES_QUERY = {
   },
 };
 
+const FILTERED_QUERY = {
+  request: {
+    query: EmployeeLookupDocument,
+    variables: { filter: { search: "Zulkifli" }, first: 10, after: null },
+  },
+  result: {
+    data: {
+      employeeLookup: {
+        totalCount: 1,
+        edges: [
+          {
+            node: {
+              id: "emp-9",
+              fullName: "Zulkifli Rahman",
+              nomorInduk: "EMP-0909",
+              email: "zulkifli@telkom.co.id",
+              __typename: "Employee",
+            },
+            cursor: "c-emp-9",
+            __typename: "EmployeeEdge",
+          },
+        ],
+        pageInfo: {
+          hasNextPage: false,
+          endCursor: "c-emp-9",
+          __typename: "PageInfo",
+        },
+        __typename: "EmployeeConnection",
+      },
+    },
+  },
+};
+
 function renderPicker({
   label = "Karyawan",
   onChange = vi.fn(),
@@ -64,6 +98,12 @@ function renderPicker({
       <EmployeePicker label={label} onChange={onChange} value={value} />
     </MockedProvider>,
   );
+}
+
+/** Mirrors AccountsSection: the picked id is lifted into the parent's form state. */
+function ControlledPicker() {
+  const [value, setValue] = React.useState("");
+  return <EmployeePicker label="Karyawan" onChange={setValue} value={value} />;
 }
 
 async function openOptions() {
@@ -93,15 +133,48 @@ describe("EmployeePicker", () => {
   });
 
   it("selects the active option with ArrowDown and Enter", async () => {
-    const onChange = vi.fn();
-    renderPicker({ onChange });
+    render(
+      <MockedProvider mocks={[EMPLOYEES_QUERY, FILTERED_QUERY] as never}>
+        <ControlledPicker />
+      </MockedProvider>,
+    );
     const input = await openOptions();
 
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
 
-    expect(onChange).toHaveBeenCalledWith("emp-2");
     expect(screen.queryByRole("listbox")).toBeNull();
+    expect(screen.getByText("Budi Santoso")).toBeInTheDocument();
+    expect(screen.getByText("(EMP-0101)")).toBeInTheDocument();
+  });
+
+  it("keeps a picked employee outside the default page visible as a chip", async () => {
+    render(
+      <MockedProvider mocks={[EMPLOYEES_QUERY, FILTERED_QUERY] as never}>
+        <ControlledPicker />
+      </MockedProvider>,
+    );
+
+    const input = screen.getByRole("combobox");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "Zulkifli" } });
+
+    const option = await screen.findByRole("option", { name: /Zulkifli Rahman/ });
+    fireEvent.mouseDown(option);
+
+    // Let the debounced query settle back to the unfiltered first page: the
+    // picked employee is not on it, so the chip has to survive on its own.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+    });
+
+    expect(screen.getByText("Zulkifli Rahman")).toBeInTheDocument();
+    expect(screen.getByText("(EMP-0909)")).toBeInTheDocument();
+    expect((input as HTMLInputElement).value).toBe("");
+
+    fireEvent.focus(input);
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    expect(screen.getByText("(EMP-0909)")).toBeInTheDocument();
   });
 
   it("clears the selected employee", async () => {
