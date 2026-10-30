@@ -1,110 +1,145 @@
-import type { CvFieldsFragment } from "@/generated/graphql";
-import type { MyIdp } from "@/features/idp/talent/useMyIdp";
+import { CV, IDP_MY, WORKLOAD } from "@/lib/constants/routes";
 import type { RefetchableQueryState } from "@/lib/apollo/toQueryState";
 import type { ProfileMetric } from "./ProfileMetrics";
-import type { ProfileHistory } from "./useProfile";
+import type { SelfProfileMetrics } from "./useSelfProfile";
 
 interface ProfileMetricsInput {
-  assignmentsCanRead: boolean;
-  cv: RefetchableQueryState<CvFieldsFragment | undefined>;
-  history: RefetchableQueryState<ProfileHistory>;
-  idp: RefetchableQueryState<MyIdp | undefined>;
-  idpCanRead: boolean;
+  metrics: RefetchableQueryState<SelfProfileMetrics>;
 }
 
-function assignmentMetric(
-  canRead: boolean,
-  history: RefetchableQueryState<ProfileHistory>,
-): ProfileMetric {
-  const base = { id: "assignment", label: "Assignment aktif" };
-  if (!canRead) {
-    return { ...base, hint: "Butuh akses modul Assignment.", state: "unavailable" };
+type MetricsQuery = RefetchableQueryState<SelfProfileMetrics>;
+
+interface MetricLink {
+  href?: string;
+  linkLabel?: string;
+}
+
+const UTILIZATION_LINK: MetricLink = { href: WORKLOAD, linkLabel: "Buka Workload saya" };
+const CERTIFICATION_LINK: MetricLink = { href: CV, linkLabel: "Buka CV saya" };
+const IDP_LINK: MetricLink = { href: IDP_MY, linkLabel: "Buka IDP saya" };
+
+/**
+ * State that stops a metric before it reads a value: loading and error. `ready`
+ * returns null so the caller can resolve the value (including a null source).
+ */
+function pendingMetric(
+  id: string,
+  label: string,
+  query: MetricsQuery,
+  link: MetricLink,
+): ProfileMetric | null {
+  if (query.status === "loading") {
+    return { ...link, id, label, hint: "Memuat metrik…", state: "loading" };
   }
-  if (history.status === "loading") {
-    return { ...base, hint: "Memuat data assignment…", state: "loading" };
-  }
-  if (history.status === "error") {
+  if (query.status === "error") {
     return {
-      ...base,
-      hint: "Gagal memuat data assignment.",
-      onRetry: history.refetch,
+      ...link,
+      id,
+      label,
+      hint: "Gagal memuat metrik profil.",
+      onRetry: query.refetch,
       state: "error",
     };
   }
+  return null;
+}
 
-  const assignments = history.data?.assignments ?? [];
-  const active = assignments.filter((assignment) => assignment.status === "ACTIVE").length;
+function assignmentMetric(query: MetricsQuery): ProfileMetric {
+  const pending = pendingMetric("assignment", "Assignment aktif", query, {});
+  if (pending) return pending;
+  const count = query.data?.activeAssignmentCount ?? null;
+  if (count === null) {
+    return {
+      id: "assignment",
+      label: "Assignment aktif",
+      hint: "Belum ada assignment aktif untuk akun ini.",
+      state: "unavailable",
+    };
+  }
   return {
-    ...base,
-    hint: `${assignments.length} assignment tercatat.`,
+    id: "assignment",
+    label: "Assignment aktif",
+    hint: `${count} assignment berstatus aktif.`,
     state: "ready",
-    value: active,
+    value: count,
   };
 }
 
-function certificationMetric(
-  cv: RefetchableQueryState<CvFieldsFragment | undefined>,
-): ProfileMetric {
-  const base = { id: "certification", label: "Sertifikasi" };
-  if (cv.status === "loading") {
-    return { ...base, hint: "Memuat profil CV…", state: "loading" };
-  }
-  if (cv.status === "error") {
-    return { ...base, hint: "Gagal memuat profil CV.", onRetry: cv.refetch, state: "error" };
-  }
-  if (!cv.data) {
-    return { ...base, hint: "Profil CV belum diisi.", state: "unavailable" };
-  }
-
-  const total = cv.data.certifications.length;
-  return {
-    ...base,
-    hint: total ? "Terdata di profil CV." : "Belum ada sertifikasi tercatat.",
-    state: "ready",
-    value: total,
-  };
-}
-
-function idpMetric(canRead: boolean, idp: RefetchableQueryState<MyIdp | undefined>): ProfileMetric {
-  const base = { id: "idp", label: "IDP berjalan" };
-  if (!canRead) {
-    return { ...base, hint: "Butuh akses modul IDP.", state: "unavailable" };
-  }
-  if (idp.status === "loading") {
-    return { ...base, hint: "Memuat IDP…", state: "loading" };
-  }
-  if (idp.status === "error") {
-    return { ...base, hint: "Gagal memuat IDP.", onRetry: idp.refetch, state: "error" };
-  }
-  if (!idp.data) {
-    return { ...base, hint: "Belum ada IDP dari Chapter.", state: "unavailable" };
-  }
-
-  const completed = idp.data.actions.filter((action) => action.status === "COMPLETED").length;
-  return {
-    ...base,
-    hint: `${completed}/${idp.data.actions.length} aksi selesai.`,
-    state: "ready",
-    value: idp.data.actions.length - completed,
-  };
-}
-
-export function buildProfileMetrics({
-  assignmentsCanRead,
-  cv,
-  history,
-  idp,
-  idpCanRead,
-}: ProfileMetricsInput): ProfileMetric[] {
-  return [
-    assignmentMetric(assignmentsCanRead, history),
-    {
+function utilizationMetric(query: MetricsQuery): ProfileMetric {
+  const pending = pendingMetric("utilization", "Utilisasi 6 bulan", query, UTILIZATION_LINK);
+  if (pending) return pending;
+  const percent = query.data?.utilizationPercent ?? null;
+  if (percent === null) {
+    return {
+      ...UTILIZATION_LINK,
       id: "utilization",
       label: "Utilisasi 6 bulan",
-      hint: "Belum ada sumber data utilisasi (menunggu agregat WAD).",
+      hint: "Belum ada assignment pada enam bulan terakhir.",
       state: "unavailable",
-    },
-    certificationMetric(cv),
-    idpMetric(idpCanRead, idp),
+    };
+  }
+  return {
+    ...UTILIZATION_LINK,
+    id: "utilization",
+    label: "Utilisasi 6 bulan",
+    hint: "Rata-rata 6 bulan terakhir · rentang sehat 70–85%.",
+    state: "ready",
+    value: `${percent}%`,
+  };
+}
+
+function certificationMetric(query: MetricsQuery): ProfileMetric {
+  const pending = pendingMetric("certification", "Sertifikasi", query, CERTIFICATION_LINK);
+  if (pending) return pending;
+  const count = query.data?.certificationCount ?? null;
+  if (count === null) {
+    return {
+      ...CERTIFICATION_LINK,
+      id: "certification",
+      label: "Sertifikasi",
+      hint: "Profil CV belum pernah diisi.",
+      state: "unavailable",
+    };
+  }
+  return {
+    ...CERTIFICATION_LINK,
+    id: "certification",
+    label: "Sertifikasi",
+    hint: count ? "Terdata di profil CV." : "Belum ada sertifikasi tercatat.",
+    state: "ready",
+    value: count,
+  };
+}
+
+function idpMetric(query: MetricsQuery): ProfileMetric {
+  const pending = pendingMetric("idp", "IDP berjalan", query, IDP_LINK);
+  if (pending) return pending;
+  const running = query.data?.runningIdpCount ?? null;
+  if (running === null) {
+    return {
+      ...IDP_LINK,
+      id: "idp",
+      label: "IDP berjalan",
+      hint: "Chapter belum membuat IDP untuk Anda.",
+      state: "unavailable",
+    };
+  }
+  const completed = query.data?.completedIdpCount ?? 0;
+  return {
+    ...IDP_LINK,
+    id: "idp",
+    label: "IDP berjalan",
+    hint: `${completed} IDP selesai.`,
+    state: "ready",
+    value: running,
+  };
+}
+
+export function buildProfileMetrics({ metrics }: ProfileMetricsInput): ProfileMetric[] {
+  return [
+    assignmentMetric(metrics),
+    utilizationMetric(metrics),
+    certificationMetric(metrics),
+    idpMetric(metrics),
   ];
 }

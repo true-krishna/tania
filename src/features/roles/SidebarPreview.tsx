@@ -36,7 +36,7 @@ export function SidebarPreview({ role, cells }: SidebarPreviewProps) {
         aria-label={`Pratinjau sidebar role ${role.label}`}
         className="max-w-[268px] rounded-lg border border-tp-line bg-tp-surface p-2"
       >
-        <SidebarNavPreview config={config} roleName={role.name} />
+        <SidebarNavPreview config={config} roleName={role.name} templateRole={role.templateRole} />
       </div>
     </div>
   );

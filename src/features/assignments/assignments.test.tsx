@@ -782,9 +782,6 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
         variables: {
           first: 100,
           after: null,
-          search: null,
-          sortBy: "FULL_NAME",
-          sortDirection: "ASC",
         },
       },
       result: assignmentsResult,
@@ -815,9 +812,6 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
           variables: {
             first: 100,
             after: null,
-            search: null,
-            sortBy: "FULL_NAME",
-            sortDirection: "ASC",
           },
         },
         result: {
@@ -1119,9 +1113,6 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
             variables: {
               first: 100,
               after: null,
-              search: null,
-              sortBy: "FULL_NAME",
-              sortDirection: "ASC",
             },
           },
           result: assignmentsResult,

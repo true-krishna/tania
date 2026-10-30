@@ -7,10 +7,11 @@ const ROLES: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"]
 const EXPECTED: Record<Module, Record<AccessRole, boolean>> = {
   // TAN-374 (keputusan TAN-364): Admin kembali memegang seluruh modul
   // operasional; Talent tetap tanpa Assignment (self-service ditunda) dan
-  // Workload keluar dari matriks sampai TAN-378.
+  // Workload keluar dari matriks sampai TAN-378. TAN-392: Talent tanpa Data
+  // Karyawan — record miliknya dibaca lewat Profil saya.
   dashboard: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   activities: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
-  employees: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
+  employees: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   entra: { ADMIN: true, OPERATION: true, CHAPTER: false, TALENT: false },
   contracts: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   assignments: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },

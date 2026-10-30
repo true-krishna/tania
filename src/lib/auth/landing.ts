@@ -1,23 +1,16 @@
 import type { AccessRole } from "@/generated/graphql";
-import { ACCOUNTS, DASHBOARD, EMPLOYEES, LOGIN } from "@/lib/constants/routes";
+import { ACCOUNTS, DASHBOARD, LOGIN, PROFILE } from "@/lib/constants/routes";
 
 /**
  * Halaman muka setelah login per peran (TAN-343, umpan balik pemilik produk
- * 2026-10-27):
+ * 2026-10-27; TAN-392):
  *
  * - Operation & Chapter tetap mendarat di Dashboard (sel default READ).
  * - Admin tidak memegang sel Dashboard — langsung ke Accounts, fokus RBAC.
- * - Talent tidak memegang sel Dashboard/Assignment — langsung ke Data Karyawan
- *   untuk melihat record miliknya (profil tetap lewat menu).
+ * - Talent mendarat di Profil saya — menu item pertama di sidebar datar
+ *   (TAN-392), menggantikan redirect Data Karyawan.
  *
  * Tanpa sesi (peran belum dikenali) kembali ke halaman login.
- *
- * TAN-373: landing stays static by design. It runs right after sign-in, before
- * `myMenuConfig` has answered, so an effective-config landing would either
- * bounce on the first paint or trust a stale grid. It is a navigation hint, not
- * an authorization decision: no page redirects back into it, and a role whose
- * historical landing cell is hidden sees AccessDenied instead of a bounce. The
- * approved Admin landing (`/accounts`) therefore does not move.
  */
 export function landingRoute(role: AccessRole | null | undefined): string {
   if (!role) return LOGIN;
@@ -25,7 +18,7 @@ export function landingRoute(role: AccessRole | null | undefined): string {
     case "ADMIN":
       return ACCOUNTS;
     case "TALENT":
-      return EMPLOYEES;
+      return PROFILE;
     default:
       // OPERATION & CHAPTER
       return DASHBOARD;

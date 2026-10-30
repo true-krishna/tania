@@ -1,9 +1,12 @@
 import {
+  IconChartBar,
   IconClipboardCheck,
   IconClockHour3,
   IconDatabase,
+  IconFileCv,
   IconLayoutGrid,
   IconTarget,
+  IconUserCircle,
   IconUserPlus,
   IconUserShield,
   IconUsers,
@@ -16,6 +19,7 @@ import {
   ACTIVITIES,
   AUDIT,
   CONTRACTS,
+  CV,
   DASHBOARD,
   EMPLOYEES,
   ENTRA,
@@ -24,12 +28,15 @@ import {
   EVALUATION_PERIODS,
   EVALUATION_TEMPLATES,
   IDP,
+  IDP_MY,
   MASTER_DATA_CHAPTERS,
   MASTER_DATA_JOB_ROLES,
   MASTER_DATA_PROJECTS,
   MASTER_DATA_UNITS,
+  PROFILE,
   ROLES_ADMIN,
   TALENT_ASSIGNMENT,
+  WORKLOAD,
 } from "@/lib/constants/routes";
 
 export interface NavLink {
@@ -58,51 +65,47 @@ export interface NavSubmenu {
 
 export type NavEntry = NavStandalone | NavSubmenu;
 
-const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
+const OPS: readonly AccessRole[] = ["CHAPTER", "OPERATION", "ADMIN"];
 
 /**
- * Single source of truth for the sidebar. Multi-page sections (Employee,
- * Evaluations, Master Data) are groups rendered as expandable submenus; the
- * rest are direct links. Visibility is role-scoped at the UI layer — the
- * backend still enforces authorization (FR-16).
+ * Sidebar peran operasional (Chapter/Operation/Admin) — satu sumber kebenaran
+ * untuk grup yang bisa dikonfigurasi Admin di Menu & Akses. Multi-page sections
+ * (Karyawan, Evaluasi, Master Data) dirender sebagai submenu; sisanya tautan
+ * langsung. Visibilitas diatur konfigurasi menu × role (W2/US-C); server tetap
+ * titik penegakan (FR-16).
  *
- * R2.2 (002-tania-rbac): each entry mirrors the role/module matrix. Every
- * module a role may *read* has a menu entry, even when the page turns out
- * read-only for that role — Data Karyawan for Chapter (scoped) and Talent
- * (own record), Kontrak for Chapter (scoped, read-only), Assignments for
- * Operation (read-only), Master Data for Operation (read-only) and Chapter
- * (scoped read).
+ * R2.2 (002-tania-rbac): setiap entri mencerminkan matriks role/modul. Setiap
+ * modul yang boleh *dibaca* sebuah peran punya entri menu, walau halamannya
+ * hanya baca untuk peran itu.
  *
- * 2026-10-29 (TAN-372): CV is no longer a menu — it lives inside the talent
- * profile (`/profile` for the caller's own CV, `/employees/[id]` read-only for
- * Chapter/Operation/Admin).
+ * 2026-10-29 (TAN-372): CV bukan lagi menu operasional — CV karyawan dibaca
+ * dari detail karyawan.
  *
  * 2026-10-29 (TAN-374, keputusan TAN-364): Admin kembali memegang Dashboard,
- * grup Employee (Data Karyawan, Kontrak, Assignments) dan Provisi Entra; menu
- * Workload dihapus seluruhnya — prototipenya masih fixture dan modulnya baru
- * diaktifkan lagi oleh TAN-378.
+ * grup Karyawan (Data Karyawan, Kontrak, Assignments) dan Provisi Entra; menu
+ * Workload dihapus — prototipenya masih fixture dan modulnya baru diaktifkan
+ * lagi oleh TAN-378.
  *
  * 2026-10-16 (clarify 5/6): Kontrak `+CHAPTER` (cakupan, hanya baca), Master
- * Data = `[CHAPTER, OPERATION, ADMIN]` (Talent tanpa akses).
+ * Data = `[CHAPTER, OPERATION, ADMIN]`.
  *
- * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation tampil untuk **semua**
- * peran; yang berbeda hanya aksesnya. `/idp` terbuka bagi keempat peran (Talent
- * melihat IDP-nya sendiri, Operation hanya baca, Chapter/Admin mengelola) dan
- * grup Evaluations terbuka bagi keempat peran lewat anak yang sesuai — Roster
- * untuk Admin/Operation/Chapter, Periode & Template tetap Admin (konfigurasi
- * global), Evaluasi Saya untuk Talent. `nav.test.ts` menjaga invariannya: tidak
- * ada tautan mati, dan setiap peran yang boleh membuka modul melihat minimal
- * satu entri modul itu.
+ * 2026-10-16 (clarify 9 — aktivasi): IDP & Evaluation tampil untuk peran
+ * operasional; `/idp` terbuka bagi Chapter/Operation/Admin (Operation hanya
+ * baca, Chapter/Admin mengelola) dan grup Evaluasi berisi Roster (Chapter/
+ * Operation/Admin) serta Periode & Template (Admin).
  *
  * 2026-10-27 (TAN-343): sel default mengikuti definisi peran baru — Dashboard
  * hanya Operation & Chapter, Employee tanpa Admin, Assignments hanya
- * Chapter/Operation (Talent ditunda), Provisi Entra hanya Operation.
- * Bagian Dashboard/Employee/Entra dari amandemen ini dicabut TAN-374: Admin
- * mengelola seluruh modul operasional lagi.
+ * Chapter/Operation. Bagian Dashboard/Employee/Entra dari amandemen ini dicabut
+ * TAN-374: Admin mengelola seluruh modul operasional lagi.
  *
  * 2026-10-29 (TAN-376): Accounts, Menu & Akses (`/admin/roles`), dan Audit
- * dikelompokkan sebagai "Administrasi" supaya konfigurasi menu ditemukan
- * lewat navigasi, bukan hanya tautan di halaman Accounts.
+ * dikelompokkan sebagai "Administrasi".
+ *
+ * 2026-10-30 (TAN-392): Talent keluar dari menu operasional ini dan memakai
+ * `TALENT_NAV` — halaman pribadi yang datar, tanpa grup. Halaman pribadi tidak
+ * masuk katalog menu server (katalognya hanya memuat permukaan operasional),
+ * jadi tidak ikut dikonfigurasi di Menu & Akses.
  */
 export const NAV: readonly NavEntry[] = [
   {
@@ -112,21 +115,17 @@ export const NAV: readonly NavEntry[] = [
     icon: IconLayoutGrid,
     roles: ["CHAPTER", "OPERATION", "ADMIN"],
   },
-  { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: ALL },
+  { kind: "link", href: ACTIVITIES, label: "Aktivitas saya", icon: IconClockHour3, roles: OPS },
   {
     kind: "group",
     id: "employee",
     label: "Karyawan",
     icon: IconUsers,
-    roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
+    roles: OPS,
     children: [
-      {
-        href: EMPLOYEES,
-        label: "Data Karyawan",
-        roles: ["TALENT", "CHAPTER", "OPERATION", "ADMIN"],
-      },
-      { href: CONTRACTS, label: "Kontrak", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
-      { href: TALENT_ASSIGNMENT, label: "Assignments", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: EMPLOYEES, label: "Data Karyawan", roles: OPS },
+      { href: CONTRACTS, label: "Kontrak", roles: OPS },
+      { href: TALENT_ASSIGNMENT, label: "Assignments", roles: OPS },
     ],
   },
   {
@@ -136,18 +135,17 @@ export const NAV: readonly NavEntry[] = [
     icon: IconUserPlus,
     roles: ["OPERATION", "ADMIN"],
   },
-  { kind: "link", href: IDP, label: "IDP", icon: IconTarget, roles: ALL },
+  { kind: "link", href: IDP, label: "IDP", icon: IconTarget, roles: OPS },
   {
     kind: "group",
     id: "evaluations",
     label: "Evaluasi",
     icon: IconClipboardCheck,
-    roles: ALL,
+    roles: OPS,
     children: [
-      { href: EVALUATIONS, label: "Roster", roles: ["CHAPTER", "OPERATION", "ADMIN"] },
+      { href: EVALUATIONS, label: "Roster", roles: OPS },
       { href: EVALUATION_PERIODS, label: "Periode", roles: ["ADMIN"] },
       { href: EVALUATION_TEMPLATES, label: "Template", roles: ["ADMIN"] },
-      { href: EVALUATIONS_MY, label: "Evaluasi Saya", roles: ["TALENT"] },
     ],
   },
   {
@@ -180,10 +178,40 @@ export const NAV: readonly NavEntry[] = [
 ];
 
 /**
+ * Sidebar datar peran Talent (TAN-392): setiap entri adalah halaman milik
+ * pemanggil sendiri, diurutkan menurut frekuensi kerja (identitas → beban →
+ * log harian → pertumbuhan). Tidak ada grup karena setiap grup operasional
+ * hanya menyisakan satu anak untuk Talent.
+ *
+ * "Assignment saya" belum masuk: keputusan produk TAN-343 masih terbuka dan
+ * baca assignment mandiri belum ada (TAN-393). Saat keduanya selesai, entri
+ * ditambahkan di posisi kedua.
+ */
+export const TALENT_NAV: readonly NavEntry[] = [
+  { kind: "link", href: PROFILE, label: "Profil saya", icon: IconUserCircle, roles: ["TALENT"] },
+  { kind: "link", href: WORKLOAD, label: "Workload saya", icon: IconChartBar, roles: ["TALENT"] },
+  {
+    kind: "link",
+    href: ACTIVITIES,
+    label: "Aktivitas saya",
+    icon: IconClockHour3,
+    roles: ["TALENT"],
+  },
+  { kind: "link", href: CV, label: "CV saya", icon: IconFileCv, roles: ["TALENT"] },
+  { kind: "link", href: IDP_MY, label: "IDP saya", icon: IconTarget, roles: ["TALENT"] },
+  {
+    kind: "link",
+    href: EVALUATIONS_MY,
+    label: "Evaluasi saya",
+    icon: IconClipboardCheck,
+    roles: ["TALENT"],
+  },
+];
+
+/**
  * A group with one visible child renders as that child, using the group's icon:
- * "Karyawan → Data Karyawan" for Talent is a group that repeats its child, not
- * a section worth an expand affordance. The same rule keeps "Evaluasi → Roster"
- * from being a one-item submenu for Operation and Chapter.
+ * "Evaluasi → Roster" for Operation and Chapter is a group that repeats its
+ * child, not a section worth an expand affordance.
  */
 function collapseSingleChildGroups(entries: readonly NavEntry[]): NavEntry[] {
   return entries.map((entry) => {
@@ -210,11 +238,17 @@ function collapseSingleChildGroups(entries: readonly NavEntry[]): NavEntry[] {
  *
  * The server is the enforcement point (US-C): this only decides what is drawn,
  * and `nav.test.ts` asserts that nothing drawn is denied by the active config.
+ *
+ * The Talent template role draws `TALENT_NAV` as-is (TAN-392): its pages are
+ * self-scoped and absent from the server menu catalog, so there is no cell to
+ * read. Custom roles with Talent as their template role follow the same list.
  */
 export function visibleNavEntries(
   config: MenuAccessConfig | null,
   roleName: string | null,
+  templateRole: AccessRole | null = null,
 ): readonly NavEntry[] {
+  if (templateRole === "TALENT") return TALENT_NAV;
   if (!config || !roleName) return NAV;
   const entries: NavEntry[] = [];
   for (const entry of NAV) {
@@ -232,6 +266,7 @@ export function visibleNavEntries(
 
 /** The static role filter of `NAV`, with one-child groups collapsed to their child. */
 export function navEntriesForRole(role: AccessRole | null): readonly NavEntry[] {
+  if (role === "TALENT") return TALENT_NAV;
   const entries: NavEntry[] = [];
   for (const entry of NAV) {
     if (entry.kind === "link") {
@@ -251,7 +286,7 @@ export function sectionForPath(pathname: string): string {
   }
   let bestLabel = "Tania";
   let bestLength = -1;
-  for (const entry of NAV) {
+  for (const entry of [...NAV, ...TALENT_NAV]) {
     const hrefs = entry.kind === "link" ? [entry.href] : entry.children.map((c) => c.href);
     for (const href of hrefs) {
       const active = pathname === href || pathname.startsWith(`${href}/`);

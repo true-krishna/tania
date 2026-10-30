@@ -16,16 +16,22 @@ import { useCvCollection } from "./useCvCollection";
 type CertificationItem = CvFieldsFragment["certifications"][number];
 
 type CertificationValues = {
+  credentialUrl: string;
+  expiryDate: string;
+  issuedDate: string;
   issuer: string;
   name: string;
 };
 
 function createCertificationValues(): CertificationValues {
-  return { issuer: "", name: "" };
+  return { credentialUrl: "", expiryDate: "", issuedDate: "", issuer: "", name: "" };
 }
 
 function toCertificationValues(certification: CertificationItem): CertificationValues {
   return {
+    credentialUrl: certification.credentialUrl ?? "",
+    expiryDate: certification.expiryDate ?? "",
+    issuedDate: certification.issuedDate ?? "",
     issuer: certification.issuer ?? "",
     name: certification.name,
   };
@@ -33,6 +39,9 @@ function toCertificationValues(certification: CertificationItem): CertificationV
 
 function buildCertificationInput(values: CertificationValues): CvCertificationInput {
   return {
+    credentialUrl: values.credentialUrl.trim() || null,
+    expiryDate: values.expiryDate || null,
+    issuedDate: values.issuedDate || null,
     issuer: values.issuer.trim() || null,
     name: values.name.trim(),
   };
@@ -96,7 +105,7 @@ export function CvCertificationsSection({ cv }: { cv: CvFieldsFragment | undefin
         <p className="text-sm text-zinc-500">Belum ada sertifikasi.</p>
       )}
 
-      <form className="grid grid-cols-1 gap-2 sm:grid-cols-2" onSubmit={submit}>
+      <form className="grid grid-cols-1 gap-2 min-[860px]:grid-cols-2" onSubmit={submit}>
         <Input
           onChange={(event) =>
             setValues((current) => ({
@@ -117,6 +126,39 @@ export function CvCertificationsSection({ cv }: { cv: CvFieldsFragment | undefin
           }
           placeholder="Penerbit"
           value={values.issuer}
+        />
+        <Input
+          aria-label="Diterbitkan"
+          onChange={(event) =>
+            setValues((current) => ({
+              ...current,
+              issuedDate: event.target.value,
+            }))
+          }
+          type="date"
+          value={values.issuedDate}
+        />
+        <Input
+          aria-label="Berlaku sampai"
+          onChange={(event) =>
+            setValues((current) => ({
+              ...current,
+              expiryDate: event.target.value,
+            }))
+          }
+          type="date"
+          value={values.expiryDate}
+        />
+        <Input
+          onChange={(event) =>
+            setValues((current) => ({
+              ...current,
+              credentialUrl: event.target.value,
+            }))
+          }
+          placeholder="Tautan kredensial (opsional)"
+          type="url"
+          value={values.credentialUrl}
         />
         <div className="flex gap-2 sm:col-span-2">
           <Button disabled={saving || !values.name.trim()} type="submit">

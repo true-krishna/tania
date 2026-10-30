@@ -297,7 +297,7 @@ describe("IdpPage (Apollo, US3)", () => {
         </MockedProvider>,
       );
 
-      expect(await screen.findByText("IDP Saya")).toBeInTheDocument();
+      expect(await screen.findByText("IDP saya")).toBeInTheDocument();
       expect(screen.getByText(/menjadi go backend engineer yang andal/i)).toBeInTheDocument();
     } finally {
       auth.role = "CHAPTER";

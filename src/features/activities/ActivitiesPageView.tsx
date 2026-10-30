@@ -152,7 +152,7 @@ export function ActivitiesPageView() {
 
       {success ? (
         <p
-          className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800"
+          className="rounded-tp-md border border-tp-tint-mint bg-tp-tint-mint p-3 text-sm text-tp-ink-mint"
           role="status"
         >
           {success}
@@ -160,7 +160,7 @@ export function ActivitiesPageView() {
       ) : null}
       {deleteError ? (
         <p
-          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="rounded-tp-md border border-tp-tint-peach bg-tp-tint-peach p-3 text-sm text-tp-ink-peach"
           role="alert"
         >
           {deleteError}

@@ -1,4 +1,5 @@
-import { IconAlertTriangle, IconRefresh } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconAlertTriangle, IconArrowUpRight, IconRefresh } from "@tabler/icons-react";
 import type * as React from "react";
 import { cn } from "@/lib/cn";
 
@@ -6,13 +7,17 @@ export type MetricState = "loading" | "ready" | "unavailable" | "error";
 
 export function ProfileMetricCard({
   hint,
+  href,
   label,
+  linkLabel,
   onRetry,
   state,
   value,
 }: {
   hint: string;
+  href?: string;
   label: string;
+  linkLabel?: string;
   onRetry?: () => void;
   state: MetricState;
   value?: React.ReactNode;
@@ -41,7 +46,10 @@ export function ProfileMetricCard({
   }
 
   return (
-    <div className="tp-card min-w-0 border-t-4" style={{ borderTopColor: "var(--tp-brand-navy)" }}>
+    <div
+      className="tp-card flex min-w-0 flex-col border-t-4"
+      style={{ borderTopColor: "var(--tp-brand-navy)" }}
+    >
       <p className="tp-label min-w-0 break-words">{label}</p>
       {body}
       <p
@@ -62,6 +70,15 @@ export function ProfileMetricCard({
           <IconRefresh aria-hidden className="h-4 w-4" />
           Coba lagi
         </button>
+      ) : null}
+      {href && linkLabel ? (
+        <Link
+          className="mt-3 inline-flex min-h-[44px] items-center gap-1.5 text-[13px] font-semibold text-tp-brand-red-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tp-brand-red"
+          href={href}
+        >
+          {linkLabel}
+          <IconArrowUpRight aria-hidden className="h-4 w-4" />
+        </Link>
       ) : null}
     </div>
   );

@@ -2,16 +2,22 @@
 
 import * as React from "react";
 import { visibleNavEntries, type NavSubmenu } from "@/components/Sidebar";
+import type { AccessRole } from "@/generated/graphql";
 import type { MenuAccessConfig } from "@/lib/auth/menuAccess";
 
 export function SidebarNavPreview({
   config,
   roleName,
+  templateRole = null,
 }: {
   config: MenuAccessConfig | null;
   roleName: string;
+  templateRole?: AccessRole | null;
 }) {
-  const entries = React.useMemo(() => visibleNavEntries(config, roleName), [config, roleName]);
+  const entries = React.useMemo(
+    () => visibleNavEntries(config, roleName, templateRole),
+    [config, roleName, templateRole],
+  );
 
   if (entries.length === 0) {
     return (

@@ -991,6 +991,43 @@ input CvCertificationInput {
 
 input CvSkillInput { name: String!, level: String }
 
+# ------------------------------ Profil saya ---------------------------------
+
+"""Agregat strip metrik profil (TAN-387). Dihitung ulang saat dibaca; metrik
+tanpa sumber data bernilai null supaya antarmuka menampilkan "—", bukan nol."""
+type ProfileMetrics {
+  """Jumlah assignment berstatus ACTIVE milik pemanggil."""
+  activeAssignmentCount: Int
+  """Rata-rata persentase hari kerja (Senin–Jumat) enam bulan terakhir yang
+  tercakup minimal satu assignment; null bila tidak ada assignment pada rentang."""
+  utilizationPercent: Float
+  """Jumlah sertifikasi pada profil CV; null bila CV belum pernah diisi."""
+  certificationCount: Int
+  """Jumlah IDP yang belum selesai (IN_PROGRESS/NEEDS_REVIEW); null bila belum
+  pernah ada IDP."""
+  runningIdpCount: Int
+  """Jumlah IDP berstatus COMPLETED; null bila belum pernah ada IDP."""
+  completedIdpCount: Int
+}
+
+"""Status keamanan akun pemanggil (self view). Tidak memuat kredensial."""
+type AccountSecurity {
+  """Hasil provisi akun Entra milik pemanggil; null = belum pernah diprovisi."""
+  entraProvision: EntraProvision
+  """Sesi aktif milik pemanggil, terbaru lebih dulu."""
+  sessions: [AccountSession!]!
+}
+
+"""Satu sesi aktif (refresh token yang belum dicabut dan belum kedaluwarsa).
+Nilai token dan hash-nya tidak pernah diekspos."""
+type AccountSession {
+  id: ID!
+  createdAt: Time!
+  expiresAt: Time!
+  """Metode masuk yang membuka sesi: `local` atau `entra_sso`."""
+  authMethod: String!
+}
+
 # ------------------------------- Dashboard ----------------------------------
 
 type AdminDashboard {
@@ -1276,6 +1313,19 @@ pengurutan."""
   myCvProfile: CvProfile
   """Profil CV untuk pemiliknya, Chapter dalam cakupan, Operation, atau Admin (hanya baca, FR-13)."""
   cvProfile(employeeId: ID!): CvProfile
+
+  # --- Profil saya (TAN-383/TAN-387; selalu milik pemanggil) ---
+  """Jejak audit pemanggil sendiri (FR-41 dipersempit ke self): entri terbaru
+  atas record karyawan, kontrak, dan assignment miliknya. `first` default 5,
+  maksimum 50. Akun tanpa record karyawan menerima daftar kosong."""
+  myAuditTrail(first: Int = 5): [AuditLog!]!
+
+  """Agregat strip metrik profil milik pemanggil. Metrik tanpa sumber data
+  bernilai null agar antarmuka menampilkan "—", bukan angka karangan."""
+  myProfileMetrics: ProfileMetrics!
+
+  """Status keamanan akun pemanggil: provisi Entra dan sesi aktif (self view)."""
+  myAccountSecurity: AccountSecurity!
 
   # --- Dashboard per peran (FR-29/FR-30) ---
   dashboard: Dashboard!

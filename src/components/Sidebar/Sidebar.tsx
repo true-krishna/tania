@@ -10,7 +10,13 @@ import {
   type MenuAccessConfig,
   type MenuConfigStatus,
 } from "@/lib/auth/menuAccess";
-import { navEntriesForRole, visibleNavEntries, type NavEntry, type NavSubmenu } from "./nav";
+import {
+  TALENT_NAV,
+  navEntriesForRole,
+  visibleNavEntries,
+  type NavEntry,
+  type NavSubmenu,
+} from "./nav";
 import { SidebarCompactNav } from "./SidebarCompactNav";
 import { SidebarDesktopNav } from "./SidebarDesktopNav";
 
@@ -55,7 +61,8 @@ function resolveEntries(
   role: AccessRole | null,
   menuStatus: MenuConfigStatus,
 ): readonly NavEntry[] {
-  if (configured && menuConfig && roleName) return visibleNavEntries(menuConfig, roleName);
+  if (role === "TALENT") return TALENT_NAV;
+  if (configured && menuConfig && roleName) return visibleNavEntries(menuConfig, roleName, role);
   if (menuStatus === "ready") return navEntriesForRole(role);
   return [];
 }

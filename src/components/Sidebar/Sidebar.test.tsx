@@ -51,21 +51,24 @@ describe("Sidebar", () => {
     }
   });
 
-  it("menampilkan IDP & Evaluation untuk semua peran setelah aktivasi (klarifikasi 9)", () => {
-    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
+  it("IDP & Evaluasi: halaman pribadi untuk Talent, modul operasional untuk peran lain (TAN-392)", () => {
+    const talent = renderSidebar({ role: "TALENT" });
+    expect(desktopNav().getByRole("link", { name: "IDP saya" })).toHaveAttribute("href", "/idp/my");
+    expect(desktopNav().getByRole("link", { name: "Evaluasi saya" })).toHaveAttribute(
+      "href",
+      "/evaluations/my",
+    );
+    expect(compactNav().getByRole("link", { name: "IDP saya" })).toBeInTheDocument();
+    talent.unmount();
+
+    for (const role of ["CHAPTER", "OPERATION", "ADMIN"] as const) {
       const view = renderSidebar({ role });
-      // Entri menunya sama untuk semua peran; yang berbeda hanya isi/akses
-      // halamannya (Talent membuka IDP-nya sendiri, Operation hanya baca).
       expect(desktopNav().getByRole("link", { name: "IDP" })).toBeInTheDocument();
-      // Satu anak yang terlihat dirender sebagai tautannya sendiri (F11).
       if (role === "ADMIN") {
         expect(desktopNav().getByRole("button", { name: "Evaluasi" })).toBeInTheDocument();
-      } else if (role === "TALENT") {
-        expect(desktopNav().getByRole("link", { name: "Evaluasi Saya" })).toBeInTheDocument();
       } else {
         expect(desktopNav().getByRole("link", { name: "Roster" })).toBeInTheDocument();
       }
-      expect(compactNav().getByRole("link", { name: "IDP" })).toBeInTheDocument();
       view.unmount();
     }
   });
@@ -83,16 +86,23 @@ describe("Sidebar", () => {
     }
   });
 
-  it("mirrors the module matrix in the Employee section (R2.2)", () => {
-    // Talent hanya punya satu halaman di grup itu, jadi grupnya dirender
-    // sebagai tautan "Data Karyawan", bukan submenu satu anak (F11).
+  it("Talent memakai sidebar datar tanpa grup (TAN-392)", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().queryByRole("button", { name: "Karyawan" })).toBeNull();
-    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toBeInTheDocument();
-    // TAN-343: Talent tanpa Assignments (self-service ditunda) dan Kontrak.
-    expect(desktopNav().queryByRole("link", { name: "Assignments" })).toBeNull();
-    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
-    expect(compactNav().queryByText("Karyawan")).toBeNull();
+    const labels = [
+      "Profil saya",
+      "Workload saya",
+      "Aktivitas saya",
+      "CV saya",
+      "IDP saya",
+      "Evaluasi saya",
+    ];
+    for (const label of labels) {
+      expect(desktopNav().getByRole("link", { name: label })).toBeInTheDocument();
+    }
+    expect(desktopNav().queryByRole("button")).toBeNull();
+    expect(desktopNav().queryByText("Karyawan")).toBeNull();
+    expect(desktopNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
+    expect(desktopNav().queryByRole("link", { name: "Assignment saya" })).toBeNull();
     talent.unmount();
 
     const chapter = renderSidebar({ role: "CHAPTER" });
@@ -155,12 +165,18 @@ describe("Sidebar", () => {
   });
 
   // TAN-374 (keputusan TAN-364): Workload disembunyikan sampai datanya nyata.
-  it("does not render Workload for any role", () => {
-    for (const role of ["TALENT", "CHAPTER", "OPERATION", "ADMIN"] as const) {
+  it("Workload hanya tampil untuk Talent, sebagai halaman pribadi (TAN-392)", () => {
+    const talent = renderSidebar({ role: "TALENT" });
+    expect(desktopNav().getByRole("link", { name: "Workload saya" })).toHaveAttribute(
+      "href",
+      "/workload",
+    );
+    talent.unmount();
+
+    for (const role of ["CHAPTER", "OPERATION", "ADMIN"] as const) {
       const view = renderSidebar({ role });
-      expect(desktopNav().queryByRole("link", { name: "Workload" })).toBeNull();
-      expect(desktopNav().queryByRole("button", { name: "Workload" })).toBeNull();
-      expect(compactNav().queryByRole("link", { name: "Workload" })).toBeNull();
+      expect(desktopNav().queryByRole("link", { name: /Workload/ })).toBeNull();
+      expect(desktopNav().queryByRole("button", { name: /Workload/ })).toBeNull();
       view.unmount();
     }
   });
@@ -186,20 +202,20 @@ describe("Sidebar", () => {
     expect(desktopNav().getByRole("link", { name: "Unit" })).not.toHaveAttribute("aria-current");
   });
 
-  it("shows only the role-scoped child of a section", () => {
-    renderSidebar({ role: "TALENT", pathname: "/employees/emp-1" });
-    expect(desktopNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute(
+  it("menandai halaman pribadi Talent yang aktif", () => {
+    renderSidebar({ role: "TALENT", pathname: "/cv" });
+    expect(desktopNav().getByRole("link", { name: "CV saya" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    // TAN-343: Assignments & Kontrak bukan milik Talent.
-    expect(desktopNav().queryByRole("link", { name: "Assignments" })).toBeNull();
-    expect(desktopNav().queryByRole("link", { name: "Kontrak" })).toBeNull();
+    expect(desktopNav().getByRole("link", { name: "Profil saya" })).not.toHaveAttribute(
+      "aria-current",
+    );
   });
 
   it("marks the active link in the compact strip without expanding anything", () => {
-    renderSidebar({ role: "TALENT", pathname: "/employees" });
-    expect(compactNav().getByRole("link", { name: "Data Karyawan" })).toHaveAttribute(
+    renderSidebar({ role: "TALENT", pathname: "/profile" });
+    expect(compactNav().getByRole("link", { name: "Profil saya" })).toHaveAttribute(
       "aria-current",
       "page",
     );

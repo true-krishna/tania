@@ -1,0 +1,45 @@
+# Baca profil mandiri (TAN-387): strip metrik, status keamanan akun, dan jejak
+# audit milik pemanggil. Semua query self-scoped — tidak ada parameter id.
+query MyProfileMetrics {
+  myProfileMetrics {
+    activeAssignmentCount
+    utilizationPercent
+    certificationCount
+    runningIdpCount
+    completedIdpCount
+  }
+}
+
+query MyAccountSecurity {
+  myAccountSecurity {
+    entraProvision {
+      status
+      action
+      upn
+      lastError
+      notifyStatus
+      needsReprovision
+      updatedAt
+    }
+    sessions {
+      id
+      createdAt
+      expiresAt
+      authMethod
+    }
+  }
+}
+
+query MyAuditTrail($first: Int) {
+  myAuditTrail(first: $first) {
+    id
+    occurredAt
+    action
+    entityType
+    entityId
+    actor {
+      id
+      fullName
+    }
+  }
+}

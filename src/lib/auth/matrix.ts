@@ -33,6 +33,10 @@ import type { AccessRole } from "@/generated/graphql";
  *
  * 2026-10-29 (TAN-376): `/admin/roles` (Menu & Akses) menjadi modul `adminRoles`
  * yang hanya dimiliki Admin, sejalan dengan entri katalog terkunci TAN-381.
+ *
+ * 2026-10-30 (TAN-392): Talent tidak lagi membuka Data Karyawan — record
+ * miliknya dibaca lewat Profil saya, dan halaman pribadi lainnya memakai
+ * `TALENT_NAV`. Modul `employees` tetap milik peran operasional.
  */
 export type Module =
   | "dashboard"
@@ -53,7 +57,7 @@ const ALL: readonly AccessRole[] = ["TALENT", "CHAPTER", "OPERATION", "ADMIN"];
 export const MODULE_ROLES: Record<Module, readonly AccessRole[]> = {
   dashboard: ["ADMIN", "OPERATION", "CHAPTER"],
   activities: ALL,
-  employees: ["ADMIN", "OPERATION", "CHAPTER", "TALENT"],
+  employees: ["ADMIN", "OPERATION", "CHAPTER"],
   entra: ["ADMIN", "OPERATION"],
   contracts: ["ADMIN", "OPERATION", "CHAPTER"],
   assignments: ["ADMIN", "OPERATION", "CHAPTER"],

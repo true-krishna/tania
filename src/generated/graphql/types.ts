@@ -25,6 +25,28 @@ export type AccessRole =
   | 'OPERATION'
   | 'TALENT';
 
+/** Status keamanan akun pemanggil (self view). Tidak memuat kredensial. */
+export type AccountSecurity = {
+  __typename?: 'AccountSecurity';
+  /** Hasil provisi akun Entra milik pemanggil; null = belum pernah diprovisi. */
+  entraProvision?: Maybe<EntraProvision>;
+  /** Sesi aktif milik pemanggil, terbaru lebih dulu. */
+  sessions: Array<AccountSession>;
+};
+
+/**
+ * Satu sesi aktif (refresh token yang belum dicabut dan belum kedaluwarsa).
+ * Nilai token dan hash-nya tidak pernah diekspos.
+ */
+export type AccountSession = {
+  __typename?: 'AccountSession';
+  /** Metode masuk yang membuka sesi: `local` atau `entra_sso`. */
+  authMethod: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  expiresAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+};
+
 export type AccountStatus =
   | 'ACTIVE'
   | 'INACTIVE';
@@ -1882,6 +1904,30 @@ export type PersonalWorkActivityFilter = {
   talentId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/**
+ * Agregat strip metrik profil (TAN-387). Dihitung ulang saat dibaca; metrik
+ * tanpa sumber data bernilai null supaya antarmuka menampilkan "—", bukan nol.
+ */
+export type ProfileMetrics = {
+  __typename?: 'ProfileMetrics';
+  /** Jumlah assignment berstatus ACTIVE milik pemanggil. */
+  activeAssignmentCount?: Maybe<Scalars['Int']['output']>;
+  /** Jumlah sertifikasi pada profil CV; null bila CV belum pernah diisi. */
+  certificationCount?: Maybe<Scalars['Int']['output']>;
+  /** Jumlah IDP berstatus COMPLETED; null bila belum pernah ada IDP. */
+  completedIdpCount?: Maybe<Scalars['Int']['output']>;
+  /**
+   * Jumlah IDP yang belum selesai (IN_PROGRESS/NEEDS_REVIEW); null bila belum
+   * pernah ada IDP.
+   */
+  runningIdpCount?: Maybe<Scalars['Int']['output']>;
+  /**
+   * Rata-rata persentase hari kerja (Senin–Jumat) enam bulan terakhir yang
+   * tercakup minimal satu assignment; null bila tidak ada assignment pada rentang.
+   */
+  utilizationPercent?: Maybe<Scalars['Float']['output']>;
+};
+
 /** Project master data; wajib merujuk tepat satu Unit (FR-19). */
 export type Project = {
   __typename?: 'Project';
@@ -1960,8 +2006,16 @@ export type Query = {
   jobRoles: Array<JobRole>;
   /** Profil user yang sedang login. */
   me: User;
+  /** Status keamanan akun pemanggil: provisi Entra dan sesi aktif (self view). */
+  myAccountSecurity: AccountSecurity;
   /** Aktivitas milik pemanggil; Chapter/Operation/Admin boleh menyaring ke talent dalam scope (tanpa query allActivities). */
   myActivities: PersonalWorkActivityConnection;
+  /**
+   * Jejak audit pemanggil sendiri (FR-41 dipersempit ke self): entri terbaru
+   * atas record karyawan, kontrak, dan assignment miliknya. `first` default 5,
+   * maksimum 50. Akun tanpa record karyawan menerima daftar kosong.
+   */
+  myAuditTrail: Array<AuditLog>;
   myCvProfile?: Maybe<CvProfile>;
   /** IDP milik Talent yang sedang login; null = belum ada IDP (FR-14). */
   myIdp?: Maybe<Idp>;
@@ -1974,6 +2028,11 @@ export type Query = {
   myMenuConfig: Array<RoleMenuEntry>;
   /** Evaluasi milik Talent yang sedang login (FR-27). */
   myPerformanceEvaluations: Array<PerformanceEvaluation>;
+  /**
+   * Agregat strip metrik profil milik pemanggil. Metrik tanpa sumber data
+   * bernilai null agar antarmuka menampilkan "—", bukan angka karangan.
+   */
+  myProfileMetrics: ProfileMetrics;
   performanceEvaluations: PerformanceEvaluationConnection;
   /** Referensi Project level organisasi — terbaca oleh semua peran terautentikasi (dipakai filter Assignment); 2026-10-16 clarify 8. */
   projects: Array<Project>;
@@ -2148,6 +2207,11 @@ export type QueryJobRolesArgs = {
 export type QueryMyActivitiesArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<PersonalWorkActivityFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyAuditTrailArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
 };
 

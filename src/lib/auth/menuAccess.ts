@@ -55,6 +55,7 @@ export const MODULE_OF_HREF: Record<string, Module> = {
   "/assignments": "assignments",
   "/entra": "entra",
   "/idp": "idp",
+  "/idp/my": "idp",
   "/evaluations": "evaluations",
   "/evaluations/periods": "evaluations",
   "/evaluations/templates": "evaluations",

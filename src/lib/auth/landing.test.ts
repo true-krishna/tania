@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { landingRoute } from "./landing";
 
-describe("landingRoute (TAN-343)", () => {
+describe("landingRoute (TAN-343, TAN-392)", () => {
   it("mendaratkan setiap peran di halaman muka sesuai sel defaultnya", () => {
     expect(landingRoute("OPERATION")).toBe("/dashboard");
     expect(landingRoute("CHAPTER")).toBe("/dashboard");
     expect(landingRoute("ADMIN")).toBe("/accounts");
-    expect(landingRoute("TALENT")).toBe("/employees");
+    expect(landingRoute("TALENT")).toBe("/profile");
   });
 
   it("tanpa sesi kembali ke halaman login", () => {

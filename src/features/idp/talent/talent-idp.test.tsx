@@ -91,11 +91,11 @@ describe("MyIdpPage — Talent (FR-14 / US3)", () => {
       </MockedProvider>,
     );
 
-    expect(await screen.findByText("IDP Saya")).toBeInTheDocument();
+    expect(await screen.findByText("IDP saya")).toBeInTheDocument();
     expect(screen.getByText("Menjadi Go backend engineer yang andal")).toBeInTheDocument();
     expect(screen.getByText("Ikut training GraphQL")).toBeInTheDocument();
     expect(screen.getByText("Progres stabil")).toBeInTheDocument();
-    expect(screen.getByText("0/2 selesai")).toBeInTheDocument();
+    expect(screen.getAllByText("0/2 selesai").length).toBeGreaterThan(0);
   });
 
   it("updates an action status and confirms", async () => {
@@ -195,7 +195,7 @@ describe("MyIdpPage — Talent (FR-14 / US3)", () => {
       </MenuAccessProvider>,
     );
 
-    expect(await screen.findByText("IDP Saya")).toBeInTheDocument();
+    expect(await screen.findByText("IDP saya")).toBeInTheDocument();
     expect(screen.getByText("Menjadi Go backend engineer yang andal")).toBeInTheDocument();
   });
 });

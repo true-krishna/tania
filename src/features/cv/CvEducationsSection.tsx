@@ -124,7 +124,7 @@ export function CvEducationsSection({ cv }: { cv: CvFieldsFragment | undefined }
         <p className="text-sm text-zinc-500">Belum ada riwayat pendidikan.</p>
       )}
 
-      <form className="grid grid-cols-1 gap-2 sm:grid-cols-2" onSubmit={submit}>
+      <form className="grid grid-cols-1 gap-2 min-[860px]:grid-cols-2" onSubmit={submit}>
         <Input
           onChange={(event) =>
             setValues((current) => ({

@@ -260,7 +260,13 @@ describe("TalentCvEditor — CV tab on /profile (US4 / FR-12)", () => {
                 query: UpdateCvCertificationDocument,
                 variables: {
                   id: "cert-1",
-                  input: { name: "AWS Certified Solutions Architect", issuer: "AWS" },
+                  input: {
+                    credentialUrl: null,
+                    expiryDate: "2026-01-15",
+                    issuedDate: "2023-01-15",
+                    issuer: "AWS",
+                    name: "AWS Certified Solutions Architect",
+                  },
                 },
               },
               result: { data: { updateCvCertification: updatedCert } },

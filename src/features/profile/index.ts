@@ -6,9 +6,7 @@ export type {
   ProfileHistory,
   ProfileSession,
 } from "./useProfile";
-export { AssignmentsSection } from "./AssignmentsSection";
 export { ContractsSection } from "./ContractsSection";
-export { IdpSection } from "./IdpSection";
 export { WorkloadSection } from "./WorkloadSection";
 export { ContractRow } from "./ContractRow";
 export { IdpStatusChip } from "./IdpStatusChip";

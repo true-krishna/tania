@@ -72,8 +72,12 @@ describe("MENU_ROWS mengikuti katalog menu", () => {
     for (const row of MENU_ROWS) {
       expect(inMatrix.has(row.id), `${row.id} tidak ada di DEFAULT_MENU_ACCESS`).toBe(true);
     }
-    // And the other way round: no entry of the matrix is unreachable from the grid.
+    // And the other way round: every configurable entry of the matrix is
+    // reachable from the grid. Talent's personal pages are not configurable
+    // (TAN-392), so `evaluations/my` no longer has a row.
+    const talentOnly = new Set(["evaluations/my"]);
     for (const id of inMatrix) {
+      if (talentOnly.has(id)) continue;
       expect(
         MENU_ROWS.some((row) => row.id === id),
         `${id} tidak muncul di grid`,

@@ -2,66 +2,51 @@
 
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import { ToastProvider } from "@/components/Toast";
 import ProfilePage from "@/app/(app)/profile/page";
 import {
-  MyCvProfileDocument,
-  MyIdpDocument,
+  MyAccountSecurityDocument,
+  MyAuditTrailDocument,
+  MyProfileMetricsDocument,
   ProfileDocument,
   ProfileHistoryDocument,
 } from "@/generated/graphql";
 
-const h = vi.hoisted(() => ({
-  role: { current: "TALENT" as string | null },
-}));
+const h = vi.hoisted(() => ({ role: { current: "TALENT" as string | null } }));
 
-vi.mock("@/lib/auth/guard", () => ({
-  useSessionRole: () => h.role.current,
-}));
+vi.mock("@/lib/auth/guard", () => ({ useSessionRole: () => h.role.current }));
 
-const contracts = [
-  {
-    __typename: "EmploymentContract",
-    id: "ctr-1",
-    contractNo: "TKWT/2025/0001",
-    contractType: "TKWT_DIGITAL_TALENT",
-    officeEmail: "ilham@telkom.co.id",
-    nomorInduk: "EMP-001",
-    bandPosition: "III",
-    jobTitle: "Backend Engineer",
-    jobLevel: null,
-    workLocation: "JAKARTA",
-    startDate: "2025-01-01",
-    endDate: "2026-12-31",
-    status: "ACTIVE",
-    endReason: null,
-    terminatedAt: null,
-    notes: null,
-    unit: { __typename: "Unit", id: "unit-1", name: "Chapter DPS" },
-    jobRole: { __typename: "JobRole", id: "jr-1", name: "Backend Engineer" },
-  },
-];
+const contract = {
+  __typename: "EmploymentContract",
+  id: "ctr-1",
+  contractNo: "TKWT/2025/0001",
+  contractType: "TKWT_DIGITAL_TALENT",
+  officeEmail: "ilham@telkom.co.id",
+  nomorInduk: "EMP-001",
+  bandPosition: "III",
+  jobTitle: "Backend Engineer",
+  jobLevel: null,
+  workLocation: "JAKARTA",
+  startDate: "2025-01-01",
+  endDate: "2026-12-31",
+  status: "ACTIVE",
+  endReason: null,
+  terminatedAt: null,
+  notes: null,
+  unit: { __typename: "Unit", id: "unit-1", name: "Chapter DPS" },
+  jobRole: { __typename: "JobRole", id: "jr-1", name: "Backend Engineer" },
+};
 
-const assignments = [
-  {
-    __typename: "Assignment",
-    id: "asg-1",
-    status: "ACTIVE",
-    periodStart: "2025-02-01",
-    periodEnd: null,
-    project: { __typename: "Project", id: "prj-1", name: "Migrasi Billing Core" },
-  },
-  {
-    __typename: "Assignment",
-    id: "asg-2",
-    status: "COMPLETED",
-    periodStart: "2024-01-01",
-    periodEnd: "2024-12-31",
-    project: { __typename: "Project", id: "prj-2", name: "Modernisasi Portal" },
-  },
-];
+const endedContract = {
+  ...contract,
+  id: "ctr-0",
+  contractNo: "TKWT/2023/0002",
+  status: "ENDED",
+  startDate: "2023-01-01",
+  endDate: "2024-12-31",
+};
 
 const employee = {
   __typename: "Employee",
@@ -83,19 +68,6 @@ const employee = {
   unit: { __typename: "Unit", id: "unit-1", name: "Chapter DPS" },
   jobRole: { __typename: "JobRole", id: "jr-1", name: "Backend Engineer" },
   chapter: { __typename: "Chapter", id: "ch-1", name: "Chapter DPS" },
-  contracts: {
-    __typename: "EmploymentContractConnection",
-    totalCount: 1,
-    edges: [{ __typename: "EmploymentContractEdge", node: contracts[0], cursor: "c1" }],
-  },
-  assignments: {
-    __typename: "AssignmentConnection",
-    totalCount: 2,
-    edges: [
-      { __typename: "AssignmentEdge", node: assignments[0], cursor: "a1" },
-      { __typename: "AssignmentEdge", node: assignments[1], cursor: "a2" },
-    ],
-  },
 };
 
 const profileResult = {
@@ -111,73 +83,6 @@ const profileResult = {
   },
 };
 
-const cvResult = {
-  data: {
-    myCvProfile: {
-      __typename: "CvProfile",
-      id: "cv-1",
-      summary: "Backend engineer yang fokus pada API.",
-      educations: [
-        {
-          __typename: "CvEducation",
-          id: "edu-1",
-          institution: "Institut Teknologi Bandung",
-          degree: "S1",
-          fieldOfStudy: "Teknik Informatika",
-          startYear: 2016,
-          endYear: 2020,
-        },
-      ],
-      certifications: [
-        {
-          __typename: "CvCertification",
-          id: "cert-1",
-          name: "AWS Certified Developer",
-          issuer: "AWS",
-          issuedDate: "2024-01-15",
-          expiryDate: null,
-          credentialUrl: null,
-        },
-      ],
-      skills: [
-        { __typename: "CvSkill", id: "skill-1", name: "Go", level: "Mahir" },
-        { __typename: "CvSkill", id: "skill-2", name: "PostgreSQL", level: "Mahir" },
-        { __typename: "CvSkill", id: "skill-3", name: "Docker", level: "Menengah" },
-        { __typename: "CvSkill", id: "skill-4", name: "Figma", level: null },
-      ],
-      workExperience: [assignments[0]],
-    },
-  },
-};
-
-const myIdpResult = {
-  data: {
-    myIdp: {
-      __typename: "Idp",
-      id: "idp-1",
-      status: "IN_PROGRESS",
-      developmentObjective: "Menjadi Go backend engineer yang andal",
-      currentAssessment: "Kuat di API, kurang di concurrency",
-      gapAnalysis: "Butuh pemahaman goroutine",
-      timelineStart: "2025-07-01",
-      timelineEnd: "2025-09-30",
-      successIndicators: "Menyelesaikan 3 fitur backend mandiri",
-      actions: [
-        {
-          __typename: "DevelopmentAction",
-          id: "act-1",
-          description: "Training Go lanjutan",
-          method: "TRAINING",
-          status: "IN_PROGRESS",
-          dueDate: "2025-08-01",
-        },
-      ],
-      reviews: [],
-      revisions: [],
-    },
-  },
-};
-
 const historyResult = {
   data: {
     me: {
@@ -186,27 +91,92 @@ const historyResult = {
       employee: {
         __typename: "Employee",
         id: "emp-001",
-        contracts: employee.contracts,
-        assignments: employee.assignments,
+        contracts: {
+          __typename: "EmploymentContractConnection",
+          totalCount: 2,
+          edges: [
+            { __typename: "EmploymentContractEdge", node: contract, cursor: "c1" },
+            { __typename: "EmploymentContractEdge", node: endedContract, cursor: "c0" },
+          ],
+        },
+        assignments: { __typename: "AssignmentConnection", totalCount: 0, edges: [] },
       },
     },
   },
 };
 
-const baseMocks: MockedResponse[] = [
-  { request: { query: ProfileDocument }, result: profileResult },
-  { request: { query: MyCvProfileDocument }, result: cvResult },
-  { request: { query: MyCvProfileDocument }, result: cvResult },
-  { request: { query: MyIdpDocument }, result: myIdpResult },
-];
+function metricsResult(overrides: Record<string, number | null> = {}) {
+  return {
+    data: {
+      myProfileMetrics: {
+        __typename: "ProfileMetrics",
+        activeAssignmentCount: 1,
+        utilizationPercent: 76,
+        certificationCount: 2,
+        runningIdpCount: 1,
+        completedIdpCount: 1,
+        ...overrides,
+      },
+    },
+  };
+}
 
-const historyMock: MockedResponse = {
-  request: { query: ProfileHistoryDocument },
-  result: historyResult,
+const securityResult = {
+  data: {
+    myAccountSecurity: {
+      __typename: "AccountSecurity",
+      entraProvision: {
+        __typename: "EntraProvision",
+        status: "CREATED",
+        action: "CREATE",
+        upn: "ilham@telkom.co.id",
+        lastError: null,
+        notifyStatus: "SENT",
+        needsReprovision: false,
+        updatedAt: "2025-01-02T00:00:00Z",
+      },
+      sessions: [
+        {
+          __typename: "AccountSession",
+          id: "ses-1",
+          createdAt: "2025-02-01T08:00:00Z",
+          expiresAt: "2025-03-01T08:00:00Z",
+          authMethod: "entra_sso",
+        },
+      ],
+    },
+  },
 };
-const profileWithHistoryMocks: MockedResponse[] = [...baseMocks, historyMock];
 
-function renderProfile(mocks: MockedResponse[] = baseMocks) {
+const auditResult = {
+  data: {
+    myAuditTrail: [
+      {
+        __typename: "AuditLog",
+        id: "aud-1",
+        occurredAt: "2025-02-02T00:00:00Z",
+        action: "UPDATE",
+        entityType: "employment_contract",
+        entityId: "ctr-1",
+        actor: { __typename: "User", id: "usr-2", fullName: "Operation Tania" },
+      },
+    ],
+  },
+};
+
+function baseMocks(metrics = metricsResult(), audit = auditResult): MockedResponse[] {
+  return [
+    { request: { query: ProfileDocument }, result: profileResult },
+    { request: { query: MyProfileMetricsDocument }, result: metrics },
+    { request: { query: MyAccountSecurityDocument }, result: securityResult },
+    {
+      request: { query: MyAuditTrailDocument, variables: { first: 5 } },
+      result: audit,
+    },
+  ];
+}
+
+function renderProfile(mocks: MockedResponse[] = baseMocks()) {
   return render(
     <MockedProvider mocks={mocks}>
       <ToastProvider>
@@ -220,196 +190,103 @@ beforeEach(() => {
   h.role.current = "TALENT";
 });
 
-describe("ProfilePage (TAN-386)", () => {
-  it("renders the identity hero, metrics, and ringkasan data", async () => {
+describe("ProfilePage (TAN-386, TAN-392)", () => {
+  it("renders the identity hero, data diri, and metric strip", async () => {
     renderProfile();
 
     expect(await screen.findByRole("heading", { name: "Ilham Fadillah" })).toBeInTheDocument();
     expect(screen.getAllByText("Backend Engineer").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Aktif").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("****5678").length).toBeGreaterThan(0);
-    expect(screen.getByText("Laki-laki")).toBeInTheDocument();
-    expect(screen.getAllByText("Chapter DPS").length).toBeGreaterThan(0);
-    expect(screen.getByRole("tab", { name: "Ringkasan" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("Data diri")).toBeInTheDocument();
+    expect(screen.getByText("Kontak")).toBeInTheDocument();
+    expect(screen.getByText("Kepegawaian")).toBeInTheDocument();
+    expect(screen.getByText("Pendidikan")).toBeInTheDocument();
+    expect(screen.getByLabelText("Metrik profil")).toBeInTheDocument();
   });
 
-  it("switches tab and panel visibility with aria state", async () => {
+  it("links each metric to the page it counts", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    const ringkasanPanel = document.getElementById("profile-panel-ringkasan");
-    expect(ringkasanPanel).not.toBeNull();
-    expect(ringkasanPanel).toHaveAttribute("aria-labelledby", "profile-tab-ringkasan");
-    expect(ringkasanPanel?.hidden).toBe(false);
-
-    fireEvent.click(screen.getByRole("tab", { name: "Keahlian & CV" }));
-
-    expect(screen.getByRole("tab", { name: "Keahlian & CV" })).toHaveAttribute(
-      "aria-selected",
-      "true",
+    expect(screen.getByRole("link", { name: /Buka Workload saya/ })).toHaveAttribute(
+      "href",
+      "/workload",
     );
-    expect(screen.getByRole("tab", { name: "Ringkasan" })).toHaveAttribute(
-      "aria-selected",
-      "false",
-    );
-    expect(document.getElementById("profile-panel-keahlian")?.hidden).toBe(false);
-    expect(ringkasanPanel?.hidden).toBe(true);
+    expect(screen.getByRole("link", { name: /Buka CV saya/ })).toHaveAttribute("href", "/cv");
+    expect(screen.getByRole("link", { name: /Buka IDP saya/ })).toHaveAttribute("href", "/idp/my");
+    expect(screen.getByText("76%")).toBeInTheDocument();
   });
 
-  it("moves the tab selection with arrow keys", async () => {
+  it("shows an honest contract state when the role cannot read contracts", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    const ringkasanTab = screen.getByRole("tab", { name: "Ringkasan" });
-    ringkasanTab.focus();
-    fireEvent.keyDown(ringkasanTab, { key: "ArrowRight" });
-
-    expect(screen.getByRole("tab", { name: "Keahlian & CV" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-
-    fireEvent.keyDown(screen.getByRole("tab", { name: "Keahlian & CV" }), { key: "ArrowLeft" });
-
-    expect(ringkasanTab).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("Kontrak aktif")).toBeInTheDocument();
+    expect(
+      screen.getByText("Rincian kontrak belum dapat dibaca dari akun Anda"),
+    ).toBeInTheDocument();
   });
 
-  it("hides contract and assignment tabs from Talent", async () => {
-    renderProfile();
-    await screen.findByRole("heading", { name: "Ilham Fadillah" });
-
-    expect(screen.getByRole("tab", { name: "Ringkasan" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Keahlian & CV" })).toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Workload" })).toBeNull();
-    expect(screen.getByRole("tab", { name: "Pengembangan saya" })).toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Kontrak" })).toBeNull();
-    expect(screen.queryByRole("tab", { name: "Assignment" })).toBeNull();
-  });
-
-  it("shows contract history with a read-only marker for Operation", async () => {
+  it("shows the active contract and a collapsible history for a reader", async () => {
     h.role.current = "OPERATION";
-    renderProfile(profileWithHistoryMocks);
+    renderProfile([
+      ...baseMocks(),
+      { request: { query: ProfileHistoryDocument }, result: historyResult },
+    ]);
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Kontrak" }));
-
-    expect(await screen.findByText("Riwayat kontrak (1)")).toBeInTheDocument();
-    expect(screen.getByText("TKWT/2025/0001")).toBeInTheDocument();
-    expect(screen.getByText("2025-01-01 — 2026-12-31")).toBeInTheDocument();
+    expect(await screen.findByText(/TKWT\/2025\/0001/)).toBeInTheDocument();
+    expect(screen.getByText("Riwayat kontrak (1)")).toBeInTheDocument();
+    expect(screen.getByText(/TKWT\/2023\/0002/)).toBeInTheDocument();
     expect(screen.getAllByText("Hanya baca").length).toBeGreaterThan(0);
   });
 
-  it("shows own assignments on the Assignment tab for Operation", async () => {
-    h.role.current = "OPERATION";
-    renderProfile(profileWithHistoryMocks);
-    await screen.findByRole("heading", { name: "Ilham Fadillah" });
-
-    fireEvent.click(screen.getByRole("tab", { name: "Assignment" }));
-
-    const panel = document.getElementById("profile-panel-assignment");
-    expect(panel).not.toBeNull();
-    expect(
-      await within(panel as HTMLElement).findByText("Migrasi Billing Core"),
-    ).toBeInTheDocument();
-    expect(within(panel as HTMLElement).getByText("2025-02-01 — sekarang")).toBeInTheDocument();
-    expect(within(panel as HTMLElement).getByText("Berjalan")).toBeInTheDocument();
-  });
-
-  it("relabels the IDP tab and renders the development plan", async () => {
+  it("renders account security and the self audit trail", async () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Pengembangan saya" }));
-
-    expect(await screen.findByText("Menjadi Go backend engineer yang andal")).toBeInTheDocument();
-    expect(screen.getByText("Training Go lanjutan")).toBeInTheDocument();
-    expect(screen.getByText("0/1 aksi selesai")).toBeInTheDocument();
+    expect(screen.getByText("Akun & keamanan")).toBeInTheDocument();
+    expect(screen.getByText(/1 perangkat aktif/)).toBeInTheDocument();
+    expect(screen.getAllByText("ilham@telkom.co.id").length).toBeGreaterThan(0);
+    expect(await screen.findByText(/Operation Tania/)).toBeInTheDocument();
   });
 
-  it("composes the CV read-only content in Keahlian & CV", async () => {
-    renderProfile();
-    await screen.findByRole("heading", { name: "Ilham Fadillah" });
-    fireEvent.click(screen.getByRole("tab", { name: "Keahlian & CV" }));
-
-    const panel = document.getElementById("profile-panel-keahlian") as HTMLElement;
-    expect(await within(panel).findByText("AWS Certified Developer")).toBeInTheDocument();
-    expect(within(panel).getByText(/Institut Teknologi Bandung/)).toBeInTheDocument();
-    expect(within(panel).getByText("Go")).toBeInTheDocument();
-    expect(within(panel).getByText("Docker")).toBeInTheDocument();
-    expect(within(panel).getByText("Level keahlian belum diisi.")).toBeInTheDocument();
-    expect(within(panel).getByLabelText("Mahir: level 75 dari 100")).toBeInTheDocument();
-    expect(within(panel).getByText("Migrasi Billing Core")).toBeInTheDocument();
-  });
-
-  it("lets Talent edit their own CV from the Keahlian & CV tab (TAN-372)", async () => {
-    renderProfile();
-    await screen.findByRole("heading", { name: "Ilham Fadillah" });
-    fireEvent.click(screen.getByRole("tab", { name: "Keahlian & CV" }));
-
-    fireEvent.click(await screen.findByRole("button", { name: "Ubah profil CV" }));
-
-    expect(await screen.findByText("Ringkasan Profil")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "+ Tambah Pendidikan" })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Selesai mengubah" }));
-
-    expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).toBeNull();
-  });
-
-  it("runs the Ask TANIA insight through loading, result, and close states", async () => {
-    renderProfile();
-    await screen.findByRole("heading", { name: "Ilham Fadillah" });
-    fireEvent.click(screen.getByRole("tab", { name: "Keahlian & CV" }));
-
-    const startButton = await screen.findByRole("button", { name: "Buat insight" });
-    fireEvent.click(startButton);
-
-    expect(screen.getByRole("button", { name: "Menyusun…" })).toBeDisabled();
-
-    expect(
-      await screen.findByText(/Profil Anda memuat/, {}, { timeout: 3000 }),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/4 keahlian, 1 sertifikasi/)).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Tutup insight" }));
-
-    expect(screen.getByRole("button", { name: "Buat insight" })).toBeInTheDocument();
-    expect(screen.queryByText(/Profil Anda memuat/)).toBeNull();
-  });
-
-  it("renders unavailable metrics with their reason instead of a number", async () => {
-    renderProfile();
+  it("renders a dash with a reason when a metric has no source", async () => {
+    renderProfile(
+      baseMocks(
+        metricsResult({
+          activeAssignmentCount: null,
+          utilizationPercent: null,
+          certificationCount: null,
+          runningIdpCount: null,
+        }),
+      ),
+    );
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
     expect(screen.getByLabelText("Assignment aktif tidak tersedia")).toBeInTheDocument();
-    expect(screen.getByText("Butuh akses modul Assignment.")).toBeInTheDocument();
+    expect(screen.getByText("Belum ada assignment aktif untuk akun ini.")).toBeInTheDocument();
     expect(screen.getByLabelText("Utilisasi 6 bulan tidak tersedia")).toBeInTheDocument();
-    expect(
-      screen.getByText("Belum ada sumber data utilisasi (menunggu agregat WAD)."),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Terdata di profil CV.")).toBeInTheDocument();
-    expect(screen.getByText("0/1 aksi selesai.")).toBeInTheDocument();
+    expect(screen.getByText("Profil CV belum pernah diisi.")).toBeInTheDocument();
+    expect(screen.getByText("Chapter belum membuat IDP untuk Anda.")).toBeInTheDocument();
   });
 
-  it("counts active assignments for a role with assignment access", async () => {
-    h.role.current = "OPERATION";
-    renderProfile(profileWithHistoryMocks);
+  it("shows an empty state when the self audit trail is empty", async () => {
+    renderProfile(baseMocks(metricsResult(), { data: { myAuditTrail: [] } }));
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
-    expect(screen.getByText("2 assignment tercatat.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Belum ada perubahan tercatat untuk record Anda."),
+    ).toBeInTheDocument();
   });
 
   it("shows a danger alert with retry when the profile query fails", async () => {
-    const retryMocks: MockedResponse[] = [
+    renderProfile([
       { request: { query: ProfileDocument }, error: new Error("Jaringan gagal.") },
-      ...baseMocks,
-      { request: { query: ProfileDocument }, result: profileResult },
-    ];
-    renderProfile(retryMocks);
+      ...baseMocks(),
+    ]);
 
     expect((await screen.findAllByRole("alert")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Jaringan gagal.").length).toBeGreaterThan(0);
-
     fireEvent.click(screen.getAllByRole("button", { name: "Coba lagi" })[0]);
 
     await waitFor(() =>

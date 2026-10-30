@@ -54,7 +54,7 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
         <Sidebar
           menuConfig={DEFAULT_MENU_ACCESS}
           pathname="/dashboard"
-          role={null}
+          role={role}
           roleName={role}
         />,
       );
@@ -64,14 +64,13 @@ describe("Sidebar dengan konfigurasi menu aktif (W3)", () => {
   });
 
   it("menu yang ditutup hilang dari sidebar tanpa mengubah role lain", () => {
-    const closed = withCell(DEFAULT_MENU_ACCESS, "TALENT", "idp", "NONE");
-    render(<Sidebar menuConfig={closed} pathname="/dashboard" role={null} roleName="TALENT" />);
+    const closed = withCell(DEFAULT_MENU_ACCESS, "CHAPTER", "idp", "NONE");
+    render(<Sidebar menuConfig={closed} pathname="/dashboard" role="CHAPTER" roleName="CHAPTER" />);
     const drawn = drawnMenu();
     expect(drawn.find((item) => item.label === "IDP")).toBeUndefined();
-    // The rest of the Talent menu survives: closing one cell is surgical.
-    // (TAN-343: Talent tidak punya Dashboard — Data Karyawan jadi pembanding.)
+    // The rest of the Chapter menu survives: closing one cell is surgical.
     expect(drawn.find((item) => item.label === "Data Karyawan")).toBeDefined();
-    expect(drawn.find((item) => item.label === "Evaluasi Saya")).toBeDefined();
+    expect(drawn.find((item) => item.label === "Roster")).toBeDefined();
   });
 
   it("role kustom memakai konfigurasi role-nya sendiri", () => {

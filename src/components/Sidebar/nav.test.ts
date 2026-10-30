@@ -17,6 +17,7 @@ import {
 import {
   ACCOUNTS,
   ACTIVITIES,
+  CV,
   AUDIT,
   CONTRACTS,
   DASHBOARD,
@@ -27,14 +28,17 @@ import {
   EVALUATION_PERIODS,
   EVALUATION_TEMPLATES,
   IDP,
+  IDP_MY,
   MASTER_DATA_CHAPTERS,
   MASTER_DATA_JOB_ROLES,
   MASTER_DATA_PROJECTS,
   MASTER_DATA_UNITS,
+  PROFILE,
   ROLES_ADMIN,
   TALENT_ASSIGNMENT,
+  WORKLOAD,
 } from "@/lib/constants/routes";
-import { NAV, sectionForPath, visibleNavEntries } from "./nav";
+import { NAV, TALENT_NAV, sectionForPath, visibleNavEntries } from "./nav";
 
 const ROLES: readonly AccessRole[] = ACCESS_ROLES;
 
@@ -45,6 +49,13 @@ interface Leaf {
 }
 
 const LEAVES: Leaf[] = NAV.flatMap((entry) =>
+  entry.kind === "link"
+    ? [{ href: entry.href, label: entry.label, roles: entry.roles }]
+    : entry.children.map((child) => ({ href: child.href, label: child.label, roles: child.roles })),
+);
+
+/** Sidebar Talent: halaman pribadi, tanpa grup (TAN-392). */
+const TALENT_LEAVES: Leaf[] = TALENT_NAV.flatMap((entry) =>
   entry.kind === "link"
     ? [{ href: entry.href, label: entry.label, roles: entry.roles }]
     : entry.children.map((child) => ({ href: child.href, label: child.label, roles: child.roles })),
@@ -102,7 +113,7 @@ const APPROVED_MENU: Record<AccessRole, readonly string[]> = {
     MASTER_DATA_JOB_ROLES,
     MASTER_DATA_PROJECTS,
   ],
-  TALENT: [ACTIVITIES, EMPLOYEES, IDP, EVALUATIONS_MY],
+  TALENT: [PROFILE, WORKLOAD, ACTIVITIES, CV, IDP_MY, EVALUATIONS_MY],
 };
 
 /** One configuration with a single cell overridden, for the non-default case. */
@@ -120,8 +131,22 @@ function withCell(
 }
 
 describe("NAV mirrors the role & module matrix (R2.2)", () => {
-  it("tidak punya entri menu CV untuk peran mana pun (TAN-372)", () => {
-    expect(LEAVES.some((leaf) => leaf.label === "CV")).toBe(false);
+  it("menu operasional tidak memuat entri pribadi Talent (TAN-392)", () => {
+    for (const pribadi of [PROFILE, WORKLOAD, CV, IDP_MY, EVALUATIONS_MY]) {
+      expect(LEAVES.some((leaf) => leaf.href === pribadi)).toBe(false);
+    }
+  });
+
+  it("TALENT_NAV adalah enam halaman pribadi yang datar", () => {
+    expect(TALENT_NAV.map((entry) => (entry.kind === "link" ? entry.href : entry.id))).toEqual([
+      PROFILE,
+      WORKLOAD,
+      ACTIVITIES,
+      CV,
+      IDP_MY,
+      EVALUATIONS_MY,
+    ]);
+    expect(TALENT_NAV.every((entry) => entry.kind === "link")).toBe(true);
   });
 
   for (const leaf of LEAVES) {
@@ -132,7 +157,9 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
 
   it("setiap peran yang boleh membuka modul melihat minimal satu entri modul itu", () => {
     for (const mod of Object.keys(MODULE_ROLES) as Module[]) {
-      const leaves = LEAVES.filter((leaf) => MODULE_OF_HREF[leaf.href] === mod);
+      const leaves = [...LEAVES, ...TALENT_LEAVES].filter(
+        (leaf) => MODULE_OF_HREF[leaf.href] === mod,
+      );
       expect(leaves.length, `modul ${mod} tidak punya entri sidebar`).toBeGreaterThan(0);
       for (const role of ROLES) {
         if (!canAccess(role, mod)) continue;
@@ -206,13 +233,15 @@ describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
 
   /** Flattened hrefs a sidebar render shows, in order. */
   function drawnHrefs(config: MenuAccessConfig | null, roleName: string | null) {
-    return visibleNavEntries(config, roleName).flatMap((entry) =>
+    const templateRole = (roleName as AccessRole | null) ?? null;
+    return visibleNavEntries(config, roleName, templateRole).flatMap((entry) =>
       entry.kind === "link" ? [entry.href] : entry.children.map((child) => child.href),
     );
   }
 
   /** The static role filter a caller falls back to with no configuration. */
   function staticHrefs(role: AccessRole) {
+    if (role === "TALENT") return TALENT_LEAVES.map((leaf) => leaf.href);
     return NAV.flatMap((entry) => {
       if (!entry.roles.includes(role)) return [];
       if (entry.kind === "link") return [entry.href];
@@ -240,22 +269,24 @@ describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
     }
   });
 
-  it("Workload tidak muncul untuk peran mana pun (TAN-364 keputusan 4)", () => {
-    expect(LEAVES.some((leaf) => leaf.label === "Workload")).toBe(false);
-    for (const role of ROLES) {
+  it("Workload hanya muncul di sidebar Talent (TAN-392)", () => {
+    expect(LEAVES.some((leaf) => leaf.href === WORKLOAD)).toBe(false);
+    for (const role of ["ADMIN", "OPERATION", "CHAPTER"] as AccessRole[]) {
       expect(
         drawnHrefs(DEFAULT_MENU_ACCESS, role).some((href) => href.startsWith("/workload")),
       ).toBe(false);
     }
+    expect(drawnHrefs(DEFAULT_MENU_ACCESS, "TALENT")).toContain(WORKLOAD);
   });
 
   it("tanpa konfigurasi sidebar tetap memakai filter role statis NAV", () => {
     // `visibleNavEntries` imposes no filter of its own when there is nothing to
     // read: it hands NAV back whole and `Sidebar` keeps applying the static role
     // lists (asserted in Sidebar.config.test.tsx).
-    for (const role of ROLES) {
+    for (const role of ["ADMIN", "OPERATION", "CHAPTER"] as AccessRole[]) {
       expect(drawnHrefs(null, role)).toEqual(NAV_ENTRY_IDS);
     }
+    expect(drawnHrefs(null, "TALENT")).toEqual(TALENT_LEAVES.map((leaf) => leaf.href));
     expect(visibleNavEntries(null, "ADMIN")).toBe(NAV);
     expect(visibleNavEntries(DEFAULT_MENU_ACCESS, null)).toBe(NAV);
   });
@@ -309,9 +340,8 @@ describe("sidebar mengikuti konfigurasi menu aktif (W3)", () => {
 
   it("tidak ada entri yang digambar ketika konfigurasi aktif menolaknya", () => {
     const closed = withCell(DEFAULT_MENU_ACCESS, "CHAPTER", "employees", "NONE");
-    for (const href of [...drawnHrefs(closed, "CHAPTER"), ...drawnHrefs(closed, "TALENT")]) {
-      const role = drawnHrefs(closed, "CHAPTER").includes(href) ? "CHAPTER" : "TALENT";
-      expect(serverAllows(closed, role, menuEntryIdForHref(href), "READ")).toBe(true);
+    for (const href of drawnHrefs(closed, "CHAPTER")) {
+      expect(serverAllows(closed, "CHAPTER", menuEntryIdForHref(href), "READ")).toBe(true);
     }
   });
 });
@@ -338,11 +368,13 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
         expect(serverAllows(DEFAULT_MENU_ACCESS, role, entry, "READ")).toBe(true);
       }
     }
-    // The default matrix grants every NAV leaf its role exactly as before.
+    // A role drawn by NAV is never denied by the default configuration. The
+    // converse is not asserted: the server keeps a Talent cell on the legacy
+    // `employees` page even though Talent no longer sees that menu (TAN-392).
     for (const leaf of LEAVES) {
       const entry = menuEntryIdForHref(leaf.href);
-      for (const role of ROLES) {
-        expect(visibleByConfig(DEFAULT_MENU_ACCESS, role, entry)).toBe(leaf.roles.includes(role));
+      for (const role of leaf.roles) {
+        expect(visibleByConfig(DEFAULT_MENU_ACCESS, role, entry)).toBe(true);
       }
     }
   });
@@ -393,7 +425,6 @@ describe("NAV tidak menampilkan modul yang ditolak server pada konfigurasi aktif
       evaluations: { ADMIN: "MANAGE", CHAPTER: "MANAGE", OPERATION: "READ" },
       "evaluations/periods": { ADMIN: "MANAGE" },
       "evaluations/templates": { ADMIN: "MANAGE" },
-      "evaluations/my": { TALENT: "MANAGE" },
       accounts: { ADMIN: "MANAGE" },
       "admin/roles": { ADMIN: "MANAGE" },
       "master-data/units": { ADMIN: "MANAGE", CHAPTER: "READ", OPERATION: "READ" },

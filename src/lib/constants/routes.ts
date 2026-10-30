@@ -17,6 +17,10 @@ export const WORKLOAD_EXECUTIVE = "/workload/executive";
 export const WORKLOAD_TALENT = "/workload/talent";
 export const PROFILE = "/profile";
 
+// CV milik sendiri (TAN-392): halaman pribadi Talent. CV orang lain dibaca
+// lewat detail karyawan (TAN-372).
+export const CV = "/cv";
+
 // EMPLOYEES
 export const EMPLOYEES = "/employees";
 export const EMPLOYEE_DETAIL = (id: string) => `/employees/${id}`;

@@ -240,16 +240,26 @@ describe("halaman Menu & Akses per Role — bagian grid", () => {
     expect(screen.getByText(/Pilih .*Pratinjau/i)).toBeInTheDocument();
 
     fireEvent.click(roleHeader("TALENT").getByRole("button", { name: "Pratinjau" }));
-    const preview = within(screen.getByRole("navigation", { name: "Pratinjau menu TALENT" }));
-    expect(preview.getByText("IDP")).toBeInTheDocument();
-    expect(preview.queryByText("Accounts")).toBeNull();
+    const talentPreview = within(screen.getByRole("navigation", { name: "Pratinjau menu TALENT" }));
+    // Talent memakai halaman pribadi datar (TAN-392), bukan modul operasional.
+    expect(talentPreview.getByText("IDP saya")).toBeInTheDocument();
+    expect(talentPreview.getByText("Profil saya")).toBeInTheDocument();
+    expect(talentPreview.queryByText("Accounts")).toBeNull();
     // Entri tanpa rute (TAN-344) punya baris grid, tetapi tidak pernah jadi
     // item nav di pratinjau — tanpa error.
-    expect(preview.queryByText("Asisten data")).toBeNull();
+    expect(talentPreview.queryByText("Asisten data")).toBeNull();
 
-    // Hide IDP in the draft: the preview must follow it, before any save.
-    fireEvent.change(screen.getByLabelText("IDP untuk Talent"), { target: { value: "NONE" } });
-    expect(preview.queryByText("IDP")).toBeNull();
+    // Hide an entry in the draft: an operational preview must follow it before
+    // any save.
+    fireEvent.click(roleHeader("CHAPTER").getByRole("button", { name: "Pratinjau" }));
+    const chapterPreview = within(
+      screen.getByRole("navigation", { name: "Pratinjau menu CHAPTER" }),
+    );
+    expect(chapterPreview.getByText("Data Karyawan")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Data Karyawan untuk Chapter"), {
+      target: { value: "NONE" },
+    });
+    expect(chapterPreview.queryByText("Data Karyawan")).toBeNull();
   });
 });
 

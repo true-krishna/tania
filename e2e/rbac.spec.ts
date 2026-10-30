@@ -37,7 +37,7 @@ const LANDING: Record<Role, RegExp> = {
   ADMIN: /\/accounts$/,
   OPERATION: /\/dashboard$/,
   CHAPTER: /\/dashboard$/,
-  TALENT: /\/employees\/[^/]+$/,
+  TALENT: /\/profile$/,
 };
 
 async function loginAs(page: Page, role: Role): Promise<void> {
@@ -80,7 +80,14 @@ const NAV_VISIBLE: Record<Role, readonly string[]> = {
     "Master Data",
   ],
   CHAPTER: ["Dashboard", "Aktivitas saya", "Karyawan", "IDP", "Roster", "Master Data"],
-  TALENT: ["Aktivitas saya", "Data Karyawan", "IDP", "Evaluasi Saya"],
+  TALENT: [
+    "Profil saya",
+    "Workload saya",
+    "Aktivitas saya",
+    "CV saya",
+    "IDP saya",
+    "Evaluasi saya",
+  ],
 };
 
 /**
@@ -94,8 +101,7 @@ const NAV_HIDDEN: Record<Role, readonly string[]> = {
   OPERATION: ["CV", "Workload", "Administrasi", "Menu & Akses", "Accounts", "Audit"],
   CHAPTER: ["CV", "Workload", "Provisi Entra", "Administrasi", "Menu & Akses", "Accounts", "Audit"],
   TALENT: [
-    "CV",
-    "Workload",
+    "Data Karyawan",
     "Dashboard",
     "Kontrak",
     "Assignments",
@@ -109,7 +115,7 @@ const NAV_HIDDEN: Record<Role, readonly string[]> = {
 };
 
 /** Rute modul yang aktif: URL langsung harus membuka halamannya (bukan 404). */
-const ACTIVE_ROUTES = ["/idp", "/evaluations"] as const;
+const ACTIVE_ROUTES = ["/idp", "/evaluations", "/cv", "/workload"] as const;
 
 test.describe("RBAC matrix (T041)", () => {
   for (const role of ["ADMIN", "OPERATION", "CHAPTER", "TALENT"] as const) {
@@ -139,10 +145,9 @@ test.describe("RBAC matrix (T041)", () => {
       }
 
       if (role === "ADMIN") {
-        // TAN-374: Workload tersembunyi — rutenya mengalihkan, bukan merender fixture.
+        // TAN-392: Workload hanya halaman pribadi Talent — peran lain ditolak.
         await page.goto("/workload");
-        await page.waitForURL(/\/accounts$/);
-        await expect(page.getByText("Workload", { exact: true })).toHaveCount(0);
+        await expect(page.getByText("Anda tidak memiliki akses ke halaman ini")).toBeVisible();
 
         // TAN-376: Menu & Akses ditemukan dari grup Administration, bukan hanya
         // tautan di halaman Accounts; top bar menamai seksinya.
@@ -211,16 +216,19 @@ test.describe("RBAC matrix (T041)", () => {
     await expect(page.getByRole("link", { name: /Tambah Karyawan/ })).toHaveCount(0);
   });
 
-  test("T041 — TALENT: Employees mengarah ke data diri, IDP miliknya", async ({ page }) => {
+  test("T041 — TALENT: halaman pribadi datar (TAN-392)", async ({ page }) => {
     await loginAs(page, "TALENT");
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(page.getByRole("heading", { name: /Profil saya|./ }).first()).toBeVisible();
 
-    await page.goto("/employees");
-    await page.waitForURL(/\/employees\/[^/]+$/);
-    await expect(page.getByRole("heading", { name: "Data Karyawan" })).toHaveCount(0);
-
-    // Entri IDP yang sama membuka rencana milik Talent sendiri (klarifikasi 9).
-    await page.goto("/idp");
-    await expect(page.getByRole("heading", { name: "IDP Saya" })).toBeVisible();
+    await page.goto("/idp/my");
+    await expect(page.getByRole("heading", { name: "IDP saya" })).toBeVisible();
     await expect(page.getByRole("link", { name: /Buat IDP/ })).toHaveCount(0);
+
+    await page.goto("/cv");
+    await expect(page.getByRole("heading", { name: "CV saya" })).toBeVisible();
+
+    // Data Karyawan bukan lagi permukaan Talent.
+    await expect(mainNav(page).getByRole("link", { name: "Data Karyawan" })).toHaveCount(0);
   });
 });

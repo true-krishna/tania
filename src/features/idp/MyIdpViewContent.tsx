@@ -2,16 +2,19 @@
 
 import { useMutation } from "@apollo/client";
 import { AccessDenied } from "@/components/AccessDenied";
-import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Card } from "@/components/Card";
 import { Chip } from "@/components/Chip";
+import { EmptyState, LoadingState } from "@/components/DataState";
+import { DescriptionItem } from "@/components/DescriptionItem";
+import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/components/Toast";
+import { ProfileErrorState } from "@/features/profile/ProfileErrorState";
+import { IdpProgressBar } from "@/features/idp/IdpProgressBar";
 import { useModuleAccess } from "@/lib/auth/access";
 import { IDP_STATUS_LABEL, IDP_STATUS_VARIANT } from "@/features/idp/labels";
 import { useMyIdp } from "@/features/idp/talent/useMyIdp";
 import { MyIdpDocument, UpdateDevelopmentActionStatusDocument } from "@/generated/graphql";
 import type { DevelopmentActionStatus, DevelopmentMethod } from "@/generated/graphql/types";
-import { DescriptionItem } from "@/components/DescriptionItem";
 import { errorText } from "@/lib/errors";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
@@ -30,7 +33,7 @@ const METHOD_LABEL: Record<DevelopmentMethod, string> = {
 
 export function MyIdpViewContent() {
   const access = useModuleAccess("idp");
-  const { status, data, error } = useMyIdp({ skip: access.pending || !access.canRead });
+  const { status, data, error, refetch } = useMyIdp({ skip: access.pending || !access.canRead });
 
   const [updateActionStatus] = useMutation(UpdateDevelopmentActionStatusDocument, {
     refetchQueries: [{ query: MyIdpDocument }],
@@ -40,18 +43,35 @@ export function MyIdpViewContent() {
 
   if (access.pending) return null;
   if (!access.canRead) return <AccessDenied />;
-  if (status === "loading") return <LoadingState />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat IDP."} />;
-  if (!data)
+
+  if (status === "loading") {
     return (
-      <section className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">IDP Saya</h1>
+      <section className="flex min-w-0 flex-col gap-4">
+        <PageHeader subtitle="Rencana pengembangan individu Anda." title="IDP saya" />
+        <LoadingState label="Memuat IDP…" />
+      </section>
+    );
+  }
+  if (status === "error") {
+    return (
+      <section className="flex min-w-0 flex-col gap-4">
+        <PageHeader subtitle="Rencana pengembangan individu Anda." title="IDP saya" />
+        <ProfileErrorState message={error ?? "Gagal memuat IDP."} onRetry={refetch} />
+      </section>
+    );
+  }
+  if (!data) {
+    return (
+      <section className="flex min-w-0 flex-col gap-4">
+        <PageHeader subtitle="Rencana pengembangan individu Anda." title="IDP saya" />
         <EmptyState message="Chapter belum membuat IDP untuk Anda. IDP akan muncul di sini setelah dibuat." />
       </section>
     );
+  }
 
   const idp = data;
-  const completedActions = idp.actions.filter((a) => a.status === "COMPLETED").length;
+  const completedActions = idp.actions.filter((action) => action.status === "COMPLETED").length;
+  const totalActions = idp.actions.length;
 
   async function handleUpdateStatus(actionId: string, next: DevelopmentActionStatus) {
     try {
@@ -63,132 +83,166 @@ export function MyIdpViewContent() {
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">IDP Saya</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Rencana pengembangan individu Anda ({idp.id}).
+    <section className="flex min-w-0 flex-col gap-4">
+      <PageHeader
+        actions={
+          <Chip variant={IDP_STATUS_VARIANT[idp.status]}>{IDP_STATUS_LABEL[idp.status]}</Chip>
+        }
+        subtitle="Rencana pengembangan individu, dibuat dan direview Chapter."
+        title="IDP saya"
+      />
+
+      <div className="grid grid-cols-1 gap-3 min-[860px]:grid-cols-2">
+        <Card className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+            <h2 className="tp-h3">Periode & progres aksi</h2>
+            <span className="tp-label">{`${completedActions}/${totalActions} selesai`}</span>
+          </div>
+          <p className="mt-2 text-sm text-tp-text">{`${idp.timelineStart} s.d. ${idp.timelineEnd}`}</p>
+          <div className="mt-3">
+            <IdpProgressBar completed={completedActions} total={totalActions} />
+          </div>
+          <p className="tp-label mt-3 leading-5">
+            Progres dihitung dari status aksi di bawah; Anda memperbarui status tiap aksi, Chapter
+            menyetujui penyelesaian IDP.
           </p>
-        </div>
-        <Chip size="small" variant={IDP_STATUS_VARIANT[idp.status]}>
-          {IDP_STATUS_LABEL[idp.status]}
-        </Chip>
+        </Card>
+
+        <Card className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <h2 className="tp-h3">Tujuan & asesmen</h2>
+            <Chip size="small" variant="neutral">
+              Disusun Chapter
+            </Chip>
+          </div>
+          <dl className="mt-3 grid grid-cols-1 gap-4">
+            <DescriptionItem
+              label="Tujuan pengembangan"
+              value={idp.developmentObjective}
+              variant="compact"
+            />
+            <DescriptionItem
+              label="Asesmen saat ini"
+              value={idp.currentAssessment}
+              variant="compact"
+            />
+            <DescriptionItem label="Analisis gap" value={idp.gapAnalysis} variant="compact" />
+            <DescriptionItem
+              label="Indikator keberhasilan"
+              value={idp.successIndicators}
+              variant="compact"
+            />
+          </dl>
+        </Card>
       </div>
 
-      <Card className="flex flex-col gap-4">
-        <h2 className="text-base font-semibold text-zinc-900">Tujuan & Asesmen</h2>
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <DescriptionItem
-            label="Tujuan pengembangan"
-            value={idp.developmentObjective}
-            variant="compact"
-          />
-          <DescriptionItem
-            label="Asesmen saat ini"
-            value={idp.currentAssessment}
-            variant="compact"
-          />
-          <DescriptionItem label="Analisis gap" value={idp.gapAnalysis} variant="compact" />
-          <DescriptionItem
-            label="Indikator keberhasilan"
-            value={idp.successIndicators}
-            variant="compact"
-          />
-          <DescriptionItem
-            label="Periode"
-            value={`${idp.timelineStart} — ${idp.timelineEnd}`}
-            variant="compact"
-          />
-        </dl>
-      </Card>
-
-      <Card className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-zinc-900">Aksi Pengembangan</h2>
-          <span className="text-xs text-zinc-500">
-            {`${completedActions}/${idp.actions.length} selesai`}
-          </span>
+      <Card className="min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <h2 className="tp-h3">Aksi pengembangan</h2>
+          <span className="tp-label">{`${completedActions}/${totalActions} selesai`}</span>
         </div>
-        {idp.actions.length ? (
-          <ul className="flex flex-col gap-2">
+        {totalActions > 0 ? (
+          <ul className="mt-3 flex flex-col">
             {idp.actions.map((action) => (
               <li
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-board-border px-3 py-2"
+                className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-t border-tp-line py-3 first:border-t-0 first:pt-0 last:pb-0"
                 key={action.id}
               >
-                <div>
-                  <p className="text-sm font-medium text-zinc-900">{action.description}</p>
-                  <p className="text-xs text-zinc-500">
-                    {METHOD_LABEL[action.method]} · Tenggat {action.dueDate ?? "—"}
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold text-tp-text">
+                    {action.description}
+                  </p>
+                  <p className="text-[13px] text-tp-muted">
+                    {`${METHOD_LABEL[action.method]} · Tenggat ${action.dueDate ?? "—"}`}
                   </p>
                 </div>
-                <select
-                  aria-label={`Status aksi: ${action.description}`}
-                  className="rounded-md border border-surface-border bg-white px-2 py-1 text-xs font-medium text-zinc-700 shadow-sm focus:border-tp-brand-red"
-                  onChange={(e) =>
-                    handleUpdateStatus(action.id, e.target.value as DevelopmentActionStatus)
-                  }
-                  value={action.status}
+                <label className="flex min-w-0 items-center gap-2">
+                  <span className="sr-only">{`Status aksi: ${action.description}`}</span>
+                  <select
+                    className="min-h-[44px] rounded-full border border-tp-line bg-tp-surface px-3 text-sm font-semibold text-tp-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tp-brand-red"
+                    onChange={(event) =>
+                      handleUpdateStatus(action.id, event.target.value as DevelopmentActionStatus)
+                    }
+                    value={action.status}
+                  >
+                    {(Object.keys(ACTION_STATUS_LABEL) as DevelopmentActionStatus[]).map(
+                      (state) => (
+                        <option key={state} value={state}>
+                          {ACTION_STATUS_LABEL[state]}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </label>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="tp-empty mt-3">
+            <strong>Belum ada aksi pengembangan</strong>
+            Chapter belum menambahkan aksi pada IDP ini.
+          </p>
+        )}
+      </Card>
+
+      <div className="grid grid-cols-1 gap-3 min-[860px]:grid-cols-2">
+        <Card className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <h2 className="tp-h3">Review Chapter</h2>
+            <span className="tp-label">{`${idp.reviews.length} terdata`}</span>
+          </div>
+          {idp.reviews.length ? (
+            <ul className="mt-3 flex flex-col">
+              {idp.reviews.map((review) => (
+                <li
+                  className="min-w-0 border-t border-tp-line py-3 first:border-t-0 first:pt-0 last:pb-0"
+                  key={review.id}
                 >
-                  {(Object.keys(ACTION_STATUS_LABEL) as DevelopmentActionStatus[]).map((s) => (
-                    <option key={s} value={s}>
-                      {ACTION_STATUS_LABEL[s]}
-                    </option>
-                  ))}
-                </select>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-zinc-500">Belum ada aksi pengembangan.</p>
-        )}
-      </Card>
+                  <p className="text-sm font-semibold text-tp-text">
+                    {`Review ${review.reviewDate} · ${review.createdBy?.fullName ?? "Chapter"}`}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-5 text-tp-text">{review.summary}</p>
+                  {review.followUp ? (
+                    <p className="mt-1 text-[13px] leading-5 text-tp-muted">
+                      {`Tindak lanjut: ${review.followUp}`}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="tp-empty mt-3">Belum ada review dari Chapter.</p>
+          )}
+        </Card>
 
-      <Card className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-zinc-900">Riwayat Review</h2>
-        {idp.reviews.length ? (
-          <ul className="flex flex-col gap-2">
-            {idp.reviews.map((review) => (
-              <li
-                className="rounded-md border border-board-border px-3 py-2 text-sm"
-                key={review.id}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium text-zinc-900">
-                    {review.reviewDate} · {review.createdBy?.fullName ?? "—"}
-                  </span>
-                </div>
-                <p className="mt-1 text-zinc-700">{review.summary}</p>
-                {review.followUp ? (
-                  <p className="mt-1 text-xs text-zinc-500">Tindak lanjut: {review.followUp}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-zinc-500">Belum ada review.</p>
-        )}
-      </Card>
-
-      <Card className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-zinc-900">Riwayat Revisi</h2>
-        {idp.revisions.length ? (
-          <ul className="flex flex-col gap-2">
-            {idp.revisions.map((rev) => (
-              <li className="rounded-md border border-board-border px-3 py-2 text-sm" key={rev.id}>
-                <span className="font-medium text-zinc-900">Revisi {rev.revisionNo}</span>
-                <p className="mt-1 text-zinc-700">{rev.changeNote}</p>
-                <p className="mt-1 text-xs text-zinc-500">
-                  {rev.createdAt} · {rev.changedBy?.fullName ?? "—"}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-zinc-500">Belum ada revisi.</p>
-        )}
-      </Card>
+        <Card className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <h2 className="tp-h3">Revisi rencana</h2>
+            <Chip size="small" variant="neutral">
+              Hanya baca
+            </Chip>
+          </div>
+          {idp.revisions.length ? (
+            <ul className="mt-3 flex flex-col">
+              {idp.revisions.map((revision) => (
+                <li
+                  className="min-w-0 border-t border-tp-line py-3 first:border-t-0 first:pt-0 last:pb-0"
+                  key={revision.id}
+                >
+                  <p className="text-sm font-semibold text-tp-text">
+                    {`Revisi ${revision.revisionNo}: ${revision.changeNote}`}
+                  </p>
+                  <p className="mt-1 text-[13px] text-tp-muted">
+                    {`${revision.createdAt} · ${revision.changedBy?.fullName ?? "Chapter"}`}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="tp-empty mt-3">Belum ada revisi rencana.</p>
+          )}
+        </Card>
+      </div>
     </section>
   );
 }

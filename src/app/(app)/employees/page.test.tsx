@@ -3,7 +3,7 @@
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider, type MockedResponse } from "@apollo/client/testing";
 import EmployeesPage from "@/app/(app)/employees/page";
 import {
   AssignableTalentsDocument,
@@ -514,7 +514,7 @@ describe("ChapterTalentTable pagination & sort (TAN-384)", () => {
     sortDirection: "ASC",
   };
 
-  function renderChapter(mocks: Parameters<typeof MockedProvider>[0]["mocks"]) {
+  function renderChapter(mocks: readonly MockedResponse[]) {
     auth.role = "CHAPTER";
     return render(
       <MockedProvider mocks={mocks}>

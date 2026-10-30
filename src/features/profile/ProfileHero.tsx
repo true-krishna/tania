@@ -101,7 +101,7 @@ export function ProfileHero({
           </Chip>
         </div>
         <p className="tp-label mt-1 break-words text-sm">{orgLine}</p>
-        <dl className="mt-5 grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="mt-5 grid grid-cols-1 gap-x-5 gap-y-4 min-[860px]:grid-cols-2 xl:grid-cols-4">
           {fields.map((field) => (
             <ProfileField
               key={field.label}
