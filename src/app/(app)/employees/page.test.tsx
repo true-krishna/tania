@@ -375,7 +375,7 @@ describe("EmployeesPage per role (T034)", () => {
     expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
   });
 
-  it("shows the add action to Admin again (TAN-374)", async () => {
+  it("no longer shows the add action to Admin (TAN-343)", async () => {
     auth.role = "ADMIN";
     render(
       <MockedProvider mocks={[chaptersMock, unitsMock, firstPageMock, nextPageMock]}>
@@ -383,8 +383,8 @@ describe("EmployeesPage per role (T034)", () => {
       </MockedProvider>,
     );
     expect(await screen.findByText("Andi Pratama")).toBeInTheDocument();
-    // TAN-374: Admin kembali memegang Data Karyawan — aksi kelola tampil.
-    expect(screen.getByRole("button", { name: /tambah karyawan/i })).toBeInTheDocument();
+    // TAN-343: Admin tidak memegang sel Data Karyawan — tanpa aksi kelola.
+    expect(screen.queryByRole("button", { name: /tambah karyawan/i })).toBeNull();
   });
 
   it("lists scoped talents for Chapter via assignableTalents", async () => {
@@ -514,7 +514,7 @@ describe("ChapterTalentTable pagination & sort (TAN-384)", () => {
     sortDirection: "ASC",
   };
 
-  function renderChapter(mocks: readonly MockedResponse[]) {
+  function renderChapter(mocks: MockedResponse[]) {
     auth.role = "CHAPTER";
     return render(
       <MockedProvider mocks={mocks}>

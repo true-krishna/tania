@@ -218,6 +218,13 @@ describe("DashboardPage — union per role (FR-30 / US4)", () => {
     // Widget administratif + indikator FR-40.
     expect(await screen.findByText("Karyawan aktif")).toBeInTheDocument();
     expect(statValue("Karyawan aktif").getByText("89")).toBeInTheDocument();
+    // Definisi KPI ditampilkan: populasi kontrak berjalan, bukan status kepegawaian
+    // (TAN-395).
+    expect(
+      statValue("Karyawan aktif").getByText(
+        "Kontrak berjalan hari ini (sudah mulai, belum berakhir)",
+      ),
+    ).toBeInTheDocument();
     expect(statValue("Kontrak berakhir ≤ 90 hari").getByText("5")).toBeInTheDocument();
     expect(statValue("Kontrak berakhir ≤ 30 hari").getByText("2")).toBeInTheDocument();
     expect(statValue("Karyawan pra-pensiun").getByText("3")).toBeInTheDocument();

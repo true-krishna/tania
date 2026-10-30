@@ -4,7 +4,7 @@ import { IconSearch, IconX } from "@tabler/icons-react";
 import * as React from "react";
 import { cn } from "@/lib/cn";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
-import { EmployeeOptionList } from "./EmployeeOptionList";
+import { EmployeeOptionList, type EmployeeOption } from "./EmployeeOptionList";
 import { SelectedEmployeeChip } from "./SelectedEmployeeChip";
 import { useEmployeeLookup } from "./useEmployeeLookup";
 
@@ -33,6 +33,7 @@ export function EmployeePicker({
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [selectedOption, setSelectedOption] = React.useState<EmployeeOption | null>(null);
   const listRef = React.useRef<HTMLUListElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const generatedId = React.useId();
@@ -43,7 +44,10 @@ export function EmployeePicker({
   const lookupState = useEmployeeLookup({ search: debouncedQuery || undefined }, PAGE_SIZE);
   const items = React.useMemo(() => lookupState.items ?? [], [lookupState.items]);
   const boundedActiveIndex = items.length === 0 ? 0 : Math.min(activeIndex, items.length - 1);
-  const selectedEmployee = items.find((employee) => employee.id === value) ?? null;
+  const selectedEmployee =
+    value && selectedOption?.id === value
+      ? selectedOption
+      : (items.find((employee) => employee.id === value) ?? null);
 
   React.useEffect(() => {
     if (!open || !listRef.current) return;
@@ -66,6 +70,7 @@ export function EmployeePicker({
   }, []);
 
   function handleSelect(employeeId: string) {
+    setSelectedOption(items.find((employee) => employee.id === employeeId) ?? null);
     onChange(employeeId);
     setOpen(false);
     setQuery("");
@@ -73,6 +78,7 @@ export function EmployeePicker({
   }
 
   function handleClear() {
+    setSelectedOption(null);
     onChange("");
     setQuery("");
     setActiveIndex(0);
