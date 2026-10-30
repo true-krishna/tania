@@ -393,11 +393,22 @@ describe("EmployeesPage per role (T034)", () => {
       <MockedProvider
         mocks={[
           {
-            request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+            request: {
+              query: AssignableTalentsDocument,
+              variables: {
+                first: 100,
+                after: null,
+                search: null,
+                sortBy: "FULL_NAME",
+                sortDirection: "ASC",
+              },
+            },
             result: {
               data: {
                 assignableTalents: {
                   __typename: "EmployeeConnection",
+                  totalCount: 1,
+                  pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
                   edges: [
                     {
                       __typename: "EmployeeEdge",
@@ -466,6 +477,122 @@ describe("EmployeesPage per role (T034)", () => {
       </MockedProvider>,
     );
     expect(await screen.findByText(/belum tertaut/i)).toBeInTheDocument();
+  });
+});
+
+describe("ChapterTalentTable pagination & sort (TAN-384)", () => {
+  const chapterTalent = (i: number) => ({
+    __typename: "Employee",
+    id: `emp-${i}`,
+    fullName: `Talent ${String(i).padStart(2, "0")}`,
+    nomorInduk: `N-${String(i).padStart(2, "0")}`,
+  });
+
+  const talentsMock = (variables: Record<string, unknown>, ids: number[], totalCount: number) => ({
+    request: { query: AssignableTalentsDocument, variables },
+    result: {
+      data: {
+        assignableTalents: {
+          __typename: "EmployeeConnection",
+          totalCount,
+          edges: ids.map((i) => ({
+            __typename: "EmployeeEdge",
+            cursor: `c-${i}`,
+            node: chapterTalent(i),
+          })),
+          pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+        },
+      },
+    },
+  });
+
+  const initialVariables = {
+    first: 100,
+    after: null,
+    search: null,
+    sortBy: "FULL_NAME",
+    sortDirection: "ASC",
+  };
+
+  function renderChapter(mocks: Parameters<typeof MockedProvider>[0]["mocks"]) {
+    auth.role = "CHAPTER";
+    return render(
+      <MockedProvider mocks={mocks}>
+        <EmployeesPage />
+      </MockedProvider>,
+    );
+  }
+
+  it("paginates the loaded rows with a working page navigation", async () => {
+    const ids = Array.from({ length: 12 }, (_, i) => i + 1);
+    renderChapter([talentsMock(initialVariables, ids, 12)]);
+
+    expect(await screen.findByRole("link", { name: "Talent 01" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Talent 11" })).toBeNull();
+    expect(screen.getByText(/Menampilkan/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Halaman berikutnya" }));
+
+    expect(await screen.findByRole("link", { name: "Talent 11" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Talent 01" })).toBeNull();
+  });
+
+  it("re-queries server-side when a column header toggles the sort", async () => {
+    // Nama ASC: Andi, Budi, Cica. Nomor induk ASC: Budi, Cica, Andi.
+    const byName = [
+      { __typename: "Employee", id: "emp-1", fullName: "Andi", nomorInduk: "N-03" },
+      { __typename: "Employee", id: "emp-2", fullName: "Budi", nomorInduk: "N-01" },
+      { __typename: "Employee", id: "emp-3", fullName: "Cica", nomorInduk: "N-02" },
+    ];
+    const row = (talent: (typeof byName)[number]) => ({
+      __typename: "EmployeeEdge",
+      cursor: talent.id,
+      node: talent,
+    });
+    const conn = (talents: typeof byName) => ({
+      __typename: "EmployeeConnection",
+      totalCount: 3,
+      edges: talents.map(row),
+      pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+    });
+    renderChapter([
+      {
+        request: { query: AssignableTalentsDocument, variables: initialVariables },
+        result: { data: { assignableTalents: conn(byName) } },
+      },
+      {
+        request: {
+          query: AssignableTalentsDocument,
+          variables: { ...initialVariables, sortBy: "NOMOR_INDUK", sortDirection: "ASC" },
+        },
+        result: { data: { assignableTalents: conn([byName[1], byName[2], byName[0]]) } },
+      },
+      {
+        request: {
+          query: AssignableTalentsDocument,
+          variables: { ...initialVariables, sortBy: "NOMOR_INDUK", sortDirection: "DESC" },
+        },
+        result: { data: { assignableTalents: conn([byName[0], byName[2], byName[1]]) } },
+      },
+    ]);
+    expect(await screen.findByRole("link", { name: "Andi" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /nomor induk/i }));
+    expect(await screen.findByRole("link", { name: "Budi" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
+      "Budi",
+      "Cica",
+      "Andi",
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: /nomor induk/i }));
+    await waitFor(() =>
+      expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
+        "Andi",
+        "Cica",
+        "Budi",
+      ]),
+    );
   });
 });
 

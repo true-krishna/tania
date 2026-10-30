@@ -1,11 +1,28 @@
-query AssignableTalents($search: String, $first: Int = 25, $after: String) {
-  assignableTalents(search: $search, first: $first, after: $after) {
+query AssignableTalents(
+  $search: String
+  $sortBy: EmployeeListSortField = FULL_NAME
+  $sortDirection: SortDirection = ASC
+  $first: Int = 25
+  $after: String
+) {
+  assignableTalents(
+    search: $search
+    sortBy: $sortBy
+    sortDirection: $sortDirection
+    first: $first
+    after: $after
+  ) {
+    totalCount
     edges {
       node {
         id
         fullName
         nomorInduk
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

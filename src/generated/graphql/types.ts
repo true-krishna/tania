@@ -753,6 +753,11 @@ export type EmployeeFilter = {
   unitId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** Kolom yang dapat diurutkan pada daftar talent assignable (TAN-384). */
+export type EmployeeListSortField =
+  | 'FULL_NAME'
+  | 'NOMOR_INDUK';
+
 export type EmployeeStatus =
   | 'ACTIVE'
   | 'INACTIVE'
@@ -1904,7 +1909,10 @@ export type Query = {
   activityStatuses: Array<ActivityStatus>;
   /** Rekap aktivitas satu bulan (`periodId` = YYYY-MM) sesuai scope pemanggil. */
   activitySummary: ActivitySummary;
-  /** Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35). */
+  /**
+   * Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35).
+   * Pengurutan server-side dengan keyset cursor agar urutan konsisten lintas halaman (TAN-384).
+   */
   assignableTalents: EmployeeConnection;
   assignments: AssignmentConnection;
   auditLogs: AuditLogConnection;
@@ -1921,8 +1929,8 @@ export type Query = {
   employee?: Maybe<Employee>;
   /**
    * Lookup karyawan minimal khusus form Tambah Akun (TAN-371): mengikuti sel
-   * modul Akun (Admin-only), terpisah dari sel Data Karyawan yang Admin tidak
-   * pegang sejak TAN-343.
+   * modul Akun (Admin-only), terpisah dari sel Data Karyawan sehingga menutup Data
+   * Karyawan tidak ikut mematikan form Tambah Akun.
    */
   employeeLookup: EmployeeConnection;
   employees: EmployeeConnection;
@@ -2001,6 +2009,8 @@ export type QueryAssignableTalentsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<EmployeeListSortField>;
+  sortDirection?: InputMaybe<SortDirection>;
 };
 
 
@@ -2279,7 +2289,7 @@ export type RoleCount = {
  */
 export type RoleMenuAccessInput = {
   accessLevel: MenuAccessLevel;
-  /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`. */
+  /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `employees`. */
   menuEntryId: Scalars['String']['input'];
   /** Visibilitas entri di sidebar; tidak pernah mengubah otorisasi server. */
   visible: Scalars['Boolean']['input'];
@@ -2289,7 +2299,7 @@ export type RoleMenuAccessInput = {
 export type RoleMenuEntry = {
   __typename?: 'RoleMenuEntry';
   accessLevel: MenuAccessLevel;
-  /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`. */
+  /** Kunci katalog menu: path rute tanpa garis miring depan, mis. `employees`. */
   menuEntryId: Scalars['String']['output'];
   roleId: Scalars['ID']['output'];
   /** Nama mesin role pemilik sel ini (bawaan atau kustom) — kunci kolom grid. */

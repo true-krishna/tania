@@ -91,6 +91,12 @@ enum SortDirection {
   DESC
 }
 
+"""Kolom yang dapat diurutkan pada daftar talent assignable (TAN-384)."""
+enum EmployeeListSortField {
+  FULL_NAME
+  NOMOR_INDUK
+}
+
 """Hasil provisioning akun Entra seorang talent (FR-44, FR-45)."""
 type EntraProvision {
   status: EntraProvisionStatus!
@@ -1156,7 +1162,7 @@ type RoleMenuEntry {
   roleId: ID!
   """Nama mesin role pemilik sel ini (bawaan atau kustom) — kunci kolom grid."""
   roleName: String!
-  """Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`."""
+  """Kunci katalog menu: path rute tanpa garis miring depan, mis. `employees`."""
   menuEntryId: String!
   visible: Boolean!
   accessLevel: MenuAccessLevel!
@@ -1174,7 +1180,7 @@ input CreateRoleInput {
 
 `accessLevel` adalah sumbu otorisasi server; `visible` hanya tampilan sidebar."""
 input RoleMenuAccessInput {
-  """Kunci katalog menu: path rute tanpa garis miring depan, mis. `workload/talent`."""
+  """Kunci katalog menu: path rute tanpa garis miring depan, mis. `employees`."""
   menuEntryId: String!
   """Visibilitas entri di sidebar; tidak pernah mengubah otorisasi server."""
   visible: Boolean!
@@ -1222,12 +1228,19 @@ type Query {
   employee(id: ID!): Employee
 
   """Lookup karyawan minimal khusus form Tambah Akun (TAN-371): mengikuti sel
-  modul Akun (Admin-only), terpisah dari sel Data Karyawan yang Admin tidak
-  pegang sejak TAN-343."""
+  modul Akun (Admin-only), terpisah dari sel Data Karyawan sehingga menutup Data
+  Karyawan tidak ikut mematikan form Tambah Akun."""
   employeeLookup(filter: EmployeeFilter, first: Int = 25, after: String): EmployeeConnection!
 
-  """Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35)."""
-  assignableTalents(search: String, first: Int = 25, after: String): EmployeeConnection!
+  """Kandidat assignment/IDP baru: karyawan aktif dengan kontrak aktif dan assignable (FR-04, FR-23, FR-35).
+  Pengurutan server-side dengan keyset cursor agar urutan konsisten lintas halaman (TAN-384)."""
+  assignableTalents(
+    search: String
+    sortBy: EmployeeListSortField = FULL_NAME
+    sortDirection: SortDirection = ASC
+    first: Int = 25
+    after: String
+  ): EmployeeConnection!
 
   # --- Kontrak kerja (Operation/Admin tulis; Chapter baca cakupan chapter-nya) ---
   employmentContracts(filter: EmploymentContractFilter, first: Int = 25, after: String): EmploymentContractConnection!

@@ -17,7 +17,7 @@ type CandidateNode = PreRetirementCandidatesQuery["employees"]["edges"][number][
  */
 export function usePreRetirementCandidates(): QueryState<CandidateNode[] | undefined> {
   const result = useQuery<PreRetirementCandidatesQuery>(PreRetirementCandidatesDocument, {
-    variables: { first: 100 },
+    variables: { first: 100, after: null, search: null, sortBy: "FULL_NAME", sortDirection: "ASC" },
   });
   return toQueryState({
     ...result,

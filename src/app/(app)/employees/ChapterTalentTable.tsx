@@ -2,16 +2,39 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import * as React from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
 import { Table } from "@/components/Table";
+import { useTablePagination } from "@/components/Pagination";
 import { RowActionsMenu } from "@/components/RowActionsMenu";
 import { useAssignableTalents } from "@/features/employees/useEmployees";
+import type { EmployeeListSortField } from "@/generated/graphql/types";
 import { EMPLOYEE_DETAIL } from "@/lib/constants/routes";
 import { orDash } from "@/lib/cell";
+import { ChapterSortHeader, chapterSortAria, type ChapterSortState } from "./ChapterSortHeader";
 
 export function ChapterTalentTable() {
   const router = useRouter();
-  const { status, data, error } = useAssignableTalents();
+  const [sort, setSort] = React.useState<ChapterSortState>(null);
+  const sortBy: EmployeeListSortField = sort?.key ?? "FULL_NAME";
+  const sortDirection = sort?.dir ?? "ASC";
+  const { status, data, error, totalCount, hasNextPage, loadingMore, loadMore } =
+    useAssignableTalents({ sortBy, sortDirection });
+  const { pageRows, pagination, resetPage } = useTablePagination(data, {
+    totalItems: totalCount,
+    hasMore: hasNextPage,
+    loadingMore,
+    loadMore,
+  });
+
+  function toggleSort(key: EmployeeListSortField) {
+    resetPage();
+    setSort((current) => {
+      if (!current || current.key !== key) return { key, dir: "ASC" };
+      if (current.dir === "ASC") return { key, dir: "DESC" };
+      return null;
+    });
+  }
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat data."} />;
@@ -25,7 +48,10 @@ export function ChapterTalentTable() {
       columns={[
         {
           key: "name",
-          title: "Nama",
+          title: (
+            <ChapterSortHeader label="Nama" onToggle={toggleSort} sort={sort} sortKey="FULL_NAME" />
+          ),
+          headerProps: { "aria-sort": chapterSortAria(sort, "FULL_NAME") },
           render: (_value, talent) => (
             <Link
               className="font-medium text-zinc-900 hover:underline"
@@ -37,7 +63,15 @@ export function ChapterTalentTable() {
         },
         {
           key: "nomorInduk",
-          title: "Nomor Induk",
+          title: (
+            <ChapterSortHeader
+              label="Nomor Induk"
+              onToggle={toggleSort}
+              sort={sort}
+              sortKey="NOMOR_INDUK"
+            />
+          ),
+          headerProps: { "aria-sort": chapterSortAria(sort, "NOMOR_INDUK") },
           className: "text-zinc-600",
           render: (_value, talent) => orDash(talent.nomorInduk),
         },
@@ -58,7 +92,8 @@ export function ChapterTalentTable() {
           ),
         },
       ]}
-      dataSource={data}
+      dataSource={pageRows}
+      pagination={pagination}
       rowKey={(talent) => talent.id}
     />
   );
