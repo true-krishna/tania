@@ -1,7 +1,6 @@
 "use client";
 
 import { ErrorState, LoadingState } from "@/components/DataState";
-import { PageHeader } from "@/components/PageHeader";
 import { useMyCvProfile } from "@/features/cv/useMyCvProfile";
 import { CvCertificationsSection } from "./CvCertificationsSection";
 import { CvEducationsSection } from "./CvEducationsSection";
@@ -19,10 +18,6 @@ export function TalentCvEditor() {
 
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader
-        subtitle="Isi setiap bagian lalu simpan; pengalaman kerja terisi otomatis dari riwayat assignment."
-        title="Profil CV"
-      />
       <CvSummarySection cv={data} />
       <CvEducationsSection cv={data} />
       <CvCertificationsSection cv={data} />

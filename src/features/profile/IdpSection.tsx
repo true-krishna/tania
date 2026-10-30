@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { Card } from "@/components/Card";
-import { DescriptionItem } from "@/components/DescriptionItem";
 import { Chip, type ChipVariant } from "@/components/Chip";
-import { EmptyState, ErrorState, LoadingState } from "@/components/DataState";
-import { IdpStatusChip } from "./IdpStatusChip";
-import { useMyIdp } from "@/features/idp/talent/useMyIdp";
+import { DescriptionItem } from "@/components/DescriptionItem";
+import { EmptyState } from "@/components/DataState";
+import type { MyIdp } from "@/features/idp/talent/useMyIdp";
+import type { RefetchableQueryState } from "@/lib/apollo/toQueryState";
 import { IDP_MY } from "@/lib/constants/routes";
 import type { DevelopmentActionStatus, DevelopmentMethod } from "@/generated/graphql/types";
+import { IdpStatusChip } from "./IdpStatusChip";
+import { ProfileErrorState } from "./ProfileErrorState";
+import { ProfilePanelSkeleton } from "./ProfilePanelSkeleton";
 
 const ACTION_STATUS_LABEL: Record<DevelopmentActionStatus, string> = {
   TODO: "To do",
@@ -30,26 +33,28 @@ const METHOD_LABEL: Record<DevelopmentMethod, string> = {
   SELF_STUDY: "Belajar mandiri",
 };
 
-export function IdpSection() {
-  const { status, data, error } = useMyIdp();
+export function IdpSection({ idp }: { idp: RefetchableQueryState<MyIdp | undefined> }) {
+  if (idp.status === "loading") return <ProfilePanelSkeleton label="Memuat IDP…" />;
+  if (idp.status === "error") {
+    return <ProfileErrorState message={idp.error ?? "Gagal memuat IDP."} onRetry={idp.refetch} />;
+  }
 
-  if (status === "loading") return <LoadingState label="Memuat IDP…" />;
-  if (status === "error") return <ErrorState message={error ?? "Gagal memuat IDP."} />;
+  const data = idp.data;
   if (!data) {
     return (
       <EmptyState message="Chapter belum membuat IDP untuk Anda. IDP akan muncul di sini setelah dibuat." />
     );
   }
 
-  const completedActions = data.actions.filter((a) => a.status === "COMPLETED").length;
+  const completedActions = data.actions.filter((action) => action.status === "COMPLETED").length;
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
-      <Card className="flex flex-col gap-3">
+    <div className="flex min-w-0 max-w-3xl flex-col gap-4">
+      <Card className="flex min-w-0 flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-zinc-900">Rencana pengembangan individu</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500">
+          <h2 className="text-sm font-semibold text-tp-text">Rencana pengembangan individu</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-tp-muted">
               {`${completedActions}/${data.actions.length} aksi selesai`}
             </span>
             <IdpStatusChip status={data.status} />
@@ -64,18 +69,18 @@ export function IdpSection() {
         </dl>
       </Card>
 
-      <Card className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-zinc-900">Aksi pengembangan</h2>
+      <Card className="flex min-w-0 flex-col gap-3">
+        <h2 className="text-sm font-semibold text-tp-text">Aksi pengembangan</h2>
         {data.actions.length ? (
           <ul className="flex flex-col gap-2">
             {data.actions.map((action) => (
               <li
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-board-border px-3 py-2"
+                className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-tp-md border border-tp-line px-3 py-2"
                 key={action.id}
               >
-                <div>
-                  <p className="text-sm font-medium text-zinc-900">{action.description}</p>
-                  <p className="text-xs text-zinc-500">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-tp-text">{action.description}</p>
+                  <p className="text-xs text-tp-muted">
                     {METHOD_LABEL[action.method]} · Tenggat {action.dueDate ?? "—"}
                   </p>
                 </div>
@@ -86,9 +91,9 @@ export function IdpSection() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-zinc-500">Belum ada aksi pengembangan.</p>
+          <p className="text-sm text-tp-muted">Belum ada aksi pengembangan.</p>
         )}
-        <Link className="text-sm font-medium text-zinc-900 hover:underline" href={IDP_MY}>
+        <Link className="text-sm font-medium text-tp-brand-red-ink hover:underline" href={IDP_MY}>
           Kelola IDP saya →
         </Link>
       </Card>

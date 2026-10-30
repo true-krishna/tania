@@ -5,8 +5,12 @@ import { IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand } from "@tab
 import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/cn";
 import type { AccessRole } from "@/generated/graphql";
-import type { MenuAccessConfig, MenuConfigStatus } from "@/lib/auth/menuAccess";
-import { NAV, visibleNavEntries, type NavEntry, type NavSubmenu } from "./nav";
+import {
+  defaultMenuAccessFor,
+  type MenuAccessConfig,
+  type MenuConfigStatus,
+} from "@/lib/auth/menuAccess";
+import { navEntriesForRole, visibleNavEntries, type NavEntry, type NavSubmenu } from "./nav";
 import { SidebarCompactNav } from "./SidebarCompactNav";
 import { SidebarDesktopNav } from "./SidebarDesktopNav";
 
@@ -16,6 +20,7 @@ interface SidebarProps {
   menuConfig?: MenuAccessConfig | null;
   menuStatus?: MenuConfigStatus;
   roleName?: string | null;
+  onRetryMenu?: () => void;
 }
 
 function useActiveHref(
@@ -47,17 +52,17 @@ function resolveEntries(
   configured: boolean,
   menuConfig: MenuAccessConfig | null,
   roleName: string | null,
+  role: AccessRole | null,
   menuStatus: MenuConfigStatus,
 ): readonly NavEntry[] {
   if (configured && menuConfig && roleName) return visibleNavEntries(menuConfig, roleName);
-  if (menuStatus === "ready") return NAV;
+  if (menuStatus === "ready") return navEntriesForRole(role);
   return [];
 }
 
 function menuNoticeFor(menuStatus: MenuConfigStatus, entryCount: number): string | null {
-  if (menuStatus === "error")
-    return "Gagal memuat menu akses. Muat ulang halaman untuk mencoba lagi.";
-  if (entryCount === 0) return "Tidak ada menu untuk peran ini.";
+  if (menuStatus === "error") return "Gagal memuat konfigurasi menu; menampilkan akses default";
+  if (menuStatus === "empty" || entryCount === 0) return "Tidak ada menu untuk peran ini.";
   return null;
 }
 
@@ -67,11 +72,16 @@ export function Sidebar({
   menuConfig = null,
   menuStatus = "ready",
   roleName = null,
+  onRetryMenu,
 }: SidebarProps) {
-  const configured = !!menuConfig && !!roleName;
+  const effectiveRoleName = roleName ?? role;
+  const fallbackConfig =
+    menuStatus === "error" ? defaultMenuAccessFor(effectiveRoleName, role) : null;
+  const effectiveConfig = menuConfig ?? fallbackConfig;
+  const configured = !!effectiveConfig && !!effectiveRoleName;
   const entries = React.useMemo(
-    () => resolveEntries(configured, menuConfig, roleName, menuStatus),
-    [configured, menuConfig, menuStatus, roleName],
+    () => resolveEntries(configured, effectiveConfig, effectiveRoleName, role, menuStatus),
+    [configured, effectiveConfig, menuStatus, effectiveRoleName, role],
   );
   const activeHref = useActiveHref(pathname, role, entries, !configured);
   const [openOverride, setOpenOverride] = React.useState<Record<string, boolean>>({});
@@ -144,6 +154,7 @@ export function Sidebar({
           isHidden={hidden}
           menuStatus={menuStatus}
           notice={menuNotice}
+          onRetry={onRetryMenu}
           onToggleGroup={(entryId, open) =>
             setOpenOverride((prev) => ({ ...prev, [entryId]: !open }))
           }
@@ -163,6 +174,7 @@ export function Sidebar({
           isHidden={hidden}
           menuStatus={menuStatus}
           notice={menuNotice}
+          onRetry={onRetryMenu}
         />
       </nav>
     </aside>

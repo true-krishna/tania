@@ -40,3 +40,5 @@ function toStatus(loading: boolean, error: unknown): QueryStatus {
   if (error) return "error";
   return "ready";
 }
+
+export type RefetchableQueryState<T> = QueryState<T> & { refetch: () => void };

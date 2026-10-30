@@ -1,30 +1,20 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { ToastProvider } from "@/components/Toast";
-import CvPage from "@/app/(app)/cv/page";
+import { EmployeeCvContent } from "@/features/cv/EmployeeCvContent";
+import { TalentCvEditor } from "@/features/cv/TalentCvEditor";
 import {
   AddCvEducationDocument,
   CvProfileDocument,
-  EmployeesDocument,
   MyCvProfileDocument,
   UpdateCvCertificationDocument,
   UpdateCvEducationDocument,
   UpdateCvSkillDocument,
 } from "@/generated/graphql";
-
-vi.mock("@/lib/auth/guard", () => ({
-  useSessionRole: (): string | null => mockRole,
-}));
-
-let mockRole: string | null = "TALENT";
-
-function setRole(role: string | null) {
-  mockRole = role;
-}
 
 const cv = {
   __typename: "CvProfile",
@@ -67,37 +57,14 @@ const cv = {
 
 const myCvResult = { data: { myCvProfile: cv } };
 
-const employee = {
-  __typename: "Employee",
-  id: "emp-1",
-  fullName: "Andi Pratama",
-  nomorInduk: "EMP-001",
-  email: "andi@example.com",
-  status: "ACTIVE",
-  assignable: true,
-  unit: { __typename: "Unit", id: "u-1", name: "Digital" },
-  jobRole: { __typename: "JobRole", id: "jr-1", name: "Engineer" },
-};
-
-const employeesResult = {
-  data: {
-    employees: {
-      __typename: "EmployeeConnection",
-      totalCount: 1,
-      edges: [{ __typename: "EmployeeEdge", cursor: "emp-1", node: employee }],
-      pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-    },
-  },
-};
-
 const cvProfileResult = { data: { cvProfile: cv } };
 
-describe("CvPage — Talent editor (US4 / FR-12)", () => {
+describe("TalentCvEditor — CV tab on /profile (US4 / FR-12)", () => {
   it("renders the structured CV sections for the logged-in talent", async () => {
     render(
       <ToastProvider>
         <MockedProvider mocks={[{ request: { query: MyCvProfileDocument }, result: myCvResult }]}>
-          <CvPage />
+          <TalentCvEditor />
         </MockedProvider>
       </ToastProvider>,
     );
@@ -150,7 +117,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
             },
           ]}
         >
-          <CvPage />
+          <TalentCvEditor />
         </MockedProvider>
       </ToastProvider>,
     );
@@ -181,7 +148,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
     render(
       <ToastProvider>
         <MockedProvider mocks={[{ request: { query: MyCvProfileDocument }, result: myCvResult }]}>
-          <CvPage />
+          <TalentCvEditor />
         </MockedProvider>
       </ToastProvider>,
     );
@@ -245,7 +212,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
             },
           ]}
         >
-          <CvPage />
+          <TalentCvEditor />
         </MockedProvider>
       </ToastProvider>,
     );
@@ -315,7 +282,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
             },
           ]}
         >
-          <CvPage />
+          <TalentCvEditor />
         </MockedProvider>
       </ToastProvider>,
     );
@@ -362,7 +329,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
             },
           ]}
         >
-          <CvPage />
+          <TalentCvEditor />
         </MockedProvider>
       </ToastProvider>,
     );
@@ -391,7 +358,7 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
             },
           ]}
         >
-          <CvPage />
+          <TalentCvEditor />
         </MockedProvider>
       </ToastProvider>,
     );
@@ -402,104 +369,60 @@ describe("CvPage — Talent editor (US4 / FR-12)", () => {
   });
 });
 
-describe("CvPage — Chapter read-only (US4 / FR-13)", () => {
-  it("renders a read-only CV after selecting a talent", async () => {
-    setRole("CHAPTER");
+describe("EmployeeCvContent — read-only CV tab on the employee profile (US4 / FR-13)", () => {
+  it("renders the selected employee's CV read-only", async () => {
     render(
-      <ToastProvider>
-        <MockedProvider
-          mocks={[
-            {
-              request: {
-                query: EmployeesDocument,
-                variables: { filter: { assignableOnly: true }, first: 25, after: null },
-              },
-              result: employeesResult,
-            },
-            {
-              request: { query: CvProfileDocument, variables: { employeeId: "emp-1" } },
-              result: cvProfileResult,
-            },
-          ]}
-        >
-          <CvPage />
-        </MockedProvider>
-      </ToastProvider>,
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: CvProfileDocument, variables: { employeeId: "emp-1" } },
+            result: cvProfileResult,
+          },
+        ]}
+      >
+        <EmployeeCvContent employeeId="emp-1" />
+      </MockedProvider>,
     );
-
-    expect(await screen.findByText("Andi Pratama (EMP-001)")).toBeInTheDocument();
-
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "emp-1" } });
 
     expect(await screen.findByText(/Universitas Indonesia/)).toBeInTheDocument();
     expect(screen.getByText("AWS Certified Developer")).toBeInTheDocument();
     expect(screen.getByText("Go")).toBeInTheDocument();
+    // A CV is personal content: readers never edit someone else's CV (FR-13).
     expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
   });
 
-  it("gives Operation the same read-only roster over every talent (2026-10-16 clarify 6)", async () => {
-    setRole("OPERATION");
+  it("shows an empty state when the employee has no CV yet", async () => {
     render(
-      <ToastProvider>
-        <MockedProvider
-          mocks={[
-            {
-              request: {
-                query: EmployeesDocument,
-                variables: { filter: { assignableOnly: true }, first: 25, after: null },
-              },
-              result: employeesResult,
-            },
-            {
-              request: { query: CvProfileDocument, variables: { employeeId: "emp-1" } },
-              result: cvProfileResult,
-            },
-          ]}
-        >
-          <CvPage />
-        </MockedProvider>
-      </ToastProvider>,
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: CvProfileDocument, variables: { employeeId: "emp-2" } },
+            result: { data: { cvProfile: null } },
+          },
+        ]}
+      >
+        <EmployeeCvContent employeeId="emp-2" />
+      </MockedProvider>,
     );
 
-    expect(await screen.findByText(/seluruh talent/)).toBeInTheDocument();
-
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "emp-1" } });
-
-    expect(await screen.findByText(/Universitas Indonesia/)).toBeInTheDocument();
-    // A CV is personal content: Operation reads it, never edits it (FR-13).
-    expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
+    expect(await screen.findByText("Talent ini belum memiliki profil CV.")).toBeInTheDocument();
   });
 
-  it("gives Admin the same read-only roster over every talent (TAN-212 clarify 4)", async () => {
-    setRole("ADMIN");
+  it("surfaces a not-found CV as an error, without leaking the profile", async () => {
     render(
-      <ToastProvider>
-        <MockedProvider
-          mocks={[
-            {
-              request: {
-                query: EmployeesDocument,
-                variables: { filter: { assignableOnly: true }, first: 25, after: null },
-              },
-              result: employeesResult,
-            },
-            {
-              request: { query: CvProfileDocument, variables: { employeeId: "emp-1" } },
-              result: cvProfileResult,
-            },
-          ]}
-        >
-          <CvPage />
-        </MockedProvider>
-      </ToastProvider>,
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: CvProfileDocument, variables: { employeeId: "emp-out-of-scope" } },
+            error: new Error("not found"),
+          },
+        ]}
+      >
+        <EmployeeCvContent employeeId="emp-out-of-scope" />
+      </MockedProvider>,
     );
 
-    expect(await screen.findByText(/seluruh talent/)).toBeInTheDocument();
-
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "emp-1" } });
-
-    expect(await screen.findByText(/Universitas Indonesia/)).toBeInTheDocument();
-    // A CV is personal content: Admin reads it, never edits it (FR-13).
-    expect(screen.queryByRole("button", { name: "+ Tambah Pendidikan" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.queryByText(/Universitas Indonesia/)).not.toBeInTheDocument();
   });
 });

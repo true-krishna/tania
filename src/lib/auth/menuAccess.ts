@@ -13,6 +13,9 @@ import type { Module } from "./matrix";
  * `defaultMenuAccess`), keyed by the menu entry id that `role_menu_config`
  * stores. `nav.test.ts` uses it to assert that no menu shows a module the
  * server denies on the active configuration.
+ *
+ * 2026-10-29 (TAN-376): `admin/roles` (Menu & Akses) adalah entri katalog
+ * terkunci milik Admin (TAN-381) dengan default `MANAGE` hanya untuk Admin.
  */
 export type MenuAccessLevel = "NONE" | "READ" | "MANAGE";
 
@@ -47,15 +50,11 @@ export function menuEntryIdForHref(href: string): string {
 export const MODULE_OF_HREF: Record<string, Module> = {
   "/dashboard": "dashboard",
   "/activities": "activities",
-  "/workload": "workload",
-  "/workload/executive": "workload",
-  "/workload/talent": "workload",
   "/employees": "employees",
   "/contracts": "contracts",
   "/assignments": "assignments",
   "/entra": "entra",
   "/idp": "idp",
-  "/cv": "cv",
   "/evaluations": "evaluations",
   "/evaluations/periods": "evaluations",
   "/evaluations/templates": "evaluations",
@@ -65,6 +64,7 @@ export const MODULE_OF_HREF: Record<string, Module> = {
   "/master-data/job-roles": "masterData",
   "/master-data/projects": "masterData",
   "/accounts": "accounts",
+  "/admin/roles": "adminRoles",
   "/audit": "audit",
 };
 
@@ -78,14 +78,12 @@ export const MODULE_OF_HREF: Record<string, Module> = {
 export const MODULE_ENTRIES: Record<Module, readonly string[]> = {
   dashboard: ["dashboard"],
   activities: ["activities"],
-  workload: ["workload", "workload/executive", "workload/talent"],
   employees: ["employees"],
   entra: ["entra"],
   contracts: ["contracts"],
   assignments: ["assignments"],
   idp: ["idp"],
   evaluations: ["evaluations", "evaluations/periods", "evaluations/templates", "evaluations/my"],
-  cv: ["cv"],
   masterData: [
     "master-data/units",
     "master-data/chapters",
@@ -93,6 +91,7 @@ export const MODULE_ENTRIES: Record<Module, readonly string[]> = {
     "master-data/projects",
   ],
   accounts: ["accounts"],
+  adminRoles: ["admin/roles"],
   audit: ["audit"],
 };
 
@@ -103,35 +102,31 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
     for (const role of roles) matrix[entry][role] = level;
   };
   const all: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
-  const execs: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER"];
 
-  // TAN-343: dashboard hanya Operation & Chapter (sel default).
-  set("dashboard", "READ", ["OPERATION", "CHAPTER"]);
+  // TAN-374: Admin memegang seluruh modul operasional lagi; Workload tidak
+  // punya sel sampai TAN-378 menyambungkan data nyata.
+  set("dashboard", "READ", ["ADMIN", "OPERATION", "CHAPTER"]);
   set("activities", "READ", all);
-  // Talent gets the single Workload link; the other roles get the group pages.
-  set("workload", "READ", ["TALENT"]);
-  set("workload/executive", "READ", execs);
-  set("workload/talent", "READ", execs);
-  // TAN-343: Admin memegang tanpa sel pada employees/contracts/assignments/
-  // entra; Talent tanpa Assignment (fitur self-service ditunda).
-  set("employees", "MANAGE", ["OPERATION"]);
+  // Talent tanpa Assignment (fitur self-service ditunda).
+  set("employees", "MANAGE", ["ADMIN", "OPERATION"]);
   set("employees", "READ", ["CHAPTER", "TALENT"]);
-  set("contracts", "MANAGE", ["OPERATION"]);
+  set("contracts", "MANAGE", ["ADMIN", "OPERATION"]);
   set("contracts", "READ", ["CHAPTER"]);
-  set("assignments", "MANAGE", ["CHAPTER"]);
+  set("assignments", "MANAGE", ["ADMIN", "CHAPTER"]);
   set("assignments", "READ", ["OPERATION"]);
-  set("entra", "MANAGE", ["OPERATION"]);
+  set("entra", "MANAGE", ["ADMIN", "OPERATION"]);
   // IDP: Chapter manages its scope, Talent its own record, Operation reads.
   set("idp", "MANAGE", ["ADMIN", "CHAPTER", "TALENT"]);
   set("idp", "READ", ["OPERATION"]);
-  set("cv", "MANAGE", ["TALENT"]);
-  set("cv", "READ", ["ADMIN", "OPERATION", "CHAPTER"]);
   set("evaluations", "MANAGE", ["ADMIN", "CHAPTER"]);
   set("evaluations", "READ", ["OPERATION"]);
   set("evaluations/periods", "MANAGE", ["ADMIN"]);
   set("evaluations/templates", "MANAGE", ["ADMIN"]);
   set("evaluations/my", "MANAGE", ["TALENT"]);
   set("accounts", "MANAGE", ["ADMIN"]);
+  // Menu & Akses (TAN-381): entri terkunci milik Admin, tidak dapat diberikan
+  // ke peran lain maupun disembunyikan dari Admin.
+  set("admin/roles", "MANAGE", ["ADMIN"]);
   for (const entry of [
     "master-data/units",
     "master-data/chapters",
@@ -158,6 +153,24 @@ function buildDefaultMenuAccess(): MenuAccessConfig {
 
 /** The 002 baseline configuration, identical to the server's fallback matrix. */
 export const DEFAULT_MENU_ACCESS: MenuAccessConfig = buildDefaultMenuAccess();
+
+/**
+ * The baseline grid for one caller, keyed by the caller's own role name.
+ *
+ * Used only when `myMenuConfig` fails: the server falls back to this same
+ * matrix, so showing it (instead of an empty sidebar that denies every page)
+ * keeps the UI in step with what the server would actually authorize. A custom
+ * role inherits the grid of its template role.
+ */
+export function defaultMenuAccessFor(
+  roleName: string | null,
+  templateRole: AccessRole | null,
+): MenuAccessConfig | null {
+  if (!roleName || !templateRole) return null;
+  const cells = DEFAULT_MENU_ACCESS[templateRole];
+  if (!cells) return null;
+  return { [roleName]: cells };
+}
 
 /** Configured level of one cell; an absent row is NONE (deny by default). */
 export function accessLevel(

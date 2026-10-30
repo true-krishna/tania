@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
-import CvPage from "@/features/cv/CvPage";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { resolveSession } from "@/lib/auth/route-gate";
+import { EMPLOYEES, PROFILE } from "@/lib/constants/routes";
+import { SESSION_COOKIE } from "@/lib/constants/storage";
 
 export const metadata: Metadata = {
-  description:
-    "Profil CV talent Tania: ringkasan, pendidikan, sertifikasi, keahlian, dan pengalaman kerja.",
   title: "Profil CV",
 };
 
-export default function Page() {
-  return <CvPage />;
+export default async function Page() {
+  const session = resolveSession((await cookies()).get(SESSION_COOKIE)?.value);
+  redirect(session?.accessRole === "TALENT" ? PROFILE : EMPLOYEES);
 }

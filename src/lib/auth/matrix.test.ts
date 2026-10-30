@@ -5,41 +5,40 @@ import { canAccess, canManage, isModuleOpen, MODULE_ROLES, type Module } from ".
 const ROLES: readonly AccessRole[] = ["ADMIN", "OPERATION", "CHAPTER", "TALENT"];
 
 const EXPECTED: Record<Module, Record<AccessRole, boolean>> = {
-  // TAN-343: dashboard hanya Operation & Chapter; Employee tanpa Admin;
-  // Assignments tanpa Admin & Talent (self-service ditunda).
-  dashboard: { ADMIN: false, OPERATION: true, CHAPTER: true, TALENT: false },
+  // TAN-374 (keputusan TAN-364): Admin kembali memegang seluruh modul
+  // operasional; Talent tetap tanpa Assignment (self-service ditunda) dan
+  // Workload keluar dari matriks sampai TAN-378.
+  dashboard: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   activities: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
-  workload: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
-  employees: { ADMIN: false, OPERATION: true, CHAPTER: true, TALENT: true },
-  entra: { ADMIN: false, OPERATION: true, CHAPTER: false, TALENT: false },
-  contracts: { ADMIN: false, OPERATION: true, CHAPTER: true, TALENT: false },
-  assignments: { ADMIN: false, OPERATION: true, CHAPTER: true, TALENT: false },
+  employees: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
+  entra: { ADMIN: true, OPERATION: true, CHAPTER: false, TALENT: false },
+  contracts: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
+  assignments: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   // Aktif sejak 2026-10-16 (klarifikasi 9): entri menu ditampilkan untuk semua
   // peran, yang berbeda hanya aksesnya di dalam halaman (lihat EXPECTED_MANAGE).
   idp: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
   evaluations: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
-  cv: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: true },
   masterData: { ADMIN: true, OPERATION: true, CHAPTER: true, TALENT: false },
   accounts: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
+  adminRoles: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   audit: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
 };
 
-/** TAN-343: kelola Operation/Chapter sesuai selnya; Admin memegang tanpa sel. */
+/** TAN-374: Admin memegang penuh modul operasional lagi. */
 const EXPECTED_MANAGE: Record<Module, Record<AccessRole, boolean>> = {
   dashboard: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   activities: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
-  workload: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
-  employees: { ADMIN: false, OPERATION: true, CHAPTER: false, TALENT: false },
-  entra: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
-  contracts: { ADMIN: false, OPERATION: true, CHAPTER: false, TALENT: false },
-  assignments: { ADMIN: false, OPERATION: false, CHAPTER: true, TALENT: false },
+  employees: { ADMIN: true, OPERATION: true, CHAPTER: false, TALENT: false },
+  entra: { ADMIN: true, OPERATION: true, CHAPTER: false, TALENT: false },
+  contracts: { ADMIN: true, OPERATION: true, CHAPTER: false, TALENT: false },
+  assignments: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: false },
   // IDP & evaluasi: Chapter mengelola dalam cakupannya, Admin penuh; Operation
   // hanya baca dan Talent hanya miliknya (klarifikasi 9).
   idp: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: false },
   evaluations: { ADMIN: true, OPERATION: false, CHAPTER: true, TALENT: false },
-  cv: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
   masterData: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   accounts: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
+  adminRoles: { ADMIN: true, OPERATION: false, CHAPTER: false, TALENT: false },
   audit: { ADMIN: false, OPERATION: false, CHAPTER: false, TALENT: false },
 };
 

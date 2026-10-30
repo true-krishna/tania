@@ -1,84 +1,101 @@
 "use client";
 
 import * as React from "react";
-import { PageHeader } from "@/components/PageHeader";
-import { useProfile, useProfileHistory } from "@/features/profile";
+import { useMyCvProfile } from "@/features/cv/useMyCvProfile";
+import { useMyIdp } from "@/features/idp/talent/useMyIdp";
+import { buildProfileMetrics } from "@/features/profile/profileMetrics";
+import { ProfileHero } from "@/features/profile/ProfileHero";
+import { ProfileMetrics } from "@/features/profile/ProfileMetrics";
+import { ProfileTabs, type ProfileTabItem } from "@/features/profile/ProfileTabs";
+import { useProfile, useProfileHistory, type ProfileContract } from "@/features/profile";
+import type { QueryStatus } from "@/lib/apollo/toQueryState";
 import { useModuleAccess } from "@/lib/auth/access";
+import { useSessionRole } from "@/lib/auth/guard";
 import type { Module } from "@/lib/auth/matrix";
-import { ProfileTabContent } from "./ProfileTabContent";
+import { ProfileTabContent, type ProfileTab } from "./ProfileTabContent";
 
-type ProfileTab = "personal" | "contracts" | "assignments" | "workload" | "idp";
-
-const PROFILE_TABS: { id: ProfileTab; label: string; module?: Module }[] = [
-  { id: "personal", label: "Informasi pribadi" },
-  { id: "contracts", label: "Kontrak", module: "contracts" },
-  { id: "assignments", label: "Assignment", module: "assignments" },
-  { id: "workload", label: "Workload" },
-  { id: "idp", label: "IDP Saya", module: "idp" },
+const PROFILE_TABS: readonly { id: ProfileTab; label: string; module?: Module }[] = [
+  { id: "ringkasan", label: "Ringkasan" },
+  { id: "keahlian", label: "Keahlian & CV" },
+  { id: "kontrak", label: "Kontrak", module: "contracts" },
+  { id: "assignment", label: "Assignment", module: "assignments" },
+  { id: "pengembangan", label: "Pengembangan saya", module: "idp" },
 ];
 
+function findActiveContract(contracts: readonly ProfileContract[]): ProfileContract | undefined {
+  return contracts.find((contract) => contract.status === "ACTIVE");
+}
+
+function resolveContractHint(canRead: boolean, status: QueryStatus): string {
+  if (!canRead) return "Butuh akses modul Kontrak.";
+  if (status === "loading") return "Memuat kontrak…";
+  if (status === "error") return "Gagal memuat kontrak.";
+  return "Kontrak aktif belum tersedia.";
+}
+
 export default function ProfilePage() {
+  const role = useSessionRole();
   const contractsAccess = useModuleAccess("contracts");
   const assignmentsAccess = useModuleAccess("assignments");
   const idpAccess = useModuleAccess("idp");
-  const { status, data, error, session } = useProfile();
-  const [tab, setTab] = React.useState<ProfileTab>("personal");
+  const profile = useProfile();
+  const history = useProfileHistory(contractsAccess.canRead || assignmentsAccess.canRead);
+  const cv = useMyCvProfile();
+  const idp = useMyIdp({ skip: !idpAccess.canRead });
+  const [tab, setTab] = React.useState<ProfileTab>("ringkasan");
 
-  const employee = data;
-  const tabs = PROFILE_TABS.filter(
-    (item) =>
-      !item.module ||
-      (item.module === "contracts" && contractsAccess.canRead) ||
-      (item.module === "assignments" && assignmentsAccess.canRead) ||
-      (item.module === "idp" && idpAccess.canRead),
-  );
-  const selectedTab: ProfileTab = tabs.some((item) => item.id === tab) ? tab : "personal";
-  const history = useProfileHistory(
-    tabs.some((item) => item.id === "contracts" || item.id === "assignments"),
-  );
+  const tabs: ProfileTabItem<ProfileTab>[] = PROFILE_TABS.filter((item) => {
+    if (item.module === "contracts") return contractsAccess.canRead;
+    if (item.module === "assignments") return assignmentsAccess.canRead;
+    if (item.module === "idp") return idpAccess.canRead;
+    return true;
+  });
+  const selectedTab = tabs.some((item) => item.id === tab) ? tab : "ringkasan";
+  const contract = findActiveContract(history.data?.contracts ?? []);
+  const contractHint = resolveContractHint(contractsAccess.canRead, history.status);
+  const metrics = buildProfileMetrics({
+    assignmentsCanRead: assignmentsAccess.canRead,
+    cv,
+    history,
+    idp,
+    idpCanRead: idpAccess.canRead,
+  });
 
   return (
-    <section className="flex flex-col gap-4">
-      <PageHeader
-        subtitle={
-          employee ? `${employee.nomorInduk ?? "Tanpa nomor induk"} · ${employee.email}` : undefined
-        }
-        title={employee?.fullName ?? session?.fullName ?? "Profil saya"}
+    <section className="flex min-w-0 flex-col gap-4">
+      <ProfileHero
+        contract={contract}
+        contractHint={contractHint}
+        employee={profile.data}
+        error={profile.error}
+        onRetry={profile.refetch}
+        session={profile.session}
+        status={profile.status}
       />
-
-      <div
-        aria-label="Detail profil"
-        className="flex gap-6 overflow-x-auto border-b border-board-border"
-        role="tablist"
-      >
-        {tabs.map((item) => {
-          const selected = item.id === selectedTab;
-          return (
-            <button
-              aria-selected={selected}
-              className={
-                selected
-                  ? "-mb-px border-b-2 border-tp-brand-navy px-1 py-2 text-sm font-semibold text-zinc-900"
-                  : "-mb-px border-b-2 border-transparent px-1 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900"
-              }
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              role="tab"
-              type="button"
-            >
-              {item.label}
-            </button>
-          );
-        })}
+      <ProfileMetrics metrics={metrics} />
+      <ProfileTabs items={tabs} onSelect={setTab} selected={selectedTab} />
+      <div className="flex min-w-0 flex-col gap-4">
+        {tabs.map((item) => (
+          <div
+            aria-labelledby={`profile-tab-${item.id}`}
+            className="min-w-0"
+            hidden={item.id !== selectedTab}
+            id={`profile-panel-${item.id}`}
+            key={item.id}
+            role="tabpanel"
+            tabIndex={0}
+          >
+            <ProfileTabContent
+              canEditCv={role === "TALENT"}
+              cv={cv}
+              history={history}
+              idp={idp}
+              profile={profile}
+              selectedTab={item.id}
+            />
+          </div>
+        ))}
       </div>
-
-      <ProfileTabContent
-        employee={employee}
-        error={error}
-        history={history}
-        selectedTab={selectedTab}
-        status={status}
-      />
     </section>
   );
 }

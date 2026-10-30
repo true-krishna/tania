@@ -2,7 +2,7 @@
 
 import { useQuery } from "@apollo/client";
 import { MyCvProfileDocument, type CvFieldsFragment } from "@/generated/graphql";
-import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
+import { toQueryState, type RefetchableQueryState } from "@/lib/apollo/toQueryState";
 
 /**
  * Talent's own CV profile (FR-12/FR-13).
@@ -12,10 +12,20 @@ import { toQueryState, type QueryState } from "@/lib/apollo/toQueryState";
  * riwayat assignment yang baru diakhiri/diubah (di permukaan lain sesi yang
  * sama) ikut diperbarui dari server, bukan hanya dari cache.
  */
-export function useMyCvProfile(): QueryState<CvFieldsFragment | undefined> {
-  const result = useQuery(MyCvProfileDocument, { fetchPolicy: "cache-and-network" });
-  return toQueryState({
-    ...result,
-    data: result.data?.myCvProfile as CvFieldsFragment | undefined,
+export function useMyCvProfile(
+  enabled = true,
+): RefetchableQueryState<CvFieldsFragment | undefined> {
+  const result = useQuery(MyCvProfileDocument, {
+    fetchPolicy: "cache-and-network",
+    skip: !enabled,
   });
+  return {
+    ...toQueryState({
+      ...result,
+      data: result.data?.myCvProfile as CvFieldsFragment | undefined,
+    }),
+    refetch: () => {
+      void result.refetch();
+    },
+  };
 }

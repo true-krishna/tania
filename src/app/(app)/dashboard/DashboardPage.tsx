@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
+import { AccessDenied } from "@/components/AccessDenied";
 import { BarList } from "@/components/BarList";
 import { Chip, type ChipVariant } from "@/components/Chip";
 import { ErrorState, LoadingState } from "@/components/DataState";
@@ -17,9 +16,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { orDash } from "@/lib/cell";
-import { useSessionRole } from "@/lib/auth/guard";
-import { landingRoute } from "@/lib/auth/landing";
-import { canAccess } from "@/lib/auth/matrix";
+import { useModuleAccess } from "@/lib/auth/access";
 import { roleLabel } from "@/features/accounts/roles";
 import { useDashboard } from "@/features/dashboard/useDashboard";
 import { EmptyNote } from "./EmptyNote";
@@ -38,16 +35,11 @@ const ASSIGNMENT_STATUS_VARIANT: Record<AssignmentStatus, ChipVariant> = {
 };
 
 export default function DashboardPage() {
-  const role = useSessionRole();
-  const router = useRouter();
-  const { status, data, error } = useDashboard();
+  const access = useModuleAccess("dashboard");
+  const { status, data, error } = useDashboard({ skip: access.pending || !access.canRead });
 
-  const denied = role !== null && !canAccess(role, "dashboard");
-  React.useEffect(() => {
-    if (denied) router.replace(landingRoute(role));
-  }, [denied, role, router]);
-
-  if (denied) return null;
+  if (access.pending) return null;
+  if (!access.canRead) return <AccessDenied />;
 
   if (status === "loading") return <LoadingState />;
   if (status === "error") return <ErrorState message={error ?? "Gagal memuat dashboard."} />;

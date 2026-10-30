@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ToastProvider } from "@/components/Toast";
 import ProfilePage from "./ProfilePage";
 
 export const metadata: Metadata = {
@@ -6,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <ProfilePage />;
+  return (
+    <ToastProvider>
+      <ProfilePage />
+    </ToastProvider>
+  );
 }

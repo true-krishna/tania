@@ -55,8 +55,9 @@ export function MenuGrid({
       title: roleHeader(role, draft, saved, busyRoleId, onSaveRole, onResetRole, onPreviewRole),
       render: (_value: unknown, row: MenuGridRow) => {
         const grid = draft[role.id] ?? {};
-        const rule = cellRule(role.templateRole as AccessRole, row.id);
         const value = grid[row.id]?.accessLevel ?? "NONE";
+        const rule = cellRule(role.templateRole as AccessRole, row.id, value);
+        const selected = rule.allowed.includes(value) ? value : rule.allowed[0];
         return (
           <Select
             aria-label={`${row.label} untuk ${role.label}`}
@@ -68,7 +69,7 @@ export function MenuGrid({
               label: LEVEL_LABEL[level],
             }))}
             title={rule.reason}
-            value={value}
+            value={selected}
           />
         );
       },
