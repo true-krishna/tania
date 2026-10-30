@@ -1001,7 +1001,9 @@ type AdminDashboard {
 }
 
 type OperationDashboard {
+  """Talent aktif: karyawan berstatus ACTIVE dengan kontrak berjalan hari ini (sudah mulai, belum berakhir/expire, tidak diakhiri dini) — sama dengan jumlah kontrak aktif yang berlaku."""
   totalActiveEmployees: Int!
+  """Kontrak berjalan hari ini milik talent aktif, per unit; total barisnya sama dengan totalActiveEmployees."""
   employeesPerUnit: [UnitCount!]!
   nonAssignableEmployees: Int!
   recentEmployeeChanges: [Employee!]!
