@@ -149,6 +149,15 @@ describe("NAV mirrors the role & module matrix (R2.2)", () => {
       EVALUATIONS_MY,
     ]);
     expect(TALENT_NAV.every((entry) => entry.kind === "link")).toBe(true);
+    expect(TALENT_NAV.map((entry) => entry.label)).toEqual([
+      "Profil",
+      "Assignment",
+      "Workload",
+      "Aktivitas",
+      "CV",
+      "IDP",
+      "Evaluasi",
+    ]);
   });
 
   for (const leaf of LEAVES) {

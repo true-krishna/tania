@@ -185,33 +185,34 @@ export const NAV: readonly NavEntry[] = [
  * log harian → pertumbuhan). Tidak ada grup karena setiap grup operasional
  * hanya menyisakan satu anak untuk Talent.
  *
- * "Assignment saya" ikut tampil (keputusan pemilik produk, 2026-10-30): halaman
- * ini membaca riwayat assignment dari profil CV mandiri sampai TAN-393
- * menyediakan baca assignment khusus.
+ * Label halaman pribadi tanpa "saya" (keputusan pemilik produk, 2026-10-30) —
+ * cakupan halaman sudah jelas dari posisinya di sidebar Talent. "Assignment"
+ * membaca riwayat assignment dari profil CV mandiri sampai TAN-393 menyediakan
+ * baca assignment khusus.
  */
 export const TALENT_NAV: readonly NavEntry[] = [
-  { kind: "link", href: PROFILE, label: "Profil saya", icon: IconUserCircle, roles: ["TALENT"] },
+  { kind: "link", href: PROFILE, label: "Profil", icon: IconUserCircle, roles: ["TALENT"] },
   {
     kind: "link",
     href: ASSIGNMENT_MY,
-    label: "Assignment saya",
+    label: "Assignment",
     icon: IconBriefcase,
     roles: ["TALENT"],
   },
-  { kind: "link", href: WORKLOAD, label: "Workload saya", icon: IconChartBar, roles: ["TALENT"] },
+  { kind: "link", href: WORKLOAD, label: "Workload", icon: IconChartBar, roles: ["TALENT"] },
   {
     kind: "link",
     href: ACTIVITIES,
-    label: "Aktivitas saya",
+    label: "Aktivitas",
     icon: IconClockHour3,
     roles: ["TALENT"],
   },
-  { kind: "link", href: CV, label: "CV saya", icon: IconFileCv, roles: ["TALENT"] },
-  { kind: "link", href: IDP_MY, label: "IDP saya", icon: IconTarget, roles: ["TALENT"] },
+  { kind: "link", href: CV, label: "CV", icon: IconFileCv, roles: ["TALENT"] },
+  { kind: "link", href: IDP_MY, label: "IDP", icon: IconTarget, roles: ["TALENT"] },
   {
     kind: "link",
     href: EVALUATIONS_MY,
-    label: "Evaluasi saya",
+    label: "Evaluasi",
     icon: IconClipboardCheck,
     roles: ["TALENT"],
   },

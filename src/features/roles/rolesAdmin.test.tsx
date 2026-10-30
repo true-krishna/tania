@@ -242,8 +242,8 @@ describe("halaman Menu & Akses per Role — bagian grid", () => {
     fireEvent.click(roleHeader("TALENT").getByRole("button", { name: "Pratinjau" }));
     const talentPreview = within(screen.getByRole("navigation", { name: "Pratinjau menu TALENT" }));
     // Talent memakai halaman pribadi datar (TAN-392), bukan modul operasional.
-    expect(talentPreview.getByText("IDP saya")).toBeInTheDocument();
-    expect(talentPreview.getByText("Profil saya")).toBeInTheDocument();
+    expect(talentPreview.getByText("IDP")).toBeInTheDocument();
+    expect(talentPreview.getByText("Profil")).toBeInTheDocument();
     expect(talentPreview.queryByText("Accounts")).toBeNull();
     // Entri tanpa rute (TAN-344) punya baris grid, tetapi tidak pernah jadi
     // item nav di pratinjau — tanpa error.

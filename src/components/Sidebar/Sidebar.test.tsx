@@ -53,12 +53,12 @@ describe("Sidebar", () => {
 
   it("IDP & Evaluasi: halaman pribadi untuk Talent, modul operasional untuk peran lain (TAN-392)", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().getByRole("link", { name: "IDP saya" })).toHaveAttribute("href", "/idp/my");
-    expect(desktopNav().getByRole("link", { name: "Evaluasi saya" })).toHaveAttribute(
+    expect(desktopNav().getByRole("link", { name: "IDP" })).toHaveAttribute("href", "/idp/my");
+    expect(desktopNav().getByRole("link", { name: "Evaluasi" })).toHaveAttribute(
       "href",
       "/evaluations/my",
     );
-    expect(compactNav().getByRole("link", { name: "IDP saya" })).toBeInTheDocument();
+    expect(compactNav().getByRole("link", { name: "IDP" })).toBeInTheDocument();
     talent.unmount();
 
     for (const role of ["CHAPTER", "OPERATION", "ADMIN"] as const) {
@@ -88,14 +88,7 @@ describe("Sidebar", () => {
 
   it("Talent memakai sidebar datar tanpa grup (TAN-392)", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    const labels = [
-      "Profil saya",
-      "Workload saya",
-      "Aktivitas saya",
-      "CV saya",
-      "IDP saya",
-      "Evaluasi saya",
-    ];
+    const labels = ["Profil", "Workload", "Aktivitas", "CV", "IDP", "Evaluasi"];
     for (const label of labels) {
       expect(desktopNav().getByRole("link", { name: label })).toBeInTheDocument();
     }
@@ -166,7 +159,7 @@ describe("Sidebar", () => {
   // TAN-374 (keputusan TAN-364): Workload disembunyikan sampai datanya nyata.
   it("Workload hanya tampil untuk Talent, sebagai halaman pribadi (TAN-392)", () => {
     const talent = renderSidebar({ role: "TALENT" });
-    expect(desktopNav().getByRole("link", { name: "Workload saya" })).toHaveAttribute(
+    expect(desktopNav().getByRole("link", { name: "Workload" })).toHaveAttribute(
       "href",
       "/workload",
     );
@@ -203,18 +196,13 @@ describe("Sidebar", () => {
 
   it("menandai halaman pribadi Talent yang aktif", () => {
     renderSidebar({ role: "TALENT", pathname: "/cv" });
-    expect(desktopNav().getByRole("link", { name: "CV saya" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
-    expect(desktopNav().getByRole("link", { name: "Profil saya" })).not.toHaveAttribute(
-      "aria-current",
-    );
+    expect(desktopNav().getByRole("link", { name: "CV" })).toHaveAttribute("aria-current", "page");
+    expect(desktopNav().getByRole("link", { name: "Profil" })).not.toHaveAttribute("aria-current");
   });
 
   it("marks the active link in the compact strip without expanding anything", () => {
     renderSidebar({ role: "TALENT", pathname: "/profile" });
-    expect(compactNav().getByRole("link", { name: "Profil saya" })).toHaveAttribute(
+    expect(compactNav().getByRole("link", { name: "Profil" })).toHaveAttribute(
       "aria-current",
       "page",
     );
