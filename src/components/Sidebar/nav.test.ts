@@ -17,6 +17,7 @@ import {
 import {
   ACCOUNTS,
   ACTIVITIES,
+  ASSIGNMENT_MY,
   CV,
   AUDIT,
   CONTRACTS,
@@ -113,7 +114,7 @@ const APPROVED_MENU: Record<AccessRole, readonly string[]> = {
     MASTER_DATA_JOB_ROLES,
     MASTER_DATA_PROJECTS,
   ],
-  TALENT: [PROFILE, WORKLOAD, ACTIVITIES, CV, IDP_MY, EVALUATIONS_MY],
+  TALENT: [PROFILE, ASSIGNMENT_MY, WORKLOAD, ACTIVITIES, CV, IDP_MY, EVALUATIONS_MY],
 };
 
 /** One configuration with a single cell overridden, for the non-default case. */
@@ -132,14 +133,15 @@ function withCell(
 
 describe("NAV mirrors the role & module matrix (R2.2)", () => {
   it("menu operasional tidak memuat entri pribadi Talent (TAN-392)", () => {
-    for (const pribadi of [PROFILE, WORKLOAD, CV, IDP_MY, EVALUATIONS_MY]) {
+    for (const pribadi of [PROFILE, ASSIGNMENT_MY, WORKLOAD, CV, IDP_MY, EVALUATIONS_MY]) {
       expect(LEAVES.some((leaf) => leaf.href === pribadi)).toBe(false);
     }
   });
 
-  it("TALENT_NAV adalah enam halaman pribadi yang datar", () => {
+  it("TALENT_NAV adalah tujuh halaman pribadi yang datar", () => {
     expect(TALENT_NAV.map((entry) => (entry.kind === "link" ? entry.href : entry.id))).toEqual([
       PROFILE,
+      ASSIGNMENT_MY,
       WORKLOAD,
       ACTIVITIES,
       CV,

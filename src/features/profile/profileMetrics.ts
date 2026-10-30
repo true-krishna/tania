@@ -1,4 +1,4 @@
-import { CV, IDP_MY, WORKLOAD } from "@/lib/constants/routes";
+import { ASSIGNMENT_MY, CV, IDP_MY, WORKLOAD } from "@/lib/constants/routes";
 import type { RefetchableQueryState } from "@/lib/apollo/toQueryState";
 import type { ProfileMetric } from "./ProfileMetrics";
 import type { SelfProfileMetrics } from "./useSelfProfile";
@@ -14,6 +14,7 @@ interface MetricLink {
   linkLabel?: string;
 }
 
+const ASSIGNMENT_LINK: MetricLink = { href: ASSIGNMENT_MY, linkLabel: "Buka Assignment saya" };
 const UTILIZATION_LINK: MetricLink = { href: WORKLOAD, linkLabel: "Buka Workload saya" };
 const CERTIFICATION_LINK: MetricLink = { href: CV, linkLabel: "Buka CV saya" };
 const IDP_LINK: MetricLink = { href: IDP_MY, linkLabel: "Buka IDP saya" };
@@ -45,11 +46,12 @@ function pendingMetric(
 }
 
 function assignmentMetric(query: MetricsQuery): ProfileMetric {
-  const pending = pendingMetric("assignment", "Assignment aktif", query, {});
+  const pending = pendingMetric("assignment", "Assignment aktif", query, ASSIGNMENT_LINK);
   if (pending) return pending;
   const count = query.data?.activeAssignmentCount ?? null;
   if (count === null) {
     return {
+      ...ASSIGNMENT_LINK,
       id: "assignment",
       label: "Assignment aktif",
       hint: "Belum ada assignment aktif untuk akun ini.",
@@ -57,6 +59,7 @@ function assignmentMetric(query: MetricsQuery): ProfileMetric {
     };
   }
   return {
+    ...ASSIGNMENT_LINK,
     id: "assignment",
     label: "Assignment aktif",
     hint: `${count} assignment berstatus aktif.`,

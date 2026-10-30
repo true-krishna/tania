@@ -1,4 +1,5 @@
 import {
+  IconBriefcase,
   IconChartBar,
   IconClipboardCheck,
   IconClockHour3,
@@ -17,6 +18,7 @@ import { menuEntryIdForHref, visibleByConfig, type MenuAccessConfig } from "@/li
 import {
   ACCOUNTS,
   ACTIVITIES,
+  ASSIGNMENT_MY,
   AUDIT,
   CONTRACTS,
   CV,
@@ -183,12 +185,19 @@ export const NAV: readonly NavEntry[] = [
  * log harian → pertumbuhan). Tidak ada grup karena setiap grup operasional
  * hanya menyisakan satu anak untuk Talent.
  *
- * "Assignment saya" belum masuk: keputusan produk TAN-343 masih terbuka dan
- * baca assignment mandiri belum ada (TAN-393). Saat keduanya selesai, entri
- * ditambahkan di posisi kedua.
+ * "Assignment saya" ikut tampil (keputusan pemilik produk, 2026-10-30): halaman
+ * ini membaca riwayat assignment dari profil CV mandiri sampai TAN-393
+ * menyediakan baca assignment khusus.
  */
 export const TALENT_NAV: readonly NavEntry[] = [
   { kind: "link", href: PROFILE, label: "Profil saya", icon: IconUserCircle, roles: ["TALENT"] },
+  {
+    kind: "link",
+    href: ASSIGNMENT_MY,
+    label: "Assignment saya",
+    icon: IconBriefcase,
+    roles: ["TALENT"],
+  },
   { kind: "link", href: WORKLOAD, label: "Workload saya", icon: IconChartBar, roles: ["TALENT"] },
   {
     kind: "link",

@@ -102,7 +102,6 @@ describe("Sidebar", () => {
     expect(desktopNav().queryByRole("button")).toBeNull();
     expect(desktopNav().queryByText("Karyawan")).toBeNull();
     expect(desktopNav().queryByRole("link", { name: "Data Karyawan" })).toBeNull();
-    expect(desktopNav().queryByRole("link", { name: "Assignment saya" })).toBeNull();
     talent.unmount();
 
     const chapter = renderSidebar({ role: "CHAPTER" });

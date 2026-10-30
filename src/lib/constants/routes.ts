@@ -35,6 +35,8 @@ export const CONTRACT_RENEW = (id: string) => `/contracts/${id}/renew`;
 export const TALENT_ASSIGNMENT = "/assignments";
 export const ASSIGNMENT_NEW = "/assignments/new";
 export const ASSIGNMENT_DETAIL = (id: string) => `/assignments/${id}`;
+// Assignment milik sendiri (TAN-392): halaman pribadi Talent, dibaca dari CV.
+export const ASSIGNMENT_MY = "/assignments/my";
 
 // ENTRA
 export const ENTRA = "/entra";

@@ -207,6 +207,10 @@ describe("ProfilePage (TAN-386, TAN-392)", () => {
     renderProfile();
     await screen.findByRole("heading", { name: "Ilham Fadillah" });
 
+    expect(screen.getByRole("link", { name: /Buka Assignment saya/ })).toHaveAttribute(
+      "href",
+      "/assignments/my",
+    );
     expect(screen.getByRole("link", { name: /Buka Workload saya/ })).toHaveAttribute(
       "href",
       "/workload",

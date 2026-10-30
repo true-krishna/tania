@@ -115,7 +115,7 @@ const NAV_HIDDEN: Record<Role, readonly string[]> = {
 };
 
 /** Rute modul yang aktif: URL langsung harus membuka halamannya (bukan 404). */
-const ACTIVE_ROUTES = ["/idp", "/evaluations", "/cv", "/workload"] as const;
+const ACTIVE_ROUTES = ["/idp", "/evaluations", "/cv", "/workload", "/assignments/my"] as const;
 
 test.describe("RBAC matrix (T041)", () => {
   for (const role of ["ADMIN", "OPERATION", "CHAPTER", "TALENT"] as const) {
