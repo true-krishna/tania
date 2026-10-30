@@ -4,6 +4,7 @@
 - **Fixed**: 2026-10-30
 - **Assessment**: ./assessment.md
 - **Status**: applied
+- **Branch**: `fix/tan-394-employee-picker-selected-name` (MR !167)
 
 ## Summary
 
