@@ -19,7 +19,7 @@ type AssignmentNode = AssignmentsQuery["assignments"]["edges"][number]["node"];
  */
 export function useAssignment(id: string): QueryState<AssignmentNode | undefined> {
   const result = useQuery(AssignmentsDocument, {
-    variables: { first: 100, after: null, search: null, sortBy: "FULL_NAME", sortDirection: "ASC" },
+    variables: { first: 100 },
     skip: !id,
   });
   const found = result.data?.assignments?.edges.find((edge) => edge.node.id === id)?.node;

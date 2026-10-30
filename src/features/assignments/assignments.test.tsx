@@ -779,13 +779,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
     {
       request: {
         query: AssignmentsDocument,
-        variables: {
-          first: 100,
-          after: null,
-          search: null,
-          sortBy: "FULL_NAME",
-          sortDirection: "ASC",
-        },
+        variables: { first: 100 },
       },
       result: assignmentsResult,
     },
@@ -812,13 +806,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       {
         request: {
           query: AssignmentsDocument,
-          variables: {
-            first: 100,
-            after: null,
-            search: null,
-            sortBy: "FULL_NAME",
-            sortDirection: "ASC",
-          },
+          variables: { first: 100 },
         },
         result: {
           data: {
@@ -1116,13 +1104,7 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
         {
           request: {
             query: AssignmentsDocument,
-            variables: {
-              first: 100,
-              after: null,
-              search: null,
-              sortBy: "FULL_NAME",
-              sortDirection: "ASC",
-            },
+            variables: { first: 100 },
           },
           result: assignmentsResult,
         },
