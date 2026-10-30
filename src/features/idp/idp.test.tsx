@@ -50,6 +50,8 @@ const assignableTalentsResult = {
   data: {
     assignableTalents: {
       __typename: "EmployeeConnection",
+      totalCount: 1,
+      pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
       edges: [{ __typename: "EmployeeEdge", cursor: "emp-1", node: talent }],
     },
   },
@@ -311,7 +313,16 @@ describe("IdpPage (Apollo, US3)", () => {
             result: idpsResult,
           },
           {
-            request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+            request: {
+              query: AssignableTalentsDocument,
+              variables: {
+                first: 100,
+                after: null,
+                search: null,
+                sortBy: "FULL_NAME",
+                sortDirection: "ASC",
+              },
+            },
             result: assignableTalentsResult,
           },
         ]}
@@ -340,7 +351,16 @@ describe("IdpPage (Apollo, US3)", () => {
             result: idpsResult,
           },
           {
-            request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+            request: {
+              query: AssignableTalentsDocument,
+              variables: {
+                first: 100,
+                after: null,
+                search: null,
+                sortBy: "FULL_NAME",
+                sortDirection: "ASC",
+              },
+            },
             result: assignableTalentsResult,
           },
         ]}
@@ -363,7 +383,16 @@ describe("IdpPage (Apollo, US3)", () => {
 describe("CreateIdpForm (Apollo form, US3)", () => {
   const newMocks = [
     {
-      request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+      request: {
+        query: AssignableTalentsDocument,
+        variables: {
+          first: 100,
+          after: null,
+          search: null,
+          sortBy: "FULL_NAME",
+          sortDirection: "ASC",
+        },
+      },
       result: assignableTalentsResult,
     },
     {
@@ -458,7 +487,16 @@ describe("CreateIdpForm (Apollo form, US3)", () => {
   it("shows an error toast when the create mutation fails", async () => {
     const failingMocks = [
       {
-        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        request: {
+          query: AssignableTalentsDocument,
+          variables: {
+            first: 100,
+            after: null,
+            search: null,
+            sortBy: "FULL_NAME",
+            sortDirection: "ASC",
+          },
+        },
         result: assignableTalentsResult,
       },
       {

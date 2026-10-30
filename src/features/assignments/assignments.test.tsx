@@ -125,11 +125,22 @@ describe("AssignmentsPage (Apollo, US2)", () => {
   it("renders the assignment list after the queries resolve", async () => {
     renderPage([
       {
-        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        request: {
+          query: AssignableTalentsDocument,
+          variables: {
+            first: 100,
+            after: null,
+            search: null,
+            sortBy: "FULL_NAME",
+            sortDirection: "ASC",
+          },
+        },
         result: {
           data: {
             assignableTalents: {
               __typename: "EmployeeConnection",
+              totalCount: 1,
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
               edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }],
             },
           },
@@ -173,11 +184,22 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     };
     renderPage([
       {
-        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        request: {
+          query: AssignableTalentsDocument,
+          variables: {
+            first: 100,
+            after: null,
+            search: null,
+            sortBy: "FULL_NAME",
+            sortDirection: "ASC",
+          },
+        },
         result: {
           data: {
             assignableTalents: {
               __typename: "EmployeeConnection",
+              totalCount: 1,
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
               edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }],
             },
           },
@@ -231,11 +253,22 @@ describe("AssignmentsPage (Apollo, US2)", () => {
     };
     renderPage([
       {
-        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        request: {
+          query: AssignableTalentsDocument,
+          variables: {
+            first: 100,
+            after: null,
+            search: null,
+            sortBy: "FULL_NAME",
+            sortDirection: "ASC",
+          },
+        },
         result: {
           data: {
             assignableTalents: {
               __typename: "EmployeeConnection",
+              totalCount: 1,
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
               edges: [{ __typename: "EmployeeEdge", node: assignableTalentNode }],
             },
           },
@@ -426,11 +459,22 @@ describe("CreateAssignmentModal (TAN-316)", () => {
       result: createProjectsResult,
     },
     {
-      request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+      request: {
+        query: AssignableTalentsDocument,
+        variables: {
+          first: 100,
+          after: null,
+          search: null,
+          sortBy: "FULL_NAME",
+          sortDirection: "ASC",
+        },
+      },
       result: {
         data: {
           assignableTalents: {
             __typename: "EmployeeConnection",
+            totalCount: 1,
+            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
             edges: [{ __typename: "EmployeeEdge", cursor: "emp-1", node: assignableTalentNode }],
           },
         },
@@ -733,7 +777,16 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
   };
   const baseDetailMocks = [
     {
-      request: { query: AssignmentsDocument, variables: { first: 100 } },
+      request: {
+        query: AssignmentsDocument,
+        variables: {
+          first: 100,
+          after: null,
+          search: null,
+          sortBy: "FULL_NAME",
+          sortDirection: "ASC",
+        },
+      },
       result: assignmentsResult,
     },
     {
@@ -757,7 +810,16 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
   it('shows a completed assignment as "Selesai" without edit or end actions (O4)', async () => {
     await renderDetail([
       {
-        request: { query: AssignmentsDocument, variables: { first: 100 } },
+        request: {
+          query: AssignmentsDocument,
+          variables: {
+            first: 100,
+            after: null,
+            search: null,
+            sortBy: "FULL_NAME",
+            sortDirection: "ASC",
+          },
+        },
         result: {
           data: {
             assignments: {
@@ -1052,7 +1114,16 @@ describe("AssignmentDetailPage (Apollo, US2)", () => {
       auth.role = role;
       await renderDetail([
         {
-          request: { query: AssignmentsDocument, variables: { first: 100 } },
+          request: {
+            query: AssignmentsDocument,
+            variables: {
+              first: 100,
+              after: null,
+              search: null,
+              sortBy: "FULL_NAME",
+              sortDirection: "ASC",
+            },
+          },
           result: assignmentsResult,
         },
       ]);
@@ -1128,6 +1199,8 @@ describe("Bulk assignment (TAN-337)", () => {
     data: {
       assignableTalents: {
         __typename: "EmployeeConnection",
+        totalCount: 1,
+        pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
         edges: [
           { __typename: "EmployeeEdge", cursor: "emp-1", node: assignableTalentNode },
           { __typename: "EmployeeEdge", cursor: "emp-2", node: budiTalent },
@@ -1193,7 +1266,16 @@ describe("Bulk assignment (TAN-337)", () => {
   function bulkMocks(...mutations: MockedResponse[]): MockedResponse[] {
     return [
       {
-        request: { query: AssignableTalentsDocument, variables: { first: 100 } },
+        request: {
+          query: AssignableTalentsDocument,
+          variables: {
+            first: 100,
+            after: null,
+            search: null,
+            sortBy: "FULL_NAME",
+            sortDirection: "ASC",
+          },
+        },
         result: bulkTalentsResult,
       },
       {
